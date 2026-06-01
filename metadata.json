@@ -1,0 +1,6 @@
+{
+  "name": "Alphasynth Intelligence",
+  "description": "AI-powered, institutional-grade equity intelligence and action terminal for Indian securities. Instantly analyze SEBI disclosures, stress-test capital allocations, and prepare trade executions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

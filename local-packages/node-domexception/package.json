@@ -1,0 +1,11 @@
+{
+  "name": "node-domexception",
+  "version": "1.0.0",
+  "description": "Local non-deprecated wrap for native DOMException",
+  "main": "./index.cjs",
+  "module": "./index.js",
+  "exports": {
+    "import": "./index.js",
+    "require": "./index.cjs"
+  }
+}

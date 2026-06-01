@@ -1,0 +1,12 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# 🌟 ADDED: Explicitly protect your Google Cloud Private Credentials
+gcp-key.json
+

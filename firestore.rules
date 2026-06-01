@@ -1,0 +1,131 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ---------------------------------------------------------
+    // 1. DEFAULT DENY CATCH-ALL
+    // ---------------------------------------------------------
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ---------------------------------------------------------
+    // 2. HELPER FUNCTIONS
+    // ---------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // ---------------------------------------------------------
+    // 3. COLLECTION: USERS
+    // ---------------------------------------------------------
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow create: if isOwner(userId) 
+        && isValidId(userId)
+        && incoming().uid == userId
+        && incoming().email is string
+        && incoming().email.size() <= 256
+        && incoming().keys().hasAll(['uid', 'email'])
+        && incoming().keys().size() >= 2;
+      allow update: if isOwner(userId) 
+        && incoming().uid == userId
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'joinedAt']);
+    }
+
+    // ---------------------------------------------------------
+    // 4. COLLECTION: REPORTS
+    // ---------------------------------------------------------
+    function isValidEquityReport(data) {
+      return data.ticker is string && data.ticker.size() <= 20
+        && data.summary is string && data.summary.size() <= 30000
+        && data.bullCase is string && data.bullCase.size() <= 15000
+        && data.bearCase is string && data.bearCase.size() <= 15000
+        && data.rating.lower() in ['buy', 'hold', 'sell']
+        && data.authorId == request.auth.uid
+        && data.authorName is string && data.authorName.size() <= 256
+        && data.authorEmail is string && data.authorEmail.size() <= 256
+        && data.likesCount is int
+        && data.isPublic is bool
+        && data.createdAt == request.time
+        && data.keys().hasAll(['ticker', 'summary', 'bullCase', 'bearCase', 'rating', 'authorId', 'authorName', 'authorEmail', 'likesCount', 'isPublic', 'createdAt'])
+        && data.keys().size() >= 11;
+    }
+
+    match /reports/{reportId} {
+      // List/read public reports or own reports
+      allow list: if (resource.data.isPublic == true || isOwner(resource.data.authorId));
+      allow get: if (resource.data.isPublic == true || isOwner(resource.data.authorId));
+      
+      allow create: if isSignedIn() && isValidEquityReport(incoming());
+      
+      allow update: if isOwner(existing().authorId) 
+        && (
+            // User can toggle privacy or update report content
+            incoming().diff(existing()).affectedKeys().hasOnly(['isPublic', 'summary', 'rating', 'bullCase', 'bearCase'])
+            && isValidEquityReport(incoming())
+        )
+        || (
+            // Like/Unlike logic - only likesCount can change
+            isSignedIn() && incoming().diff(existing()).affectedKeys().hasOnly(['likesCount'])
+            && incoming().likesCount == existing().likesCount + 1 
+        );
+      
+      allow delete: if isOwner(existing().authorId);
+    }
+
+    // ---------------------------------------------------------
+    // 5. COLLECTION: SUBSCRIBERS
+    // ---------------------------------------------------------
+    function isValidSubscriber(data) {
+      return data.email is string && data.email.size() <= 256
+        && data.active is bool
+        && data.subscribedAt == request.time
+        && data.keys().hasAll(['email', 'active', 'subscribedAt'])
+        && data.keys().size() == 3;
+    }
+
+    match /subscribers/{subscriberId} {
+      allow create: if isValidSubscriber(incoming());
+      allow update: if isSignedIn() && isValidSubscriber(incoming());
+    }
+
+    // ---------------------------------------------------------
+    // 6. COLLECTION: USER_PORTFOLIO (Private Audit History)
+    // ---------------------------------------------------------
+    function isValidPortfolioEntry(data) {
+      return data.ticker is string && data.ticker.size() <= 20
+        && data.userId == request.auth.uid
+        && data.createdAt == request.time
+        && data.summary is string && data.summary.size() <= 30000
+        && data.bullCase is string && data.bullCase.size() <= 15000
+        && data.bearCase is string && data.bearCase.size() <= 15000
+        && data.rating.lower() in ['buy', 'hold', 'sell']
+        && data.keys().hasAll(['ticker', 'userId', 'createdAt', 'summary', 'bullCase', 'bearCase', 'rating'])
+        // We allow extra fields in portfolio as it might contain original report metadata
+        && data.keys().size() >= 7;
+    }
+
+    match /user_portfolio/{entryId} {
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create, update: if isSignedIn() && isValidPortfolioEntry(incoming());
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+  }
+}

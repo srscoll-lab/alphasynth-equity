@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "ScrapedNews": {
+      "title": "Scraped News Item",
+      "description": "High-signal news extracted from financial sources.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string", "format": "uri" },
+        "source": { "type": "string" },
+        "content": { "type": "string" },
+        "publishedAt": { "type": "string", "format": "date-time" },
+        "ticker": { "type": "string" },
+        "sentiment": { "type": "string", "enum": ["bullish", "bearish", "neutral"] }
+      },
+      "required": ["title", "url", "source", "publishedAt"]
+    },
+    "EquityReport": {
+      "title": "Equity Analysis Report",
+      "description": "GenAI generated stock intelligence.",
+      "type": "object",
+      "properties": {
+        "ticker": { "type": "string" },
+        "companyName": { "type": "string" },
+        "summary": { "type": "string" },
+        "keySignals": { "type": "array", "items": { "type": "string" } },
+        "riskFactors": { "type": "array", "items": { "type": "string" } },
+        "rating": { "type": "string", "enum": ["buy", "hold", "sell"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorEmail": { "type": "string" },
+        "likesCount": { "type": "number" },
+        "isPublic": { "type": "boolean" }
+      },
+      "required": ["ticker", "summary", "rating", "createdAt", "authorId"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user preferences and activity.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "isPremium": { "type": "boolean" },
+        "joinedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Subscriber": {
+      "title": "Email Subscriber",
+      "description": "Users receiving the morning briefing.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "subscribedAt": { "type": "string", "format": "date-time" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["email", "active"]
+    },
+    "BlogPost": {
+      "title": "Published Blog Post",
+      "description": "Ported insights for marketing.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "body": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "platform": { "type": "string", "enum": ["internal", "substack", "linkedin"] },
+        "publishedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "body", "platform", "publishedAt"]
+    },
+    "PortfolioEntry": {
+      "title": "Private Portfolio Entry",
+      "description": "Historical account of generated analyses.",
+      "type": "object",
+      "properties": {
+        "ticker": { "type": "string" },
+        "bullCase": { "type": "string" },
+        "bearCase": { "type": "string" },
+        "rating": { "type": "string" },
+        "rawReport": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["ticker", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "news": {
+      "schema": "ScrapedNews",
+      "description": "Validated financial news queue."
+    },
+    "reports": {
+      "schema": "EquityReport",
+      "description": "Final intelligence reports."
+    },
+    "subscribers": {
+      "schema": "Subscriber",
+      "description": "Mailing list."
+    },
+    "blog_posts": {
+      "schema": "BlogPost",
+      "description": "Content archive."
+    },
+    "users": {
+        "schema": "UserProfile",
+        "description": "User identity store."
+    },
+    "user_portfolio": {
+        "schema": "PortfolioEntry",
+        "description": "Private history of all audits."
+    }
+  }
+}
