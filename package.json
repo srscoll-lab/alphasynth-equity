@@ -6,11 +6,10 @@
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build",
-    "start": "NODE_ENV=production node server.ts",
+    "start": "NODE_ENV=production tsx server.ts",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@google-cloud/vertexai": "^1.12.0",
     "@google/genai": "^2.0.1",
     "@google/generative-ai": "^0.24.1",
     "@mendable/firecrawl-js": "^4.25.1",

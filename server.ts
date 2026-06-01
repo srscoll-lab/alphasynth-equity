@@ -3,10 +3,9 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
-import pkg from "@google-cloud/vertexai";
+import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
-const { VertexAI } = pkg;
 dotenv.config();
 
 const app = express();
@@ -14,17 +13,18 @@ const PORT: number = Number(process.env.PORT) || 3005;
 
 let resend: Resend | null = null;
 let firecrawl: Firecrawl | null = null;
-let vertexAI: any = null;
+let genAI: GoogleGenAI | null = null;
 
-function getVertexAI() {
-  if (!vertexAI) {
-    console.log("[VERTEX] Initializing Enterprise Vertex AI Client...");
-    vertexAI = new VertexAI({
-      project: process.env.GCP_PROJECT_ID || 'your-gcp-project-id', 
-      location: process.env.GCP_REGION || 'us-central1'
+function getGenAI(): GoogleGenAI {
+  if (!genAI) {
+    console.log("[GENAI] Initializing Google Gen AI Client (Vertex AI)...");
+    genAI = new GoogleGenAI({
+      vertexai: true,
+      project: process.env.GCP_PROJECT_ID || 'your-gcp-project-id',
+      location: process.env.GCP_REGION || 'us-central1',
     });
   }
-  return vertexAI;
+  return genAI;
 }
 
 function getResend() {
@@ -64,24 +64,6 @@ function sanitizeGroundingJson(jsonText: string): string {
   return cleaned;
 }
 
-let cachedIntel: any = null;
-let lastIntelUpdate: number = 0;
-const INTEL_CACHE_DURATION = 4 * 60 * 60 * 1000;
-
-const serverSidePriceCache: Record<string, { data: any, timestamp: number }> = {};
-const PRICE_CACHE_DURATION = 60 * 60 * 1000;
-
-const serverSidePeersCache: Record<string, { data: any, timestamp: number }> = {};
-const PEERS_CACHE_DURATION = 2 * 60 * 60 * 1000;
-
-const checkIfErrorIsTransient = (err: any): boolean => {
-  const errMsg = (err?.message || "").toLowerCase();
-  const statusStr = String(err?.status || err?.statusCode || "").toLowerCase();
-  return errMsg.includes("503") || errMsg.includes("429") || statusStr.includes("429") ||
-         errMsg.includes("high demand") || errMsg.includes("unavailable") || 
-         errMsg.includes("resource_exhausted") || errMsg.includes("rate") || 
-         errMsg.includes("quota") || errMsg.includes("exhausted");
-};
 
 const SERVER_INTEL_FALLBACK = {
   trending: [
@@ -97,11 +79,11 @@ async function startServer() {
   app.use(express.json());
 
   app.get("/api/health", (req, res) => {
-    res.json({ 
-      status: "running", 
+    res.json({
+      status: "running",
       time: new Date().toISOString(),
       scraperConfigured: !!process.env.FIRECRAWL_API_KEY,
-      vertexConfigured: !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
+      genaiConfigured: !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
       mailerConfigured: !!process.env.RESEND_API_KEY
     });
   });
@@ -114,7 +96,7 @@ async function startServer() {
       let finalUrl = url;
       if (!finalUrl && ticker) {
         const searchRes: any = await scraper.search(`${ticker} stock latest news corporate announcements NSE filings`, { limit: 1 });
-        finalUrl = searchRes?.web?.url || searchRes?.data?.url || searchRes?.web?.uri || searchRes?.data?.uri;
+        finalUrl = searchRes?.web?.[0]?.url || searchRes?.news?.[0]?.url;
       }
       let scrapedMarkdown = "Direct context unavailable.";
       if (finalUrl) {
@@ -128,13 +110,21 @@ async function startServer() {
   });
 
   app.get("/api/market-intel", async (req, res) => {
-    const ai = getVertexAI();
-    if (!ai) return res.json(SERVER_INTEL_FALLBACK);
+    const ai = getGenAI();
     try {
-      const model = ai.getGenerativeModel({
+      // Stage 1: Search grounding (cannot combine with JSON schema)
+      const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} } as any],
-        generationConfig: { 
+        contents: [{ role: 'user', parts: [{ text: "Identify top 5 trending Indian stocks on NSE today. For each, provide the NSE ticker symbol and a one-sentence reason for the trend." }] }],
+        config: { tools: [{ googleSearch: {} }] }
+      });
+      const rawText = searchResult.text || "";
+
+      // Stage 2: JSON structuring (no search tool)
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: `Structure this market intelligence into the required JSON format:\n\n${rawText}` }] }],
+        config: {
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",
@@ -157,11 +147,7 @@ async function startServer() {
           }
         }
       });
-      const responseResult = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: "Identify top trending Indian stocks on NSE today as JSON." }] }]
-      });
-      const rawText = responseResult.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      res.json(JSON.parse(sanitizeGroundingJson(rawText)));
+      res.json(JSON.parse(sanitizeGroundingJson(structResult.text || "")));
     } catch (error: any) {
       res.json(SERVER_INTEL_FALLBACK);
     }
@@ -169,13 +155,22 @@ async function startServer() {
 
   app.post("/api/pipeline/price", async (req, res) => {
     const { ticker } = req.body;
-    const ai = getVertexAI();
-    if (!ai || !ticker) return res.status(400).json({ error: "Invalid context setup" });
+    if (!ticker) return res.status(400).json({ error: "Invalid context setup" });
+    const ai = getGenAI();
     try {
-      const model = ai.getGenerativeModel({
+      // Stage 1: Search grounding
+      const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} } as any],
-        generationConfig: { 
+        contents: [{ role: 'user', parts: [{ text: `Find the current live NSE stock price, today's change in rupees, and percentage change for ${ticker}.` }] }],
+        config: { tools: [{ googleSearch: {} }] }
+      });
+      const rawText = searchResult.text || "";
+
+      // Stage 2: JSON structuring
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: `Extract stock price data for ${ticker} from this text and return as JSON:\n\n${rawText}` }] }],
+        config: {
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",
@@ -189,19 +184,14 @@ async function startServer() {
           }
         }
       });
-      const responseResult = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: `Find current live stock price of ${ticker} on NSE India.` }] }]
-      });
-      const rawText = responseResult.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      res.json(JSON.parse(sanitizeGroundingJson(rawText)));
+      res.json(JSON.parse(sanitizeGroundingJson(structResult.text || "")));
     } catch (error: any) {
       res.json({ ticker, price: 1500, change: 0, percentChange: 0, isFallback: true });
     }
   });
   app.post("/api/pipeline/analyze", async (req, res) => {
     const { ticker, context, mode } = req.body;
-    const ai = getVertexAI();
-    if (!ai) return res.status(500).json({ error: "Vertex AI unconfigured" });
+    const ai = getGenAI();
     
     const cleanTicker = ticker ? ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim() : "UNKNOWN";
     console.log(`[ANALYZE] Running Mode-Isolated Production Pipeline for: ${cleanTicker} | Target Mode: ${mode}`);
@@ -244,27 +234,40 @@ async function startServer() {
       }
 
       // Stage 1: Search Grounding
-      const searchModel = ai.getGenerativeModel({
-        model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} } as any]
-      });
-
       const searchPrompt = `
         ${dynamicTaskPrompt}
         Also identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.
       `;
 
-      const searchResponse = await searchModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: searchPrompt }] }]
+      const searchResponse = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: searchPrompt }] }],
+        config: { tools: [{ googleSearch: {} }] }
       });
 
-      const rawGroundedMetrics = searchResponse.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const rawGroundedMetrics = searchResponse.text || "";
       console.log(`[ANALYZE] Stage 1 finished. Starting Stage 2 formatting constraints...`);
 
       // Stage 2: JSON Structuring Panel
-      const structuredModel = ai.getGenerativeModel({
+      const formattingPrompt = `
+        Using the grounded data corpus block provided below, perform these formatting tasks:
+        1. Populate the exact requested data into the "report" parameter styled in standard Markdown formatting. Ensure it is completely full, highly comprehensive, and never cut off or summarized mid-sentence.
+        2. Extract individual target vs peer average numeric values for "PE Ratio", "ROCE %", "Operating Margin %", and "Debt to Equity".
+
+        Grounded Data Corpus:
+        ---
+        ${rawGroundedMetrics}
+        ---
+        Scraper Context:
+        ---
+        ${context || "No context extracted."}
+        ---
+      `;
+
+      const structuredResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        generationConfig: { 
+        contents: [{ role: 'user', parts: [{ text: formattingPrompt }] }],
+        config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
           responseSchema: {
@@ -290,26 +293,7 @@ async function startServer() {
         }
       });
 
-      const formattingPrompt = `
-        Using the grounded data corpus block provided below, perform these formatting tasks:
-        1. Populate the exact requested data into the "report" parameter styled in standard Markdown formatting. Ensure it is completely full, highly comprehensive, and never cut off or summarized mid-sentence.
-        2. Extract individual target vs peer average numeric values for "PE Ratio", "ROCE %", "Operating Margin %", and "Debt to Equity".
-        
-        Grounded Data Corpus:
-        ---
-        ${rawGroundedMetrics}
-        ---
-        Scraper Context:
-        ---
-        ${context || "No context extracted."}
-        ---
-      `;
-
-      const structuredResponse = await structuredModel.generateContent({
-        contents: [{ role: 'user', parts: [{ text: formattingPrompt }] }]
-      });
-
-      const rawJsonText = structuredResponse.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      const rawJsonText = structuredResponse.text || "";
       const cleanedJson = sanitizeGroundingJson(rawJsonText);
       const parsedPayload = JSON.parse(cleanedJson);
 
@@ -349,15 +333,30 @@ async function startServer() {
   });
   app.post("/api/pipeline/peers", async (req, res) => {
     const { ticker } = req.body;
-    const ai = getVertexAI();
-    if (!ai || !ticker) return res.status(500).json({ error: "Setup missing" });
+    if (!ticker) return res.status(500).json({ error: "Setup missing" });
+    const ai = getGenAI();
     const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
     try {
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-      const model = ai.getGenerativeModel({
+
+      // Stage 1: Search grounding
+      const strictPrompt = `
+        STEP 1: Find the EXACT "Sector" and "Industry" classification for the Indian stock ticker "${cleanTicker}" on Screener.in or Moneycontrol.
+        STEP 2: Identify 3 other prominent Indian listed companies in the EXACT SAME industry bucket. DO NOT include RELIANCE, TCS, or HDFCBANK unless the target stock belongs to their sector.
+        STEP 3: Find P/E ratio, ROCE %, Debt-to-Equity, and Market Cap in INR Crores for all 4 companies as of ${todayStr}. Mark ${cleanTicker} as the target stock.
+      `;
+      const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} } as any],
-        generationConfig: { 
+        contents: [{ role: 'user', parts: [{ text: strictPrompt }] }],
+        config: { tools: [{ googleSearch: {} }] }
+      });
+      const rawText = searchResult.text || "";
+
+      // Stage 2: JSON structuring
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: `Structure the following peer comparison data for ${cleanTicker} into JSON:\n\n${rawText}` }] }],
+        config: {
           responseMimeType: "application/json",
           responseSchema: {
             type: "OBJECT",
@@ -383,16 +382,8 @@ async function startServer() {
           }
         }
       });
-      const strictPrompt = `
-        STEP 1: Use Google Search grounding to find the EXACT "Sector" and "Industry" classification for the Indian stock ticker "${cleanTicker}" on Screener.in or Moneycontrol.
-        STEP 2: Identify 3 other prominent Indian listed companies that belong to that EXACT SAME industry bucket. DO NOT include generic large-cap stocks like RELIANCE, TCS, or HDFCBANK unless the target stock natively belongs to their sector.
-        STEP 3: Extract the latest financial metrics (P/E ratio, ROCE %, Debt-to-Equity, and Market Capitalization in INR Crores) for all 4 companies as of May 2026. Mark isTarget true only for ${cleanTicker}.
-      `;
-      const responseResult = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: strictPrompt }] }]
-      });
-      const rawText = responseResult.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const cleanedJson = sanitizeGroundingJson(rawText);
+      const rawJsonText = structResult.text || "";
+      const cleanedJson = sanitizeGroundingJson(rawJsonText);
       const parsedData = JSON.parse(cleanedJson);
       if (parsedData && Array.isArray(parsedData.peers)) {
         parsedData.peers = parsedData.peers.map((p: any) => {
@@ -437,18 +428,15 @@ async function startServer() {
 
   app.post("/api/portfolio/analyze", async (req, res) => {
     const { holdings } = req.body;
-    const ai = getVertexAI();
-    if (!ai || !holdings) return res.status(500).json({ error: "Audit infrastructure missing" });
+    if (!holdings) return res.status(500).json({ error: "Audit infrastructure missing" });
+    const ai = getGenAI();
     try {
-      const model = ai.getGenerativeModel({
+      const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        tools: [{ googleSearch: {} } as any]
+        contents: [{ role: 'user', parts: [{ text: `Audit portfolio structure: ${JSON.stringify(holdings)}` }] }],
+        config: { tools: [{ googleSearch: {} }] }
       });
-      const responseResult = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: `Audit portfolio structure: ${JSON.stringify(holdings)}` }] }]
-      });
-      const audit = responseResult.response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      res.json({ audit });
+      res.json({ audit: response.text || "" });
     } catch (error: any) {
       res.status(500).json({ error: "Audit failed" });
     }
