@@ -73,19 +73,25 @@ function isFinancialContent(text: string): boolean {
   return FINANCIAL_KW.filter(kw => lower.includes(kw)).length >= 3;
 }
 
-// FIX 4: Normalise special characters in ticker for web search queries only.
-// & → "and", - → " ". The original ticker is always preserved in prompts and the UI.
+// Normalise special characters in ticker for web search queries only.
+// & → "and", - → space, . → space. The original ticker is always preserved in prompts and the UI.
 function searchQueryTicker(ticker: string): string {
-  return ticker.replace(/&/g, 'and').replace(/-/g, ' ').trim();
+  return ticker.replace(/&/g, 'and').replace(/-/g, ' ').replace(/\./g, ' ').trim();
 }
 
-// NSE website navigation phrases that indicate wrong content was scraped
+// NSE website navigation phrases that indicate wrong content was scraped or generated
 const NSE_NAV_PHRASES = [
   'Website Navigation', 'NSE India website offers', 'navigation options including',
   'Option Chain', 'Market Turnover'
 ];
 
-// Problem 6 + FIX 3: Navigation menu detection in scraped context or generated report
+// Additional phrases that indicate a report contains generic NSE/navigation content rather than company data
+const REPORT_NAV_PHRASES = [
+  'Website Navigation', 'NSE India website offers',
+  'overview of the NSE India website', 'navigation options'
+];
+
+// Universal navigation/menu detection for scraped content and generated reports
 function looksLikeNavMenu(text: string): boolean {
   const first500 = text.substring(0, 500);
   // Single-word line heuristic (classic nav menu pattern)
@@ -96,7 +102,14 @@ function looksLikeNavMenu(text: string): boolean {
   if (singleWordLines.length >= 5) return true;
   // Specific NSE website phrases (first 300 chars is sufficient signal)
   const first300 = text.substring(0, 300);
-  return NSE_NAV_PHRASES.some(p => first300.includes(p));
+  if (NSE_NAV_PHRASES.some(p => first300.includes(p))) return true;
+  // "Derivatives" as a standalone bullet or line in first 300 chars
+  const lines300 = first300.split('\n');
+  if (lines300.some(l => {
+    const t = l.trim();
+    return t === 'Derivatives' || /^[-*•]\s*Derivatives\s*$/.test(t);
+  })) return true;
+  return false;
 }
 
 // Problem 3: Universal confidence scoring based on report length
@@ -167,12 +180,19 @@ async function startServer() {
     try {
       let finalUrl = url;
       if (!finalUrl && ticker) {
-        // FIX 4: normalise special characters in the search query ticker for all modes
+        // Normalise special characters in the search query ticker for all modes
         const sqTicker = searchQueryTicker(ticker);
-        // FIX 1: earnings mode uses a targeted concall/transcript search query
-        const searchQuery = (mode === 'earnings')
-          ? `${sqTicker} earnings call transcript concall Q4 Q3 quarterly results management commentary India`
-          : `${sqTicker} stock latest news corporate announcements NSE filings`;
+        // Mode-specific search queries to target the right content for every report type
+        let searchQuery: string;
+        if (mode === 'earnings') {
+          searchQuery = `${sqTicker} India concall transcript quarterly earnings results management commentary analyst questions`;
+        } else if (mode === 'move') {
+          searchQuery = `${sqTicker} India stock price movement today news catalyst reason`;
+        } else if (mode === 'filings' || mode === 'research') {
+          searchQuery = `${sqTicker} India SEBI filing corporate announcement investor presentation annual report`;
+        } else {
+          searchQuery = `${sqTicker} India stock fundamental analysis quarterly results annual report revenue profit`;
+        }
         const searchRes: any = await scraper.search(searchQuery, { limit: 1 });
         finalUrl = searchRes?.web?.[0]?.url || searchRes?.news?.[0]?.url;
       }
@@ -181,8 +201,12 @@ async function startServer() {
       if (finalUrl) {
         const scrapeResult = await scraper.scrape(finalUrl, { formats: ['markdown'], onlyMainContent: true });
         const rawContent = scrapeResult?.markdown || (typeof scrapeResult === 'string' ? scrapeResult : "");
-        // Problem 1: only use scraped content if it contains genuine financial data
-        scrapedMarkdown = isFinancialContent(rawContent) ? rawContent : SCRAPE_FALLBACK;
+        // Reject navigation/NSE menu content universally for all tickers and all modes
+        if (looksLikeNavMenu(rawContent)) {
+          console.log(`[SCRAPER] Rejected scraped content for ${ticker} (${mode}) — NSE navigation/menu detected`);
+        } else if (isFinancialContent(rawContent)) {
+          scrapedMarkdown = rawContent;
+        }
       }
       res.json({ scrapedMarkdown, ticker, sourceUrl: finalUrl });
     } catch (error: any) {
@@ -395,12 +419,15 @@ async function startServer() {
         modelReportDescription = "Comprehensive institutional equity deep-dive report with bull/bear cases styled in Markdown.";
       }
 
+      // Universal instruction appended to every Gemini prompt to prevent generic NSE/nav content
+      const universalFocusInstruction = `\n\nFocus exclusively on company specific financial data for ${cleanTicker} listed on NSE India. Do not summarise generic market data, NSE website information, or navigation content. Search for this specific company's financial results, management commentary and business performance only.`;
+
       // Stage 1: Search Grounding
       // Filings mode is a focused SEBI audit — adding competitor analysis confuses Gemini
       // and produces a short/incomplete response. Keep filings grounding focused.
       const searchPrompt = (mode === 'filings' || mode === 'research')
-        ? `${dynamicTaskPrompt}\n\nProcessing Date is ${todayStr}.`
-        : `${dynamicTaskPrompt}\n        Also identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
+        ? `${dynamicTaskPrompt}${universalFocusInstruction}\n\nProcessing Date is ${todayStr}.`
+        : `${dynamicTaskPrompt}${universalFocusInstruction}\n        Also identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
 
       const searchResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -482,11 +509,11 @@ async function startServer() {
         });
       }
 
-      // FIX 3: If earnings report contains NSE navigation content, regenerate without context
+      // Universal: if any report in any mode contains NSE navigation content, regenerate without context
       let reportText = parsedPayload.report || "Analysis report data empty.";
-      if (mode === 'earnings' && NSE_NAV_PHRASES.some(p => reportText.substring(0, 300).includes(p))) {
-        console.log(`[ANALYZE] Earnings report contains navigation content — regenerating without scraped context`);
-        const retryPrompt = `${dynamicTaskPrompt}\n\nGrounded Data (use this only — ignore any scraped web navigation):\n---\n${rawGroundedMetrics}\n---`;
+      if (REPORT_NAV_PHRASES.some(p => reportText.includes(p))) {
+        console.log(`[ANALYZE] ${mode} report for ${cleanTicker} contains navigation content — regenerating without scraped context`);
+        const retryPrompt = `${dynamicTaskPrompt}${universalFocusInstruction}\n\nGrounded Data (use this only — ignore any scraped web navigation):\n---\n${rawGroundedMetrics}\n---`;
         const retryRes = await ai.models.generateContent({
           model: "gemini-2.5-flash",
           contents: [{ role: 'user', parts: [{ text: retryPrompt }] }],
@@ -643,11 +670,14 @@ async function startServer() {
         `;
       }
 
+      // Universal instruction appended to every Gemini prompt to prevent generic NSE/nav content
+      const streamFocusInstruction = `\n\nFocus exclusively on company specific financial data for ${cleanTicker} listed on NSE India. Do not summarise generic market data, NSE website information, or navigation content. Search for this specific company's financial results, management commentary and business performance only.`;
+
       // Stage 1: Search grounding (non-streaming — grounding requires a complete round-trip)
       send({ type: 'stage', message: 'Grounding with live NSE/SEBI data...' });
       const streamSearchText = (mode === 'filings' || mode === 'research')
-        ? `${dynamicTaskPrompt}\n\nProcessing Date is ${todayStr}.`
-        : `${dynamicTaskPrompt}\n\nAlso identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
+        ? `${dynamicTaskPrompt}${streamFocusInstruction}\n\nProcessing Date is ${todayStr}.`
+        : `${dynamicTaskPrompt}${streamFocusInstruction}\n\nAlso identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
       const searchResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: streamSearchText }] }],
@@ -656,14 +686,14 @@ async function startServer() {
       const rawGroundedMetrics = searchResponse.text || "";
       console.log(`[ANALYZE/STREAM] Stage 1 grounding: ${rawGroundedMetrics.length} chars`);
 
-      // Problem 6: discard context if it looks like a navigation menu
+      // Universal: discard context if it looks like a navigation menu
       const streamSafeContext = (context && looksLikeNavMenu(context)) ? "" : (context || "");
 
       // Stage 2: Stream report as plain Markdown
       send({ type: 'stage', message: 'Streaming research report...' });
       const reportStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Using the grounded data corpus below, write the complete Markdown report.\n\n${dynamicTaskPrompt}\n\nDo NOT truncate any section. Every section must be fully written with specific data points.\n\nGrounded Data:\n---\n${rawGroundedMetrics}\n---\nScraper Context:\n---\n${streamSafeContext || "No context extracted."}\n---` }] }],
+        contents: [{ role: 'user', parts: [{ text: `Using the grounded data corpus below, write the complete Markdown report.\n\n${dynamicTaskPrompt}${streamFocusInstruction}\n\nDo NOT truncate any section. Every section must be fully written with specific data points.\n\nGrounded Data:\n---\n${rawGroundedMetrics}\n---\nScraper Context:\n---\n${streamSafeContext || "No context extracted."}\n---` }] }],
         config: { maxOutputTokens: 8192 }
       });
 
