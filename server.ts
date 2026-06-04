@@ -112,6 +112,66 @@ function looksLikeNavMenu(text: string): boolean {
   return false;
 }
 
+// Hard-rejection patterns for scraped content — any match means discard
+const SCRAPE_REJECT_PATTERNS = [
+  'export to excel', 'notebook ai', 'summary chart analysis peers',
+  'website navigation', 'nse india website offers', 'navigation options including',
+];
+
+// Returns true only if the scraped text is genuine company-specific financial content
+function isScrapedContentUsable(text: string): boolean {
+  if (!text || text.length < 100) return false;
+  const lower = text.toLowerCase();
+  if (SCRAPE_REJECT_PATTERNS.some(p => lower.includes(p))) return false;
+
+  const first500 = text.substring(0, 500);
+  // "Follow" as a standalone word (Screener.in follow button) or exchange label lines
+  if (/\bFollow\b/.test(first500)) return false;
+  if (/(?:BSE|NSE):\n/.test(first500)) return false;
+
+  if (looksLikeNavMenu(text)) return false;
+
+  // Reject if >30% of non-empty lines in the first 1000 chars have fewer than 3 words
+  const first1000Lines = text.substring(0, 1000).split('\n').filter(l => l.trim().length > 0);
+  if (first1000Lines.length > 0) {
+    const shortLines = first1000Lines.filter(l => l.trim().split(/\s+/).length < 3);
+    if (shortLines.length / first1000Lines.length > 0.3) return false;
+  }
+
+  return isFinancialContent(text);
+}
+
+// Validate a generated report for quality — returns reason so caller can decide retry strategy
+function isReportValid(text: string): { valid: boolean; reason?: string } {
+  if (!text || text.length < 800) return { valid: false, reason: 'too_short' };
+  const failPhrases = ['Export to Excel', 'Notebook AI', 'Summary Chart', 'Website Navigation'];
+  if (failPhrases.some(p => text.includes(p))) return { valid: false, reason: 'nav_content' };
+  if (REPORT_NAV_PHRASES.some(p => text.includes(p))) return { valid: false, reason: 'nav_content' };
+  // More than 5 lines with fewer than 3 words in the first 500 chars → nav-like output
+  const first500Lines = text.substring(0, 500).split('\n').filter(l => l.trim().length > 0);
+  const tinyLines = first500Lines.filter(l => l.trim().split(/\s+/).length < 3);
+  if (tinyLines.length > 5) return { valid: false, reason: 'nav_content' };
+  return { valid: true };
+}
+
+// Mandatory preamble injected into every Gemini analysis prompt for all modes
+function buildAnalystPreamble(ticker: string): string {
+  return `You are an institutional equity research analyst. Generate a complete original investment research report for ${ticker} listed on NSE India.
+
+STRICT RULES:
+1. Write entirely in your own analytical voice — do not copy or reformat any scraped content
+2. Do not reproduce website navigation text, menu items, or raw data tables
+3. Do not summarise what a website says — analyse the company itself
+4. Use the context provided only to extract specific data points like revenue figures or management quotes
+5. If the context contains website navigation or non-financial content, ignore it completely and rely on your own knowledge and search grounding
+6. Your report must contain original analysis, investment thesis, risks and opportunities
+
+`;
+}
+
+// Warning prepended to scraped context block in every Stage 2 prompt
+const SCRAPED_CONTEXT_WARNING = `IMPORTANT INSTRUCTION: The text below is raw scraped data from financial websites. Do NOT summarise, reproduce, or reformat this raw data. Use it only as background reference to extract specific data points (revenue numbers, management quotes). Your response must be entirely your own original analytical writing.\n\n`;
+
 // Problem 3: Universal confidence scoring based on report length
 function assessConfidence(reportText: string): 'high' | 'medium' | 'low' {
   const len = (reportText || "").length;
@@ -201,11 +261,11 @@ async function startServer() {
       if (finalUrl) {
         const scrapeResult = await scraper.scrape(finalUrl, { formats: ['markdown'], onlyMainContent: true });
         const rawContent = scrapeResult?.markdown || (typeof scrapeResult === 'string' ? scrapeResult : "");
-        // Reject navigation/NSE menu content universally for all tickers and all modes
-        if (looksLikeNavMenu(rawContent)) {
-          console.log(`[SCRAPER] Rejected scraped content for ${ticker} (${mode}) — NSE navigation/menu detected`);
-        } else if (isFinancialContent(rawContent)) {
+        if (isScrapedContentUsable(rawContent)) {
           scrapedMarkdown = rawContent;
+          console.log(`[SCRAPER] Accepted ${rawContent.length} chars for ${ticker} (${mode})`);
+        } else {
+          console.log(`[SCRAPER] Rejected scraped content for ${ticker} (${mode}) — nav/non-financial content detected`);
         }
       }
       res.json({ scrapedMarkdown, ticker, sourceUrl: finalUrl });
@@ -263,11 +323,14 @@ async function startServer() {
     const { ticker } = req.body;
     if (!ticker) return res.status(400).json({ error: "Invalid context setup" });
     const ai = getGenAI();
+    // Use cleaned ticker in search so special chars (& - .) don't break the query
+    const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+    const sqTicker = searchQueryTicker(cleanTicker);
     try {
-      // Stage 1: Search grounding
+      // Stage 1: Search grounding — use both original and cleaned ticker for best match
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Find the current live NSE stock price, today's change in rupees, and percentage change for ${ticker}.` }] }],
+        contents: [{ role: 'user', parts: [{ text: `Find the current live NSE/BSE stock price, today's change in rupees, and percentage change for ${cleanTicker} (search as "${sqTicker}" India stock NSE). Provide only the numeric price values, do not describe the website.` }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
       });
       const rawText = searchResult.text || "";
@@ -275,7 +338,7 @@ async function startServer() {
       // Stage 2: JSON structuring
       const structResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Extract stock price data for ${ticker} from this text and return as JSON:\n\n${rawText}` }] }],
+        contents: [{ role: 'user', parts: [{ text: `Extract stock price data for ${cleanTicker} from this text and return as JSON. If price is not found or is zero, set price to null:\n\n${rawText}` }] }],
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
@@ -291,9 +354,14 @@ async function startServer() {
           }
         }
       });
-      res.json(JSON.parse(sanitizeGroundingJson(structResult.text || "")));
+      const priceData = JSON.parse(sanitizeGroundingJson(structResult.text || ""));
+      // If price came back as 0 treat it as unavailable
+      if (!priceData.price || priceData.price === 0) {
+        return res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, unavailable: true });
+      }
+      res.json(priceData);
     } catch (error: any) {
-      res.json({ ticker, price: null, change: null, percentChange: null, unavailable: true });
+      res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, unavailable: true });
     }
   });
   app.post("/api/pipeline/analyze", async (req, res) => {
@@ -320,12 +388,14 @@ async function startServer() {
       // cleanTicker is still used in Stage 2 formatting and in the final report display.
       const searchTicker = searchQueryTicker(cleanTicker);
 
-      let dynamicTaskPrompt = "";
+      // Prepend analyst preamble to every mode's prompt — enforces original analytical writing
+      const preamble = buildAnalystPreamble(cleanTicker);
+
+      let modePromptBody = "";
       let modelReportDescription = "";
 
       if (mode === 'research' || mode === 'filings') {
-        dynamicTaskPrompt = `
-          Perform an EXHAUSTIVE, UNTRUNCATED AUDIT AND COMPLIANCE DISCLOSURE REPORT for the Indian stock ticker "${cleanTicker}" (search as "${searchTicker}") based on official SEBI filings and NSE announcements.
+        modePromptBody = `Perform an EXHAUSTIVE, UNTRUNCATED AUDIT AND COMPLIANCE DISCLOSURE REPORT for the Indian stock ticker "${cleanTicker}" (search as "${searchTicker}") based on official SEBI filings and NSE announcements.
           Structure your response into these exact Markdown sections with extensive technical detail:
           # 📑 Corporate Governance & Audit Disclosures: ${cleanTicker}
           ## 1. SEBI CORPORATE FILINGS ACCOUNTABILITY
@@ -343,12 +413,10 @@ async function startServer() {
           Transcript Transparency: X
           Disclosure Completeness: X
           Guideline Conservatism: X
-          Governance Cleanliness: X
-        `;
+          Governance Cleanliness: X`;
         modelReportDescription = "Exhaustive SEBI compliance audit and corporate disclosure report styled in Markdown.";
       } else if (mode === 'move') {
-        dynamicTaskPrompt = `
-          Analyze immediate momentum, volume anomalies, structural price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker} (search as "${searchTicker}" on NSE India).
+        modePromptBody = `Analyze immediate momentum, volume anomalies, structural price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker} (search as "${searchTicker}" on NSE India).
           Provide an institutional write-up structured in Markdown explaining technical breakouts, underlying buy/sell flows, and short-term directional expectations.
 
           MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
@@ -356,13 +424,10 @@ async function startServer() {
           Growth Momentum: [score 1-10 based on price and volume momentum strength]
           Quality & Moat: [score 1-10 based on business quality and competitive position]
           Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
-          Governance Alpha: [score 1-10 based on management credibility and capital allocation]
-        `;
+          Governance Alpha: [score 1-10 based on management credibility and capital allocation]`;
         modelReportDescription = "Price action momentum breakdown report styled in clean Markdown formatting.";
       } else if (mode === 'earnings') {
-        // FIX 2: Enhanced earnings prompt that directs Gemini to concall/transcript data
-        dynamicTaskPrompt = `
-          You are analysing the earnings call transcript and quarterly results for ${cleanTicker} (search as "${searchTicker}") — a company listed on NSE India. Search specifically for their most recent concall transcript, management commentary, quarterly revenue, profit, EBITDA, guidance and analyst questions. Focus entirely on this specific company's earnings data. Do not summarise generic market data or NSE website information.
+        modePromptBody = `Analyse the most recent earnings call transcript and quarterly results for ${cleanTicker} (search as "${searchTicker}") — listed on NSE India. Search specifically for their concall transcript, management commentary, quarterly revenue, profit, EBITDA, guidance and analyst questions. Focus entirely on this specific company's earnings data.
 
           Act as an Earnings Doctor. Structure your report in clean Markdown:
 
@@ -386,12 +451,10 @@ async function startServer() {
           Growth Momentum: [score 1-10 based on revenue and earnings growth trajectory]
           Quality & Moat: [score 1-10 based on margin quality and competitive durability]
           Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
-          Governance Alpha: [score 1-10 based on management execution and guidance reliability]
-        `;
+          Governance Alpha: [score 1-10 based on management execution and guidance reliability]`;
         modelReportDescription = "Earnings call transcript analysis and quarterly results diagnosis styled in clean Markdown.";
       } else {
-        dynamicTaskPrompt = `
-          You are an institutional equity research analyst. Generate a comprehensive deep-dive report for the Indian stock "${cleanTicker}" listed on NSE/BSE.
+        modePromptBody = `Generate a comprehensive deep-dive investment research report for the Indian stock "${cleanTicker}" (search as "${searchTicker}") listed on NSE/BSE.
           Structure the report in clean Markdown with these exact section headers:
 
           ## THE BULL CASE
@@ -414,20 +477,18 @@ async function startServer() {
           Growth Momentum: [score 1-10 based on revenue and earnings growth trajectory]
           Quality & Moat: [score 1-10 based on competitive advantage and business quality]
           Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
-          Governance Alpha: [score 1-10 based on management quality and capital allocation]
-        `;
+          Governance Alpha: [score 1-10 based on management quality and capital allocation]`;
         modelReportDescription = "Comprehensive institutional equity deep-dive report with bull/bear cases styled in Markdown.";
       }
 
-      // Universal instruction appended to every Gemini prompt to prevent generic NSE/nav content
+      const dynamicTaskPrompt = preamble + modePromptBody;
+
       const universalFocusInstruction = `\n\nFocus exclusively on company specific financial data for ${cleanTicker} listed on NSE India. Do not summarise generic market data, NSE website information, or navigation content. Search for this specific company's financial results, management commentary and business performance only.`;
 
-      // Stage 1: Search Grounding
-      // Filings mode is a focused SEBI audit — adding competitor analysis confuses Gemini
-      // and produces a short/incomplete response. Keep filings grounding focused.
+      // Stage 1: Search Grounding — builds the raw grounded data corpus
       const searchPrompt = (mode === 'filings' || mode === 'research')
         ? `${dynamicTaskPrompt}${universalFocusInstruction}\n\nProcessing Date is ${todayStr}.`
-        : `${dynamicTaskPrompt}${universalFocusInstruction}\n        Also identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
+        : `${dynamicTaskPrompt}${universalFocusInstruction}\n\nAlso identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
 
       const searchResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -436,71 +497,68 @@ async function startServer() {
       });
 
       const rawGroundedMetrics = searchResponse.text || "";
-      console.log(`[ANALYZE] Stage 1 finished. Starting Stage 2 formatting constraints...`);
       console.log(`[ANALYZE] Stage 1 grounding: ${rawGroundedMetrics.length} chars`);
 
-      // Problem 6: discard context if it looks like a navigation menu
-      const safeContext = (context && looksLikeNavMenu(context)) ? "" : (context || "");
+      // Filter scraped context — reject nav/non-financial content universally
+      const safeContext = isScrapedContentUsable(context || "") ? context : "";
+      const contextBlock = safeContext
+        ? `${SCRAPED_CONTEXT_WARNING}${safeContext}`
+        : "No usable scraped context — rely on grounded data above only.";
 
-      // Stage 2: JSON Structuring Panel
+      // Reusable schema for JSON structured response
+      const reportSchema = {
+        type: "OBJECT",
+        properties: {
+          report: { type: "STRING", description: modelReportDescription },
+          benchmarking: {
+            type: "ARRAY",
+            description: "Sector peer benchmark numeric data for front-end charts.",
+            items: {
+              type: "OBJECT",
+              properties: {
+                metric: { type: "STRING", description: "Financial KPI Name (PE Ratio, ROCE %, Operating Margin %, Debt to Equity)" },
+                targetValue: { type: "NUMBER" },
+                industryAverage: { type: "NUMBER" }
+              },
+              required: ["metric", "targetValue", "industryAverage"]
+            }
+          }
+        },
+        required: ["report", "benchmarking"]
+      };
+
+      // Stage 2: JSON Structuring — enforces original analytical writing, not scraped content summary
       const isFilingsMode = mode === 'filings' || mode === 'research';
       const formattingPrompt = isFilingsMode
-        ? `Using the grounded data corpus below, write the complete Markdown report. Ensure it is fully written, comprehensive, and includes the mandatory scorecard lines at the end.\n\nGrounded Data Corpus:\n---\n${rawGroundedMetrics}\n---\nScraper Context:\n---\n${safeContext || "No context extracted."}\n---`
-        : `Using the grounded data corpus block provided below, perform these formatting tasks:
-        1. Populate the exact requested data into the "report" parameter styled in standard Markdown formatting. Ensure it is completely full, highly comprehensive, and never cut off or summarized mid-sentence.
-        2. Extract individual target vs peer average numeric values for "PE Ratio", "ROCE %", "Operating Margin %", and "Debt to Equity".
+        ? `${dynamicTaskPrompt}\n\nUsing the grounded data below, write the complete Markdown report. Every section must be fully written with original analysis.\n\nGrounded Data Corpus:\n---\n${rawGroundedMetrics}\n---\nBackground Context (reference only — do not reproduce):\n---\n${contextBlock}\n---`
+        : `${dynamicTaskPrompt}\n\nUsing the grounded data below:
+        1. Write the complete original research report in the "report" field — comprehensive, analytical, never cut off.
+        2. Extract PE Ratio, ROCE %, Operating Margin %, Debt to Equity for ${cleanTicker} vs peer average in "benchmarking".
 
         Grounded Data Corpus:
         ---
         ${rawGroundedMetrics}
         ---
-        Scraper Context:
+        Background Context (reference only — do not reproduce):
         ---
-        ${safeContext || "No context extracted."}
-        ---
-      `;
+        ${contextBlock}
+        ---`;
 
       const structuredResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: formattingPrompt }] }],
-        config: {
-          responseMimeType: "application/json",
-          maxOutputTokens: 65536,
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              report: { type: "STRING", description: modelReportDescription },
-              benchmarking: {
-                type: "ARRAY",
-                description: "Clean numerical matrix dataset representing sector peer benchmarks used to populate front-end analytics graphs.",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    metric: { type: "STRING", description: "Financial KPI Name (PE Ratio, ROCE %, Operating Margin %, Debt to Equity)" },
-                    targetValue: { type: "NUMBER" },
-                    industryAverage: { type: "NUMBER" }
-                  },
-                  required: ["metric", "targetValue", "industryAverage"]
-                }
-              }
-            },
-            required: ["report", "benchmarking"]
-          }
-        }
+        config: { responseMimeType: "application/json", maxOutputTokens: 65536, responseSchema: reportSchema }
       });
 
-      const rawJsonText = structuredResponse.text || "";
       const finishReason = structuredResponse.candidates?.[0]?.finishReason;
-      console.log(`[ANALYZE] Stage 1 grounding: ${rawGroundedMetrics.length} chars`);
-      console.log(`[ANALYZE] Stage 2 response: ${rawJsonText.length} chars | finishReason: ${finishReason}`);
-      const cleanedJson = sanitizeGroundingJson(rawJsonText);
-      const parsedPayload = JSON.parse(cleanedJson);
+      console.log(`[ANALYZE] Stage 2 response: ${(structuredResponse.text || "").length} chars | finishReason: ${finishReason}`);
+      const parsedPayload = JSON.parse(sanitizeGroundingJson(structuredResponse.text || ""));
 
-      // Enforce numeric data mapping to graphs natively
+      // Normalise benchmarking numbers
       if (parsedPayload && Array.isArray(parsedPayload.benchmarking)) {
         parsedPayload.benchmarking = parsedPayload.benchmarking.map((b: any) => {
-          let targetVal = typeof b.targetValue === 'string' ? parseFloat(b.targetValue.replace(/[^\d.-]/g, '')) : b.targetValue;
-          let industryAvg = typeof b.industryAverage === 'string' ? parseFloat(b.industryAverage.replace(/[^\d.-]/g, '')) : b.industryAverage;
+          const targetVal = typeof b.targetValue === 'string' ? parseFloat(b.targetValue.replace(/[^\d.-]/g, '')) : b.targetValue;
+          const industryAvg = typeof b.industryAverage === 'string' ? parseFloat(b.industryAverage.replace(/[^\d.-]/g, '')) : b.industryAverage;
           return {
             metric: String(b.metric || "Metric"),
             targetValue: isNaN(targetVal) || targetVal === null ? 0 : Number(targetVal),
@@ -509,28 +567,19 @@ async function startServer() {
         });
       }
 
-      // Universal: if any report in any mode contains NSE navigation content, regenerate without context
-      let reportText = parsedPayload.report || "Analysis report data empty.";
-      if (REPORT_NAV_PHRASES.some(p => reportText.includes(p))) {
-        console.log(`[ANALYZE] ${mode} report for ${cleanTicker} contains navigation content — regenerating without scraped context`);
-        const retryPrompt = `${dynamicTaskPrompt}${universalFocusInstruction}\n\nGrounded Data (use this only — ignore any scraped web navigation):\n---\n${rawGroundedMetrics}\n---`;
-        const retryRes = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [{ role: 'user', parts: [{ text: retryPrompt }] }],
-          config: {
-            responseMimeType: "application/json",
-            maxOutputTokens: 65536,
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                report: { type: "STRING", description: modelReportDescription },
-                benchmarking: { type: "ARRAY", items: { type: "OBJECT", properties: { metric: { type: "STRING" }, targetValue: { type: "NUMBER" }, industryAverage: { type: "NUMBER" } }, required: ["metric","targetValue","industryAverage"] } }
-              },
-              required: ["report", "benchmarking"]
-            }
-          }
-        });
+      let reportText = parsedPayload.report || "";
+      let validation = isReportValid(reportText);
+
+      // Attempt 1: report failed — regenerate with empty context (no scraped noise)
+      if (!validation.valid) {
+        console.log(`[ANALYZE] Report validation failed (${validation.reason}) — Attempt 1: regenerating without scraped context`);
+        const retryPrompt = `${dynamicTaskPrompt}${universalFocusInstruction}\n\nGrounded Data only (no scraped context):\n---\n${rawGroundedMetrics}\n---`;
         try {
+          const retryRes = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: 'user', parts: [{ text: retryPrompt }] }],
+            config: { responseMimeType: "application/json", maxOutputTokens: 65536, responseSchema: reportSchema }
+          });
           const retryPayload = JSON.parse(sanitizeGroundingJson(retryRes.text || ""));
           if (retryPayload.report) {
             reportText = retryPayload.report;
@@ -538,10 +587,41 @@ async function startServer() {
               parsedPayload.benchmarking = retryPayload.benchmarking;
             }
           }
-        } catch { /* keep original if retry JSON fails */ }
+        } catch { /* keep previous text if JSON parse fails */ }
+        validation = isReportValid(reportText);
       }
 
-      // Problem 3: confidence based on generated report length
+      // Attempt 2: pure Gemini search grounding, zero scraped context
+      if (!validation.valid) {
+        console.log(`[ANALYZE] Report still invalid (${validation.reason}) — Attempt 2: pure Gemini grounding fallback`);
+        const fallbackGroundingPrompt = `Generate a comprehensive institutional equity research report for ${cleanTicker} listed on NSE India. Include: company overview, recent financial performance, quarterly results analysis, management quality assessment, bull case, bear case, key risks, valuation and investment recommendation. Use your search grounding to find the most current data available. Processing Date: ${todayStr}.`;
+        try {
+          const fallbackSearch = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: 'user', parts: [{ text: fallbackGroundingPrompt }] }],
+            config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
+          });
+          const fallbackGrounded = fallbackSearch.text || "";
+          const fallbackStructPrompt = `${dynamicTaskPrompt}\n\nGrounded Data:\n---\n${fallbackGrounded}\n---\nWrite the complete original research report using only this grounded data.`;
+          const fallbackStructRes = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: 'user', parts: [{ text: fallbackStructPrompt }] }],
+            config: { responseMimeType: "application/json", maxOutputTokens: 65536, responseSchema: reportSchema }
+          });
+          const fallbackPayload = JSON.parse(sanitizeGroundingJson(fallbackStructRes.text || ""));
+          if (fallbackPayload.report && fallbackPayload.report.length > 200) {
+            reportText = fallbackPayload.report;
+            if (Array.isArray(fallbackPayload.benchmarking) && fallbackPayload.benchmarking.length) {
+              parsedPayload.benchmarking = fallbackPayload.benchmarking;
+            }
+          }
+        } catch { /* keep whatever we have */ }
+      }
+
+      if (!reportText || reportText.length < 100) {
+        reportText = `# Analysis Unavailable: ${cleanTicker}\n\nThe research pipeline was unable to generate a valid report for this ticker. Please retry — live grounding requires an active connection.`;
+      }
+
       const confidence = assessConfidence(reportText);
       console.log(`[ANALYZE] Analysis complete! report=${reportText.length} chars, confidence=${confidence}`);
       return res.json({
@@ -588,96 +668,74 @@ async function startServer() {
     try {
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-      let dynamicTaskPrompt = "";
+      const streamSearchTicker = searchQueryTicker(cleanTicker);
+      const streamPreamble = buildAnalystPreamble(cleanTicker);
+
+      let streamModeBody = "";
       if (mode === 'research' || mode === 'filings') {
-        dynamicTaskPrompt = `
-          Perform an EXHAUSTIVE, UNTRUNCATED AUDIT AND COMPLIANCE DISCLOSURE REPORT for the Indian stock ticker "${cleanTicker}" based on official SEBI filings and NSE announcements.
+        streamModeBody = `Perform an EXHAUSTIVE, UNTRUNCATED AUDIT AND COMPLIANCE DISCLOSURE REPORT for the Indian stock ticker "${cleanTicker}" (search as "${streamSearchTicker}") based on official SEBI filings and NSE announcements.
           Structure your response into these exact Markdown sections with extensive technical detail:
           # 📑 Corporate Governance & Audit Disclosures: ${cleanTicker}
           ## 1. SEBI CORPORATE FILINGS ACCOUNTABILITY
-          Detailed audit of insider trading filings, SAST disclosures, and material board announcements over the past 6 months.
           ## 2. PROMOTER HOLDING & PLEDGING INTELLIGENCE
-          Analyze exact promoter stakes, hidden risks, increases/decreases in pledged shares, or changes in institutional float.
           ## 3. RELATED PARTY TRANSACTIONS & CASH FLOW INTEGRITY
-          Audit financial notes regarding material transactions with subsidiary partners, joint ventures, or promoter-owned firms.
           ## 4. REGULATORY FRICTION & COMPLIANCE ALERTS
-          List any explicit SEBI warnings, tax notices, environmental clearance issues, or open legal friction items.
           ## 5. BOARD ALPHA & GOVERNANCE CONCLUSION
-          Evaluate independent director stability, committee independence, audit rotations, and a final overall institutional governance grade.
 
-          MANDATORY SCORECARD: At the very end of your report, after all 5 sections, output EXACTLY these 4 lines. Replace each X with a single integer from 1 to 10 — no other text on these lines:
+          MANDATORY SCORECARD at the very end (integers 1-10, no other text on these lines):
           Transcript Transparency: X
           Disclosure Completeness: X
           Guideline Conservatism: X
-          Governance Cleanliness: X
-        `;
+          Governance Cleanliness: X`;
       } else if (mode === 'move') {
-        dynamicTaskPrompt = `
-          Analyze immediate momentum, volume anomalies, structural price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker}.
-          Provide an institutional write-up structured in Markdown explaining technical breakouts, underlying buy/sell flows, and short-term directional expectations.
+        streamModeBody = `Analyze momentum, volume anomalies, price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker} (search as "${streamSearchTicker}" on NSE India). Write an institutional Markdown report.
 
-          MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
-          Valuation Intelligence: [score 1-10 based on current valuation vs estimated fair value]
-          Growth Momentum: [score 1-10 based on price and volume momentum strength]
-          Quality & Moat: [score 1-10 based on business quality and competitive position]
-          Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
-          Governance Alpha: [score 1-10 based on management credibility and capital allocation]
-        `;
+          MANDATORY scores at the very end (integers 1-10):
+          Valuation Intelligence: [score]
+          Growth Momentum: [score]
+          Quality & Moat: [score]
+          Execution Risk: [score]
+          Governance Alpha: [score]`;
       } else if (mode === 'earnings') {
-        // FIX 2: Enhanced earnings prompt directing Gemini to concall/transcript data
-        dynamicTaskPrompt = `
-          You are analysing the earnings call transcript and quarterly results for ${cleanTicker} — a company listed on NSE India. Search specifically for their most recent concall transcript, management commentary, quarterly revenue, profit, EBITDA, guidance and analyst questions. Focus entirely on this specific company's earnings data. Do not summarise generic market data or NSE website information.
-
-          Act as an Earnings Doctor. Structure your report in clean Markdown:
+        streamModeBody = `Analyse the most recent earnings call transcript and quarterly results for ${cleanTicker} (search as "${streamSearchTicker}") — listed on NSE India. Act as an Earnings Doctor. Structure your report:
 
           ## QUARTERLY EARNINGS SNAPSHOT
-          Latest quarterly revenue, net profit, EBITDA, and EPS with YoY and QoQ comparisons.
-
           ## MANAGEMENT COMMENTARY
-          Key statements from the CEO/CFO in the most recent earnings concall about growth outlook and strategy.
-
           ## ANALYST Q&A INSIGHTS
-          Important analyst questions and management responses from the concall transcript.
-
           ## FORWARD GUIDANCE
-          Revenue and margin guidance provided by management for upcoming quarters.
-
           ## EARNINGS VERDICT
-          Overall assessment of earnings quality, beat/miss vs estimates, and near-term catalysts.
 
-          MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
-          Valuation Intelligence: [score 1-10 based on current valuation vs earnings power]
-          Growth Momentum: [score 1-10 based on revenue and earnings growth trajectory]
-          Quality & Moat: [score 1-10 based on margin quality and competitive durability]
-          Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
-          Governance Alpha: [score 1-10 based on management execution and guidance reliability]
-        `;
+          MANDATORY scores at the very end (integers 1-10):
+          Valuation Intelligence: [score]
+          Growth Momentum: [score]
+          Quality & Moat: [score]
+          Execution Risk: [score]
+          Governance Alpha: [score]`;
       } else {
-        dynamicTaskPrompt = `
-          Generate a comprehensive institutional equity deep-dive for "${cleanTicker}" with sections:
+        streamModeBody = `Generate a comprehensive deep-dive investment research report for "${cleanTicker}" (search as "${streamSearchTicker}") listed on NSE/BSE. Structure:
+
           ## THE BULL CASE
           ## THE CONTRARIAN BEAR CASE
           ## INSTITUTIONAL CONVICTION METRICS
           ## EARNINGS & CATALYSTS
           ## ANALYST TARGETS
 
-          MANDATORY: At the very end output these exact lines with integer scores 1-10:
-          Valuation Intelligence: [score 1-10]
-          Growth Momentum: [score 1-10]
-          Quality & Moat: [score 1-10]
-          Execution Risk: [score 1-10 where 10 = very high risk]
-          Governance Alpha: [score 1-10]
-        `;
+          MANDATORY scores at the very end (integers 1-10):
+          Valuation Intelligence: [score]
+          Growth Momentum: [score]
+          Quality & Moat: [score]
+          Execution Risk: [score]
+          Governance Alpha: [score]`;
       }
 
-      // Universal instruction appended to every Gemini prompt to prevent generic NSE/nav content
+      const streamDynamicPrompt = streamPreamble + streamModeBody;
       const streamFocusInstruction = `\n\nFocus exclusively on company specific financial data for ${cleanTicker} listed on NSE India. Do not summarise generic market data, NSE website information, or navigation content. Search for this specific company's financial results, management commentary and business performance only.`;
 
       // Stage 1: Search grounding (non-streaming — grounding requires a complete round-trip)
       send({ type: 'stage', message: 'Grounding with live NSE/SEBI data...' });
       const streamSearchText = (mode === 'filings' || mode === 'research')
-        ? `${dynamicTaskPrompt}${streamFocusInstruction}\n\nProcessing Date is ${todayStr}.`
-        : `${dynamicTaskPrompt}${streamFocusInstruction}\n\nAlso identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
+        ? `${streamDynamicPrompt}${streamFocusInstruction}\n\nProcessing Date is ${todayStr}.`
+        : `${streamDynamicPrompt}${streamFocusInstruction}\n\nAlso identify 3 primary sector competitors and find current precise values for their PE Ratio, ROCE %, Operating Margin %, and Debt to Equity. Processing Date is ${todayStr}.`;
       const searchResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: streamSearchText }] }],
@@ -686,14 +744,17 @@ async function startServer() {
       const rawGroundedMetrics = searchResponse.text || "";
       console.log(`[ANALYZE/STREAM] Stage 1 grounding: ${rawGroundedMetrics.length} chars`);
 
-      // Universal: discard context if it looks like a navigation menu
-      const streamSafeContext = (context && looksLikeNavMenu(context)) ? "" : (context || "");
+      // Filter scraped context — reject nav/non-financial content universally
+      const streamSafeContext = isScrapedContentUsable(context || "") ? context : "";
+      const streamContextBlock = streamSafeContext
+        ? `${SCRAPED_CONTEXT_WARNING}${streamSafeContext}`
+        : "No usable scraped context — rely on grounded data above only.";
 
       // Stage 2: Stream report as plain Markdown
       send({ type: 'stage', message: 'Streaming research report...' });
       const reportStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Using the grounded data corpus below, write the complete Markdown report.\n\n${dynamicTaskPrompt}${streamFocusInstruction}\n\nDo NOT truncate any section. Every section must be fully written with specific data points.\n\nGrounded Data:\n---\n${rawGroundedMetrics}\n---\nScraper Context:\n---\n${streamSafeContext || "No context extracted."}\n---` }] }],
+        contents: [{ role: 'user', parts: [{ text: `${streamDynamicPrompt}${streamFocusInstruction}\n\nDo NOT truncate any section. Write entirely in your own analytical voice.\n\nGrounded Data:\n---\n${rawGroundedMetrics}\n---\nBackground Context (reference only — do not reproduce):\n---\n${streamContextBlock}\n---` }] }],
         config: { maxOutputTokens: 8192 }
       });
 
@@ -707,7 +768,27 @@ async function startServer() {
       }
       console.log(`[ANALYZE/STREAM] Stream complete. Report: ${accumulatedReport.length} chars`);
 
-      // Stage 3: Tiny isolated JSON call just for the benchmarking numbers
+      // Post-stream validation — if report is bad, send a silent correction as a replacement chunk
+      const streamValidation = isReportValid(accumulatedReport);
+      if (!streamValidation.valid) {
+        console.log(`[ANALYZE/STREAM] Report validation failed (${streamValidation.reason}) — sending corrected version`);
+        send({ type: 'stage', message: 'Enhancing report quality...' });
+        try {
+          const correctionPrompt = `${streamDynamicPrompt}${streamFocusInstruction}\n\nGrounded Data only (no scraped context):\n---\n${rawGroundedMetrics}\n---\nWrite the complete original research report.`;
+          const corrRes = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: 'user', parts: [{ text: correctionPrompt }] }],
+            config: { maxOutputTokens: 8192 }
+          });
+          const correctedText = corrRes.text || "";
+          if (isReportValid(correctedText).valid) {
+            accumulatedReport = correctedText;
+            send({ type: 'replace', text: correctedText });
+          }
+        } catch { /* keep original stream if correction fails */ }
+      }
+
+      // Stage 3: Benchmarking numbers
       let benchmarking: any[] = [];
       try {
         const benchResponse = await ai.models.generateContent({
@@ -748,7 +829,6 @@ async function startServer() {
       }
 
       send({ type: 'benchmarking', data: benchmarking });
-      // Problem 3: confidence based on accumulated report length
       const streamConfidence = assessConfidence(accumulatedReport);
       console.log(`[ANALYZE/STREAM] Complete. report=${accumulatedReport.length} chars, confidence=${streamConfidence}`);
       send({ type: 'done', confidence: streamConfidence });
