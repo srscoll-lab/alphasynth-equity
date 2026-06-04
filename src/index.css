@@ -7,14 +7,21 @@
   --font-serif: "Playfair Display", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
-  /* Custom palette based on feedback */
-  --color-app-bg: #0D0F10;
-  --color-app-surface: #151819;
-  --color-app-surface-accent: #1C2021;
-  --color-app-border: #242829;
-  
-  --color-positive: #14b8a6; /* Teal 500 */
-  --color-negative: #f43f5e; /* Rose 500 */
+  /* ── App surface palette — deep navy/slate, matching landing page ── */
+  --color-app-bg:             #0a0f1e;
+  --color-app-surface:        #0f1628;
+  --color-app-surface-accent: #162038;
+  --color-app-border:         #1e2d4a;
+
+  /* ── Accent tokens ──────────────────────────────────────────────── */
+  /* Gold  — informational: labels, icons, logo, highlights, decorative */
+  --color-gold:       #D4A843;
+  /* Amber — action: execute trade, launch terminal, primary CTAs      */
+  --color-amber:      #B8962E;
+
+  /* ── Market indicators — must not change ───────────────────────── */
+  --color-positive: #14b8a6;
+  --color-negative: #f43f5e;
 }
 
 @layer base {

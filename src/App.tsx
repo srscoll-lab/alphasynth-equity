@@ -1303,10 +1303,14 @@ ${list}
             scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
           }
         } else {
+          let errData: any = {};
+          try { errData = await response.json(); } catch {}
+          if (errData.error === 'TICKER_NOT_FOUND') throw new Error(errData.message);
           scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
         }
-      } catch (scrapeErr) {
+      } catch (scrapeErr: any) {
         clearTimeout(timeoutId);
+        if (scrapeErr.message?.includes('NSE/BSE')) throw scrapeErr;
         scrapedMarkdown = "Scraping fallback triggered. Relying on Gemini search grounding.";
       }
 
@@ -1325,7 +1329,13 @@ ${list}
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(text || "Disclosures server returned an error.");
+        try {
+          const errData = JSON.parse(text);
+          throw new Error(errData.message || text || "Disclosures server returned an error.");
+        } catch (parseErr: any) {
+          if (parseErr.message && (parseErr.message.includes('NSE/BSE') || parseErr.message.includes('Insufficient data'))) throw parseErr;
+          throw new Error(text || "Disclosures server returned an error.");
+        }
       }
 
       const contentType = response.headers.get("content-type");
@@ -1340,6 +1350,11 @@ ${list}
       if (!report) {
         throw new Error("Gemini returned an empty filing summary.");
       }
+
+      const filingsScrapeThin = !scrapedMarkdown || scrapedMarkdown.length < 100 ||
+        scrapedMarkdown.includes('Direct context unavailable') ||
+        scrapedMarkdown.includes('Scraping service unavailable') ||
+        scrapedMarkdown.includes('Scraping fallback');
 
       const parseMetric = (name: string) => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1360,6 +1375,8 @@ ${list}
         ticker: tkr.toUpperCase(),
         metrics,
         sourceUrl: finalUsedUrl,
+        confidence: (data.confidence as 'high' | 'medium' | 'low') || 'medium',
+        scrapeQuality: filingsScrapeThin ? 'thin' : 'good',
         createdAt: new Date().toISOString()
       };
 
@@ -1583,11 +1600,15 @@ ${list}
             await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
           }
         } else {
+          let errData: any = {};
+          try { errData = await response.json(); } catch {}
+          if (errData.error === 'TICKER_NOT_FOUND') throw new Error(errData.message);
           scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
           await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
         }
-      } catch (scrapeErr) {
+      } catch (scrapeErr: any) {
         clearTimeout(timeoutId);
+        if (scrapeErr.message?.includes('NSE/BSE')) throw scrapeErr;
         scrapedMarkdown = "Scraping fallback triggered. Relying on Gemini search grounding.";
         await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
       }
@@ -1620,7 +1641,13 @@ ${list}
 
         if (!response.ok) {
           const text = await response.text();
-          throw new Error(text || "Analysis server returned an error.");
+          try {
+            const errData = JSON.parse(text);
+            throw new Error(errData.message || text || "Analysis server returned an error.");
+          } catch (parseErr: any) {
+            if (parseErr.message && (parseErr.message.includes('NSE/BSE') || parseErr.message.includes('Insufficient data'))) throw parseErr;
+            throw new Error(text || "Analysis server returned an error.");
+          }
         }
 
         const contentType = response.headers.get("content-type");
@@ -1635,6 +1662,14 @@ ${list}
         if (!report) {
           throw new Error("Gemini returned an empty response.");
         }
+
+        const scrapeQuality: 'good' | 'thin' = (
+          !scrapedMarkdown ||
+          scrapedMarkdown.length < 100 ||
+          scrapedMarkdown.includes('Direct context unavailable') ||
+          scrapedMarkdown.includes('Scraping service unavailable') ||
+          scrapedMarkdown.includes('Scraping fallback')
+        ) ? 'thin' : 'good';
 
         // Parsing Conviction Metrics
         const parseMetric = (name: string) => {
@@ -1707,7 +1742,9 @@ ${list}
           entryPrice: parsePrice('Tactical Entry Zone'),
           targetPrice: parsePrice('Consensus Target Price'),
           stopLoss: parsePrice('Strategic Stop Loss'),
-          parsedLtp: parsedLtpValue
+          parsedLtp: parsedLtpValue,
+          confidence: (data.confidence as 'high' | 'medium' | 'low') || 'medium',
+          scrapeQuality
         };
 
         if (parsedLtpValue && parsedLtpValue > 0) {
@@ -2148,6 +2185,32 @@ ${list}
                         </div>
                       )}
 
+                      {/* Data confidence badge */}
+                      {lastReport.confidence && (
+                        <div className={`mb-4 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider w-fit ${
+                          lastReport.confidence === 'high'
+                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                            : lastReport.confidence === 'medium'
+                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                            : 'bg-red-500/10 border-red-500/30 text-red-400'
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                            lastReport.confidence === 'high' ? 'bg-emerald-400' :
+                            lastReport.confidence === 'medium' ? 'bg-amber-400' : 'bg-red-400'
+                          }`} />
+                          {lastReport.confidence === 'high' && 'HIGH CONFIDENCE: Multiple reliable sources found including Screener.in, Moneycontrol or NSE directly'}
+                          {lastReport.confidence === 'medium' && 'MEDIUM CONFIDENCE: Limited sources found, some data may be estimated'}
+                          {lastReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
+                        </div>
+                      )}
+
+                      {/* Scrape quality notice */}
+                      {lastReport.scrapeQuality === 'thin' && (
+                        <div className="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg text-[10px] text-amber-400 font-medium leading-relaxed">
+                          Note: Limited source data was available for this analysis. This report relies primarily on AI knowledge rather than scraped financial data. Verify key figures independently.
+                        </div>
+                      )}
+
                       {lastReport.mode !== 'deep_dive' || !lastReport.bullCase ? (
                           <div className="max-w-none prose prose-invert prose-orange leading-relaxed text-zinc-300 selection:bg-orange-500/30">
                              <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.rawReport}</Markdown>
@@ -2173,6 +2236,13 @@ ${list}
                           </section>
                         </>
                       )}
+
+                      {/* Permanent disclaimer */}
+                      <div className="mt-8 pt-4 border-t border-app-border">
+                        <p className="text-[9px] text-zinc-600 leading-relaxed font-medium">
+                          This report is AI generated for informational purposes only. Data accuracy cannot be guaranteed for small cap and micro cap stocks. Always verify figures from official NSE/BSE filings before making investment decisions. This is not financial advice.
+                        </p>
+                      </div>
                     </div>
                   )}
 
@@ -3879,8 +3949,38 @@ ${list}
                                  <div className="absolute top-0 right-0 p-4 text-zinc-800 opacity-20">
                                     <FileText className="w-16 h-16" />
                                  </div>
+                                 {/* Data confidence badge */}
+                                 {filingsReport.confidence && (
+                                   <div className={`mb-4 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider w-fit ${
+                                     filingsReport.confidence === 'high'
+                                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                                       : filingsReport.confidence === 'medium'
+                                       ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                                       : 'bg-red-500/10 border-red-500/30 text-red-400'
+                                   }`}>
+                                     <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                                       filingsReport.confidence === 'high' ? 'bg-emerald-400' :
+                                       filingsReport.confidence === 'medium' ? 'bg-amber-400' : 'bg-red-400'
+                                     }`} />
+                                     {filingsReport.confidence === 'high' && 'HIGH CONFIDENCE: Multiple reliable sources found including Screener.in, Moneycontrol or NSE directly'}
+                                     {filingsReport.confidence === 'medium' && 'MEDIUM CONFIDENCE: Limited sources found, some data may be estimated'}
+                                     {filingsReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
+                                   </div>
+                                 )}
+                                 {/* Scrape quality notice */}
+                                 {filingsReport.scrapeQuality === 'thin' && (
+                                   <div className="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg text-[10px] text-amber-400 font-medium leading-relaxed">
+                                     Note: Limited source data was available for this analysis. This report relies primarily on AI knowledge rather than scraped financial data. Verify key figures independently.
+                                   </div>
+                                 )}
                                  <div className="prose prose-invert prose-orange max-w-none text-zinc-300">
                                     <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{filingsReport.rawReport}</Markdown>
+                                 </div>
+                                 {/* Permanent disclaimer */}
+                                 <div className="mt-8 pt-4 border-t border-app-border">
+                                   <p className="text-[9px] text-zinc-600 leading-relaxed font-medium">
+                                     This report is AI generated for informational purposes only. Data accuracy cannot be guaranteed for small cap and micro cap stocks. Always verify figures from official NSE/BSE filings before making investment decisions. This is not financial advice.
+                                   </p>
                                  </div>
                               </div>
                            </div>

@@ -1,0 +1,992 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Equity Intelligence — Investment Research Platform</title>
+  <meta name="description" content="Institutional-grade equity research for serious investors. NSE filings, SEBI disclosures, and AI-grounded analysis — at the standard of private capital." />
+
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Equity Intelligence — Investment Research Platform" />
+  <meta property="og:description" content="Institutional-grade equity research for serious investors." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;0,900;1,400;1,500;1,700;1,900&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Hallmark · macrostructure: Prestige Editorial · tone: luxury · anchor hue: oklch(0.86 0.10 86) */
+
+    /* ─── tokens ──────────────────────────────────────────────────────────── */
+    :root {
+      /* Color — deep navy ground */
+      --color-bg:               oklch(0.13 0.04 258);
+      --color-surface:          oklch(0.17 0.038 258);
+      --color-surface-elevated: oklch(0.21 0.035 258);
+      --color-border:           oklch(0.27 0.04 258);
+      --color-border-subtle:    oklch(0.20 0.038 258);
+
+      /* Text */
+      --color-text-primary:   oklch(0.97 0.006 85);
+      --color-text-secondary: oklch(0.76 0.015 85);
+      --color-text-muted:     oklch(0.50 0.025 258);
+
+      /* Gold — soft, luminous, not heavy */
+      --color-gold-low:    oklch(0.76 0.11 78);
+      --color-gold-mid:    oklch(0.86 0.10 86);
+      --color-gold-high:   oklch(0.94 0.06 92);
+      --color-gold-glow:   oklch(0.86 0.10 86 / 0.18);
+      --color-gold-border: oklch(0.86 0.10 86 / 0.28);
+
+      /* Status */
+      --color-positive: oklch(0.76 0.13 162);
+      --color-negative: oklch(0.68 0.15 25);
+
+      /* Font — 2 + 1 */
+      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+      --font-body:    'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+      /* Spacing — 4pt */
+      --space-1:  0.25rem;
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-4:  1rem;
+      --space-5:  1.25rem;
+      --space-6:  1.5rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+      --space-12: 3rem;
+      --space-16: 4rem;
+      --space-20: 5rem;
+      --space-24: 6rem;
+      --space-32: 8rem;
+
+      /* Type */
+      --text-xs:   0.6875rem;
+      --text-sm:   0.8125rem;
+      --text-base: 1rem;
+      --text-lg:   1.125rem;
+      --text-xl:   1.25rem;
+      --text-2xl:  1.5rem;
+      --text-3xl:  1.875rem;
+      --text-4xl:  2.25rem;
+      --text-5xl:  3rem;
+      --text-6xl:  3.75rem;
+      --text-7xl:  4.5rem;
+
+      /* Motion */
+      --ease-out:    cubic-bezier(0.0, 0.0, 0.2, 1.0);
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+      --dur-fast:    120ms;
+      --dur-base:    240ms;
+      --dur-slow:    420ms;
+
+      /* Radii */
+      --radius-sm:  3px;
+      --radius-md:  6px;
+      --radius-lg:  12px;
+    }
+
+    /* ─── reset ───────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { overflow-x: clip; scroll-behavior: smooth; }
+
+    body {
+      overflow-x: clip;
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--color-gold-mid);
+      outline-offset: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border-width: 0;
+    }
+
+    /* ─── gradient gold utility ───────────────────────────────────────────── */
+    .gold-text {
+      background: linear-gradient(
+        108deg,
+        var(--color-gold-low)  0%,
+        var(--color-gold-high) 42%,
+        var(--color-gold-mid)  68%,
+        var(--color-gold-low)  100%
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ─── nav ─────────────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 4rem;
+      border-bottom: 1px solid var(--color-border-subtle);
+      background: oklch(0.13 0.04 258 / 0.90);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .nav-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: 0 var(--space-8);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-wordmark {
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .nav-wordmark-name {
+      font-family: var(--font-display);
+      font-size: var(--text-base);
+      font-weight: 500;
+      font-style: italic;
+      letter-spacing: 0.01em;
+      line-height: 1;
+      background: linear-gradient(108deg, var(--color-gold-low), var(--color-gold-high) 55%, var(--color-gold-mid));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-wordmark-sub {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      font-weight: 400;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-top: 2px;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-8);
+    }
+
+    .nav-link {
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color var(--dur-base) var(--ease-out);
+    }
+
+    .nav-link:hover { color: var(--color-text-secondary); }
+
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.5rem var(--space-5);
+      background: transparent;
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--color-gold-mid);
+      cursor: pointer;
+      transition: background var(--dur-base) var(--ease-out),
+                  border-color var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out);
+    }
+
+    .nav-cta:hover {
+      background: var(--color-gold-glow);
+      border-color: var(--color-gold-mid);
+      transform: translateY(-1px);
+    }
+
+    .nav-cta:active { transform: translateY(0); }
+
+    /* ─── hero ────────────────────────────────────────────────────────────── */
+    .hero {
+      padding-top: calc(4rem + var(--space-24));
+      padding-bottom: var(--space-24);
+      padding-left: var(--space-8);
+      padding-right: var(--space-8);
+      max-width: 60rem;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+    }
+
+    /* soft gold radial ambient behind hero */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 4rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70%;
+      height: 420px;
+      background: radial-gradient(
+        ellipse at center,
+        oklch(0.86 0.10 86 / 0.07) 0%,
+        transparent 70%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .hero > * { position: relative; z-index: 1; }
+
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-10);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 60ms both;
+    }
+
+    .hero-eyebrow-rule {
+      display: inline-block;
+      width: 1.5rem;
+      height: 1px;
+      background: var(--color-gold-border);
+      flex-shrink: 0;
+    }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-4xl), 6vw, var(--text-7xl));
+      font-weight: 900;
+      font-style: italic;
+      line-height: 1.06;
+      letter-spacing: -0.025em;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-8);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 130ms both;
+    }
+
+    .hero-ornament {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      margin-bottom: var(--space-8);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 180ms both;
+    }
+
+    .hero-ornament-line {
+      flex: 1;
+      max-width: 5rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-gold-border));
+    }
+
+    .hero-ornament-line:last-child {
+      background: linear-gradient(90deg, var(--color-gold-border), transparent);
+    }
+
+    .hero-ornament-diamond {
+      width: 5px;
+      height: 5px;
+      background: var(--color-gold-mid);
+      transform: rotate(45deg);
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+
+    .hero-subtext {
+      font-size: clamp(var(--text-base), 1.4vw, var(--text-lg));
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.8;
+      max-width: 48ch;
+      margin: 0 auto var(--space-12);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 210ms both;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 260ms both;
+    }
+
+    /* ─── buttons ─────────────────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-10);
+      background: linear-gradient(108deg, var(--color-gold-low), var(--color-gold-high) 55%, var(--color-gold-mid));
+      color: oklch(0.12 0.04 258);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.92;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px oklch(0.86 0.10 86 / 0.22);
+    }
+
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-8);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color var(--dur-base) var(--ease-out),
+                  color var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--color-gold-border);
+      color: var(--color-gold-mid);
+      transform: translateY(-2px);
+    }
+
+    .btn-ghost:active { transform: translateY(0); }
+
+    /* ─── credentials ─────────────────────────────────────────────────────── */
+    .credentials {
+      border-top: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .credentials-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      padding: var(--space-10) var(--space-8);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 0;
+    }
+
+    .credential {
+      padding: var(--space-6) var(--space-8);
+      border-right: 1px solid var(--color-border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+    }
+
+    .credential:last-child { border-right: none; }
+
+    @media (max-width: 640px) {
+      .credential {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border-subtle);
+        padding: var(--space-5) 0;
+      }
+      .credential:last-child { border-bottom: none; }
+      .credentials-inner { padding: var(--space-8) var(--space-6); }
+    }
+
+    .credential-value {
+      font-family: var(--font-display);
+      font-size: var(--text-2xl);
+      font-weight: 700;
+      line-height: 1.1;
+      background: linear-gradient(108deg, var(--color-gold-low), var(--color-gold-high) 55%, var(--color-gold-mid));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .credential-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .credential-note {
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+
+    /* ─── features ────────────────────────────────────────────────────────── */
+    .features {
+      padding: var(--space-24) var(--space-8);
+      max-width: 72rem;
+      margin: 0 auto;
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: var(--space-16);
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 400;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      display: block;
+      margin-bottom: var(--space-5);
+    }
+
+    .section-heading {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-3xl), 3vw, var(--text-5xl));
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      color: var(--color-text-primary);
+    }
+
+    .features-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    @media (max-width: 640px) {
+      .features-list { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .feature-item {
+      padding: var(--space-8) var(--space-10);
+      border-bottom: 1px solid var(--color-border-subtle);
+      border-right: 1px solid var(--color-border-subtle);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      position: relative;
+      transition: background var(--dur-base) var(--ease-out);
+    }
+
+    /* remove right border on even items */
+    .feature-item:nth-child(even) { border-right: none; }
+
+    /* remove bottom border on last two */
+    .feature-item:nth-last-child(-n+2) { border-bottom: none; }
+
+    @media (max-width: 640px) {
+      .feature-item { border-right: none; }
+      .feature-item:nth-last-child(-n+2) { border-bottom: 1px solid var(--color-border-subtle); }
+      .feature-item:last-child { border-bottom: none; }
+    }
+
+    .feature-item:hover { background: var(--color-surface); }
+
+    .feature-item::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 2px;
+      height: 0;
+      background: linear-gradient(180deg, var(--color-gold-low), var(--color-gold-high));
+      transition: height var(--dur-slow) var(--ease-out);
+    }
+
+    .feature-item:hover::before { height: 100%; }
+
+    .feature-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: var(--color-gold-low);
+      opacity: 0.7;
+    }
+
+    .feature-title {
+      font-family: var(--font-display);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.2;
+    }
+
+    .feature-desc {
+      font-size: var(--text-sm);
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.75;
+    }
+
+    /* ─── philosophy / pull-quote ─────────────────────────────────────────── */
+    .philosophy {
+      padding: var(--space-24) var(--space-8);
+      max-width: 56rem;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+    }
+
+    .philosophy::before,
+    .philosophy::after {
+      content: '';
+      display: block;
+      width: 4rem;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-gold-border), transparent);
+      margin: 0 auto var(--space-10);
+    }
+
+    .philosophy::after {
+      margin: var(--space-10) auto 0;
+    }
+
+    .philosophy-mark {
+      font-family: var(--font-display);
+      font-size: 4rem;
+      line-height: 0.6;
+      color: var(--color-gold-low);
+      opacity: 0.3;
+      display: block;
+      margin-bottom: var(--space-6);
+      font-style: italic;
+    }
+
+    .philosophy-quote {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-xl), 2.2vw, var(--text-3xl));
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.55;
+      letter-spacing: -0.01em;
+      color: var(--color-text-secondary);
+    }
+
+    .philosophy-quote strong {
+      font-weight: 700;
+      font-style: normal;
+      background: linear-gradient(108deg, var(--color-gold-low), var(--color-gold-high) 55%, var(--color-gold-mid));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .philosophy-attr {
+      display: block;
+      margin-top: var(--space-8);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    /* ─── sign up ─────────────────────────────────────────────────────────── */
+    .signup {
+      padding: var(--space-24) var(--space-8);
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-subtle);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* subtle radial gold ambient behind signup */
+    .signup::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 60%;
+      height: 100%;
+      background: radial-gradient(
+        ellipse at top,
+        oklch(0.86 0.10 86 / 0.05) 0%,
+        transparent 65%
+      );
+      pointer-events: none;
+    }
+
+    .signup-inner {
+      max-width: 40rem;
+      margin: 0 auto;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .signup-heading {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-3xl), 3.2vw, var(--text-4xl));
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      color: var(--color-text-primary);
+      margin-top: var(--space-5);
+      margin-bottom: var(--space-4);
+    }
+
+    .signup-subtext {
+      font-size: var(--text-base);
+      font-weight: 300;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      max-width: 42ch;
+      margin: 0 auto var(--space-10);
+    }
+
+    .signup-form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-3);
+      justify-content: center;
+    }
+
+    .signup-input {
+      flex: 1;
+      min-width: 200px;
+      max-width: 256px;
+      padding: var(--space-4) var(--space-5);
+      background: var(--color-bg);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 400;
+      outline: none;
+      transition: border-color var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+    }
+
+    .signup-input::placeholder { color: var(--color-text-muted); }
+
+    .signup-input:focus {
+      border-color: var(--color-gold-border);
+      box-shadow: 0 0 0 3px var(--color-gold-glow);
+    }
+
+    .signup-input:focus-visible {
+      outline: 2px solid var(--color-gold-mid);
+      outline-offset: 2px;
+    }
+
+    .signup-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-4) var(--space-8);
+      background: linear-gradient(108deg, var(--color-gold-low), var(--color-gold-high) 55%, var(--color-gold-mid));
+      color: oklch(0.12 0.04 258);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    .signup-btn:hover {
+      opacity: 0.90;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px oklch(0.86 0.10 86 / 0.22);
+    }
+
+    .signup-btn:active { transform: translateY(0); box-shadow: none; }
+
+    .signup-note {
+      margin-top: var(--space-6);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── footer ──────────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--color-border-subtle);
+      padding: var(--space-8) var(--space-8);
+    }
+
+    .footer-inner {
+      max-width: 72rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .footer-wordmark {
+      font-family: var(--font-display);
+      font-size: var(--text-sm);
+      font-weight: 500;
+      font-style: italic;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+      transition: color var(--dur-base) var(--ease-out);
+    }
+
+    .footer-wordmark:hover { color: var(--color-text-secondary); }
+
+    .footer-note {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ─── entrance animation ─────────────────────────────────────────────── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-wordmark" aria-label="Equity Intelligence home">
+        <span class="nav-wordmark-name">Equity Intelligence</span>
+        <span class="nav-wordmark-sub">Private Research</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Platform</a>
+        <a href="#signup"   class="nav-cta">Request Access</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+    <section class="hero" aria-label="Introduction">
+      <p class="hero-eyebrow">
+        <span class="hero-eyebrow-rule"></span>
+        Investment Research Platform
+        <span class="hero-eyebrow-rule" style="background:linear-gradient(90deg,var(--color-gold-border),transparent)"></span>
+      </p>
+
+      <h1 class="hero-headline">
+        Where conviction<br/>meets <span class="gold-text">capital.</span>
+      </h1>
+
+      <div class="hero-ornament" aria-hidden="true">
+        <span class="hero-ornament-line"></span>
+        <span class="hero-ornament-diamond"></span>
+        <span class="hero-ornament-line" style="background:linear-gradient(90deg,var(--color-gold-border),transparent)"></span>
+      </div>
+
+      <p class="hero-subtext">
+        Institutional-quality equity research drawn directly from NSE filings, SEBI disclosures, and management transcripts. Built for investors who form their own views from primary sources.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#signup" class="btn-primary">Request early access</a>
+        <a href="/app"    class="btn-ghost">Open platform →</a>
+      </div>
+    </section>
+
+    <!-- ── Credentials ────────────────────────────────────────────────────── -->
+    <div class="credentials" role="region" aria-label="Platform facts">
+      <div class="credentials-inner">
+        <div class="credential">
+          <span class="credential-value">6</span>
+          <span class="credential-label">Research modules</span>
+          <span class="credential-note">News, Equity, Filings, Portfolio, Execution, Social</span>
+        </div>
+        <div class="credential">
+          <span class="credential-value">NSE / BSE</span>
+          <span class="credential-label">Data coverage</span>
+          <span class="credential-note">SEBI disclosures, quarterly filings &amp; AGM transcripts</span>
+        </div>
+        <div class="credential">
+          <span class="credential-value">Zerodha</span>
+          <span class="credential-label">Broker integration</span>
+          <span class="credential-note">One-click order routing via Kite API</span>
+        </div>
+        <div class="credential">
+          <span class="credential-value">Gemini</span>
+          <span class="credential-label">AI grounding</span>
+          <span class="credential-note">Google Search grounding — not hallucinated inference</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Features ───────────────────────────────────────────────────────── -->
+    <section class="features" id="features" aria-labelledby="features-heading">
+      <div class="features-header">
+        <span class="section-eyebrow">Platform capabilities</span>
+        <h2 class="section-heading" id="features-heading">
+          Every edge a serious<br/>investor needs.
+        </h2>
+      </div>
+
+      <div class="features-list" role="list">
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">01</span>
+          <h3 class="feature-title">Live Market Pulse</h3>
+          <p class="feature-desc">Real-time trending signal extraction from NSE regulatory filings, sector sentiment indexing, and news impact scoring — grounded in live Google Search, not cached feeds.</p>
+        </div>
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">02</span>
+          <h3 class="feature-title">Capital Conviction Analysis</h3>
+          <p class="feature-desc">Two-stage AI synthesis of bull catalysts, bear case exposure, valuation entry zones, and peer benchmarking against verified sector comparables drawn from exchange data.</p>
+        </div>
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">03</span>
+          <h3 class="feature-title">SEBI Filing Audit Engine</h3>
+          <p class="feature-desc">Parse investor analyst call transcripts and audit disclosures. Flags management guidance reliability by comparing historical estimates against reported actuals, quarter by quarter.</p>
+        </div>
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">04</span>
+          <h3 class="feature-title">Portfolio X-Ray</h3>
+          <p class="feature-desc">Import your holdings to surface hidden sector overlaps, concentration risk, and stress-tested exposure diagnostics across macro scenarios — with AI-generated audit commentary.</p>
+        </div>
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">05</span>
+          <h3 class="feature-title">Direct Broker Routing</h3>
+          <p class="feature-desc">AI-generated research populates trade parameters automatically. Review and route limit orders, GTT triggers, or market orders directly to Zerodha Kite with a single confirmation.</p>
+        </div>
+
+        <div class="feature-item" role="listitem">
+          <span class="feature-num">06</span>
+          <h3 class="feature-title">Community Signal Radar</h3>
+          <p class="feature-desc">Map retail forum concentration, track speculative narrative drift, and contrast crowd sentiment against your fundamental thesis before committing to a position.</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── Philosophy ─────────────────────────────────────────────────────── -->
+    <section class="philosophy" aria-label="Platform philosophy">
+      <span class="philosophy-mark" aria-hidden="true">"</span>
+      <p class="philosophy-quote">
+        The most dangerous information in markets is the summary.
+        <strong>Primary sources don't lie.</strong>
+        Equity Intelligence returns you to the filing, the transcript, the number — not the analyst's interpretation of it.
+      </p>
+      <span class="philosophy-attr">Equity Intelligence — Research Principles</span>
+    </section>
+
+    <!-- ── Sign Up ─────────────────────────────────────────────────────────── -->
+    <section class="signup" id="signup" aria-labelledby="signup-heading">
+      <div class="signup-inner">
+        <span class="section-eyebrow">Private Beta</span>
+        <h2 class="signup-heading" id="signup-heading">
+          Join the waitlist.
+        </h2>
+        <p class="signup-subtext">
+          Access is by invitation. Leave your email and we will reach out when your research seat is ready.
+        </p>
+        <form class="signup-form" action="#" method="post" aria-label="Request early access">
+          <label for="signup-email" class="sr-only">Email address</label>
+          <input
+            class="signup-input"
+            id="signup-email"
+            type="email"
+            name="email"
+            placeholder="your@email.com"
+            autocomplete="email"
+            required
+            aria-required="true"
+          />
+          <button type="submit" class="signup-btn">
+            Request access →
+          </button>
+        </form>
+        <p class="signup-note">No marketing lists. Invitation only.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <a href="/" class="footer-wordmark">Equity Intelligence</a>
+      <span class="footer-note">© 2026 — For serious investors</span>
+    </div>
+  </footer>
+
+</body>
+</html>
