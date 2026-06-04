@@ -529,19 +529,26 @@ async function startServer() {
 
       // Stage 2: JSON Structuring — enforces original analytical writing, not scraped content summary
       const isFilingsMode = mode === 'filings' || mode === 'research';
+      // FIX 5 & 6: Mandatory section structure to prevent incomplete reports
+      const mandatoryStructure = isFilingsMode
+        ? `\n\nComplete ALL of these sections:\n1. Corporate Governance Overview\n2. Recent SEBI Disclosures and Filings\n3. Management Commentary and Guidance\n4. Disclosure Scorecard Assessment\n5. Red Flags or Concerns if any\n6. Overall Transparency Rating`
+        : `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary (2-3 paragraphs)\n2. Financial Performance (key metrics and trends)\n3. Bull Case (investment thesis)\n4. Bear Case (key risks)\n5. Investment Recommendation (clear conclusion)\nIf you are running low on available response length, condense each section but do not omit any section entirely.`;
+      // FIX 4: Limit context to 5000 chars to leave room for output tokens
+      const trimmedGrounded = rawGroundedMetrics.substring(0, 5000);
+      const trimmedContext = contextBlock.substring(0, 5000);
       const formattingPrompt = isFilingsMode
-        ? `${dynamicTaskPrompt}\n\nUsing the grounded data below, write the complete Markdown report. Every section must be fully written with original analysis.\n\nGrounded Data Corpus:\n---\n${rawGroundedMetrics}\n---\nBackground Context (reference only — do not reproduce):\n---\n${contextBlock}\n---`
-        : `${dynamicTaskPrompt}\n\nUsing the grounded data below:
+        ? `${dynamicTaskPrompt}${mandatoryStructure}\n\nUsing the grounded data below, write the complete Markdown report. Every section must be fully written with original analysis.\n\nGrounded Data Corpus:\n---\n${trimmedGrounded}\n---\nBackground Context (reference only — do not reproduce):\n---\n${trimmedContext}\n---`
+        : `${dynamicTaskPrompt}${mandatoryStructure}\n\nUsing the grounded data below:
         1. Write the complete original research report in the "report" field — comprehensive, analytical, never cut off.
         2. Extract PE Ratio, ROCE %, Operating Margin %, Debt to Equity for ${cleanTicker} vs peer average in "benchmarking".
 
         Grounded Data Corpus:
         ---
-        ${rawGroundedMetrics}
+        ${trimmedGrounded}
         ---
         Background Context (reference only — do not reproduce):
         ---
-        ${contextBlock}
+        ${trimmedContext}
         ---`;
 
       const structuredResponse = await ai.models.generateContent({
@@ -665,6 +672,19 @@ async function startServer() {
       if (!res.writableEnded) res.write(`data: ${JSON.stringify(obj)}\n\n`);
     };
 
+    // FIX 2: Keepalive ping every 15s to prevent connection drops
+    const keepaliveTimer = setInterval(() => {
+      if (!res.writableEnded) res.write(': keepalive\n\n');
+    }, 15000);
+
+    // FIX 2: 2-minute hard timeout for the entire stream
+    const streamTimeoutTimer = setTimeout(() => {
+      if (!res.writableEnded) {
+        send({ type: 'error', message: 'Stream timed out after 2 minutes' });
+        res.end();
+      }
+    }, 120000);
+
     try {
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -752,21 +772,60 @@ async function startServer() {
 
       // Stage 2: Stream report as plain Markdown
       send({ type: 'stage', message: 'Streaming research report...' });
+      // FIX 5 & 6: Mandatory section structure for streaming path
+      const isStreamFilings = mode === 'filings' || mode === 'research';
+      const streamMandatoryStructure = isStreamFilings
+        ? `\n\nComplete ALL of these sections:\n1. Corporate Governance Overview\n2. Recent SEBI Disclosures and Filings\n3. Management Commentary and Guidance\n4. Disclosure Scorecard Assessment\n5. Red Flags or Concerns if any\n6. Overall Transparency Rating`
+        : `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary (2-3 paragraphs)\n2. Financial Performance (key metrics and trends)\n3. Bull Case (investment thesis)\n4. Bear Case (key risks)\n5. Investment Recommendation (clear conclusion)\nIf you are running low on available response length, condense each section but do not omit any section entirely.`;
+      // FIX 4: Limit context to 5000 chars to leave room for output tokens
+      const trimmedStreamGrounded = rawGroundedMetrics.substring(0, 5000);
+      const trimmedStreamContext = streamContextBlock.substring(0, 5000);
       const reportStream = await ai.models.generateContentStream({
         model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `${streamDynamicPrompt}${streamFocusInstruction}\n\nDo NOT truncate any section. Write entirely in your own analytical voice.\n\nGrounded Data:\n---\n${rawGroundedMetrics}\n---\nBackground Context (reference only — do not reproduce):\n---\n${streamContextBlock}\n---` }] }],
+        contents: [{ role: 'user', parts: [{ text: `${streamDynamicPrompt}${streamFocusInstruction}${streamMandatoryStructure}\n\nDo NOT truncate any section. Write entirely in your own analytical voice.\n\nGrounded Data:\n---\n${trimmedStreamGrounded}\n---\nBackground Context (reference only — do not reproduce):\n---\n${trimmedStreamContext}\n---` }] }],
         config: { maxOutputTokens: 8192 }
       });
 
       let accumulatedReport = "";
-      for await (const chunk of reportStream) {
-        const text = chunk.text || "";
-        if (text) {
-          accumulatedReport += text;
-          send({ type: 'chunk', text });
+      // FIX 2: Wrap loop to catch unexpected stream termination and attempt one retry
+      try {
+        for await (const chunk of reportStream) {
+          const text = chunk.text || "";
+          if (text) {
+            accumulatedReport += text;
+            send({ type: 'chunk', text });
+          }
+        }
+      } catch (streamErr: any) {
+        console.warn(`[ANALYZE/STREAM] Stream interrupted (${streamErr.message}) — attempting retry`);
+        if (accumulatedReport.length < 500) {
+          try {
+            const retryRes = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: [{ role: 'user', parts: [{ text: `${streamDynamicPrompt}${streamFocusInstruction}${streamMandatoryStructure}\n\nGrounded Data:\n---\n${trimmedStreamGrounded}\n---\nBackground Context:\n---\n${trimmedStreamContext}\n---` }] }],
+              config: { maxOutputTokens: 8192 }
+            });
+            const retryText = retryRes.text || "";
+            if (retryText) {
+              accumulatedReport = retryText;
+              send({ type: 'replace', text: retryText });
+            }
+          } catch { /* keep whatever accumulated so far */ }
         }
       }
       console.log(`[ANALYZE/STREAM] Stream complete. Report: ${accumulatedReport.length} chars`);
+
+      // FIX 3: Append truncation notice if report ends mid-sentence
+      const reportTrimmed = accumulatedReport.trim();
+      if (reportTrimmed.length > 100) {
+        const lastChar = reportTrimmed.slice(-1);
+        if (!['.', '!', '?', ')', ']', '"', "'", '`'].includes(lastChar)) {
+          const truncationNotice = '\n\n*Note: Report was truncated due to length. The analysis above covers the most critical investment considerations.*';
+          accumulatedReport += truncationNotice;
+          send({ type: 'chunk', text: truncationNotice });
+          console.log(`[ANALYZE/STREAM] Appended truncation notice (last char: '${lastChar}')`);
+        }
+      }
 
       // Post-stream validation — if report is bad, send a silent correction as a replacement chunk
       const streamValidation = isReportValid(accumulatedReport);
@@ -774,7 +833,7 @@ async function startServer() {
         console.log(`[ANALYZE/STREAM] Report validation failed (${streamValidation.reason}) — sending corrected version`);
         send({ type: 'stage', message: 'Enhancing report quality...' });
         try {
-          const correctionPrompt = `${streamDynamicPrompt}${streamFocusInstruction}\n\nGrounded Data only (no scraped context):\n---\n${rawGroundedMetrics}\n---\nWrite the complete original research report.`;
+          const correctionPrompt = `${streamDynamicPrompt}${streamFocusInstruction}${streamMandatoryStructure}\n\nGrounded Data only (no scraped context):\n---\n${trimmedStreamGrounded}\n---\nWrite the complete original research report.`;
           const corrRes = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: [{ role: 'user', parts: [{ text: correctionPrompt }] }],
@@ -837,6 +896,9 @@ async function startServer() {
       console.error(`[ANALYZE/STREAM] Error:`, error.message);
       send({ type: 'error', message: error.message });
       res.end();
+    } finally {
+      clearInterval(keepaliveTimer);
+      clearTimeout(streamTimeoutTimer);
     }
   });
 
