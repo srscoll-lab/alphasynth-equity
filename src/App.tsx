@@ -342,6 +342,24 @@ const MetricBar = ({ label, score }: { label: string, score: number | null }) =>
   </div>
 );
 
+// Problem 2: Universal ticker pattern validation — mirrors server-side logic exactly
+const BLOCKED_TICKERS_FE = new Set([
+  'TEST','FAKE','HELLO','GARBAGE','DUMMY','SAMPLE','EXAMPLE','XYZGARBAGE',
+  'RANDOM','NOTHING','INVALID','NOTASTOCK','BLAH','FOO','BAR','QWE',
+  'ASDF','ZXCV','ABC','XYZ','AAAA','BBBB','CCCC','XXXX','YYYY','ZZZZ',
+  'NULL','UNDEFINED','NONE'
+]);
+
+function isValidTickerPattern(ticker: string): boolean {
+  const t = ticker.trim();
+  if (t.length < 2 || t.length > 15) return false;
+  if (/\s/.test(t)) return false;
+  if (!/^[A-Za-z&\-./]+$/.test(t)) return false;
+  if (/^[&\-./]$/.test(t)) return false;
+  if (BLOCKED_TICKERS_FE.has(t.toUpperCase())) return false;
+  return true;
+}
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'marketing' | 'community' | 'portfolio'>('news');
   const [view, setView] = useState<'landing' | 'app'>('landing');
@@ -367,6 +385,7 @@ export default function App() {
   const [peersData, setPeersData] = useState<any[]>([]);
   const [loadingPeers, setLoadingPeers] = useState<boolean>(false);
   const [peersError, setPeersError] = useState<string | null>(null);
+  const [tickerValidationFailed, setTickerValidationFailed] = useState<boolean>(false);
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -1223,6 +1242,13 @@ ${list}
 
   const triggerFilingsAudit = async (customTicker?: string) => {
     const tkr = customTicker || filingsTicker || ticker || 'RELIANCE';
+
+    // Problem 2 & 5: client-side pattern check; filings route never blocks on data quality
+    if (!isValidTickerPattern(tkr)) {
+      setFilingsError(`'${tkr}' does not appear to be a valid stock ticker format. Please enter a valid NSE or BSE stock symbol such as RELIANCE, TCS, M&M or L&T.`);
+      return;
+    }
+
     setAuditingFilings(true);
     setFilingsError(null);
     setFilingsReport(null);
@@ -1256,12 +1282,14 @@ ${list}
         } else {
           let errData: any = {};
           try { errData = await response.json(); } catch {}
-          if (errData.error === 'TICKER_NOT_FOUND') throw new Error(errData.message);
+          if (errData.error === 'TICKER_NOT_FOUND') {
+            throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${tkr.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
+          }
           scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
         }
       } catch (scrapeErr: any) {
         clearTimeout(timeoutId);
-        if (scrapeErr.message?.includes('NSE/BSE')) throw scrapeErr;
+        if (scrapeErr.message?.startsWith('TICKER_INVALID:')) throw scrapeErr;
         scrapedMarkdown = "Scraping fallback triggered. Relying on Gemini search grounding.";
       }
 
@@ -1269,9 +1297,9 @@ ${list}
       const response = await fetch("/api/pipeline/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          ticker: tkr, 
-          context: scrapedMarkdown.substring(0, 10000), 
+        body: JSON.stringify({
+          ticker: tkr,
+          context: scrapedMarkdown.substring(0, 10000),
           sourceUrl: finalUsedUrl,
           mode: 'filings',
           dataSources: ['official']
@@ -1280,13 +1308,12 @@ ${list}
 
       if (!response.ok) {
         const text = await response.text();
-        try {
-          const errData = JSON.parse(text);
-          throw new Error(errData.message || text || "Disclosures server returned an error.");
-        } catch (parseErr: any) {
-          if (parseErr.message && (parseErr.message.includes('NSE/BSE') || parseErr.message.includes('Insufficient data'))) throw parseErr;
-          throw new Error(text || "Disclosures server returned an error.");
+        let errData: any = {};
+        try { errData = JSON.parse(text); } catch {}
+        if (errData.error === 'TICKER_NOT_FOUND' || errData.error === 'INSUFFICIENT_DATA') {
+          throw new Error(`TICKER_INVALID:We could not find '${tkr.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY, TATAMOTORS`);
         }
+        throw new Error(errData.message || text || "Disclosures server returned an error.");
       }
 
       const contentType = response.headers.get("content-type");
@@ -1302,14 +1329,14 @@ ${list}
         throw new Error("Gemini returned an empty filing summary.");
       }
 
-      const filingsScrapeThin = !scrapedMarkdown || scrapedMarkdown.length < 100 ||
-        scrapedMarkdown.includes('Direct context unavailable') ||
-        scrapedMarkdown.includes('Scraping service unavailable') ||
-        scrapedMarkdown.includes('Scraping fallback');
+      // Problem 4: only mark thin when content explicitly says no context was available
+      const filingsScrapeThin = scrapedMarkdown.includes('Direct context unavailable');
 
       const parseMetric = (name: string): number | null => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`${escapedName}[^\\d]{1,15}(\\d+(?:\\.\\d+)?)`, 'i');
+        // Match "Label: 8" or "Label: [8]" or "Label: [8 based on...]"
+        // Deliberately does NOT match "Label: [score 1-10 ...]" to avoid capturing "1" from "1-10"
+        const regex = new RegExp(`${escapedName}:\\s*\\[?(\\d+(?:\\.\\d+)?)`, 'i');
         const match = report.match(regex);
         if (!match) return null;
         const val = parseFloat(match[1]);
@@ -1337,7 +1364,8 @@ ${list}
       setFilingsStatus('Filing Report Secured.');
     } catch (err: any) {
       console.error("Filings audit failed:", err);
-      setFilingsError(err.message || "Failed to audit corporate disclosures.");
+      const rawMsg = err.message || "Failed to audit corporate disclosures.";
+      setFilingsError(rawMsg.startsWith('TICKER_INVALID:') ? rawMsg.slice('TICKER_INVALID:'.length) : rawMsg);
     } finally {
       setAuditingFilings(false);
       setFilingsStatus('');
@@ -1463,7 +1491,7 @@ ${list}
 
   const fetchPeers = async (scripTicker?: string) => {
     const targetTicker = scripTicker || lastReport?.ticker || ticker;
-    if (!targetTicker) return;
+    if (!targetTicker || tickerValidationFailed) return;
     setLoadingPeers(true);
     setPeersError(null);
     try {
@@ -1497,9 +1525,8 @@ ${list}
   };
 
   useEffect(() => {
-    const activeTarget = lastReport?.ticker || ticker;
-    if (activeTarget) {
-      fetchPeers(activeTarget);
+    if (lastReport?.ticker) {
+      fetchPeers(lastReport.ticker);
     }
   }, [lastReport?.ticker]);
 
@@ -1507,10 +1534,29 @@ ${list}
     const tkr = tickerOverride || ticker;
     if (!tkr) return;
     const targetMode = typeof modeOverride === 'string' ? modeOverride : workflowMode;
-    
+
+    // Problem 2: client-side pattern check before any API call
+    if (!isValidTickerPattern(tkr)) {
+      setTickerValidationFailed(true);
+      setError(`'${tkr}' does not appear to be a valid stock ticker format. Please enter a valid NSE or BSE stock symbol such as RELIANCE, TCS, M&M or L&T.`);
+      setLastReport(null);
+      setPeersData([]);
+      setLoadingPeers(false);
+      // Problem 8: clear peers with specific message for invalid ticker
+      setPeersError("Peer data unavailable — please enter a valid stock ticker to view peer benchmarking.");
+      setScripLtp(0);
+      setScripLtpTicker('');
+      return;
+    }
+
     setAnalyzing(true);
+    setTickerValidationFailed(false);
     if (!keepReportOpen) {
       setLastReport(null);
+      setPeersData([]);
+      setPeersError(null);
+      setScripLtp(0);
+      setScripLtpTicker('');
     }
     setError(null);
     setAnalysisStatus('Initializing Analysis Pipeline...');
@@ -1530,7 +1576,8 @@ ${list}
         const response = await fetch("/api/pipeline/scrape", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ticker: tkr, url: activeUrl }),
+          // FIX 1+4: pass mode so the scraper uses the right search query and normalises special chars
+          body: JSON.stringify({ ticker: tkr, url: activeUrl, mode: targetMode }),
           signal: controller.signal
         });
         
@@ -1553,19 +1600,34 @@ ${list}
         } else {
           let errData: any = {};
           try { errData = await response.json(); } catch {}
-          if (errData.error === 'TICKER_NOT_FOUND') throw new Error(errData.message);
+          if (errData.error === 'TICKER_NOT_FOUND') {
+            throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${tkr.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
+          }
           scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
           await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
         }
       } catch (scrapeErr: any) {
         clearTimeout(timeoutId);
-        if (scrapeErr.message?.includes('NSE/BSE')) throw scrapeErr;
+        if (scrapeErr.message?.startsWith('TICKER_INVALID:')) throw scrapeErr;
         scrapedMarkdown = "Scraping fallback triggered. Relying on Gemini search grounding.";
         await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
       }
     } catch (err: any) {
       console.warn("Analysis conduit exception:", err.message);
-      setError(err.message || "Something went wrong during analysis.");
+      const rawMsg: string = err.message || "Something went wrong during analysis.";
+      if (rawMsg.startsWith('TICKER_INVALID:')) {
+        setTickerValidationFailed(true);
+        setError(rawMsg.slice('TICKER_INVALID:'.length));
+        setLastReport(null);
+        setPeersData([]);
+        setLoadingPeers(false);
+        // Problem 8: clear peers message for invalid tickers
+        setPeersError("Peer data unavailable — please enter a valid stock ticker to view peer benchmarking.");
+        setScripLtp(0);
+        setScripLtpTicker('');
+      } else {
+        setError(rawMsg);
+      }
     } finally {
       setAnalyzing(false);
       setAnalysisStatus('');
@@ -1592,13 +1654,12 @@ ${list}
 
         if (!response.ok) {
           const text = await response.text();
-          try {
-            const errData = JSON.parse(text);
-            throw new Error(errData.message || text || "Analysis server returned an error.");
-          } catch (parseErr: any) {
-            if (parseErr.message && (parseErr.message.includes('NSE/BSE') || parseErr.message.includes('Insufficient data'))) throw parseErr;
-            throw new Error(text || "Analysis server returned an error.");
+          let errData: any = {};
+          try { errData = JSON.parse(text); } catch {}
+          if (errData.error === 'TICKER_NOT_FOUND' || errData.error === 'INSUFFICIENT_DATA') {
+            throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${ticker.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
           }
+          throw new Error(errData.message || text || "Analysis server returned an error.");
         }
 
         const contentType = response.headers.get("content-type");
@@ -1614,13 +1675,8 @@ ${list}
           throw new Error("Gemini returned an empty response.");
         }
 
-        const scrapeQuality: 'good' | 'thin' = (
-          !scrapedMarkdown ||
-          scrapedMarkdown.length < 100 ||
-          scrapedMarkdown.includes('Direct context unavailable') ||
-          scrapedMarkdown.includes('Scraping service unavailable') ||
-          scrapedMarkdown.includes('Scraping fallback')
-        ) ? 'thin' : 'good';
+        // Problem 4: only mark thin when content explicitly says no context was available
+        const scrapeQuality: 'good' | 'thin' = scrapedMarkdown.includes('Direct context unavailable') ? 'thin' : 'good';
 
         // Parsing Conviction Metrics
         const parseMetric = (name: string): number | null => {
@@ -2132,32 +2188,6 @@ ${list}
                         </div>
                       )}
 
-                      {/* Data confidence badge */}
-                      {lastReport.confidence && (
-                        <div className={`mb-4 flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[10px] font-black uppercase tracking-wider w-fit ${
-                          lastReport.confidence === 'high'
-                            ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
-                            : lastReport.confidence === 'medium'
-                            ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
-                            : 'bg-red-500/10 border-red-500/30 text-red-400'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                            lastReport.confidence === 'high' ? 'bg-emerald-400' :
-                            lastReport.confidence === 'medium' ? 'bg-amber-400' : 'bg-red-400'
-                          }`} />
-                          {lastReport.confidence === 'high' && 'HIGH CONFIDENCE: Multiple reliable sources found including Screener.in, Moneycontrol or NSE directly'}
-                          {lastReport.confidence === 'medium' && 'MEDIUM CONFIDENCE: Limited sources found, some data may be estimated'}
-                          {lastReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
-                        </div>
-                      )}
-
-                      {/* Scrape quality notice */}
-                      {lastReport.scrapeQuality === 'thin' && (
-                        <div className="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg text-[10px] text-amber-400 font-medium leading-relaxed">
-                          Note: Limited source data was available for this analysis. This report relies primarily on AI knowledge rather than scraped financial data. Verify key figures independently.
-                        </div>
-                      )}
-
                       {lastReport.mode !== 'deep_dive' || !lastReport.bullCase ? (
                           <div className="max-w-none prose prose-invert prose-orange leading-relaxed text-zinc-300 selection:bg-gold/30">
                              <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.rawReport}</Markdown>
@@ -2184,8 +2214,30 @@ ${list}
                         </>
                       )}
 
-                      {/* Permanent disclaimer */}
-                      <div className="mt-8 pt-4 border-t border-app-border">
+                      {/* Data confidence + scrape quality — placed after content as a subtle footer indicator */}
+                      <div className="mt-8 pt-4 border-t border-app-border flex flex-col gap-2">
+                        {lastReport.confidence && (
+                          <div className={`flex items-center gap-2 px-2.5 py-1 rounded border text-[9px] font-bold tracking-wider w-fit ${
+                            lastReport.confidence === 'high'
+                              ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500'
+                              : lastReport.confidence === 'medium'
+                              ? 'bg-zinc-800/60 border-zinc-700 text-zinc-400'
+                              : 'bg-red-500/5 border-red-500/20 text-red-400'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                              lastReport.confidence === 'high' ? 'bg-emerald-500' :
+                              lastReport.confidence === 'medium' ? 'bg-zinc-500' : 'bg-red-400'
+                            }`} />
+                            {lastReport.confidence === 'high' && 'HIGH CONFIDENCE: Strong data sources found'}
+                            {lastReport.confidence === 'medium' && 'MEDIUM CONFIDENCE: Limited sources found, some data may be estimated'}
+                            {lastReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
+                          </div>
+                        )}
+                        {lastReport.scrapeQuality === 'thin' && (
+                          <p className="text-[9px] text-amber-600/70 font-medium">
+                            Limited scraped source data — report relies primarily on AI search grounding. Verify key figures from official NSE/BSE filings.
+                          </p>
+                        )}
                         <p className="text-[9px] text-zinc-600 leading-relaxed font-medium">
                           This report is AI generated for informational purposes only. Data accuracy cannot be guaranteed for small cap and micro cap stocks. Always verify figures from official NSE/BSE filings before making investment decisions. This is not financial advice.
                         </p>
@@ -3462,7 +3514,10 @@ ${list}
                               <span className="text-zinc-500 not-italic">{analysisStatus}</span>
                             </div>
                           ) : error ? (
-                            <span className="text-red-400 not-italic">Error: {error}</span>
+                            <div className="not-italic bg-red-950/30 border border-red-500/20 rounded-xl p-4">
+                              <p className="text-red-400 font-semibold text-sm mb-1">Unable to generate report</p>
+                              <p className="text-zinc-400 text-xs leading-relaxed">{error}</p>
+                            </div>
                           ) : (lastReport && lastReport.ticker === ticker) ? (
                             lastReport.rawReport
                           ) : ticker ? (
@@ -3598,14 +3653,18 @@ ${list}
                         </div>
                      ) : peersError ? (
                         <div className="py-12 text-center border border-dashed border-red-500/20 rounded-2xl bg-red-500/[0.02]">
-                           <p className="text-sm font-semibold text-red-400 mb-2">Failed to load peer benchmarking data</p>
+                           <p className="text-sm font-semibold text-red-400 mb-2">
+                             {peersError.includes('could not be verified') ? 'Peer Benchmarking Unavailable' : 'Failed to load peer benchmarking data'}
+                           </p>
                            <p className="text-xs text-zinc-500 mb-4 max-w-md mx-auto">{peersError}</p>
-                           <button 
-                             onClick={() => fetchPeers()}
-                             className="px-4 py-2 bg-zinc-900 border border-app-border rounded-lg text-xs font-bold text-white hover:bg-zinc-800"
-                           >
-                             Try Again
-                           </button>
+                           {!peersError.includes('could not be verified') && (
+                             <button
+                               onClick={() => fetchPeers()}
+                               className="px-4 py-2 bg-zinc-900 border border-app-border rounded-lg text-xs font-bold text-white hover:bg-zinc-800"
+                             >
+                               Try Again
+                             </button>
+                           )}
                         </div>
                      ) : peersData.length === 0 ? (
                         <div className="py-16 text-center border border-dashed border-app-border rounded-3xl">
@@ -3929,7 +3988,7 @@ ${list}
                                        filingsReport.confidence === 'high' ? 'bg-emerald-400' :
                                        filingsReport.confidence === 'medium' ? 'bg-amber-400' : 'bg-red-400'
                                      }`} />
-                                     {filingsReport.confidence === 'high' && 'HIGH CONFIDENCE: Multiple reliable sources found including Screener.in, Moneycontrol or NSE directly'}
+                                     {filingsReport.confidence === 'high' && 'HIGH CONFIDENCE: Strong data sources found'}
                                      {filingsReport.confidence === 'medium' && 'MEDIUM CONFIDENCE: Limited sources found, some data may be estimated'}
                                      {filingsReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
                                    </div>
