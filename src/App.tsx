@@ -105,49 +105,53 @@ enum OperationType {
 const MarkdownComponents = {
   h1: ({ children }: any) => (
     <h1 className="text-5xl font-serif font-black text-white italic tracking-tight mb-12 mt-16 border-b border-app-border pb-6 flex items-center gap-6">
-      <div className="w-2.5 h-12 bg-orange-600 rounded-full shadow-[0_0_20px_rgba(234,88,12,0.3)]" />
+      <div className="w-2.5 h-12 bg-gold rounded-full shadow-[0_0_20px_rgba(212,168,67,0.3)]" />
       {children}
     </h1>
   ),
   h2: ({ children }: any) => (
-    <h2 className="text-3xl font-display font-bold text-zinc-100 tracking-tight mb-8 mt-14 flex items-center gap-4">
-      <div className="w-2 h-2 rounded-full bg-orange-600 shadow-[0_0_10px_rgba(234,88,12,0.5)]" />
+    <h2 className="text-3xl font-display font-bold text-white tracking-tight mb-8 mt-14 flex items-center gap-4">
+      <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(212,168,67,0.5)]" />
       {children}
     </h2>
   ),
   h3: ({ children }: any) => (
-    <h3 className="text-sm font-black text-zinc-400 uppercase tracking-[0.3em] mb-6 mt-10">
+    <h3 className="text-sm font-black text-gold uppercase tracking-[0.3em] mb-6 mt-10">
       {children}
     </h3>
   ),
   p: ({ children }: any) => (
-    <p className="text-zinc-300 leading-relaxed mb-8 text-xl font-light">
+    <p className="text-[#B0B8C8] leading-relaxed mb-8 text-xl font-light">
       {children}
     </p>
   ),
   ul: ({ children }: any) => (
-    <ul className="space-y-6 mb-10 list-none">
+    <ul className="space-y-4 mb-10 list-disc pl-6">
       {children}
     </ul>
   ),
+  ol: ({ children }: any) => (
+    <ol className="space-y-4 mb-10 list-decimal pl-6">
+      {children}
+    </ol>
+  ),
   li: ({ children }: any) => (
-    <li className="flex items-start gap-6 text-zinc-200 group">
-      <div className="mt-2.5 shrink-0">
-        <ArrowRight className="w-5 h-5 text-orange-600 opacity-40 group-hover:opacity-100 transition-all" />
-      </div>
-      <span className="text-lg leading-relaxed group-hover:text-white transition-colors">{children}</span>
+    <li className="text-[#B0B8C8] leading-relaxed text-lg marker:text-gold">
+      {children}
     </li>
   ),
   strong: ({ children }: any) => {
     const content = String(children);
-    // If it's a number or contains financial symbols, make it "Rich Text"
     const isNumeric = /^[\d.%₹$+-]+$/.test(content.trim());
     return (
-      <strong className={isNumeric ? "text-orange-500 font-mono text-xl font-black" : "text-white font-black tracking-widest uppercase text-[11px] bg-orange-950/40 text-orange-400 px-2 py-0.5 rounded border border-orange-500/20"}>
+      <strong className={isNumeric ? "text-gold font-mono text-xl font-black" : "text-white font-black tracking-widest uppercase text-[11px] bg-gold/10 text-gold px-2 py-0.5 rounded border border-gold/20"}>
         {children}
       </strong>
     );
   },
+  hr: () => (
+    <hr className="my-10 border-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+  ),
   table: ({ children }: any) => (
     <div className="my-12 overflow-hidden rounded-[32px] border border-app-border bg-app-surface-accent shadow-2xl">
       <table className="w-full border-collapse">
@@ -161,19 +165,19 @@ const MarkdownComponents = {
     </thead>
   ),
   th: ({ children }: any) => (
-    <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-[0.25em] text-zinc-400">
+    <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-[0.25em] text-gold">
       {children}
     </th>
   ),
   td: ({ children }: any) => (
-    <td className="px-8 py-5 text-base font-mono text-zinc-300 border-b border-app-border/50">
+    <td className="px-8 py-5 text-base font-mono text-[#B0B8C8] border-b border-app-border/50">
       {children}
     </td>
   ),
   blockquote: ({ children }: any) => (
     <div className="relative my-12 group">
-        <div className="absolute inset-0 bg-orange-500/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
-        <blockquote className="relative p-10 bg-app-surface border-l-[6px] border-orange-600 rounded-r-[40px] italic text-zinc-100 text-2xl font-serif">
+        <div className="absolute inset-0 bg-gold/5 blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
+        <blockquote className="relative p-10 bg-app-surface border-l-[6px] border-gold rounded-r-[40px] italic text-white text-2xl font-serif">
           {children}
         </blockquote>
     </div>
@@ -221,8 +225,8 @@ testConnection();
 const COLORS = {
   bg: "bg-app-bg",
   surface: "bg-app-surface",
-  accent: "text-orange-600",
-  accentBg: "bg-orange-600",
+  accent: "text-gold",
+  accentBg: "bg-amber",
   muted: "text-zinc-500",
   border: "border-app-border",
 };
@@ -312,7 +316,7 @@ const RatingBadge = ({ rating }: { rating: string }) => {
   const colors: any = {
     buy: 'bg-positive/20 text-positive border-positive/50',
     sell: 'bg-negative/20 text-negative border-negative/50',
-    hold: 'bg-orange-600/20 text-orange-400 border-orange-500/50'
+    hold: 'bg-gold/20 text-gold border-gold/50'
   };
   return (
     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${colors[rating?.toLowerCase()] || colors.hold}`}>
@@ -321,18 +325,18 @@ const RatingBadge = ({ rating }: { rating: string }) => {
   );
 };
 
-const MetricBar = ({ label, score }: { label: string, score: number }) => (
+const MetricBar = ({ label, score }: { label: string, score: number | null }) => (
   <div className="space-y-1.5">
     <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-zinc-400">
       <span>{label}</span>
-      <span className="text-zinc-200">{score}/10</span>
+      <span className="text-zinc-200">{score !== null && score !== undefined ? `${score}/10` : 'N/A'}</span>
     </div>
     <div className="h-1 bg-app-border rounded-full overflow-hidden">
-      <motion.div 
+      <motion.div
         initial={{ width: 0 }}
-        animate={{ width: `${score * 10}%` }}
+        animate={{ width: score !== null && score !== undefined ? `${score * 10}%` : '0%' }}
         transition={{ duration: 1, ease: "easeOut" }}
-        className={`h-full ${score > 7 ? 'bg-orange-600' : score > 4 ? 'bg-zinc-400' : 'bg-negative'}`}
+        className={`h-full ${score !== null && score !== undefined ? (score > 7 ? 'bg-gold' : score > 4 ? 'bg-zinc-400' : 'bg-negative') : 'bg-zinc-700'}`}
       />
     </div>
   </div>
@@ -386,11 +390,6 @@ export default function App() {
   const [tradeTargetPrice, setTradeTargetPrice] = useState<string>('0');
   const [tradeStopLoss, setTradeStopLoss] = useState<string>('0');
   
-  // GTT Order states
-  const [isGttOrder, setIsGttOrder] = useState(false);
-  const [gttTriggerType, setGttTriggerType] = useState<'single' | 'two-leg'>('single');
-  const [gttTriggerPrice, setGttTriggerPrice] = useState<string>('0');
-
   // LTP Scrip dynamic state
   const [scripLtp, setScripLtp] = useState<number>(0);
   const [scripLtpTicker, setScripLtpTicker] = useState<string>('');
@@ -485,11 +484,10 @@ export default function App() {
   useEffect(() => {
     if (lastReport) {
       const isLtpMatch = scripLtp > 0 && scripLtpTicker === lastReport.ticker.toUpperCase();
-      const livePriceToUse = isLtpMatch ? scripLtp : (lastReport.parsedLtp || 1500);
+      const livePriceToUse = isLtpMatch ? scripLtp : (lastReport.parsedLtp || 0);
       const defaultPrice = lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : livePriceToUse;
       const roundedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 100) / 100 : livePriceToUse;
       setTradePrice(roundedPrice.toFixed(2));
-      setGttTriggerPrice(roundedPrice.toFixed(2));
 
       const defaultTarget = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : (roundedPrice * 1.05);
       setTradeTargetPrice((Math.round(defaultTarget * 100) / 100).toFixed(2));
@@ -497,32 +495,19 @@ export default function App() {
       const defaultSL = lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : (roundedPrice * 0.95);
       setTradeStopLoss((Math.round(defaultSL * 100) / 100).toFixed(2));
     } else {
-      // Set defaults using scripLtp when lastReport is null (such as starting scrip)
+      // Set defaults using scripLtp when lastReport is null
       const isLtpMatch = scripLtp > 0 && scripLtpTicker === (ticker || '').toUpperCase();
-      const basePrice = isLtpMatch ? scripLtp : 1500;
+      const basePrice = isLtpMatch ? scripLtp : 0;
       setTradePrice(basePrice.toFixed(2));
-      setGttTriggerPrice(basePrice.toFixed(2));
-      setTradeTargetPrice((basePrice * 1.05).toFixed(2));
-      setTradeStopLoss((basePrice * 0.95).toFixed(2));
+      setTradeTargetPrice(basePrice > 0 ? (basePrice * 1.05).toFixed(2) : '0.00');
+      setTradeStopLoss(basePrice > 0 ? (basePrice * 0.95).toFixed(2) : '0.00');
     }
   }, [lastReport, showTradeModal, scripLtp, scripLtpTicker, ticker]);
 
-  useEffect(() => {
-    if (showTradeModal && window.KitePublisher) {
-      setTimeout(() => {
-        if (typeof window.KitePublisher.render === 'function') {
-          window.KitePublisher.render();
-        }
-      }, 500);
-    }
-  }, [showTradeModal, tradeQuantity, tradeOrderType, tradePrice, tradeTargetPrice, tradeStopLoss, zerodhaApiKey, isGttOrder, gttTriggerType, gttTriggerPrice]);
-
   const executeTrade = () => {
-    // For Zerodha (PoC), we actually let the Kite Publisher handle it
-    // For this mock/demo, we just show success if not using the real button
     if (selectedBroker !== 'zerodha') {
       setAnalyzing(true);
-      setAnalysisStatus(isGttOrder ? `Routing Secure GTT Trigger (${gttTriggerType.toUpperCase()}) to ${selectedBroker.toUpperCase()} exchange node...` : 'Routing Order to Exchange (MOCK)...');
+      setAnalysisStatus('Routing Order to Exchange (MOCK)...');
       setTimeout(() => {
         setAnalyzing(false);
         setTradeSuccess(true);
@@ -543,54 +528,20 @@ export default function App() {
       e.stopPropagation();
       try {
         const kite = new KiteClass(apiKey);
-        let orderInfo: any;
-        
-        if (isGttOrder) {
-          if (gttTriggerType === 'single') {
-            orderInfo = {
-              exchange: "NSE",
-              tradingsymbol: ((lastReport && lastReport.ticker) || "RELIANCE").replace(".NS", ""),
-              transaction_type: "BUY",
-              quantity: parseInt(tradeQuantity) || 1,
-              trigger_price: parseFloat(gttTriggerPrice) || undefined,
-              price: parseFloat(tradePrice) || undefined,
-              order_type: "GTT",
-              product: "CNC",
-              gtt_type: "single"
-            };
-          } else {
-            orderInfo = {
-              exchange: "NSE",
-              tradingsymbol: ((lastReport && lastReport.ticker) || "RELIANCE").replace(".NS", ""),
-              quantity: parseInt(tradeQuantity) || 1,
-              gtt_type: "two-leg",
-              order_type: "GTT",
-              product: "CNC",
-              stoploss_trigger: parseFloat(tradeStopLoss) || undefined,
-              target_trigger: parseFloat(tradeTargetPrice) || undefined,
-              price: parseFloat(tradePrice) || undefined
-            };
-          }
-        } else {
-          orderInfo = {
-            exchange: "NSE",
-            tradingsymbol: ((lastReport && lastReport.ticker) || "RELIANCE").replace(".NS", ""),
-            transaction_type: "BUY",
-            quantity: parseInt(tradeQuantity) || 1,
-            order_type: tradeOrderType,
-            price: tradeOrderType === "LIMIT" ? (parseFloat(tradePrice) || undefined) : undefined,
-            product: "CNC"
-          };
-        }
-        
+        kite.setOption("redirect_url", window.location.href);
+        const orderInfo = {
+          exchange: "NSE",
+          tradingsymbol: ((lastReport && lastReport.ticker) || "RELIANCE").replace(".NS", ""),
+          transaction_type: "BUY",
+          quantity: parseInt(tradeQuantity) || 1,
+          order_type: tradeOrderType,
+          price: tradeOrderType === "LIMIT" ? (parseFloat(tradePrice) || undefined) : undefined,
+          product: "CNC"
+        };
         kite.add(orderInfo);
-        
-        // Connect programmatically to launch the payment checkout popup directly
         kite.connect();
-        
-        // Provide local visual response
         setAnalyzing(true);
-        setAnalysisStatus(isGttOrder ? `Routing Secure GTT Trigger (${gttTriggerType.toUpperCase()}) directly via Zerodha Kite...` : 'Routing Secure Order Basket directly via Zerodha Kite...');
+        setAnalysisStatus('Routing Secure Order Basket directly via Zerodha Kite...');
         setTimeout(() => {
           setAnalyzing(false);
           setTradeSuccess(true);
@@ -602,11 +553,11 @@ export default function App() {
         console.error("Programmatic Kite connect handler failed, falling back to simulator:", err);
       }
     }
-    
+
     // Sandbox / fallback simulation
-    console.warn("Kite Publisher/Connect classes not initialized or API offline. Triggering secure simulation bridge.");
+    console.warn("Kite Publisher/Connect not available. Triggering simulation bridge.");
     setAnalyzing(true);
-    setAnalysisStatus(isGttOrder ? `Connecting to Zerodha Kite secure payment bridge for GTT (${gttTriggerType.toUpperCase()}) (Demo)...` : 'Connecting to Zerodha Kite secure payment bridge (Demo)...');
+    setAnalysisStatus('Connecting to Zerodha Kite secure payment bridge (Demo)...');
     setTimeout(() => {
       setAnalyzing(false);
       setTradeSuccess(true);
@@ -643,7 +594,7 @@ export default function App() {
           { ticker: "TCS.NS", reason: "Large-scale AI implementation contract from global client." }
         ],
         marketSentiment: "Market shows consolidation at life-highs with positive institutional bias.",
-        marketMoodScore: 62,
+        marketMoodScore: null,
         sources: []
       });
     } finally {
@@ -1356,11 +1307,13 @@ ${list}
         scrapedMarkdown.includes('Scraping service unavailable') ||
         scrapedMarkdown.includes('Scraping fallback');
 
-      const parseMetric = (name: string) => {
+      const parseMetric = (name: string): number | null => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         const regex = new RegExp(`${escapedName}[^\\d]{1,15}(\\d+(?:\\.\\d+)?)`, 'i');
         const match = report.match(regex);
-        return match ? Math.min(Math.max(Math.round(parseFloat(match[1])), 1), 10) : 5;
+        if (!match) return null;
+        const val = parseFloat(match[1]);
+        return isNaN(val) ? null : Math.min(Math.max(Math.round(val), 1), 10);
       };
 
       const metrics = {
@@ -1535,11 +1488,9 @@ ${list}
         throw new Error("Invalid response format received from AI peer engine.");
       }
     } catch (err: any) {
-      console.warn("Peers fetch error, initiating high-fidelity local fallback metrics:", err);
-      // Fallback/Graceful handling if API fails or limit hit - load realistic sectoral peer groupings
-      const fallbackPeers = generateFrontendPeerGroupFallback(targetTicker);
-      setPeersData(fallbackPeers);
-      setPeersError(null); // Bypass visual error block so the user maintains a fully operational interface
+      console.warn("Peers fetch error:", err.message);
+      setPeersData([]);
+      setPeersError("Peer data unavailable — please retry.");
     } finally {
       setLoadingPeers(false);
     }
@@ -1672,17 +1623,13 @@ ${list}
         ) ? 'thin' : 'good';
 
         // Parsing Conviction Metrics
-        const parseMetric = (name: string) => {
-          // Hyper-robust regex: Look for the name, skip non-digits, capture the first digit(s) found near it
+        const parseMetric = (name: string): number | null => {
           const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(`${escapedName}[^\\d]{1,15}(\\d+(?:\\.\\d+)?)`, 'i');
           const match = report.match(regex);
-          
-          if (match) {
-            const val = parseFloat(match[1]);
-            return isNaN(val) ? 5 : Math.min(Math.max(Math.round(val), 1), 10);
-          }
-          return 5;
+          if (!match) return null;
+          const val = parseFloat(match[1]);
+          return isNaN(val) ? null : Math.min(Math.max(Math.round(val), 1), 10);
         };
 
         const metrics = {
@@ -1816,7 +1763,7 @@ ${list}
               {/* Header */}
               <div className="p-6 border-b border-app-border flex items-center justify-between bg-app-surface/20">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 bg-orange-600 rounded-xl text-black">
+                  <div className="p-3 bg-amber rounded-xl text-black">
                      <BarChart3 className="w-6 h-6" />
                   </div>
                   <div>
@@ -1851,12 +1798,12 @@ ${list}
                 {/* Sidebar Logic: Metrics and Rating */}
                 <div className="lg:col-span-4 space-y-8">
                   {/* Cross-Analysis Selector Card */}
-                  <div className="p-6 bg-app-surface/50 border border-orange-500/15 rounded-2xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 p-4 opacity-5 text-orange-400">
+                  <div className="p-6 bg-app-surface/50 border border-gold/15 rounded-2xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-5 text-gold">
                         <Zap className="w-12 h-12" />
                       </div>
-                      <h3 className="text-xs font-black text-orange-400 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-orange-500 fill-current" /> Cross-Analysis Suite
+                      <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-gold fill-current" /> Cross-Analysis Suite
                       </h3>
                       <p className="text-[10px] text-zinc-400 font-medium leading-normal mb-4">
                         Switch research lens and run immediate multi-angle AI audits on <strong>{lastReport.ticker}</strong>:
@@ -1878,16 +1825,16 @@ ${list}
                                }}
                                className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                                  isActive 
-                                   ? 'bg-orange-600/10 border-orange-500/50 text-orange-400 font-semibold shadow-[0_0_15px_rgba(234,88,12,0.1)]' 
+                                   ? 'bg-gold/10 border-gold/50 text-gold font-semibold shadow-[0_0_15px_rgba(196,98,45,0.1)]' 
                                    : 'bg-black/35 border-app-border text-zinc-400 hover:border-zinc-700 hover:text-white'
                                }`}
                              >
                                 <div className="text-[10px] font-black uppercase tracking-wider flex items-center gap-2">
-                                  <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-orange-500 animate-pulse' : 'bg-zinc-600'}`} />
+                                  <div className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-amber animate-pulse' : 'bg-zinc-600'}`} />
                                   {m.name}
                                 </div>
                                 <span className="text-[9px] text-zinc-500 font-medium block mt-1">{m.desc}</span>
-                                {isActive && <div className="absolute right-3 top-3.5 text-[7px] px-1.5 py-0.5 bg-orange-600/15 text-orange-400 font-bold tracking-widest uppercase border border-orange-600/20 rounded">Active</div>}
+                                {isActive && <div className="absolute right-3 top-3.5 text-[7px] px-1.5 py-0.5 bg-gold/15 text-gold font-bold tracking-widest uppercase border border-gold/20 rounded">Active</div>}
                              </button>
                            );
                          })}
@@ -1898,10 +1845,10 @@ ${list}
                      <div className="absolute top-0 right-0 p-4 opacity-10 text-zinc-800">
                        <Target className="w-12 h-12" />
                      </div>
-                     <h3 className="text-xs font-black text-orange-400 uppercase tracking-widest mb-6">Trade Parameters</h3>
+                     <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-6">Trade Parameters</h3>
                      <div className="grid grid-cols-1 gap-4">
-                        <div className="p-4 bg-app-surface border border-orange-500/30 rounded-xl relative overflow-hidden">
-                           <p className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-1 flex justify-between items-center">
+                        <div className="p-4 bg-app-surface border border-gold/30 rounded-xl relative overflow-hidden">
+                           <p className="text-[9px] font-black text-gold uppercase tracking-widest mb-1 flex justify-between items-center">
                              <span>Last Traded Price (LTP)</span>
                              {isMarketOpen() ? (
                                <span className="flex items-center gap-1.5">
@@ -1924,19 +1871,19 @@ ${list}
                         <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Target Price</p>
                            <p className="text-xl font-display font-black text-positive">
-                             ₹{(lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 1500)) * 1.05)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                             ₹{(lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0)) * 1.05)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                            </p>
                         </div>
                         <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Entry Zone</p>
                            <p className="text-xl font-display font-black text-white">
-                             ₹{(lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : (scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 1500))).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                             ₹{(lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : (scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0))).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                            </p>
                         </div>
                         <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Stop Loss</p>
                            <p className="text-xl font-display font-black text-negative">
-                             ₹{(lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 1500)) * 0.95)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                             ₹{(lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0)) * 0.95)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                            </p>
                         </div>
                      </div>
@@ -1950,7 +1897,7 @@ ${list}
                         }}
                         className={`w-full mt-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-xl ${
                           brokerConnected 
-                            ? 'bg-orange-600 text-black hover:bg-white animate-pulse' 
+                            ? 'bg-amber text-black hover:bg-white animate-pulse' 
                             : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-white border border-app-border'
                         }`}
                       >
@@ -1989,7 +1936,7 @@ ${list}
                               href={`https://kite.zerodha.com`} 
                               target="_blank" 
                               rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
+                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
                             >
                                Kite
                             </a>
@@ -1997,7 +1944,7 @@ ${list}
                               href={`https://groww.in/search?q=${lastReport.ticker.replace(".NS", "")}`} 
                               target="_blank" 
                               rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
+                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
                             >
                                Groww
                             </a>
@@ -2005,7 +1952,7 @@ ${list}
                               href={`https://upstox.com`} 
                               target="_blank" 
                               rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
+                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
                             >
                                Upstox
                             </a>
@@ -2035,8 +1982,8 @@ ${list}
                       </div>
                   </div>
 
-                  <div className="p-6 bg-orange-600/5 border border-orange-600/20 rounded-2xl">
-                      <h3 className="text-xs font-black text-orange-400 uppercase tracking-widest mb-4">Earnings Diagnostic</h3>
+                  <div className="p-6 bg-gold/5 border border-gold/20 rounded-2xl">
+                      <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4">Earnings Diagnostic</h3>
                       <div className="text-xs text-zinc-300 leading-relaxed max-h-[150px] overflow-y-auto no-scrollbar prose prose-invert prose-xs">
                         <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.earnings || 'Parsing latest transcript data...'}</Markdown>
                       </div>
@@ -2046,17 +1993,17 @@ ${list}
                 {/* Main Content */}
                 <div className="lg:col-span-8 space-y-12">
                   {analyzing ? (
-                    <div className="flex flex-col items-center justify-center py-20 px-8 text-center bg-zinc-950/40 border border-orange-500/10 rounded-3xl min-h-[500px]">
+                    <div className="flex flex-col items-center justify-center py-20 px-8 text-center bg-zinc-950/40 border border-gold/10 rounded-3xl min-h-[500px]">
                       <div className="relative w-24 h-24 mb-8">
                         {/* Radial Scanning Rings */}
-                        <div className="absolute inset-0 rounded-full border-2 border-orange-500/20 animate-ping" />
-                        <div className="absolute inset-2 rounded-full border-2 border-orange-500/40 border-t-orange-500 animate-spin" style={{ animationDuration: '1.5s' }} />
-                        <div className="absolute inset-4 rounded-full border border-orange-600/10 flex items-center justify-center">
-                          <Zap className="w-8 h-8 text-orange-500 fill-current animate-pulse" />
+                        <div className="absolute inset-0 rounded-full border-2 border-gold/20 animate-ping" />
+                        <div className="absolute inset-2 rounded-full border-2 border-gold/40 border-t-orange-500 animate-spin" style={{ animationDuration: '1.5s' }} />
+                        <div className="absolute inset-4 rounded-full border border-gold/10 flex items-center justify-center">
+                          <Zap className="w-8 h-8 text-gold fill-current animate-pulse" />
                         </div>
                       </div>
                       
-                      <span className="text-[10px] font-black tracking-[0.3em] text-orange-600 uppercase mb-2">AlphaSynth Intelligence Suite</span>
+                      <span className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-2">Alphasynth Intelligence</span>
                       <h3 className="text-xl font-display font-medium text-white mb-2">Recalibrating Research Conduit</h3>
                       <p className="text-xs text-zinc-500 font-mono mb-8 max-w-sm">
                         Accessing real-time {workflowMode === 'earnings' ? 'Earnings Transcripts' : workflowMode === 'move' ? 'Price Action Spikes' : 'Filing Audits'} for <strong>{lastReport?.ticker || ticker}</strong>...
@@ -2065,11 +2012,11 @@ ${list}
                       {/* Pipeline Status Indicator */}
                       <div className="w-full max-w-md bg-zinc-900 border border-app-border rounded-xl p-4 text-left font-mono text-[10px] space-y-1.5 shadow-lg">
                         <div className="flex justify-between text-zinc-400">
-                          <span className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-[ping_1.5s_infinite]" /> {analysisStatus || 'Accessing Server...'}</span>
-                          <span className="text-orange-500 animate-pulse">RUNNING</span>
+                          <span className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber animate-[ping_1.5s_infinite]" /> {analysisStatus || 'Accessing Server...'}</span>
+                          <span className="text-gold animate-pulse">RUNNING</span>
                         </div>
                         <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mt-2">
-                          <div className="h-full bg-gradient-to-r from-orange-600 to-amber-500 animate-pulse" style={{ width: '75%' }} />
+                          <div className="h-full bg-gradient-to-r from-amber to-amber-500 animate-pulse" style={{ width: '75%' }} />
                         </div>
                         <div className="pt-2 text-[8px] text-zinc-600 space-y-1">
                           <p>&gt; [SYS] SWAPPING AGENT FOCUS PROTOCOL TO {workflowMode.toUpperCase()}</p>
@@ -2082,9 +2029,9 @@ ${list}
                     <div ref={reportContentRef} className="no-scrollbar">
                       {/* Interactive Visual Differential Widgets based on Mode */}
                       {lastReport.mode === 'earnings' && (
-                        <div className="mb-10 p-6 bg-orange-600/5 border border-orange-600/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" /> Operational Execution Diagnostic
+                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
+                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Operational Execution Diagnostic
                           </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
@@ -2097,7 +2044,7 @@ ${list}
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">C-Suite Response Speed</p>
-                              <p className="text-sm font-bold text-orange-400">High Transparency (8.5/10)</p>
+                              <p className="text-sm font-bold text-gold">High Transparency (8.5/10)</p>
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Operational Health Check</p>
@@ -2108,9 +2055,9 @@ ${list}
                       )}
 
                       {lastReport.mode === 'move' && (
-                        <div className="mb-10 p-6 bg-orange-600/5 border border-orange-600/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" /> Catalyst Strength & Technical Speedometer
+                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
+                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Catalyst Strength & Technical Speedometer
                           </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
@@ -2123,7 +2070,7 @@ ${list}
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Sector Sympathy Correlation</p>
-                              <p className="text-sm font-bold text-orange-400">Parallel move (Industry rally)</p>
+                              <p className="text-sm font-bold text-gold">Parallel move (Industry rally)</p>
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Trend Velocity</p>
@@ -2134,9 +2081,9 @@ ${list}
                       )}
 
                       {lastReport.mode === 'filings' && (
-                        <div className="mb-10 p-6 bg-orange-600/5 border border-orange-600/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" /> Governance & Integrity Shield
+                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
+                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Governance & Integrity Shield
                           </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
@@ -2149,7 +2096,7 @@ ${list}
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Auditors Signature</p>
-                              <p className="text-xs font-bold text-orange-400 truncate">Unqualified Clean Report</p>
+                              <p className="text-xs font-bold text-gold truncate">Unqualified Clean Report</p>
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Transparency Index</p>
@@ -2160,9 +2107,9 @@ ${list}
                       )}
 
                       {lastReport.mode === 'deep_dive' && (
-                        <div className="mb-10 p-6 bg-orange-600/5 border border-orange-600/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-orange-500 animate-pulse" /> Strategic Moat & Conviction Scope
+                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
+                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Strategic Moat & Conviction Scope
                           </h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
@@ -2175,7 +2122,7 @@ ${list}
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Target Entry Mode</p>
-                              <p className="text-xs font-bold text-orange-400 truncate">High Confidence Accumulation</p>
+                              <p className="text-xs font-bold text-gold truncate">High Confidence Accumulation</p>
                             </div>
                             <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
                               <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Strategic Audit</p>
@@ -2212,7 +2159,7 @@ ${list}
                       )}
 
                       {lastReport.mode !== 'deep_dive' || !lastReport.bullCase ? (
-                          <div className="max-w-none prose prose-invert prose-orange leading-relaxed text-zinc-300 selection:bg-orange-500/30">
+                          <div className="max-w-none prose prose-invert prose-orange leading-relaxed text-zinc-300 selection:bg-gold/30">
                              <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.rawReport}</Markdown>
                           </div>
                       ) : (
@@ -2257,8 +2204,8 @@ ${list}
                     </div>
                     {lastReport.sourceUrl && (
                       <div className="font-bold uppercase tracking-widest text-[9px] text-zinc-500 flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-orange-600" /> Grounded: 
-                        <a href={lastReport.sourceUrl} target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-orange-400 truncate max-w-[120px]">
+                        <Globe className="w-4 h-4 text-gold" /> Grounded: 
+                        <a href={lastReport.sourceUrl} target="_blank" rel="noreferrer" className="text-zinc-400 hover:text-gold truncate max-w-[120px]">
                             {new URL(lastReport.sourceUrl).hostname}
                         </a>
                       </div>
@@ -2281,15 +2228,15 @@ ${list}
           <div className="flex-1">
             <div id="capture-card" className="border border-app-border rounded-[2.5rem] overflow-hidden bg-app-bg shadow-2xl relative">
               <div className="absolute top-8 right-10 flex items-center gap-2 opacity-30 select-none">
-                 <TrendingUp className="w-4 h-4 text-orange-600" />
-                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-orange-600">Institutional Audit</span>
+                 <TrendingUp className="w-4 h-4 text-gold" />
+                 <span className="text-[10px] font-black tracking-[0.2em] uppercase text-gold">Institutional Audit</span>
               </div>
               
               <div className="p-12 border-b border-app-border bg-app-surface/10">
                   <div className="flex justify-between items-start mb-10">
                       <div>
                         <h1 className="text-6xl md:text-7xl font-display font-black tracking-tighter text-white mb-3 italic">
-                            {lastReport.ticker}<span className="text-orange-600">.</span>
+                            {lastReport.ticker}<span className="text-gold">.</span>
                         </h1>
                         <div className="flex items-center gap-4">
                             <span className="px-3 py-1 bg-app-surface border border-app-border text-zinc-400 text-[10px] font-bold uppercase tracking-widest rounded-lg">NSE Index</span>
@@ -2298,7 +2245,7 @@ ${list}
                       </div>
                       <div className="text-right">
                         <span className={`text-4xl md:text-5xl font-display font-black uppercase tracking-[0.1em] ${
-                            lastReport.rating === 'buy' ? 'text-positive shadow-[0_0_20px_rgba(20,184,166,0.2)]' : lastReport.rating === 'sell' ? 'text-negative shadow-[0_0_20px_rgba(244,63,94,0.2)]' : 'text-orange-600'
+                            lastReport.rating === 'buy' ? 'text-positive shadow-[0_0_20px_rgba(20,184,166,0.2)]' : lastReport.rating === 'sell' ? 'text-negative shadow-[0_0_20px_rgba(244,63,94,0.2)]' : 'text-gold'
                         }`}>
                             {lastReport.rating}
                         </span>
@@ -2317,7 +2264,7 @@ ${list}
                      ].map((m) => (
                        <div key={m.l} className="space-y-1.5">
                           <div className="h-1 bg-app-border rounded-full overflow-hidden">
-                             <div className="h-full bg-orange-600" style={{ width: `${(m.v || 5) * 10}%` }} />
+                             <div className="h-full bg-amber" style={{ width: `${(m.v || 5) * 10}%` }} />
                           </div>
                           <p className="text-[8px] font-black text-zinc-600 uppercase tracking-widest text-center">{m.l}</p>
                        </div>
@@ -2349,10 +2296,10 @@ ${list}
 
                   <div className="pt-12 border-t border-app-border flex justify-between items-center text-[10px] text-zinc-600 font-black tracking-[0.2em] uppercase">
                       <div className="flex items-center gap-2">
-                        <Globe className="w-4 h-4 text-orange-600 opacity-50" />
+                        <Globe className="w-4 h-4 text-gold opacity-50" />
                         <span>Source: Real-time Grounding Engine v4.0</span>
                       </div>
-                      <span className="text-orange-600 italic opacity-50 tracking-widest">Alphasynth Intelligence Lab</span>
+                      <span className="text-gold italic opacity-50 tracking-widest">Alphasynth Intelligence Lab</span>
                   </div>
               </div>
             </div>
@@ -2365,7 +2312,7 @@ ${list}
           {/* Marketing Side Panel */}
           <div className="w-full lg:w-80 space-y-6">
             <div className={`p-6 rounded-3xl ${COLORS.surface} border border-zinc-800 shadow-xl`}>
-              <h3 className="text-sm font-bold text-orange-500 mb-4 flex items-center gap-2">
+              <h3 className="text-sm font-bold text-gold mb-4 flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" /> Growth Marketing Hub
               </h3>
               
@@ -2375,7 +2322,7 @@ ${list}
                     <button 
                       key={p}
                       onClick={() => setMarketingPlatform(p)}
-                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${marketingPlatform === p ? 'bg-orange-500 text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
+                      className={`flex-1 py-1.5 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all ${marketingPlatform === p ? 'bg-amber text-black' : 'text-zinc-500 hover:text-zinc-300'}`}
                     >
                       {p}
                     </button>
@@ -2403,7 +2350,7 @@ ${list}
                         : marketingPlatform === 'linkedin' ? getLinkedInPitch() : getTwitterPitch();
                       copyToClipboard(content);
                     }}
-                    className="w-full py-2 bg-orange-500 text-black text-xs font-black uppercase rounded-lg hover:bg-orange-400 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="w-full py-2 bg-amber text-black text-xs font-black uppercase rounded-lg hover:bg-amber active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
                     {copyStatus === 'copied' ? 'Copied Pitch!' : `Copy ${marketingPlatform} Post`}
                   </button>
@@ -2444,18 +2391,18 @@ ${list}
 
   if (view === 'landing') {
     return (
-      <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-orange-500/30 overflow-x-hidden`}>
+      <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30 overflow-x-hidden`}>
         <nav className="fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50">
           <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('landing')}>
-              <div className="w-8 h-8 bg-orange-600 rounded flex items-center justify-center">
+              <div className="w-8 h-8 bg-amber rounded flex items-center justify-center">
                 <TrendingUp className="text-black w-5 h-5" />
               </div>
               <span className="font-bold text-xl tracking-tight text-white">Alphasynth Intelligence</span>
             </div>
             <button 
               onClick={() => { setView('app'); }}
-              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-orange-600 text-black rounded-lg hover:bg-orange-500 transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(234,88,12,0.3)] hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-amber text-black rounded-lg hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(196,98,45,0.3)] hover:scale-105 active:scale-95 cursor-pointer"
             >
               <BarChart3 className="w-3.5 h-3.5" /> Open Terminal
             </button>
@@ -2464,18 +2411,18 @@ ${list}
 
         <section className="pt-32 pb-16 px-6 relative overflow-hidden">
           {/* Glowing visual backdrop */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-orange-600/5 blur-[120px] rounded-full -z-10" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
           <div className="max-w-4xl mx-auto text-center mt-8">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
             >
-              <span className="inline-block px-4 py-1.5 bg-app-surface border border-app-border rounded-full text-[9px] font-black uppercase tracking-widest text-orange-400 mb-6 font-display">
+              <span className="inline-block px-4 py-1.5 bg-app-surface border border-app-border rounded-full text-[9px] font-black uppercase tracking-widest text-gold mb-6 font-display">
                 AI-SYNTHESIZED EQUITY INTELLIGENCE COCKPIT
               </span>
               <h1 className="text-5xl md:text-7xl font-display font-black text-white italic tracking-tighter leading-none mb-6">
-                COGNITIVE AI <br/>RESEARCH & <span className="text-orange-600 font-serif">ACTION GATEWAY.</span>
+                COGNITIVE AI <br/>RESEARCH & <span className="text-gold font-serif">ACTION GATEWAY.</span>
               </h1>
               <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
                 Harness specialized neural AI agents to scrape SEBI corporate disclosures, audit management meeting transcripts, and instantly generate pre-filled trades ready for single-click execution on India's premier brokerages.
@@ -2484,7 +2431,7 @@ ${list}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
                  <button 
                    onClick={() => { setView('app'); setActiveTab('news'); }}
-                   className="w-full sm:w-auto px-8 py-4 bg-orange-600 text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-orange-500 transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(234,88,12,0.3)] flex items-center justify-center gap-2 cursor-pointer"
+                   className="w-full sm:w-auto px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-amber transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(196,98,45,0.3)] flex items-center justify-center gap-2 cursor-pointer"
                  >
                    <Zap className="w-4 h-4 fill-current animate-pulse" /> Launch Interactive Terminal
                  </button>
@@ -2492,7 +2439,7 @@ ${list}
                    onClick={() => { setView('app'); setActiveTab('filings'); }}
                    className="w-full sm:w-auto px-8 py-4 bg-zinc-900 border border-app-border text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl hover:border-zinc-750 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
                  >
-                   <FileText className="w-4 h-4 text-orange-500" /> Go to Corporate Filings
+                   <FileText className="w-4 h-4 text-gold" /> Go to Corporate Filings
                  </button>
               </div>
             </motion.div>
@@ -2519,7 +2466,7 @@ ${list}
         <section className="py-24 px-6 bg-app-bg relative">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
-               <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">SYSTEM ARCHITECTURE</p>
+               <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">SYSTEM ARCHITECTURE</p>
                <h2 className="text-3xl md:text-5xl font-display font-black text-white italic tracking-tighter">MODULAR RESEARCH CORE</h2>
                <p className="text-zinc-500 text-xs max-w-md mx-auto mt-3 font-medium">Select any of the six professional terminal nodes below to bypass manual reports and dive straight into the analytical cockpit.</p>
             </div>
@@ -2532,7 +2479,7 @@ ${list}
                    desc: 'Live regulatory compliance tracking, sector sentiment shift indexing, and real-time news impact score mapping.',
                    badge: 'REAL-TIME SIGNALS',
                    icon: Zap,
-                   accent: 'border-orange-500/30'
+                   accent: 'border-gold/30'
                  },
                  {
                    tab: 'equity' as const,
@@ -2577,25 +2524,25 @@ ${list}
                ].map((node, i) => (
                   <motion.div
                     key={i}
-                    whileHover={{ y: -4, borderColor: 'rgba(234, 88, 12, 0.5)' }}
+                    whileHover={{ y: -4, borderColor: 'rgba(196, 98, 45, 0.5)' }}
                     onClick={() => { setView('app'); setActiveTab(node.tab); setTimeout(scrollToWorkflow, 100); }}
                     className={`p-8 bg-app-surface border border-app-border rounded-3xl cursor-pointer transition-all flex flex-col justify-between group shadow-xl h-[260px] relative overflow-hidden text-left`}
                   >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-orange-500 max-h-0 group-hover:opacity-10 transition-opacity">
+                    <div className="absolute top-0 right-0 p-4 opacity-5 text-gold max-h-0 group-hover:opacity-10 transition-opacity">
                       <node.icon className="w-24 h-24" />
                     </div>
                     <div>
                        <div className="flex items-center justify-between mb-4">
-                          <span className="text-[8px] font-black px-2 py-0.5 rounded bg-zinc-900 border border-app-border text-zinc-400 group-hover:border-orange-500/30 group-hover:text-orange-400 tracking-widest">{node.badge}</span>
-                          <node.icon className="w-4 h-4 text-zinc-500 group-hover:text-orange-500 transition-colors" />
+                          <span className="text-[8px] font-black px-2 py-0.5 rounded bg-zinc-900 border border-app-border text-zinc-400 group-hover:border-gold/30 group-hover:text-gold tracking-widest">{node.badge}</span>
+                          <node.icon className="w-4 h-4 text-zinc-500 group-hover:text-gold transition-colors" />
                        </div>
                        <h3 className="text-base font-bold text-zinc-100 group-hover:text-white mb-2 leading-tight font-display">{node.title}</h3>
                        <p className="text-xs text-zinc-400 group-hover:text-zinc-300 leading-relaxed font-semibold line-clamp-3">{node.desc}</p>
                     </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-orange-500/80 flex items-center gap-1 mt-4">
+                    <div className="text-[9px] font-black uppercase tracking-widest text-gold/80 flex items-center gap-1 mt-4">
                       <Zap className="w-3 h-3 fill-current" /> Initialize Node Console →
                     </div>
-                    <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-orange-600 group-hover:w-full transition-all duration-300" />
+                    <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-amber group-hover:w-full transition-all duration-300" />
                   </motion.div>
                ))}
             </div>
@@ -2606,7 +2553,7 @@ ${list}
         <section className="py-20 px-6 bg-app-surface/15 border-t border-app-border relative">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center text-left">
             <div>
-               <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">SYSTEM CONDUIT</p>
+               <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">SYSTEM CONDUIT</p>
                <h2 className="text-3xl md:text-5xl font-display font-black text-white italic tracking-tighter leading-none mb-6">SECURE DIRECT EDGE ANCHORING</h2>
                <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-semibold">Alphasynth Intelligence is equipped with zero-delay data scraping endpoints that extract authentic filing transcripts from company portals. Avoid delayed, watered-down second-hand newsletters.</p>
                <div className="space-y-4">
@@ -2615,7 +2562,7 @@ ${list}
                     { title: "CEO Guidance Reliability Auditing", desc: "Flags management when previous estimates deviate significantly from actual reports." }
                   ].map((item, idx) => (
                      <div key={idx} className="flex gap-4 p-4 border border-app-border rounded-2xl bg-app-bg/40">
-                        <div className="p-2 bg-orange-500/10 rounded-lg text-orange-500 h-fit">
+                        <div className="p-2 bg-gold/10 rounded-lg text-gold h-fit">
                            <ShieldCheck className="w-5 h-5" />
                          </div>
                         <div>
@@ -2639,12 +2586,12 @@ ${list}
                
                <div className="mt-8 space-y-3 leading-relaxed overflow-y-auto h-[250px] no-scrollbar">
                   <p className="text-zinc-600 font-bold">[SYS] BOOTING ALPHASYNTH INSTANCES v4.0.2...</p>
-                  <p className="text-orange-500 font-bold">[DB] SECURE KEY GRANTED: LOCAL_MOCK_ENV_ACTIVE</p>
+                  <p className="text-gold font-bold">[DB] SECURE KEY GRANTED: LOCAL_MOCK_ENV_ACTIVE</p>
                   <p className="text-zinc-500">[FETCH] Connected to NSE India corporate disclosure servers.</p>
                   <p className="text-zinc-500">[PARSER] Ingesting quarterly SEBI transcript docs for RELIANCE.NS</p>
                   <p className="text-emerald-400 font-bold">[VERIFIER] Cross-matching PAT and EBITDA revisions against sector median.</p>
                   <p className="text-zinc-500">[MODEL] Invoking Alphasynth AI-flash with compliance guidelines...</p>
-                  <p className="text-orange-400">[CONVICTION] Transcript Transparency Index parsed at 8.7/10 (High Quality)</p>
+                  <p className="text-gold">[CONVICTION] Transcript Transparency Index parsed at 8.7/10 (High Quality)</p>
                   <p className="text-zinc-500">[SYSTEM] Session active. Standby for new user commands...</p>
                </div>
             </div>
@@ -2661,7 +2608,7 @@ ${list}
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-orange-500/30`}>
+    <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30`}>
       <AnimatePresence>
         {showOnboarding && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-app-bg/90 backdrop-blur-xl text-left">
@@ -2671,18 +2618,21 @@ ${list}
               exit={{ scale: 0.9, opacity: 0 }}
               className="bg-app-surface border border-app-border w-full max-w-xl rounded-[2.5rem] overflow-hidden shadow-2xl relative"
             >
-              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-orange-600 via-blue-500 to-positive" />
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber via-blue-500 to-positive" />
               
               <div className="p-10 md:p-14">
-                <div className="w-24 h-24 bg-orange-600/10 border-2 border-orange-600/20 rounded-[2rem] flex items-center justify-center mb-10 mx-auto shadow-[0_0_60px_rgba(234,88,12,0.15)] relative overflow-hidden group">
-                   <div className="absolute inset-0 bg-orange-600/20 blur-xl group-hover:scale-150 transition-transform duration-700" />
-                   <TrendingUp className="w-12 h-12 text-orange-600 relative z-10" />
+                <div className="w-24 h-24 bg-gold/10 border-2 border-gold/20 rounded-[2rem] flex items-center justify-center mb-10 mx-auto shadow-[0_0_60px_rgba(196,98,45,0.15)] relative overflow-hidden group">
+                   <div className="absolute inset-0 bg-gold/20 blur-xl group-hover:scale-150 transition-transform duration-700" />
+                   <TrendingUp className="w-12 h-12 text-gold relative z-10" />
                 </div>
                 
-                <h2 className="text-4xl md:text-5xl font-display font-black text-center text-white mb-6 tracking-tighter italic leading-[1.1] pt-2">
-                   NSE RESEARCH <br/><span className="text-orange-600">TERMINAL.</span>
-                </h2>
-                
+                <div className="text-center mb-6 pt-2">
+                  <p className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-2">Alphasynth Intelligence</p>
+                  <h2 className="text-4xl md:text-5xl font-display font-black text-center text-white tracking-tighter italic leading-[1.1]">
+                     NSE RESEARCH <br/><span className="text-gold">TERMINAL.</span>
+                  </h2>
+                </div>
+
                 <p className="text-zinc-400 text-center text-base leading-relaxed mb-12 max-w-sm mx-auto font-medium">
                    Access institutional-grade insights grounded in live NSE SEBI filings. No noise. Just Alpha.
                 </p>
@@ -2704,9 +2654,9 @@ ${list}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.2 + (i * 0.1) }}
-                      className="w-full flex items-center gap-5 p-5 bg-app-bg/50 border border-app-border rounded-3xl hover:border-orange-500/30 transition-all group cursor-pointer text-left"
+                      className="w-full flex items-center gap-5 p-5 bg-app-bg/50 border border-app-border rounded-3xl hover:border-gold/30 transition-all group cursor-pointer text-left"
                     >
-                      <div className="p-3 bg-app-surface border border-app-border rounded-xl group-hover:bg-orange-600 transition-all flex-shrink-0">
+                      <div className="p-3 bg-app-surface border border-app-border rounded-xl group-hover:bg-amber transition-all flex-shrink-0">
                         <feat.icon className="w-5 h-5 text-zinc-400 group-hover:text-black" />
                       </div>
                       <div className="text-left">
@@ -2723,7 +2673,7 @@ ${list}
                     completeOnboarding();
                     setTimeout(scrollToWorkflow, 100);
                   }}
-                  className="w-full py-5 bg-orange-600 text-black font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl hover:bg-orange-500 transition-all shadow-[0_10px_30px_rgba(234,88,12,0.3)] active:scale-[0.98]"
+                  className="w-full py-5 bg-amber text-black font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl hover:bg-amber transition-all shadow-[0_10px_30px_rgba(196,98,45,0.3)] active:scale-[0.98]"
                 >
                   Enter NSE Research Terminal
                 </button>
@@ -2744,12 +2694,12 @@ ${list}
               {/* Header */}
               <div className="p-8 border-b border-app-border flex items-center justify-between bg-app-surface/40">
                 <div className="flex items-center gap-5">
-                  <div className="p-4 bg-orange-600 rounded-2xl text-black shadow-[0_0_20px_rgba(234,88,12,0.3)]">
+                  <div className="p-4 bg-amber rounded-2xl text-black shadow-[0_0_20px_rgba(196,98,45,0.3)]">
                      <Shield className="w-8 h-8" />
                   </div>
                   <div>
                       <h2 className="text-3xl font-display font-black text-white tracking-tight uppercase italic">
-                        Institutional Portfolio Audit<span className="text-orange-600">.</span>
+                        Institutional Portfolio Audit<span className="text-gold">.</span>
                       </h2>
                       <div className="text-[10px] text-zinc-400 font-black uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2">
                         <div className="w-2 h-2 rounded-full bg-positive animate-pulse" /> Grounding Engine Active 
@@ -2776,7 +2726,7 @@ ${list}
                         <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
                           <Settings className="w-16 h-16" />
                         </div>
-                        <h3 className="text-xs font-black text-orange-400 uppercase tracking-[0.2em] mb-8">Asset Concentration</h3>
+                        <h3 className="text-xs font-black text-gold uppercase tracking-[0.2em] mb-8">Asset Concentration</h3>
                         <div className="h-64 mb-8">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
@@ -2823,10 +2773,10 @@ ${list}
                   <div className="lg:col-span-8 space-y-12">
                     <div 
                       ref={auditContentRef}
-                      className="max-w-none prose-lg leading-relaxed text-zinc-300 selection:bg-orange-500/30 p-12 bg-black rounded-[40px] border border-zinc-900 shadow-2xl relative overflow-hidden text-left"
+                      className="max-w-none prose-lg leading-relaxed text-zinc-300 selection:bg-gold/30 p-12 bg-black rounded-[40px] border border-zinc-900 shadow-2xl relative overflow-hidden text-left"
                     >
                       {/* Decorative elements for rich feel */}
-                      <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="absolute top-0 right-0 w-64 h-64 bg-gold/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2" />
                       <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
                       
                       <div className="relative z-10">
@@ -2836,7 +2786,7 @@ ${list}
                     
                     <div className="pt-16 border-t border-zinc-900 flex items-center justify-between font-black uppercase tracking-[0.2em] text-[10px] text-zinc-500">
                         <div className="flex items-center gap-3">
-                          <Globe className="w-5 h-5 text-orange-500 opacity-50" /> 
+                          <Globe className="w-5 h-5 text-gold opacity-50" /> 
                           <span>Institutional Engine v4.0 • 256-bit Encryption • Audit Log Validated</span>
                         </div>
                     </div>
@@ -2880,7 +2830,7 @@ ${list}
                  </button>
                  <button 
                   onClick={() => setViewingPortfolioAudit(false)}
-                  className="px-8 py-2.5 bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-orange-400 transition-all shadow-[0_4px_14px_rgba(249,115,22,0.3)]"
+                  className="px-8 py-2.5 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber transition-all shadow-[0_4px_14px_rgba(249,115,22,0.3)]"
                  >
                    Close Audit
                  </button>
@@ -2897,14 +2847,14 @@ ${list}
             initial={{ opacity: 0, y: -20, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-24 left-1/2 z-[70] w-[90%] max-w-sm bg-app-surface border border-orange-500/50 backdrop-blur-xl p-4 rounded-2xl flex items-center gap-4 shadow-2xl"
+            className="fixed top-24 left-1/2 z-[70] w-[90%] max-w-sm bg-app-surface border border-gold/50 backdrop-blur-xl p-4 rounded-2xl flex items-center gap-4 shadow-2xl"
           >
-            <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500 flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-gold/20 flex items-center justify-center text-gold flex-shrink-0">
                <Shield className="w-4 h-4" />
             </div>
             <div className="flex-1">
               <p className="text-[10px] font-black text-white uppercase tracking-widest mb-1">Acessibility Issue</p>
-              <p className="text-[10px] text-zinc-400 leading-tight">IFrame detected. If login fails, use the <span className="text-orange-500 font-bold">Launch App</span> button or Shared URL.</p>
+              <p className="text-[10px] text-zinc-400 leading-tight">IFrame detected. If login fails, use the <span className="text-gold font-bold">Launch App</span> button or Shared URL.</p>
             </div>
             <button 
               onClick={() => setShowIframeWarning(false)}
@@ -2921,7 +2871,7 @@ ${list}
         <div className={`p-1 pr-4 bg-app-surface border ${COLORS.border} backdrop-blur-xl rounded-full flex items-center gap-3 shadow-2xl overflow-hidden group`}>
           <button 
             onClick={() => copyToClipboard(getSharedUrl())}
-            className={`p-3 rounded-full transition-all ${copyStatus === 'copied' ? 'bg-green-500 text-black' : 'bg-orange-500 text-black hover:scale-105 active:scale-95'}`}
+            className={`p-3 rounded-full transition-all ${copyStatus === 'copied' ? 'bg-green-500 text-black' : 'bg-amber text-black hover:scale-105 active:scale-95'}`}
           >
             {copyStatus === 'copied' ? <TrendingUp className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
           </button>
@@ -2955,7 +2905,7 @@ ${list}
               </button>
 
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center text-orange-500">
+                <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center text-gold">
                   <Share2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -2995,7 +2945,7 @@ ${list}
                     }
                     setPreviewContent(null);
                   }}
-                  className="flex-1 px-6 py-3 bg-orange-500 text-black font-bold rounded-xl hover:bg-orange-400 transition-colors flex items-center justify-center gap-2"
+                  className="flex-1 px-6 py-3 bg-amber text-black font-bold rounded-xl hover:bg-amber transition-colors flex items-center justify-center gap-2"
                 >
                   <TrendingUp className="w-4 h-4" /> 
                   {previewContent.title.includes("LinkedIn") 
@@ -3022,10 +2972,10 @@ ${list}
             className="flex items-center gap-2 cursor-pointer group"
             onClick={() => setView('landing')}
           >
-            <div className={`w-8 h-8 bg-orange-600 rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
+            <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-white group-hover:text-orange-400 transition-colors">Alphasynth Intelligence</span>
+            <span className="font-bold text-xl tracking-tight text-white group-hover:text-gold transition-colors">Alphasynth Intelligence</span>
           </div>
           <div className="flex items-center gap-4">
             <button 
@@ -3033,18 +2983,18 @@ ${list}
                 setView('landing');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-orange-600 border border-orange-500 rounded-lg text-[10px] font-black uppercase tracking-widest text-black hover:bg-white transition-all group shadow-[0_0_20px_rgba(234,88,12,0.4)]"
+              className="flex items-center gap-2 px-3 py-1.5 bg-amber border border-gold rounded-lg text-[10px] font-black uppercase tracking-widest text-black hover:bg-white transition-all group shadow-[0_0_20px_rgba(196,98,45,0.4)]"
             >
               <Zap className="w-3 h-3 group-hover:animate-pulse fill-current" />
               Landing Summary
             </button>
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-               <button onClick={() => { setActiveTab('news'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-orange-600' : ''}`}>Pulse</button>
-               <button onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-orange-600' : ''}`}>Research</button>
-               <button onClick={() => { setActiveTab('filings'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-orange-600' : ''}`}>Filings</button>
-               <button onClick={() => { setActiveTab('portfolio'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-orange-600' : ''}`}>Audit</button>
-               <button onClick={() => { setActiveTab('marketing'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-orange-600' : ''}`}>Growth</button>
-               <button onClick={() => { setActiveTab('community'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-orange-600' : ''}`}>Social</button>
+               <button onClick={() => { setActiveTab('news'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
+               <button onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
+               <button onClick={() => { setActiveTab('filings'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-gold' : ''}`}>Filings</button>
+               <button onClick={() => { setActiveTab('portfolio'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-gold' : ''}`}>Audit</button>
+               <button onClick={() => { setActiveTab('marketing'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
+               <button onClick={() => { setActiveTab('community'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
             </div>
             {user ? (
               <div className="flex items-center gap-3">
@@ -3057,13 +3007,13 @@ ${list}
                   className="p-2 hover:bg-white/10 rounded-lg transition-colors group"
                   title="Logout"
                 >
-                  <LogOut className="w-4 h-4 text-zinc-500 group-hover:text-orange-500" />
+                  <LogOut className="w-4 h-4 text-zinc-500 group-hover:text-gold" />
                 </button>
               </div>
             ) : (
               <button 
                 onClick={handleLogin}
-                className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-orange-600 text-black rounded hover:bg-orange-500 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(234,88,12,0.3)] active:scale-95`}
+                className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(196,98,45,0.3)] active:scale-95`}
               >
                 <TrendingUp className="w-3 h-3" /> Start Free Research
               </button>
@@ -3074,19 +3024,19 @@ ${list}
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 relative overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-orange-600/5 blur-[120px] rounded-full -z-10" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
           >
-            <span className="inline-block px-4 py-1.5 bg-app-surface border border-app-border rounded-full text-[10px] font-bold uppercase tracking-widest text-orange-400 mb-6 font-display">
+            <span className="inline-block px-4 py-1.5 bg-app-surface border border-app-border rounded-full text-[10px] font-bold uppercase tracking-widest text-gold mb-6 font-display">
               Institutional Intelligence for Retail Investors
             </span>
             <h1 className="text-4xl md:text-7xl font-display font-semibold tracking-tight leading-[1.05] mb-8 text-white">
               Own the Workflow. <br />
-              <span className="text-orange-600 font-medium">Out-Research the Street.</span>
+              <span className="text-gold font-medium">Out-Research the Street.</span>
             </h1>
 
             {/* Main Action Hub */}
@@ -3098,7 +3048,7 @@ ${list}
                    icon: BarChart3, 
                    desc: 'Institutional report with risk alpha', 
                    outcome: 'Generate conviction',
-                   accent: 'border-orange-500/30' 
+                   accent: 'border-gold/30' 
                  },
                  { 
                    id: 'earnings', 
@@ -3138,17 +3088,17 @@ ${list}
                   }}
                   className={`p-6 rounded-2xl border ${((mode.id === 'filings' && activeTab === 'filings') || (mode.id !== 'filings' && workflowMode === mode.id && activeTab === 'equity')) ? 'bg-app-surface-accent ' + mode.accent : 'bg-transparent border-app-border'} hover:border-zinc-700 transition-all text-left flex flex-col justify-between gap-4 group relative overflow-hidden h-full shadow-lg`}
                  >
-                    <div className={`p-3 rounded-xl w-fit ${workflowMode === mode.id ? 'bg-orange-600 text-black' : 'bg-app-surface text-zinc-500'}`}>
+                    <div className={`p-3 rounded-xl w-fit ${workflowMode === mode.id ? 'bg-amber text-black' : 'bg-app-surface text-zinc-500'}`}>
                       <mode.icon className="w-5 h-5" />
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-zinc-100">{mode.title}</h4>
                       <p className="text-[10px] text-zinc-400 font-medium leading-tight mt-1 mb-2">{mode.desc}</p>
-                      <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-orange-500/80 mt-auto">
+                      <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-widest text-gold/80 mt-auto">
                         <Zap className="w-2.5 h-2.5" /> {mode.outcome}
                       </div>
                     </div>
-                    {workflowMode === mode.id && <div className="absolute bottom-0 left-0 h-0.5 w-full bg-orange-600" />}
+                    {workflowMode === mode.id && <div className="absolute bottom-0 left-0 h-0.5 w-full bg-amber" />}
                  </button>
                ))}
             </div>
@@ -3172,11 +3122,11 @@ ${list}
                   }}
                   className={`px-3 py-2 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all flex items-center gap-2 ${
                     dataSources.includes(source.id) 
-                      ? 'bg-app-surface-accent border-orange-500/30 text-orange-400' 
+                      ? 'bg-app-surface-accent border-gold/30 text-gold' 
                       : 'bg-app-surface/50 border-app-border text-zinc-500 hover:border-zinc-700'
                   }`}
                 >
-                  <div className={`w-1 h-1 rounded-full ${dataSources.includes(source.id) ? 'bg-orange-600 shadow-[0_0_8px_rgba(234,88,12,0.5)]' : 'bg-app-border'}`} />
+                  <div className={`w-1 h-1 rounded-full ${dataSources.includes(source.id) ? 'bg-amber shadow-[0_0_8px_rgba(196,98,45,0.5)]' : 'bg-app-border'}`} />
                   {source.name}
                 </button>
               ))}
@@ -3184,7 +3134,7 @@ ${list}
 
             <div className="max-w-2xl mx-auto mb-6 text-center animate-pulse">
               <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 leading-none">
-                <ShieldCheck className="w-3.5 h-3.5 text-orange-600" /> 
+                <ShieldCheck className="w-3.5 h-3.5 text-gold" /> 
                 Institutional Compliance Shield Active
               </p>
             </div>
@@ -3197,13 +3147,13 @@ ${list}
                   placeholder="Ticker (e.g. RELIANCE)"
                   value={ticker}
                   onChange={(e) => setTicker(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-4 bg-app-surface border border-app-border rounded-xl text-sm text-white focus:outline-none focus:border-orange-600 transition-colors placeholder:text-zinc-600 font-semibold"
+                  className="w-full px-4 py-4 bg-app-surface border border-app-border rounded-xl text-sm text-white focus:outline-none focus:border-gold transition-colors placeholder:text-zinc-600 font-semibold"
                 />
               </div>
               <button 
                 onClick={() => triggerAnalysis()}
                 disabled={analyzing}
-                className="px-8 py-4 bg-orange-600 text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 rounded-xl hover:bg-orange-500 active:scale-[0.98] transition-all disabled:opacity-50 min-w-[200px] shadow-[0_10px_20px_rgba(234,88,12,0.2)]"
+                className="px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 rounded-xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 min-w-[200px] shadow-[0_10px_20px_rgba(196,98,45,0.2)]"
               >
                 {analyzing ? (
                   <div className="flex items-center gap-3">
@@ -3231,7 +3181,7 @@ ${list}
                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
                   {['Dalal Street Pro', 'NSE Collective', 'Alpha Insights', 'FinTech Labs'].map((brand) => (
                     <div key={brand} className="flex items-center gap-2">
-                       <Zap className="w-4 h-4 text-orange-600" />
+                       <Zap className="w-4 h-4 text-gold" />
                        <span className="text-sm font-display font-bold text-white tracking-tighter italic">{brand}</span>
                     </div>
                   ))}
@@ -3246,7 +3196,7 @@ ${list}
                   </div>
                   <div className="text-left">
                      <p className="text-xl font-display font-medium text-white italic tracking-tight">"The first tool that actually reads the filings. Non-negotiable for my workflow."</p>
-                     <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mt-1.5">— Siddhartha V., Equity Derivatives Desk</p>
+                     <p className="text-[10px] font-black text-gold uppercase tracking-widest mt-1.5">— Siddhartha V., Equity Derivatives Desk</p>
                   </div>
                </div>
             </div>
@@ -3264,7 +3214,7 @@ ${list}
                 onClick={() => { setActiveTab(tab); scrollToWorkflow(); }}
                 className={`px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group ${
                   activeTab === tab 
-                  ? 'bg-orange-600 text-black shadow-[0_10px_25px_rgba(234,88,12,0.25)]' 
+                  ? 'bg-amber text-black shadow-[0_10px_25px_rgba(196,98,45,0.25)]' 
                   : 'bg-app-surface text-zinc-500 border border-app-border hover:border-zinc-700 hover:text-zinc-300'
                 }`}
               >
@@ -3298,7 +3248,7 @@ ${list}
                        <button 
                          onClick={fetchMarketIntel}
                          disabled={loadingIntel}
-                         className="p-2 text-zinc-500 hover:text-orange-500 transition-colors disabled:opacity-50"
+                         className="p-2 text-zinc-500 hover:text-gold transition-colors disabled:opacity-50"
                          title="Refresh Pulse intelligence"
                        >
                          <RefreshCw className={`w-5 h-5 ${loadingIntel ? 'animate-spin' : ''}`} />
@@ -3318,7 +3268,7 @@ ${list}
                         ) : liveIntel?.trending?.map((item, i) => (
                           <div 
                             key={i} 
-                            className="p-4 bg-app-surface/50 border border-app-border rounded-xl hover:border-orange-500/30 transition-all cursor-pointer group flex justify-between items-center"
+                            className="p-4 bg-app-surface/50 border border-app-border rounded-xl hover:border-gold/30 transition-all cursor-pointer group flex justify-between items-center"
                             onClick={() => {
                               setTicker(item.ticker.split('.')[0]);
                               setWorkflowMode('deep_dive');
@@ -3328,7 +3278,7 @@ ${list}
                           >
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="text-xs font-black text-orange-500 uppercase tracking-widest">{item.ticker}</span>
+                                <span className="text-xs font-black text-gold uppercase tracking-widest">{item.ticker}</span>
                                 <TrendingUp className="w-3 h-3 text-positive opacity-50" />
                               </div>
                               <p className="text-[10px] text-zinc-300 font-medium line-clamp-1">{item.reason}</p>
@@ -3338,13 +3288,13 @@ ${list}
                                 e.stopPropagation();
                                 addToWatchlist(item.ticker.split('.')[0]);
                               }}
-                              className="p-2 text-zinc-600 hover:text-orange-500 transition-colors"
+                              className="p-2 text-zinc-600 hover:text-gold transition-colors"
                             >
                               <Heart className="w-4 h-4" />
                             </button>
                           </div>
                         )) || (
-                          <div className="col-span-2 p-12 text-center border-2 border-dashed border-app-border rounded-2xl group hover:border-orange-500/50 transition-all cursor-pointer" onClick={fetchMarketIntel}>
+                          <div className="col-span-2 p-12 text-center border-2 border-dashed border-app-border rounded-2xl group hover:border-gold/50 transition-all cursor-pointer" onClick={fetchMarketIntel}>
                             <RefreshCw className={`w-6 h-6 text-zinc-700 mb-2 mx-auto ${loadingIntel ? 'animate-spin' : ''}`} />
                             <p className="text-zinc-600 italic text-xs">Awaiting market signal...</p>
                             <p className="text-[10px] text-zinc-800 uppercase mt-2 font-black tracking-widest">Click to pulse manual fetch</p>
@@ -3357,7 +3307,7 @@ ${list}
                        <div className={`p-8 rounded-2xl bg-app-surface border border-app-border shadow-2xl relative overflow-hidden flex-1`}>
                           <div className="flex items-center justify-between mb-6">
                              <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest">Macro Sentiment Audit</p>
-                             <Globe className="w-4 h-4 text-orange-600" />
+                             <Globe className="w-4 h-4 text-gold" />
                           </div>
                           <p className="text-sm font-medium text-zinc-100 leading-relaxed italic mb-8">
                              {loadingIntel ? "Parsing macro news..." : liveIntel?.marketSentiment || "Fetching latest market intelligence..."}
@@ -3365,7 +3315,7 @@ ${list}
                           <div className="pt-6 border-t border-app-border/50 flex justify-between items-center">
                              <div className="flex flex-wrap gap-2">
                                 {liveIntel?.sources?.slice(0, 3).map((s: any, i: number) => (
-                                   <a key={i} href={s.url} target="_blank" rel="noreferrer" className="text-[9px] bg-app-bg border border-app-border px-2 py-1 rounded text-zinc-400 hover:text-orange-500 transition-colors">
+                                   <a key={i} href={s.url} target="_blank" rel="noreferrer" className="text-[9px] bg-app-bg border border-app-border px-2 py-1 rounded text-zinc-400 hover:text-gold transition-colors">
                                       {s.title?.substring(0, 20)}...
                                    </a>
                                 ))}
@@ -3375,26 +3325,41 @@ ${list}
                        </div>
 
                        <div className={`p-8 rounded-2xl bg-app-surface/30 border border-app-border shadow-2xl flex flex-col justify-center items-center text-center relative overflow-hidden`}>
-                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-negative via-orange-600 to-positive" />
+                          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-negative via-amber to-positive" />
                           <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] mb-8">Fear & Greed Index</h3>
                           
                           <div className="relative w-32 h-32 mb-6">
-                             <svg className="w-full h-full -rotate-90">
-                                <circle cx="64" cy="64" r="58" fill="none" stroke="#242829" strokeWidth="12" />
-                                <motion.circle 
-                                  initial={{ strokeDashoffset: 364 }}
-                                  animate={{ strokeDashoffset: 364 - (364 * (liveIntel?.marketMoodScore || 50) / 100) }}
-                                  cx="64" cy="64" r="58" fill="none" stroke={ (liveIntel?.marketMoodScore || 50) > 70 ? 'var(--color-positive)' : (liveIntel?.marketMoodScore || 50) > 40 ? 'var(--color-orange-600)' : 'var(--color-negative)' } strokeWidth="12" strokeDasharray="364" strokeLinecap="round" 
-                                />
-                             </svg>
-                             <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                <span className="text-3xl font-display font-black text-white leading-none">
-                                   {loadingIntel ? "..." : (liveIntel?.marketMoodScore || '--')}
-                                </span>
-                                <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${ (liveIntel?.marketMoodScore || 50) > 70 ? 'text-positive' : (liveIntel?.marketMoodScore || 50) > 40 ? 'text-orange-500' : 'text-negative' }`}>
-                                   { (liveIntel?.marketMoodScore || 50) > 80 ? 'Exuberance' : (liveIntel?.marketMoodScore || 50) > 60 ? 'Greed' : (liveIntel?.marketMoodScore || 50) > 40 ? 'Neutral' : (liveIntel?.marketMoodScore || 50) > 20 ? 'Fear' : 'Panic' }
-                                </span>
-                             </div>
+                             {liveIntel?.marketMoodScore !== null && liveIntel?.marketMoodScore !== undefined ? (
+                               <>
+                                 <svg className="w-full h-full -rotate-90">
+                                   <circle cx="64" cy="64" r="58" fill="none" stroke="#242829" strokeWidth="12" />
+                                   <motion.circle
+                                     initial={{ strokeDashoffset: 364 }}
+                                     animate={{ strokeDashoffset: 364 - (364 * liveIntel.marketMoodScore / 100) }}
+                                     cx="64" cy="64" r="58" fill="none"
+                                     stroke={liveIntel.marketMoodScore > 70 ? 'var(--color-positive)' : liveIntel.marketMoodScore > 40 ? 'var(--color-gold)' : 'var(--color-negative)'}
+                                     strokeWidth="12" strokeDasharray="364" strokeLinecap="round"
+                                   />
+                                 </svg>
+                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                   <span className="text-3xl font-display font-black text-white leading-none">
+                                     {loadingIntel ? "..." : liveIntel.marketMoodScore}
+                                   </span>
+                                   <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${liveIntel.marketMoodScore > 70 ? 'text-positive' : liveIntel.marketMoodScore > 40 ? 'text-gold' : 'text-negative'}`}>
+                                     {liveIntel.marketMoodScore > 80 ? 'Exuberance' : liveIntel.marketMoodScore > 60 ? 'Greed' : liveIntel.marketMoodScore > 40 ? 'Neutral' : liveIntel.marketMoodScore > 20 ? 'Fear' : 'Panic'}
+                                   </span>
+                                 </div>
+                               </>
+                             ) : (
+                               <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                 <svg className="w-full h-full -rotate-90">
+                                   <circle cx="64" cy="64" r="58" fill="none" stroke="#242829" strokeWidth="12" />
+                                 </svg>
+                                 <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                   <span className="text-xs font-bold text-zinc-500 uppercase tracking-widest text-center leading-tight">{loadingIntel ? "..." : "Unavailable"}</span>
+                                 </div>
+                               </div>
+                             )}
                           </div>
                           <p className="text-[9px] text-zinc-500 font-medium leading-relaxed px-4">Real-time analysis of volatility, momentum, and retail sentiment across Dalal Street.</p>
                        </div>
@@ -3406,7 +3371,7 @@ ${list}
                     <div className={`p-6 rounded-2xl bg-app-surface/50 border border-app-border shadow-xl`}>
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] flex items-center gap-2">
-                          <TrendingUp className="w-4 h-4 text-orange-600" /> Private Watchlist
+                          <TrendingUp className="w-4 h-4 text-gold" /> Private Watchlist
                         </h3>
                         <span className="text-[9px] font-bold text-zinc-500">{watchlist.length} Tickers</span>
                       </div>
@@ -3421,7 +3386,7 @@ ${list}
                                 setActiveTab('equity');
                                 document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' });
                               }}
-                              className="text-sm font-bold text-zinc-300 hover:text-orange-500 transition-colors"
+                              className="text-sm font-bold text-zinc-300 hover:text-gold transition-colors"
                             >
                               {t}
                             </button>
@@ -3442,8 +3407,8 @@ ${list}
                       </div>
                     </div>
 
-                    <div className="p-6 rounded-2xl bg-orange-600/5 border border-orange-600/10">
-                       <h4 className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">Alpha Signal</h4>
+                    <div className="p-6 rounded-2xl bg-gold/5 border border-gold/10">
+                       <h4 className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">Alpha Signal</h4>
                        <p className="text-[11px] text-zinc-400 leading-relaxed">
                           Your watchlist conviction is computed daily against institutional flow data.
                        </p>
@@ -3470,30 +3435,30 @@ ${list}
                             triggerAnalysis();
                           }
                         }}
-                        className={`p-6 rounded-2xl ${COLORS.surface} border ${COLORS.border} shadow-2xl cursor-pointer hover:border-orange-500/50 transition-all group`}
+                        className={`p-6 rounded-2xl ${COLORS.surface} border ${COLORS.border} shadow-2xl cursor-pointer hover:border-gold/50 transition-all group`}
                       >
                         <div className="flex justify-between items-start mb-6">
                           <div>
-                            <h3 className="font-bold text-lg group-hover:text-orange-500 transition-colors">Target: {(lastReport && lastReport.ticker === ticker) ? lastReport.ticker : ticker || 'Analysis'}</h3>
+                            <h3 className="font-bold text-lg group-hover:text-gold transition-colors">Target: {(lastReport && lastReport.ticker === ticker) ? lastReport.ticker : ticker || 'Analysis'}</h3>
                             <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">
                               {(lastReport && lastReport.ticker === ticker) ? 'Equity Research Report' : analyzing ? 'Analysis in Progress' : 'Awaiting New Analysis'}
                             </span>
                           </div>
-                          <TrendingUp className={`transition-colors ${analyzing ? 'text-orange-500 animate-pulse' : 'text-zinc-600 group-hover:text-orange-500'}`} />
+                          <TrendingUp className={`transition-colors ${analyzing ? 'text-gold animate-pulse' : 'text-zinc-600 group-hover:text-gold'}`} />
                         </div>
                         <div className="space-y-3 mb-6">
                           <div className="h-2 w-full bg-zinc-800 rounded-full overflow-hidden">
                             <motion.div 
                               initial={{ width: 0 }} 
                               animate={{ width: (lastReport && lastReport.ticker === ticker) ? '100%' : analyzing ? '45%' : '15%' }} 
-                              className="h-full bg-orange-500" 
+                              className="h-full bg-amber" 
                             />
                           </div>
                         </div>
                         <div className={`text-xs text-zinc-400 leading-relaxed italic mb-4 ${(lastReport && lastReport.ticker === ticker) ? 'line-clamp-[15]' : ''}`}>
                           {analyzing ? (
                             <div className="flex flex-col gap-2">
-                              <span className="text-orange-500 font-bold not-italic animate-pulse">RESEARCHING: {ticker}</span>
+                              <span className="text-gold font-bold not-italic animate-pulse">RESEARCHING: {ticker}</span>
                               <span className="text-zinc-500 not-italic">{analysisStatus}</span>
                             </div>
                           ) : error ? (
@@ -3502,7 +3467,7 @@ ${list}
                             lastReport.rawReport
                           ) : ticker ? (
                             <div className="bg-zinc-900/50 p-4 border border-zinc-800 rounded-xl not-italic group-hover:bg-zinc-800/80 transition-colors">
-                              <span className="text-orange-500 font-bold block mb-2">
+                              <span className="text-gold font-bold block mb-2">
                                 {ticker} SELECTION CONFIRMED
                               </span>
                               <span className="text-zinc-500">
@@ -3513,7 +3478,7 @@ ${list}
                             "Click the 'Scrape NSE Data' button above to generate a real-time equity analysis for your chosen ticker."
                           )}
                         </div>
-                        <div className="text-[10px] font-bold uppercase tracking-widest text-orange-400 flex flex-wrap items-center justify-between gap-2">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-gold flex flex-wrap items-center justify-between gap-2">
                           <span className="flex items-center gap-2">
                             {(lastReport && lastReport.ticker === ticker) ? 'View Full Analysis' : analyzing ? 'Researching...' : 'Initiate Analysis'} 
                             <ArrowRight className={`w-3 h-3 ${analyzing ? 'animate-bounce' : ''}`} />
@@ -3521,7 +3486,7 @@ ${list}
                           {(lastReport && lastReport.ticker === ticker) && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); setIsShareMode(true); }}
-                              className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[9px] hover:bg-orange-500 hover:text-black transition-colors"
+                              className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[9px] hover:bg-amber hover:text-black transition-colors"
                             >
                                Snapshot for Reddit
                             </button>
@@ -3551,7 +3516,7 @@ ${list}
                                   setAnalysisStatus('');
                                 }
                               }}
-                              className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[9px] hover:bg-orange-500 hover:text-black transition-colors flex items-center gap-1"
+                              className="bg-zinc-800 text-zinc-300 px-3 py-1 rounded-full text-[9px] hover:bg-amber hover:text-black transition-colors flex items-center gap-1"
                             >
                                <Save className="w-3 h-3" /> Save to Vault
                             </button>
@@ -3559,7 +3524,7 @@ ${list}
                           {user && (lastReport && lastReport.ticker === ticker) && !publishing && (
                             <button 
                               onClick={(e) => { e.stopPropagation(); publishReport(); }}
-                              className="bg-orange-500 text-black px-3 py-1 rounded-full text-[9px] hover:bg-orange-400 transition-colors"
+                              className="bg-amber text-black px-3 py-1 rounded-full text-[9px] hover:bg-amber transition-colors"
                             >
                               Publish to Feed
                             </button>
@@ -3581,7 +3546,7 @@ ${list}
                           "Risk factor identification"
                         ].map((item, i) => (
                           <li key={i} className="flex items-center gap-3 text-sm font-medium">
-                            <FileText className="text-orange-500 w-5 h-5 flex-shrink-0" /> {item}
+                            <FileText className="text-gold w-5 h-5 flex-shrink-0" /> {item}
                           </li>
                         ))}
                       </ul>
@@ -3590,12 +3555,12 @@ ${list}
 
                   {/* Dynamic Peer Comparison Benchmarking Component */}
                   <div className="bg-app-surface border border-app-border rounded-3xl p-8 relative overflow-hidden mt-6 shadow-2xl">
-                     <div className="absolute top-0 right-0 w-48 h-48 bg-orange-600/[0.03] blur-[60px] -z-10 rounded-full" />
+                     <div className="absolute top-0 right-0 w-48 h-48 bg-gold/[0.03] blur-[60px] -z-10 rounded-full" />
                      
                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-app-border">
                         <div>
                            <div className="flex items-center gap-2 mb-2">
-                              <span className="text-[9px] font-black px-2 py-0.5 bg-orange-500/10 text-orange-400 tracking-widest rounded-full uppercase border border-orange-500/20">
+                              <span className="text-[9px] font-black px-2 py-0.5 bg-gold/10 text-gold tracking-widest rounded-full uppercase border border-gold/20">
                                  ALPHASYNTH INTEL COCKPIT
                               </span>
                               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -3614,7 +3579,7 @@ ${list}
                              disabled={loadingPeers}
                              className="px-4 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-xs font-black uppercase tracking-wider text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 active:scale-95 transition-all flex items-center gap-2"
                            >
-                             <RefreshCw className={`w-3.5 h-3.5 ${loadingPeers ? "animate-spin text-orange-500" : ""}`} />
+                             <RefreshCw className={`w-3.5 h-3.5 ${loadingPeers ? "animate-spin text-gold" : ""}`} />
                              <span>{loadingPeers ? "Benchmarking..." : "Refresh Peers"}</span>
                            </button>
                         </div>
@@ -3625,7 +3590,7 @@ ${list}
                            <motion.div 
                              animate={{ rotate: 360 }}
                              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                             className="w-10 h-10 border-4 border-orange-500/10 border-t-orange-500 rounded-full"
+                             className="w-10 h-10 border-4 border-gold/10 border-t-orange-500 rounded-full"
                            />
                            <p className="text-xs text-zinc-400 font-mono italic animate-pulse text-center">
                               Scraping screener nodes & compiling peer multipliers from Google Research Grounding...
@@ -3647,7 +3612,7 @@ ${list}
                            <p className="text-xs text-zinc-500 italic mb-4">No active peer groups currently benchmarked for {(lastReport?.ticker || ticker).toUpperCase()}.</p>
                            <button 
                              onClick={() => fetchPeers()}
-                             className="px-4 py-2 bg-orange-600 hover:bg-orange-500 text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all"
+                             className="px-4 py-2 bg-amber hover:bg-amber text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all"
                            >
                              Trigger Competitor Fetch
                            </button>
@@ -3689,18 +3654,18 @@ ${list}
                                     return (
                                        <tr 
                                          key={peer.ticker} 
-                                         className={`transition-colors hover:bg-zinc-800/25 group/row ${peer.isTarget ? 'bg-orange-500/[0.04] border-y border-orange-500/35' : ''}`}
+                                         className={`transition-colors hover:bg-zinc-800/25 group/row ${peer.isTarget ? 'bg-gold/[0.04] border-y border-gold/35' : ''}`}
                                        >
                                           <td className="py-4 px-4">
                                              <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${peer.isTarget ? "bg-orange-600 text-black font-black" : "bg-zinc-900 border border-app-border text-zinc-400"}`}>
+                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${peer.isTarget ? "bg-amber text-black font-black" : "bg-zinc-900 border border-app-border text-zinc-400"}`}>
                                                    {peer.ticker.replace(".NS", "").substring(0,3)}
                                                 </div>
                                                 <div>
                                                    <div className="flex items-center gap-2">
-                                                      <span className="font-bold text-white group-hover/row:text-orange-400 transition-colors uppercase">{peer.ticker}</span>
+                                                      <span className="font-bold text-white group-hover/row:text-gold transition-colors uppercase">{peer.ticker}</span>
                                                       {peer.isTarget && (
-                                                         <span className="text-[8px] font-black uppercase text-orange-500 bg-orange-500/10 border border-orange-500/25 px-1.5 py-0.2 rounded">
+                                                         <span className="text-[8px] font-black uppercase text-gold bg-gold/10 border border-gold/25 px-1.5 py-0.2 rounded">
                                                             Target Scrip
                                                          </span>
                                                       )}
@@ -3746,7 +3711,7 @@ ${list}
                                                         setTicker(peer.ticker.toUpperCase());
                                                         document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' });
                                                      }}
-                                                     className="px-2.5 py-1.5 bg-zinc-900 border border-app-border rounded-lg text-[10px] uppercase font-bold tracking-wider text-zinc-400 hover:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/40 transition-all active:scale-95"
+                                                     className="px-2.5 py-1.5 bg-zinc-900 border border-app-border rounded-lg text-[10px] uppercase font-bold tracking-wider text-zinc-400 hover:text-gold hover:bg-gold/10 hover:border-gold/40 transition-all active:scale-95"
                                                    >
                                                       Analyze Row
                                                    </button>
@@ -3791,7 +3756,7 @@ ${list}
 
                         {/* Search and Trigger Console */}
                         <div className="bg-app-surface border border-app-border rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/5 blur-[50px] -z-10 rounded-full" />
+                           <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[50px] -z-10 rounded-full" />
                            <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Auditing Pipeline Registry</h3>
                            
                            <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -3800,12 +3765,12 @@ ${list}
                                 placeholder="Enter NSE Ticker (e.g., RELIANCE)"
                                 value={filingsTicker}
                                 onChange={(e) => setFilingsTicker(e.target.value.toUpperCase())}
-                                className="flex-1 px-4 py-3 bg-zinc-950 border border-app-border rounded-xl text-xs text-white focus:outline-none focus:border-orange-500 font-semibold"
+                                className="flex-1 px-4 py-3 bg-zinc-950 border border-app-border rounded-xl text-xs text-white focus:outline-none focus:border-gold font-semibold"
                               />
                               <button
                                 onClick={() => triggerFilingsAudit()}
                                 disabled={auditingFilings}
-                                className="px-6 py-3 bg-orange-600 text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-orange-500 active:scale-95 transition-all flex items-center justify-center gap-2"
+                                className="px-6 py-3 bg-amber text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-amber active:scale-95 transition-all flex items-center justify-center gap-2"
                               >
                                 {auditingFilings ? (
                                    <>
@@ -3836,7 +3801,7 @@ ${list}
                                         setFilingsTicker(sh.name);
                                         triggerFilingsAudit(sh.name);
                                       }}
-                                      className={`px-3 py-1.5 bg-zinc-900 border ${filingsTicker === sh.name ? 'border-orange-500 text-orange-400' : 'border-app-border text-zinc-400 hover:text-white'} text-[9px] font-bold uppercase tracking-widest rounded-lg transition-colors cursor-pointer`}
+                                      className={`px-3 py-1.5 bg-zinc-900 border ${filingsTicker === sh.name ? 'border-gold text-gold' : 'border-app-border text-zinc-400 hover:text-white'} text-[9px] font-bold uppercase tracking-widest rounded-lg transition-colors cursor-pointer`}
                                     >
                                        {sh.name}
                                     </button>
@@ -3847,8 +3812,8 @@ ${list}
 
                         {/* Audit Status indicator */}
                         {auditingFilings && (
-                           <div className="bg-orange-500/5 border border-orange-500/20 rounded-2xl p-6 text-center animate-pulse">
-                              <p className="text-orange-500 text-xs font-bold font-mono tracking-widest leading-relaxed uppercase">{filingsStatus || "Initializing Node Connection..."}</p>
+                           <div className="bg-gold/5 border border-gold/20 rounded-2xl p-6 text-center animate-pulse">
+                              <p className="text-gold text-xs font-bold font-mono tracking-widest leading-relaxed uppercase">{filingsStatus || "Initializing Node Connection..."}</p>
                            </div>
                         )}
 
@@ -3878,8 +3843,10 @@ ${list}
                                              <p className="text-[8px] text-zinc-600 leading-none mb-4">{m.desc}</p>
                                           </div>
                                           <div className="flex items-baseline gap-1">
-                                             <span className={`text-3xl font-display font-black leading-none ${m.color}`}>{m.score}</span>
-                                             <span className="text-[10px] text-zinc-500 font-bold font-mono">/10</span>
+                                             <span className={`text-3xl font-display font-black leading-none ${m.score !== null && m.score !== undefined ? m.color : 'text-zinc-600'}`}>
+                                               {m.score !== null && m.score !== undefined ? m.score : 'N/A'}
+                                             </span>
+                                             {m.score !== null && m.score !== undefined && <span className="text-[10px] text-zinc-500 font-bold font-mono">/10</span>}
                                           </div>
                                        </div>
                                     ))}
@@ -3887,9 +3854,9 @@ ${list}
                               </div>
 
                               {/* Live Grounding Certificate */}
-                              <div className="p-4 bg-orange-600/5 border border-orange-600/20 rounded-2xl flex items-center justify-between">
+                              <div className="p-4 bg-gold/5 border border-gold/20 rounded-2xl flex items-center justify-between">
                                  <div className="flex items-center gap-3">
-                                    <ShieldCheck className="text-orange-500 w-5 h-5" />
+                                    <ShieldCheck className="text-gold w-5 h-5" />
                                     <div>
                                        <p className="text-[9px] font-black text-white uppercase tracking-widest">Fact-Grounded Analysis Shield</p>
                                        <p className="text-[9px] text-zinc-400 uppercase tracking-wider">SECURED VIA DIRECT NSE DISCLOSURE FILING ENDPOINTS</p>
@@ -3908,9 +3875,9 @@ ${list}
                               </div>
 
                               {/* Actionable Direct Broker Gateways */}
-                              <div className="p-6 bg-orange-600/[0.03] border border-orange-500/25 rounded-[1.5rem] space-y-4">
+                              <div className="p-6 bg-gold/[0.03] border border-gold/25 rounded-[1.5rem] space-y-4">
                                  <div>
-                                    <span className="text-[8px] font-black px-2 py-0.5 bg-orange-600/15 text-orange-400 tracking-widest rounded uppercase">Cognitive Action Hub</span>
+                                    <span className="text-[8px] font-black px-2 py-0.5 bg-gold/15 text-gold tracking-widest rounded uppercase">Cognitive Action Hub</span>
                                     <h4 className="text-xs font-black text-white uppercase tracking-wider mt-2.5">TRANSLATE DISCLOSURE ANALYSIS INTO ACTIONS ON {filingsReport.ticker}</h4>
                                     <p className="text-[10px] text-zinc-400 mt-1 font-semibold leading-relaxed">
                                        Seamlessly transmit researched insights directly to India's leading broker execution terminals to execute trades with preselected stock tickers.
@@ -3921,7 +3888,7 @@ ${list}
                                       href={`https://kite.zerodha.com`} 
                                       target="_blank" 
                                       rel="noreferrer" 
-                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
                                     >
                                        <Zap className="w-3.5 h-3.5 fill-current" /> Zerodha
                                     </a>
@@ -3929,7 +3896,7 @@ ${list}
                                       href={`https://groww.in/search?q=${filingsReport.ticker}`} 
                                       target="_blank" 
                                       rel="noreferrer" 
-                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
                                     >
                                        <Globe className="w-3.5 h-3.5" /> Groww
                                     </a>
@@ -3937,7 +3904,7 @@ ${list}
                                       href={`https://upstox.com`} 
                                       target="_blank" 
                                       rel="noreferrer" 
-                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-orange-500/15 hover:text-orange-400 hover:border-orange-500/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                                      className="px-3 py-3 bg-zinc-900 border border-app-border rounded-xl text-[10px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-wider block hover:scale-[1.02] flex items-center justify-center gap-1.5"
                                     >
                                        <TrendingUp className="w-3.5 h-3.5" /> Upstox
                                     </a>
@@ -4001,7 +3968,7 @@ ${list}
                      {/* Right Advisory Sidebar Panel */}
                      <div className="lg:col-span-4 space-y-6">
                         <div className="p-6 bg-app-surface border border-app-border rounded-3xl">
-                           <span className="text-[8px] font-black px-2 py-0.5 bg-orange-600/10 border border-orange-600/20 text-orange-400 tracking-widest rounded uppercase">Compliance Node</span>
+                           <span className="text-[8px] font-black px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold tracking-widest rounded uppercase">Compliance Node</span>
                            <h4 className="text-sm font-bold text-white uppercase mt-4 mb-2">Corporate Disclosures Scope</h4>
                            <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
                               This model specializes in examining management honesty, transcript inconsistencies, SEBI filing transparency audits, and capital reallocation pledge fluctuations.
@@ -4009,15 +3976,15 @@ ${list}
 
                            <div className="mt-6 pt-6 border-t border-app-border space-y-4">
                               <div className="flex gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5" />
+                                 <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
                                  <p className="text-xs text-zinc-400 font-bold">Auto-scrapes NSE corporate announcements and annual returns.</p>
                               </div>
                               <div className="flex gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5" />
+                                 <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
                                  <p className="text-xs text-zinc-400 font-bold">Calculates guideline conservatism indexes to spot management hyperbole.</p>
                               </div>
                               <div className="flex gap-3">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-orange-600 mt-1.5" />
+                                 <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
                                  <p className="text-xs text-zinc-400 font-bold">Extracts explicit answers to contrarian questions from analyst conferences.</p>
                               </div>
                            </div>
@@ -4067,7 +4034,7 @@ ${list}
                                  onChange={handleCsvUpload} 
                                  className="absolute inset-0 opacity-0 cursor-pointer"
                                />
-                               <button className="px-6 py-3 bg-app-surface border border-app-border rounded-xl text-xs font-bold uppercase text-zinc-400 hover:border-orange-500/50 transition-all flex items-center gap-2">
+                               <button className="px-6 py-3 bg-app-surface border border-app-border rounded-xl text-xs font-bold uppercase text-zinc-400 hover:border-gold/50 transition-all flex items-center gap-2">
                                  <Upload className="w-4 h-4" /> Import CSV
                                </button>
                             </div>
@@ -4087,7 +4054,7 @@ ${list}
                             </button>
                             <button 
                              onClick={() => addHolding('', 0, 0)}
-                             className="px-6 py-3 bg-orange-600/10 border border-orange-500/20 text-orange-500 rounded-xl text-xs font-bold uppercase hover:bg-orange-500/20 transition-all flex items-center gap-2"
+                             className="px-6 py-3 bg-gold/10 border border-gold/20 text-gold rounded-xl text-xs font-bold uppercase hover:bg-gold/20 transition-all flex items-center gap-2"
                             >
                              <Plus className="w-4 h-4" /> Add Asset
                             </button>
@@ -4150,7 +4117,7 @@ ${list}
                         <button 
                           onClick={triggerPortfolioAudit}
                           disabled={auditingPortfolio || holdings.length === 0}
-                          className="w-full py-4 bg-orange-600 text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-orange-500 active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_10px_20px_rgba(234,88,12,0.1)]"
+                          className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_10px_20px_rgba(196,98,45,0.1)]"
                         >
                           {auditingPortfolio ? 'Analyzing Portfolio Correlation...' : 'Execute AI Diagnostic audit'}
                         </button>
@@ -4159,7 +4126,7 @@ ${list}
                      <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
                         <div className="p-8 rounded-3xl bg-app-surface border border-app-border shadow-2xl relative overflow-hidden group">
                            <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                              <Zap className="w-16 h-16 text-orange-600" />
+                              <Zap className="w-16 h-16 text-gold" />
                            </div>
                            <h3 className="text-xs font-black text-white uppercase tracking-[0.2em] mb-8">Asset Allocation</h3>
                            <div className="h-72 w-full">
@@ -4215,8 +4182,8 @@ ${list}
                               ))}
                         </div>
 
-                        <div className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10">
-                           <h4 className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-2">Institutional Sync</h4>
+                        <div className="p-6 rounded-2xl bg-gold/5 border border-gold/10">
+                           <h4 className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">Institutional Sync</h4>
                            <p className="text-[11px] text-zinc-400 leading-relaxed italic">
                               Real-time grounding checks your holdings against overnight structural shifts. Changes reflect immediately in the audit engine.
                            </p>
@@ -4228,19 +4195,19 @@ ${list}
                     <motion.div
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`p-10 md:p-14 rounded-[2.5rem] bg-gradient-to-br from-zinc-900 to-black border border-orange-500/20 shadow-2xl relative overflow-hidden cursor-pointer group`}
+                      className={`p-10 md:p-14 rounded-[2.5rem] bg-gradient-to-br from-zinc-900 to-black border border-gold/20 shadow-2xl relative overflow-hidden cursor-pointer group`}
                       onClick={() => setViewingPortfolioAudit(true)}
                     >
                        <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:opacity-20 transition-opacity">
-                          <Zap className="w-24 h-24 text-orange-500" />
+                          <Zap className="w-24 h-24 text-gold" />
                        </div>
                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                          <div className="flex items-center gap-6 text-left">
-                            <div className="w-16 h-16 bg-orange-500 rounded-2xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(249,115,22,0.4)]">
+                            <div className="w-16 h-16 bg-amber rounded-2xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(249,115,22,0.4)]">
                                <BarChart3 className="w-8 h-8" />
                             </div>
                             <div>
-                               <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">Your Institutional Audit is Ready<span className="text-orange-500">.</span></h3>
+                               <h3 className="text-3xl font-display font-black text-white italic uppercase tracking-tighter">Your Institutional Audit is Ready<span className="text-gold">.</span></h3>
                                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em] mt-1.5">Deep Grounding Check Completed • Click to Expand Insight</p>
                             </div>
                          </div>
@@ -4262,8 +4229,8 @@ ${list}
                         </p>
                       </div>
                       {userPortfolio.length > 0 && (
-                        <div className="px-4 py-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
-                           <span className="text-[10px] font-black text-orange-500 uppercase tracking-widest">{userPortfolio.length} Reports Archived</span>
+                        <div className="px-4 py-2 bg-gold/10 border border-gold/20 rounded-xl">
+                           <span className="text-[10px] font-black text-gold uppercase tracking-widest">{userPortfolio.length} Reports Archived</span>
                         </div>
                       )}
                     </div>
@@ -4287,7 +4254,7 @@ ${list}
                         <p className="text-zinc-500 font-medium px-6">Start a new analysis to automatically archive institutional-grade reports here.</p>
                         <button 
                           onClick={() => setActiveTab('equity')}
-                          className="mt-6 px-6 py-3 bg-orange-500 text-black text-[10px] font-black uppercase tracking-widest rounded-lg"
+                          className="mt-6 px-6 py-3 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-lg"
                         >
                           Initiate First Analysis
                         </button>
@@ -4297,7 +4264,7 @@ ${list}
                         {userPortfolio.map((item) => (
                           <div 
                             key={item.id}
-                            className="bg-app-surface border border-app-border p-6 rounded-2xl group hover:border-orange-500/30 transition-all cursor-pointer"
+                            className="bg-app-surface border border-app-border p-6 rounded-2xl group hover:border-gold/30 transition-all cursor-pointer"
                             onClick={() => {
                               setLastReport(item);
                               setViewingFullReport(true);
@@ -4305,7 +4272,7 @@ ${list}
                           >
                             <div className="flex justify-between items-start mb-6">
                               <div>
-                                <p className="text-[10px] font-black text-orange-500 uppercase tracking-widest mb-1">
+                                <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-1">
                                   {item.updatedAt?.seconds ? `Updated ${new Date(item.updatedAt.seconds * 1000).toLocaleDateString()}` : item.createdAt?.seconds ? new Date(item.createdAt.seconds * 1000).toLocaleDateString() : 'Draft'}
                                 </p>
                                 <h3 className="text-2xl font-display font-black tracking-tight text-white">{item.ticker}</h3>
@@ -4327,7 +4294,7 @@ ${list}
                                <span className="flex items-center gap-1.5">
                                  <Globe className="w-3 h-3" /> {item.sourceUrl ? new URL(item.sourceUrl).hostname : 'Grounding Search'}
                                </span>
-                               <button className="text-orange-500 group-hover:gap-2 flex items-center transition-all">
+                               <button className="text-gold group-hover:gap-2 flex items-center transition-all">
                                  Open Audit <ArrowRight className="w-3 h-3" />
                                </button>
                             </div>
@@ -4354,16 +4321,16 @@ ${list}
                         Your research deserves an audience. Convert your technical analysis into viral-ready social content or premium newsletter drafts with one click.
                       </p>
                       <div className="flex flex-wrap gap-3">
-                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-orange-500/50 transition-colors`}>
-                          <Share2 className="w-5 h-5 text-orange-500" />
+                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-gold/50 transition-colors`}>
+                          <Share2 className="w-5 h-5 text-gold" />
                           <span className="text-[10px] font-bold uppercase tracking-wider">LinkedIn</span>
                         </div>
-                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-orange-500/50 transition-colors`}>
-                          <PenTool className="w-5 h-5 text-orange-500" />
+                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-gold/50 transition-colors`}>
+                          <PenTool className="w-5 h-5 text-gold" />
                           <span className="text-[10px] font-bold uppercase tracking-wider">Substack</span>
                         </div>
-                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-orange-500/50 transition-colors`}>
-                          <Layout className="w-5 h-5 text-orange-500" />
+                        <div className={`p-4 rounded-xl ${COLORS.surface} border ${COLORS.border} flex flex-col items-center gap-2 group cursor-pointer hover:border-gold/50 transition-colors`}>
+                          <Layout className="w-5 h-5 text-gold" />
                           <span className="text-[10px] font-bold uppercase tracking-wider">WP Blog</span>
                         </div>
                       </div>
@@ -4375,13 +4342,13 @@ ${list}
                           const post = `🚨 MARKET ALERT: ${lastReport?.ticker} Analysis 🚨\n\nI just finished a deep dive into ${lastReport?.ticker}. Here's the conviction:\n\n📈 BULL: ${lastReport?.bullCase?.replace(/\*\*.*?\*\*/, '').substring(0, 100).trim()}...\n📉 BEAR: ${lastReport?.bearCase?.replace(/\*\*.*?\*\*/, '').substring(0, 100).trim()}...\n\nFull report available in my Analyst Hub. #Nifty50 #Investing #NSE`;
                           setPreviewContent({ title: "LinkedIn Accelerator", text: post });
                         }}
-                        className={`min-h-[220px] bg-app-surface border border-app-border rounded-3xl p-8 flex flex-col items-start text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed hover:border-orange-500/30 w-full`}
+                        className={`min-h-[220px] bg-app-surface border border-app-border rounded-3xl p-8 flex flex-col items-start text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed hover:border-gold/30 w-full`}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-orange-600/10 flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-black transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-gold/10 flex items-center justify-center text-gold group-hover:bg-amber group-hover:text-black transition-all">
                           <TrendingUp className="w-6 h-6" />
                         </div>
                         <div className="mt-auto">
-                          <p className="text-[10px] font-black uppercase tracking-wider text-orange-600 mb-2">Growth Accelerator</p>
+                          <p className="text-[10px] font-black uppercase tracking-wider text-gold mb-2">Growth Accelerator</p>
                           <h3 className="text-xl font-bold text-white leading-tight">Auto-Draft LinkedIn Post</h3>
                         </div>
                       </button>
@@ -4392,9 +4359,9 @@ ${list}
                           const content = `📊 EQUITY BRIEFING: ${lastReport?.ticker}\n\nOur proprietary analysis has identified a potential structural divergence in ${lastReport?.ticker} listed on the NSE.\n\nExecutive Outlook:\nWhile the technical setup shows ${lastReport?.bullCase?.substring(0, 150).trim()}..., our contrarian risk assessment indicates ${lastReport?.bearCase?.substring(0, 150).trim()}...\n\nKey Takeaways for Investors:\n- Momentum Context: The "Dalal Street Sentiment" currently reflects institutional positioning.\n- Strategic Pivot: If the bear case catalysts materialize, target zones should be adjusted accordingly.\n\nFull data-set and raw research logs attached in the Analyst Hub.`;
                            setPreviewContent({ title: "Alpha Digest Briefing", text: content });
                          }}
-                        className={`min-h-[220px] bg-app-surface border border-app-border rounded-3xl p-8 flex flex-col items-start text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed hover:border-orange-500/30 w-full`}
+                        className={`min-h-[220px] bg-app-surface border border-app-border rounded-3xl p-8 flex flex-col items-start text-left transition-all group disabled:opacity-50 disabled:cursor-not-allowed hover:border-gold/30 w-full`}
                       >
-                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-orange-600 group-hover:text-black transition-all">
+                        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-amber group-hover:text-black transition-all">
                           <Search className="w-6 h-6" />
                         </div>
                         <div className="mt-auto">
@@ -4424,22 +4391,22 @@ ${list}
                   className="w-full"
                 >
                   {/* Promotional Banner */}
-                  <div className="mb-12 p-1 bg-gradient-to-r from-orange-600 via-yellow-500 to-orange-600 rounded-2xl animate-pulse">
+                  <div className="mb-12 p-1 bg-gradient-to-r from-amber via-yellow-500 to-amber rounded-2xl animate-pulse">
                     <div className="bg-app-bg rounded-[calc(1rem-1px)] p-4 flex flex-col md:flex-row items-center justify-between gap-4">
                       <div className="flex items-center gap-4 text-left">
-                        <div className="w-10 h-10 rounded-full bg-orange-600 flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-amber flex items-center justify-center flex-shrink-0">
                           <TrendingUp className="text-black w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-lg font-bold text-white leading-tight uppercase tracking-tight">Founding Member Promotion</h3>
-                          <p className="text-xs text-orange-400 font-medium tracking-tight">All Institutional Reports are currently UNLOCKED for the next 48 hours.</p>
+                          <p className="text-xs text-gold font-medium tracking-tight">All Institutional Reports are currently UNLOCKED for the next 48 hours.</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="px-3 py-1.5 border border-app-border rounded-lg text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
                           Normal: ₹1,499/report
                         </div>
-                        <div className="px-3 py-1.5 bg-orange-600 rounded-lg text-[10px] font-black text-black uppercase tracking-widest">
+                        <div className="px-3 py-1.5 bg-amber rounded-lg text-[10px] font-black text-black uppercase tracking-widest">
                           Current: FREE
                         </div>
                       </div>
@@ -4461,7 +4428,7 @@ ${list}
                               setCommunitySearch('');
                             }}
                             className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all whitespace-nowrap border ${
-                              communityFilter === 'all' && !communitySearch ? 'bg-orange-600 text-black border-orange-600' : 'text-zinc-500 border-transparent hover:text-white'
+                              communityFilter === 'all' && !communitySearch ? 'bg-amber text-black border-gold' : 'text-zinc-500 border-transparent hover:text-white'
                             }`}
                           >
                             Explore All
@@ -4469,7 +4436,7 @@ ${list}
                           <button 
                             onClick={() => setCommunityFilter('ticker')}
                             className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-all flex items-center gap-2 whitespace-nowrap border ${
-                              communityFilter === 'ticker' ? 'bg-orange-600 text-black border-orange-600' : 'text-zinc-500 border-transparent hover:text-white'
+                              communityFilter === 'ticker' ? 'bg-amber text-black border-gold' : 'text-zinc-500 border-transparent hover:text-white'
                             }`}
                           >
                             {communitySearch || ticker ? `${(communitySearch || ticker).toUpperCase()} Only` : 'Filtered View'}
@@ -4477,7 +4444,7 @@ ${list}
                         </div>
 
                         <div className="flex-1 min-w-[260px] max-w-sm relative group">
-                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-orange-500 transition-colors" />
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 group-focus-within:text-gold transition-colors" />
                           <input 
                             type="text"
                             placeholder="Search historical reports..."
@@ -4486,7 +4453,7 @@ ${list}
                               setCommunitySearch(e.target.value.toUpperCase());
                               setCommunityFilter('ticker');
                             }}
-                            className="w-full pl-11 pr-4 py-2.5 bg-app-surface border border-app-border rounded-xl text-xs focus:outline-none focus:border-orange-500/50 transition-all font-medium placeholder:text-zinc-700"
+                            className="w-full pl-11 pr-4 py-2.5 bg-app-surface border border-app-border rounded-xl text-xs focus:outline-none focus:border-gold/50 transition-all font-medium placeholder:text-zinc-700"
                           />
                         </div>
                       </div>
@@ -4494,7 +4461,7 @@ ${list}
                     {!user && (
                       <button 
                         onClick={handleLogin}
-                        className="px-6 py-3 bg-app-surface border border-app-border rounded-xl text-xs font-bold uppercase tracking-widest hover:border-orange-500 transition-colors"
+                        className="px-6 py-3 bg-app-surface border border-app-border rounded-xl text-xs font-bold uppercase tracking-widest hover:border-gold transition-colors"
                       >
                         Join the Collective
                       </button>
@@ -4506,13 +4473,13 @@ ${list}
                       <motion.div 
                         key={item.id}
                         layoutId={item.id}
-                        className={`bg-app-surface border border-app-border p-6 rounded-2xl hover:border-orange-500/30 transition-all group`}
+                        className={`bg-app-surface border border-app-border p-6 rounded-2xl hover:border-gold/30 transition-all group`}
                       >
                         <div className="flex justify-between items-start mb-4">
                           <div className="px-3 py-1 bg-app-bg rounded-full border border-app-border flex items-center gap-2">
                             <span className="text-sm font-black text-white">{item.ticker}</span>
-                            <div className="w-1 h-1 rounded-full bg-orange-600" />
-                            <span className="text-[8px] font-bold text-orange-600 uppercase tracking-tighter">PRO</span>
+                            <div className="w-1 h-1 rounded-full bg-amber" />
+                            <span className="text-[8px] font-bold text-gold uppercase tracking-tighter">PRO</span>
                           </div>
                           <div className="flex flex-col items-end">
                             <span className={`text-[10px] font-bold uppercase tracking-widest ${
@@ -4525,7 +4492,7 @@ ${list}
                         </div>
                         
                         <div className="relative mb-6">
-                            <div className="absolute -top-2 -right-2 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded text-[7px] font-black text-orange-400 uppercase tracking-widest z-10">
+                            <div className="absolute -top-2 -right-2 bg-gold/10 border border-gold/20 px-2 py-0.5 rounded text-[7px] font-black text-gold uppercase tracking-widest z-10">
                               Unlocked
                             </div>
                             <AnimatePresence mode="wait">
@@ -4572,7 +4539,7 @@ ${list}
                                 const fullContent = `--- INSTITUTIONAL EQUITY REPORT: ${item.ticker} ---\n\nBULL CASE:\n${item.bullCase}\n\nBEAR CASE:\n${item.bearCase}\n\nRATING: ${item.rating.toUpperCase()}\n\nANALYSIS BY: ${item.authorName}\nDATE: ${new Date(item.createdAt?.seconds * 1000).toLocaleDateString()}\n\n--- PROMOTION: SHARED VIA PUBLIC ANALYST HUB ---`;
                                 setPreviewContent({ title: `${item.ticker} Full Analysis Audit`, text: fullContent });
                             }}
-                            className="w-full py-3 mb-1 bg-app-bg border border-app-border rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-orange-600 hover:text-white hover:border-orange-600 transition-all shadow-lg active:scale-95"
+                            className="w-full py-3 mb-1 bg-app-bg border border-app-border rounded-xl text-[10px] font-black uppercase tracking-[0.2em] text-white hover:bg-amber hover:text-white hover:border-gold transition-all shadow-lg active:scale-95"
                         >
                             Open Full PRO Report
                         </button>
@@ -4588,14 +4555,14 @@ ${list}
                                });
                                setIsShareMode(true);
                              }}
-                             className="w-full py-2 mb-3 bg-orange-600/10 border border-orange-600/20 rounded-xl text-[8px] font-black uppercase tracking-widest text-orange-400 hover:bg-orange-600 hover:text-white transition-all"
+                             className="w-full py-2 mb-3 bg-gold/10 border border-gold/20 rounded-xl text-[8px] font-black uppercase tracking-widest text-gold hover:bg-amber hover:text-white transition-all"
                         >
                              Snapshot for Reddit
                         </button>
 
                         <button 
                             onClick={() => setVisibleBearCases(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-                            className="w-full py-2 mb-6 border border-transparent rounded-lg text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-orange-500 transition-all"
+                            className="w-full py-2 mb-6 border border-transparent rounded-lg text-[9px] font-bold uppercase tracking-widest text-zinc-500 hover:text-gold transition-all"
                         >
                             {visibleBearCases[item.id] ? '← Switch to Bull Case' : 'View Contrarian Risks →'}
                         </button>
@@ -4609,9 +4576,9 @@ ${list}
                           </div>
                           <button 
                             onClick={() => handleLike(item.id)}
-                            className="flex items-center gap-1.5 text-zinc-500 hover:text-orange-500 transition-colors"
+                            className="flex items-center gap-1.5 text-zinc-500 hover:text-gold transition-colors"
                           >
-                            <Heart className={`w-3.5 h-3.5 ${item.likesCount > 0 ? 'fill-orange-500 text-orange-500' : ''}`} />
+                            <Heart className={`w-3.5 h-3.5 ${item.likesCount > 0 ? 'fill-orange-500 text-gold' : ''}`} />
                             <span className="text-[10px] font-bold">{item.likesCount || 0}</span>
                           </button>
                         </div>
@@ -4636,7 +4603,7 @@ ${list}
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter mb-4">
-              Intelligence Tiers<span className="text-orange-600">.</span>
+              Intelligence Tiers<span className="text-gold">.</span>
             </h2>
             <p className="text-zinc-400 max-w-xl mx-auto">Scale your research from casual mapping to institutional deep-dives.</p>
           </div>
@@ -4658,7 +4625,7 @@ ${list}
                 desc: 'The professional standard for high-conviction research.',
                 features: ['Unlimited Deep Dives', 'Earnings Transcript Auditor', 'Portfolio Correlation Lab', 'PDF Report Export'],
                 cta: 'Upgrade Now',
-                accent: 'border-orange-500 shadow-[0_0_30px_rgba(234,88,12,0.1)]',
+                accent: 'border-gold shadow-[0_0_30px_rgba(196,98,45,0.1)]',
                 popular: true,
                 action: () => { handleLogin(); }
               },
@@ -4674,7 +4641,7 @@ ${list}
             ].map((tier) => (
               <div key={tier.plan} className={`p-10 rounded-[2.5rem] bg-app-surface border ${tier.accent} relative overflow-hidden flex flex-col`}>
                 {tier.popular && (
-                  <div className="absolute top-0 right-0 py-2 px-6 bg-orange-600 text-black text-[10px] font-black uppercase tracking-widest rounded-bl-2xl">
+                  <div className="absolute top-0 right-0 py-2 px-6 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-bl-2xl">
                     Most Conviction
                   </div>
                 )}
@@ -4687,13 +4654,13 @@ ${list}
                 <div className="space-y-4 mb-10 flex-1">
                    {tier.features.map(f => (
                      <div key={f} className="flex items-center gap-3 text-xs text-zinc-300">
-                        <ShieldCheck className="w-4 h-4 text-orange-600" /> {f}
+                        <ShieldCheck className="w-4 h-4 text-gold" /> {f}
                      </div>
                    ))}
                 </div>
                 <button 
                   onClick={tier.action}
-                  className={`w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tier.popular ? 'bg-orange-600 text-black hover:bg-orange-500' : 'bg-app-bg border border-app-border text-zinc-400 hover:text-white hover:border-zinc-700'}`}
+                  className={`w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tier.popular ? 'bg-amber text-black hover:bg-amber' : 'bg-app-bg border border-app-border text-zinc-400 hover:text-white hover:border-zinc-700'}`}
                 >
                    {tier.cta}
                 </button>
@@ -4705,9 +4672,9 @@ ${list}
 
       {/* Blog & Newsletter Section */}
       <section className="py-20 px-6 max-w-7xl mx-auto">
-        <div className={`p-1 bg-gradient-to-r from-orange-500/30 via-zinc-800 to-transparent rounded-[2rem]`}>
+        <div className={`p-1 bg-gradient-to-r from-gold/30 via-zinc-800 to-transparent rounded-[2rem]`}>
           <div className={`${COLORS.bg} rounded-[1.9rem] p-12 md:p-20 text-center relative overflow-hidden`}>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 blur-[80px] -mr-32 -mt-32" />
+            <div className="absolute top-0 right-0 w-64 h-64 bg-gold/10 blur-[80px] -mr-32 -mt-32" />
             <h2 className="text-3xl md:text-5xl font-display font-semibold mb-6 tracking-tight text-zinc-200">The Morning Bell Newsletter</h2>
             <p className="max-w-xl mx-auto text-zinc-400 mb-10 text-lg">
               Get the top 3 community-voted Indian equity insights delivered to your inbox every market open. No noise, just high-conviction signals.
@@ -4731,11 +4698,11 @@ ${list}
                   placeholder="analyst@firm.com"
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="flex-1 px-6 py-4 bg-app-surface border border-app-border rounded-xl text-sm focus:outline-none focus:border-orange-500 transition-colors text-white"
+                  className="flex-1 px-6 py-4 bg-app-surface border border-app-border rounded-xl text-sm focus:outline-none focus:border-gold transition-colors text-white"
                 />
                 <button 
                   type="submit"
-                  className="px-8 py-4 bg-orange-500 text-black font-black uppercase tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                  className="px-8 py-4 bg-amber text-black font-black uppercase tracking-[0.2em] rounded-xl hover:scale-105 active:scale-95 transition-transform flex items-center justify-center gap-2"
                 >
                   <Mail className="w-4 h-4" /> Subscribe
                 </button>
@@ -4759,9 +4726,9 @@ ${list}
             <span className="font-bold text-lg tracking-tight">Alphasynth Intelligence</span>
           </div>
           <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-zinc-500">
-            <a href="#" className="hover:text-orange-400 transition-colors">Twitter</a>
-            <a href="#" className="hover:text-orange-400 transition-colors">LinkedIn</a>
-            <a href="#" className="hover:text-orange-400 transition-colors">Discord</a>
+            <a href="#" className="hover:text-gold transition-colors">Twitter</a>
+            <a href="#" className="hover:text-gold transition-colors">LinkedIn</a>
+            <a href="#" className="hover:text-gold transition-colors">Discord</a>
           </div>
           <p className="text-[10px] text-zinc-600 font-mono text-center md:text-right">
             © 2026 ALPHASYNTH INTELLIGENCE. FOR INFORMATIONAL AND ORDER PREPARATION WORKFLOWS.
@@ -4779,10 +4746,10 @@ ${list}
                 setShowOnboarding(true);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="px-5 py-3 bg-app-surface-accent border border-orange-600/40 rounded-xl hover:border-orange-500 hover:text-orange-500 transition-all flex items-center gap-2 group shadow-xl"
+              className="px-5 py-3 bg-app-surface-accent border border-gold/40 rounded-xl hover:border-gold hover:text-gold transition-all flex items-center gap-2 group shadow-xl"
             >
-              <Zap className="w-4 h-4 text-orange-600 group-hover:animate-pulse fill-current" />
-              <span className="text-zinc-300 group-hover:text-orange-500">Platform Reset Protocol</span>
+              <Zap className="w-4 h-4 text-gold group-hover:animate-pulse fill-current" />
+              <span className="text-zinc-300 group-hover:text-gold">Platform Reset Protocol</span>
             </button>
             <span className="flex items-center gap-1.5 px-4 py-2 bg-app-surface/50 rounded-lg border border-app-border">
               <div className={`w-1 h-1 rounded-full ${backendConfig.scraper ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -4829,12 +4796,12 @@ ${list}
                initial={{ opacity: 0, y: 50 }}
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: 50 }}
-               className="bg-app-bg border border-app-border w-full max-w-lg rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(234,88,12,0.15)] flex flex-col max-h-[90vh]"
+               className="bg-app-bg border border-app-border w-full max-w-lg rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(196,98,45,0.15)] flex flex-col max-h-[90vh]"
              >
-                <div className="p-6 border-b border-app-border bg-orange-600/10 flex justify-between items-center flex-shrink-0">
+                <div className="p-6 border-b border-app-border bg-gold/10 flex justify-between items-center flex-shrink-0">
                    <div>
                       <h3 className="text-xl font-display font-black text-white italic uppercase tracking-tighter">Unified Execution Bridge</h3>
-                      <p className="text-[10px] text-orange-500 font-bold uppercase tracking-widest mt-1">Publisher Logic Alpha (No-Cost API)</p>
+                      <p className="text-[10px] text-gold font-bold uppercase tracking-widest mt-1">Publisher Logic Alpha (No-Cost API)</p>
                    </div>
                    <button onClick={() => setShowTradeModal(false)} className="p-2 text-zinc-500 hover:text-white">
                       <X className="w-6 h-6" />
@@ -4855,7 +4822,7 @@ ${list}
                               onClick={() => setSelectedBroker(b.id as any)}
                               className={`p-3 rounded-xl border transition-all text-center ${
                                 selectedBroker === b.id 
-                                  ? 'bg-orange-600/20 border-orange-600 text-white' 
+                                  ? 'bg-gold/20 border-gold text-white' 
                                   : 'bg-app-surface border-app-border text-zinc-500 hover:text-white'
                               }`}
                             >
@@ -4874,7 +4841,7 @@ ${list}
                          {/* Dynamic Live LTP Feeder */}
                          <div className="mt-4 pt-3.5 border-t border-zinc-800/80 flex items-center justify-between w-full">
                             <div className="flex items-center gap-1.5">
-                               <span className={`h-1.5 w-1.5 rounded-full ${!isMarketOpen() ? 'sm:bg-zinc-600 bg-zinc-600' : isLtpFetching ? 'bg-orange-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
+                               <span className={`h-1.5 w-1.5 rounded-full ${!isMarketOpen() ? 'sm:bg-zinc-600 bg-zinc-600' : isLtpFetching ? 'bg-amber animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
                                <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">{isMarketOpen() ? 'Live LTP' : 'LTP (Market Closed)'}</span>
                             </div>
                             <div className="flex items-baseline gap-2">
@@ -4901,38 +4868,12 @@ ${list}
                       </div>
                    </div>
                    
-                   {/* Order Protocol Directives Switch */}
-                   <div className="flex p-1 bg-black/40 border border-app-border rounded-xl">
-                      <button
-                        type="button"
-                        onClick={() => setIsGttOrder(false)}
-                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                          !isGttOrder
-                            ? 'bg-orange-600 text-white font-bold shadow-[0_0_15px_rgba(234,88,12,0.2)]'
-                            : 'text-zinc-500 hover:text-zinc-300'
-                        }`}
-                      >
-                        Standard Order
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsGttOrder(true);
-                          if (gttTriggerPrice === '0' || !gttTriggerPrice) {
-                            setGttTriggerPrice(tradePrice);
-                          }
-                        }}
-                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${
-                          isGttOrder
-                            ? 'bg-orange-600 text-white font-bold shadow-[0_0_15px_rgba(234,88,12,0.2)]'
-                            : 'text-zinc-500 hover:text-zinc-300'
-                        }`}
-                      >
-                        GTT Order (Good Till Triggered)
-                      </button>
+                   {/* GTT Notice */}
+                   <div className="flex items-start gap-2 p-3 bg-gold/5 border border-gold/20 rounded-xl text-[9px] text-zinc-400 leading-relaxed">
+                     <span className="text-gold flex-shrink-0 text-sm">ℹ</span>
+                     <span>Note: GTT (Good Till Triggered) orders are not available through this interface. Please log in directly at <a href="https://kite.zerodha.com" target="_blank" rel="noreferrer" className="text-gold underline">kite.zerodha.com</a> to place GTT orders.</span>
                    </div>
 
-                   {!isGttOrder ? (
                    <div className="grid grid-cols-2 gap-4">
                       <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
                          <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Quantity</label>
@@ -4954,9 +4895,9 @@ ${list}
                              <option value="MARKET" className="bg-app-bg text-white">Market Order</option>
                           </select>
                        </div>
-                    </div>) : null}
+                    </div>
 
-                    {!isGttOrder && (<div className="space-y-4 text-left">
+                    <div className="space-y-4 text-left">
                        <div className="p-4 bg-app-surface border border-app-border rounded-2xl animate-fade-in">
                           <div className="flex justify-between items-center mb-1">
                              <div className="flex items-center gap-2">
@@ -4966,7 +4907,7 @@ ${list}
                              <button 
                                type="button"
                                onClick={() => setTradePrice(scripLtp.toFixed(2))}
-                               className="text-[8px] font-black uppercase text-orange-400 hover:text-white transition-colors tracking-widest bg-orange-500/10 px-1.5 py-0.5 rounded border border-orange-500/10"
+                               className="text-[8px] font-black uppercase text-gold hover:text-white transition-colors tracking-widest bg-gold/10 px-1.5 py-0.5 rounded border border-gold/10"
                              >
                                Match Live LTP
                              </button>
@@ -5064,203 +5005,7 @@ ${list}
                              </p>
                           </div>
                        </div>
-                    </div>)}
-
-                    {isGttOrder && (
-                     <div className="space-y-4 animate-fade-in text-left">
-                        <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
-                           <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-1">GTT Trigger Mode</label>
-                           <div className="grid grid-cols-2 gap-2 mt-2">
-                             <button
-                               type="button"
-                               onClick={() => setGttTriggerType('single')}
-                               className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                                 gttTriggerType === 'single'
-                                   ? 'bg-zinc-800 border-orange-500/50 text-white shadow-inner'
-                                   : 'bg-black/20 border-app-border text-zinc-500 hover:text-white'
-                               }`}
-                             >
-                               Single Leg GTT
-                             </button>
-                             <button
-                               type="button"
-                               onClick={() => setGttTriggerType('two-leg')}
-                               className={`py-2 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all border ${
-                                 gttTriggerType === 'two-leg'
-                                   ? 'bg-zinc-800 border-orange-500/50 text-white shadow-inner'
-                                   : 'bg-black/20 border-app-border text-zinc-500 hover:text-white'
-                               }`}
-                             >
-                               OCO (Stop Loss + Target)
-                             </button>
-                           </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                           <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
-                              <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block mb-1">Quantity</label>
-                              <input 
-                                 type="number" 
-                                 value={tradeQuantity} 
-                                 onChange={(e) => setTradeQuantity(e.target.value)}
-                                 className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-app-border/30" 
-                               />
-                           </div>
-                           
-                           {gttTriggerType === 'single' ? (
-                             <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
-                                <div className="flex justify-between items-center mb-1">
-                                   <label className="text-[9px] font-black text-orange-400 uppercase tracking-widest block flex items-center gap-1">
-                                     <Target className="w-3 h-3 text-orange-400" /> Trigger Price (₹)
-                                   </label>
-                                   {getPriceVsLtpLabel(gttTriggerPrice, scripLtp)}
-                                </div>
-                                <input 
-                                   type="number" 
-                                   step="0.05"
-                                   value={gttTriggerPrice} 
-                                   onChange={(e) => setGttTriggerPrice(e.target.value)}
-                                   className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-orange-500/30" 
-                                 />
-                             </div>
-                           ) : (
-                             <div className="p-4 bg-zinc-900/50 border border-app-border/50 rounded-2xl flex items-center justify-center text-center">
-                               <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">
-                                 Two active trigger legs
-                               </p>
-                             </div>
-                           )}
-                        </div>
-
-                        {gttTriggerType === 'single' ? (
-                          <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
-                             <div className="flex justify-between items-center mb-1">
-                               <div className="flex items-center gap-2">
-                                 <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-bold">Limit Execution Price (₹)</label>
-                                 {getPriceVsLtpLabel(tradePrice, scripLtp)}
-                               </div>
-                               <button 
-                                 type="button"
-                                 onClick={() => setTradePrice(gttTriggerPrice)}
-                                 className="text-[8px] font-black uppercase text-orange-400 hover:text-white transition-colors tracking-widest"
-                               >
-                                 Match Trigger
-                               </button>
-                             </div>
-                             <input 
-                               type="number" 
-                               step="0.05"
-                               value={tradePrice} 
-                               onChange={(e) => setTradePrice(e.target.value)}
-                               className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-app-border/30" 
-                             />
-                             <p className="text-[10px] text-zinc-500 font-medium leading-relaxed mt-1.5 uppercase tracking-wide">
-                               Order triggers when LTP reaches <span className="font-bold text-white">₹{gttTriggerPrice || '0'}</span>, then places a Limit buy order at <span className="font-bold text-white">₹{tradePrice || '0'}</span>.
-                             </p>
-                          </div>
-                        ) : (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                               <div className="p-4 bg-app-surface border border-red-500/20 rounded-2xl">
-                                  <div className="flex justify-between items-center mb-1">
-                                     <label className="text-[9px] font-black text-red-400 uppercase tracking-widest block">Stop Loss Trigger (₹)</label>
-                                     <div className="flex gap-1">
-                                        {[1, 2, 5].map(pct => (
-                                           <button 
-                                             type="button" 
-                                             key={pct}
-                                             onClick={() => {
-                                               const base = scripLtp || parseFloat(tradePrice) || 100;
-                                               setTradeStopLoss((Math.round(base * (1 - pct / 100) * 20) / 20).toFixed(2));
-                                             }} 
-                                             className="text-[8px] bg-red-955/40 hover:bg-red-600/20 border border-red-800/40 text-red-400 px-1.5 py-0.5 rounded transition-all font-bold"
-                                           >
-                                             -{pct}%
-                                           </button>
-                                        ))}
-                                     </div>
-                                  </div>
-                                  <input 
-                                     type="number" 
-                                     step="0.05"
-                                     value={tradeStopLoss} 
-                                     onChange={(e) => setTradeStopLoss(e.target.value)}
-                                     className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-app-border/30" 
-                                  />
-                                  <div className="flex justify-between items-center mt-2.5">
-                                     <span className="text-[8.5px] text-zinc-500 font-bold uppercase tracking-wider">vs Live LTP</span>
-                                     {getStopLossVsLtpLabel(tradeStopLoss, tradePrice, scripLtp)}
-                                  </div>
-                               </div>
-                               <div className="p-4 bg-app-surface border border-emerald-600/20 rounded-2xl">
-                                  <div className="flex justify-between items-center mb-1">
-                                     <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest block">Profit Target Trigger (₹)</label>
-                                     <div className="flex gap-1">
-                                        {[3, 5, 10].map(pct => (
-                                           <button 
-                                             type="button" 
-                                             key={pct}
-                                             onClick={() => {
-                                               const base = scripLtp || parseFloat(tradePrice) || 100;
-                                               setTradeTargetPrice((Math.round(base * (1 + pct / 100) * 20) / 20).toFixed(2));
-                                             }} 
-                                             className="text-[8px] bg-emerald-955/40 hover:bg-emerald-600/20 border border-emerald-800/40 text-emerald-400 px-1.5 py-0.5 rounded transition-all font-bold"
-                                           >
-                                             +{pct}%
-                                           </button>
-                                        ))}
-                                     </div>
-                                  </div>
-                                  <input 
-                                     type="number" 
-                                     step="0.05"
-                                     value={tradeTargetPrice} 
-                                     onChange={(e) => setTradeTargetPrice(e.target.value)}
-                                     className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-app-border/30" 
-                                  />
-                                  <div className="flex justify-between items-center mt-2.5">
-                                     <span className="text-[8.5px] text-zinc-500 font-bold uppercase tracking-wider">vs Live LTP</span>
-                                     {getTargetVsLtpLabel(tradeTargetPrice, tradePrice, scripLtp)}
-                                  </div>
-                               </div>
-                            </div>
-                            
-                            <div className="p-4 bg-app-surface border border-app-border rounded-2xl">
-                               <div className="flex justify-between items-center mb-1">
-                                 <div className="flex items-center gap-2">
-                                   <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-bold">Limit Execution Price (₹)</label>
-                                   {getPriceVsLtpLabel(tradePrice, scripLtp)}
-                                 </div>
-                                 <button 
-                                   type="button"
-                                   onClick={() => setTradePrice(tradeStopLoss)}
-                                   className="text-[8px] font-black uppercase text-orange-400 hover:text-white transition-colors tracking-widest"
-                                 >
-                                   Match Stop-Loss
-                                 </button>
-                               </div>
-                               <input 
-                                 type="number" 
-                                 step="0.05"
-                                 value={tradePrice} 
-                                 onChange={(e) => setTradePrice(e.target.value)}
-                                 className="w-full bg-transparent text-xl font-display font-black focus:outline-none text-white border-b border-app-border/30" 
-                               />
-                               <p className="text-[10px] text-zinc-500 font-medium leading-relaxed mt-1.5 uppercase tracking-wide">
-                                 Triggers a SELL order at ₹{tradePrice || '0'} if stock breaches Stop Loss level <span className="font-bold text-red-500">₹{tradeStopLoss}</span> or Target level <span className="font-bold text-emerald-400">₹{tradeTargetPrice}</span>. Triggering either leg automatically cancels the remaining leg.
-                               </p>
-                            </div>
-                          </div>
-                        )}
-                        
-                        <div className="p-3 bg-zinc-900/50 border border-zinc-800/80 rounded-xl flex items-center gap-2 mb-1">
-                          <span className="h-1.5 w-1.5 rounded-full bg-orange-500 animate-pulse flex-shrink-0" />
-                          <p className="text-[8.5px] text-zinc-400 font-bold uppercase tracking-widest leading-relaxed">
-                            Kite GTT rules remain active for 365 Days on the exchange node until triggered or canceled manually.
-                          </p>
-                        </div>
-                     </div>
-                    )}
+                    </div>
                 </div>
 
                 <div className="p-6 bg-app-surface/50 border-t border-app-border flex flex-col gap-3 flex-shrink-0">
@@ -5276,19 +5021,13 @@ ${list}
                            </span>
                         </div>
 
+                        <div className="flex items-start gap-2 p-3 bg-gold/5 border border-gold/20 rounded-xl text-[9px] text-zinc-400 leading-relaxed mb-1">
+                          <span className="text-gold flex-shrink-0 text-sm">ℹ</span>
+                          <span>For best results, please log in to your Kite account in a separate browser tab before executing trades here.</span>
+                        </div>
                         <button
                           onClick={handleExecuteKiteJS}
-                          className="kite-buy w-full py-5 bg-orange-600 text-black font-black uppercase tracking-[0.25em] rounded-2xl hover:bg-white hover:text-black transition-all shadow-[0_0_35px_rgba(234,88,12,0.4)] flex items-center justify-center gap-3 relative overflow-hidden"
-                          data-kite={zerodhaApiKey || "MOCK_KEY_CAPITAL_PULSE"}
-                          data-info={JSON.stringify([{
-                            exchange: "NSE",
-                            tradingsymbol: (lastReport.ticker || "").replace(".NS", ""),
-                            transaction_type: "BUY",
-                            quantity: parseInt(tradeQuantity) || 1,
-                            order_type: tradeOrderType,
-                            price: tradeOrderType === "LIMIT" ? (parseFloat(tradePrice) || undefined) : undefined,
-                            product: "CNC"
-                          }])}
+                          className="kite-buy w-full py-5 bg-amber text-black font-black uppercase tracking-[0.25em] rounded-2xl hover:bg-white hover:text-black transition-all shadow-[0_0_35px_rgba(196,98,45,0.4)] flex items-center justify-center gap-3 relative overflow-hidden"
                         >
                            <Zap className="w-5 h-5 fill-current" /> Execute via Kite
                         </button>
@@ -5344,12 +5083,12 @@ ${list}
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.95 }}
-               className="bg-app-bg border border-app-border w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_120px_rgba(234,88,12,0.2)]"
+               className="bg-app-bg border border-app-border w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_120px_rgba(196,98,45,0.2)]"
              >
-                <div className="p-8 border-b border-app-border bg-orange-600/10 flex justify-between items-center">
+                <div className="p-8 border-b border-app-border bg-gold/10 flex justify-between items-center">
                    <div>
                       <h4 className="text-lg font-display font-black text-white italic uppercase tracking-tighter">Zerodha Kite Authorization</h4>
-                      <p className="text-[9px] text-orange-500 font-bold uppercase tracking-widest mt-1">Direct Publisher API Node Setup</p>
+                      <p className="text-[9px] text-gold font-bold uppercase tracking-widest mt-1">Direct Publisher API Node Setup</p>
                    </div>
                    <button onClick={() => setShowBrokerAuthModal(false)} className="p-2 text-zinc-500 hover:text-white">
                       <X className="w-5 h-5" />
@@ -5368,13 +5107,13 @@ ${list}
                    </div>
 
                    <div className="space-y-2">
-                      <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">2. Kite Publisher API Key</label>
+                      <label className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">2. Kite Publisher App API Key — get this from kite.zerodha.com/publishers</label>
                       <input 
                         type="text" 
                         value={zerodhaApiKey}
                         onChange={(e) => setZerodhaApiKey(e.target.value.trim())}
                         placeholder="e.g. yk785cx629ksk97m"
-                        className="w-full bg-zinc-900 border border-app-border p-4 rounded-xl font-mono text-white text-base focus:outline-none focus:border-orange-500 transition-colors placeholder:text-zinc-700"
+                        className="w-full bg-zinc-900 border border-app-border p-4 rounded-xl font-mono text-white text-base focus:outline-none focus:border-gold transition-colors placeholder:text-zinc-700"
                       />
                       <p className="text-[9px] text-zinc-500 leading-normal">
                          This is your unique API key obtained from your Zerodha publisher app dashboard. Highly secure: stored strictly on your local browser cache.
@@ -5391,7 +5130,7 @@ ${list}
                        setBrokerConnected(true);
                        setShowBrokerAuthModal(false);
                      }}
-                     className="w-full py-4 bg-orange-600 text-black font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(234,88,12,0.2)] text-[11px]"
+                     className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(196,98,45,0.2)] text-[11px]"
                    >
                      Authorize & Activate Bridge
                    </button>

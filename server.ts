@@ -303,9 +303,9 @@ async function startServer() {
           Governance Alpha: [score 1-10 based on management credibility and capital allocation]
         `;
         modelReportDescription = "Price action momentum breakdown report styled in clean Markdown formatting.";
-      } else {
+      } else if (mode === 'earnings') {
         dynamicTaskPrompt = `
-          Act as an Earnings Doctor. Perform an in-depth review of the latest quarterly results (Q4) and annual financial numbers for ${cleanTicker}.
+          Act as an Earnings Doctor. Perform an in-depth review of the latest quarterly results and annual financial numbers for ${cleanTicker}.
           Dissect revenue growth, EBITDA expansion/contraction, PAT beats, and CEO/CFO earnings transcript commentary in clean Markdown formatting.
 
           MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
@@ -316,6 +316,34 @@ async function startServer() {
           Governance Alpha: [score 1-10 based on management execution and guidance reliability]
         `;
         modelReportDescription = "Earnings performance diagnosis and financial report styled in clean Markdown formatting.";
+      } else {
+        dynamicTaskPrompt = `
+          You are an institutional equity research analyst. Generate a comprehensive deep-dive report for the Indian stock "${cleanTicker}" listed on NSE/BSE.
+          Structure the report in clean Markdown with these exact section headers:
+
+          ## THE BULL CASE
+          Detailed bull thesis: revenue growth drivers, competitive moat, management quality, valuation upside, and catalyst timeline.
+
+          ## THE CONTRARIAN BEAR CASE
+          Honest risk factors: sector headwinds, valuation risks, execution risks, and scenarios where the thesis fails.
+
+          ## INSTITUTIONAL CONVICTION METRICS
+          Score-driven summary of valuation, growth, moat, and governance factors.
+
+          ## EARNINGS & CATALYSTS
+          Latest quarterly performance, management guidance, and upcoming catalysts.
+
+          ## ANALYST TARGETS
+          Current market price, consensus target price, tactical entry zone, and strategic stop loss.
+
+          MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
+          Valuation Intelligence: [score 1-10 based on current valuation vs intrinsic value]
+          Growth Momentum: [score 1-10 based on revenue and earnings growth trajectory]
+          Quality & Moat: [score 1-10 based on competitive advantage and business quality]
+          Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
+          Governance Alpha: [score 1-10 based on management quality and capital allocation]
+        `;
+        modelReportDescription = "Comprehensive institutional equity deep-dive report with bull/bear cases styled in Markdown.";
       }
 
       // Stage 1: Search Grounding
@@ -488,9 +516,9 @@ async function startServer() {
           Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
           Governance Alpha: [score 1-10 based on management credibility and capital allocation]
         `;
-      } else {
+      } else if (mode === 'earnings') {
         dynamicTaskPrompt = `
-          Act as an Earnings Doctor. Perform an in-depth review of the latest quarterly results (Q4) and annual financial numbers for ${cleanTicker}.
+          Act as an Earnings Doctor. Perform an in-depth review of the latest quarterly results and annual financial numbers for ${cleanTicker}.
           Dissect revenue growth, EBITDA expansion/contraction, PAT beats, and CEO/CFO earnings transcript commentary in clean Markdown formatting.
 
           MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
@@ -499,6 +527,22 @@ async function startServer() {
           Quality & Moat: [score 1-10 based on margin quality and competitive durability]
           Execution Risk: [score 1-10 where 10 = very high risk, 1 = very low risk]
           Governance Alpha: [score 1-10 based on management execution and guidance reliability]
+        `;
+      } else {
+        dynamicTaskPrompt = `
+          Generate a comprehensive institutional equity deep-dive for "${cleanTicker}" with sections:
+          ## THE BULL CASE
+          ## THE CONTRARIAN BEAR CASE
+          ## INSTITUTIONAL CONVICTION METRICS
+          ## EARNINGS & CATALYSTS
+          ## ANALYST TARGETS
+
+          MANDATORY: At the very end output these exact lines with integer scores 1-10:
+          Valuation Intelligence: [score 1-10]
+          Growth Momentum: [score 1-10]
+          Quality & Moat: [score 1-10]
+          Execution Risk: [score 1-10 where 10 = very high risk]
+          Governance Alpha: [score 1-10]
         `;
       }
 
