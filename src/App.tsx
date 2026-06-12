@@ -361,7 +361,7 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'marketing' | 'community' | 'portfolio'>('news');
+  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'concall' | 'portfolio' | 'marketing' | 'community'>('news');
   const [view, setView] = useState<'landing' | 'app'>('landing');
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
@@ -380,6 +380,14 @@ export default function App() {
   const [auditingFilings, setAuditingFilings] = useState(false);
   const [filingsStatus, setFilingsStatus] = useState('');
   const [filingsError, setFilingsError] = useState<string | null>(null);
+
+  // Concall Intelligence Tab states
+  const [concallTicker, setConcallTicker] = useState('RELIANCE');
+  const [concallReport, setConcallReport] = useState<any>(null);
+  const [analyzingConcall, setAnalyzingConcall] = useState(false);
+  const [concallStatus, setConcallStatus] = useState('');
+  const [concallError, setConcallError] = useState<string | null>(null);
+  const [showConcallComparison, setShowConcallComparison] = useState(false);
 
   // Dynamic Peer Benchmarking states
   const [peersData, setPeersData] = useState<any[]>([]);
@@ -1253,6 +1261,23 @@ ${list}
     setFilingsError(null);
     setFilingsReport(null);
     setFilingsStatus('Initializing Disclosure Audit...');
+
+    // Cycle status through the 2-stage server pipeline while waiting
+    const filingsStages = [
+      `Scraping NSE Corporate Disclosures for ${tkr}...`,
+      'Running AI grounding search...',
+      'Generating audit report...',
+      'Cross-referencing SEBI filings...',
+      'Structuring disclosure scorecard...',
+    ];
+    let filingsStageIdx = 0;
+    const filingsStageTimer = setInterval(() => {
+      if (filingsStageIdx < filingsStages.length) {
+        setFilingsStatus(filingsStages[filingsStageIdx]);
+        filingsStageIdx++;
+      }
+    }, 5000);
+
     try {
       setFilingsStatus(`Scraping NSE Corporate Disclosures for ${tkr}...`);
       const controller = new AbortController();
@@ -1360,15 +1385,88 @@ ${list}
         createdAt: new Date().toISOString()
       };
 
+      clearInterval(filingsStageTimer);
       setFilingsReport(filingsReportData);
       setFilingsStatus('Filing Report Secured.');
     } catch (err: any) {
+      clearInterval(filingsStageTimer);
       console.error("Filings audit failed:", err);
       const rawMsg = err.message || "Failed to audit corporate disclosures.";
       setFilingsError(rawMsg.startsWith('TICKER_INVALID:') ? rawMsg.slice('TICKER_INVALID:'.length) : rawMsg);
     } finally {
       setAuditingFilings(false);
       setFilingsStatus('');
+    }
+  };
+
+  const triggerConcallAnalysis = async (customTicker?: string) => {
+    const tkr = (customTicker || concallTicker || 'RELIANCE').toUpperCase().trim();
+    if (!isValidTickerPattern(tkr)) {
+      setConcallError(`'${tkr}' does not appear to be a valid NSE/BSE ticker. Example symbols: RELIANCE, TCS, HDFCBANK, INFY.`);
+      return;
+    }
+    setAnalyzingConcall(true);
+    setConcallError(null);
+    setConcallReport(null);
+    setShowConcallComparison(false);
+    setConcallStatus('Searching for latest concall transcript...');
+
+    // Cycle through stages while the server runs its 2-stage Gemini pipeline
+    const concallStages = [
+      'Scraping transcript sources...',
+      'Running AI grounding search...',
+      'Extracting management promises...',
+      'Analysing analyst Q&A...',
+      'Building Concall Intelligence report...',
+    ];
+    let concallStageIdx = 0;
+    const concallStageTimer = setInterval(() => {
+      if (concallStageIdx < concallStages.length) {
+        setConcallStatus(concallStages[concallStageIdx]);
+        concallStageIdx++;
+      }
+    }, 4000);
+
+    try {
+      const response = await fetch('/api/pipeline/concall', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: tkr })
+      });
+      clearInterval(concallStageTimer);
+      setConcallStatus('Parsing Intelligence Report...');
+
+      if (!response.ok) {
+        let errData: any = {};
+        try { errData = await response.json(); } catch {}
+        if (response.status === 422) {
+          throw new Error(errData.message || `Could not find '${tkr}' on NSE/BSE.`);
+        }
+        throw new Error(errData.message || 'Concall analysis server returned an error.');
+      }
+      const data = await response.json();
+      setConcallReport({ ...data, ticker: tkr });
+      setConcallStatus('Concall Intelligence Ready.');
+
+      // Save to Firestore for logged-in users
+      if (user) {
+        try {
+          await addDoc(collection(db, 'user_concall'), {
+            userId: user.uid,
+            ticker: tkr,
+            quarter: data.currentQuarter,
+            reliabilityScore: data.reliabilityScore,
+            createdAt: serverTimestamp()
+          });
+        } catch { /* non-critical */ }
+      }
+    } catch (err: any) {
+      clearInterval(concallStageTimer);
+      console.error('Concall analysis failed:', err);
+      setConcallError(err.message || 'Failed to analyse concall transcript.');
+    } finally {
+      setAnalyzingConcall(false);
+      setConcallStatus('');
     }
   };
 
@@ -1560,16 +1658,29 @@ ${list}
     }
     setError(null);
     setAnalysisStatus('Initializing Analysis Pipeline...');
+
+    // Cycle through status messages while the multi-stage server pipeline runs
+    const analysisStages = [
+      `Scraping data sources for ${tkr}...`,
+      'Running AI grounding search...',
+      'Generating analysis report...',
+      'Cross-referencing financial data...',
+      'Structuring research output...',
+      'Finalizing report...',
+    ];
+    let analysisStageIdx = 0;
+    const analysisStageTimer = setInterval(() => {
+      if (analysisStageIdx < analysisStages.length) {
+        setAnalysisStatus(analysisStages[analysisStageIdx]);
+        analysisStageIdx++;
+      }
+    }, 5000);
+
     try {
       const activeUrl = (tkr === lastReport?.ticker) ? searchUrl : '';
-      if (activeUrl) {
-        setAnalysisStatus(`Scraping Insight from ${new URL(activeUrl).hostname}...`);
-      } else {
-        setAnalysisStatus(`Accessing Stock Intelligence for ${tkr}...`);
-      }
-      
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); 
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
 
       let scrapedMarkdown = "";
       try {
@@ -1629,14 +1740,14 @@ ${list}
         setError(rawMsg);
       }
     } finally {
+      clearInterval(analysisStageTimer);
       setAnalyzing(false);
       setAnalysisStatus('');
     }
   };
 
   const runGeminiAnalysis = async (scrapedMarkdown: string, ticker: string, usedUrl: string, targetMode?: 'deep_dive' | 'earnings' | 'move') => {
-      setIsShareMode(false); 
-      setAnalysisStatus('Synthesizing with Gemini Research Engine...');
+      setIsShareMode(false);
       const activeMode = targetMode || workflowMode;
       
       try {
@@ -2060,24 +2171,26 @@ ${list}
                       </div>
                       
                       <span className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-2">Alphasynth Intelligence</span>
-                      <h3 className="text-xl font-display font-medium text-white mb-2">Recalibrating Research Conduit</h3>
+                      <h3 className="text-xl font-display font-medium text-white mb-2">
+                        {workflowMode === 'earnings' ? 'Analysing Earnings Transcript' : workflowMode === 'move' ? 'Analysing Price Action' : 'Running Deep Dive Research'}
+                      </h3>
                       <p className="text-xs text-zinc-500 font-mono mb-8 max-w-sm">
-                        Accessing real-time {workflowMode === 'earnings' ? 'Earnings Transcripts' : workflowMode === 'move' ? 'Price Action Spikes' : 'Filing Audits'} for <strong>{lastReport?.ticker || ticker}</strong>...
+                        {workflowMode === 'earnings' ? 'Scraping concall transcript and quarterly results' : workflowMode === 'move' ? 'Identifying catalyst and price action drivers' : 'Building institutional research report'} for <strong>{ticker}</strong>...
                       </p>
-                      
+
                       {/* Pipeline Status Indicator */}
                       <div className="w-full max-w-md bg-zinc-900 border border-app-border rounded-xl p-4 text-left font-mono text-[10px] space-y-1.5 shadow-lg">
                         <div className="flex justify-between text-zinc-400">
-                          <span className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber animate-[ping_1.5s_infinite]" /> {analysisStatus || 'Accessing Server...'}</span>
+                          <span className="font-bold flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-amber animate-[ping_1.5s_infinite]" /> {analysisStatus || 'Initializing Analysis Pipeline...'}</span>
                           <span className="text-gold animate-pulse">RUNNING</span>
                         </div>
                         <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mt-2">
                           <div className="h-full bg-gradient-to-r from-amber to-amber-500 animate-pulse" style={{ width: '75%' }} />
                         </div>
                         <div className="pt-2 text-[8px] text-zinc-600 space-y-1">
-                          <p>&gt; [SYS] SWAPPING AGENT FOCUS PROTOCOL TO {workflowMode.toUpperCase()}</p>
-                          <p>&gt; [DB] SECURE STORAGE VAULT ALLOCATION SECURED</p>
-                          <p>&gt; [FETCH] ESTABLISHING DIRECT REAL-TIME NSE CONDUIT...</p>
+                          <p>&gt; [SYS] MODE: {workflowMode.toUpperCase().replace('_', ' ')} — PIPELINE ACTIVE</p>
+                          <p>&gt; [FETCH] SCRAPING DATA SOURCES AND FIRECRAWL SEARCH...</p>
+                          <p>&gt; [AI] GEMINI GROUNDING SEARCH + JSON STRUCTURING RUNNING...</p>
                         </div>
                       </div>
                     </div>
@@ -3044,6 +3157,7 @@ ${list}
                <button onClick={() => { setActiveTab('news'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
                <button onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
                <button onClick={() => { setActiveTab('filings'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-gold' : ''}`}>Filings</button>
+               <button onClick={() => { setActiveTab('concall'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'concall' ? 'text-gold' : ''}`}>Concall</button>
                <button onClick={() => { setActiveTab('portfolio'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-gold' : ''}`}>Audit</button>
                <button onClick={() => { setActiveTab('marketing'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
                <button onClick={() => { setActiveTab('community'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
@@ -3260,21 +3374,21 @@ ${list}
       <section id="workflow" className="py-20 px-6 border-t border-app-border bg-app-surface/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-4 justify-center mb-16">
-            {(['news', 'equity', 'filings', 'portfolio', 'marketing', 'community'] as const).map((tab) => (
+            {(['news', 'equity', 'filings', 'concall', 'portfolio', 'marketing', 'community'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); scrollToWorkflow(); }}
                 className={`px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group ${
-                  activeTab === tab 
-                  ? 'bg-amber text-black shadow-[0_10px_25px_rgba(196,98,45,0.25)]' 
+                  activeTab === tab
+                  ? 'bg-amber text-black shadow-[0_10px_25px_rgba(196,98,45,0.25)]'
                   : 'bg-app-surface text-zinc-500 border border-app-border hover:border-zinc-700 hover:text-zinc-300'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="opacity-40">
-                    {tab === 'news' ? '01' : tab === 'equity' ? '02' : tab === 'filings' ? '03' : tab === 'portfolio' ? '04' : tab === 'marketing' ? '05' : '06'}
+                    {tab === 'news' ? '01' : tab === 'equity' ? '02' : tab === 'filings' ? '03' : tab === 'concall' ? '04' : tab === 'portfolio' ? '05' : tab === 'marketing' ? '06' : '07'}
                   </span>
-                  <span>{tab.toUpperCase()}</span>
+                  <span>{tab === 'concall' ? 'CONCALL' : tab.toUpperCase()}</span>
                 </div>
                 {activeTab !== tab && (
                   <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -4065,6 +4179,365 @@ ${list}
                            </button>
                         </div>
                      </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {activeTab === 'concall' && (
+                <motion.div
+                  key="concall"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="space-y-12 col-span-2 w-full text-left"
+                >
+                  <div className="grid lg:grid-cols-12 gap-12 items-start">
+                    {/* Left Workspace */}
+                    <div className="lg:col-span-8 space-y-8">
+                      <div>
+                        <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white mb-2 leading-none">CONCALL INTELLIGENCE</h2>
+                        <p className="text-zinc-400 text-xs md:text-sm max-w-xl leading-relaxed">
+                          AI-powered earnings call analysis — tracks management promises, flags red flags, and scores transparency across quarters.
+                        </p>
+                      </div>
+
+                      {/* Search Console */}
+                      <div className="bg-app-surface border border-app-border rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[50px] -z-10 rounded-full" />
+                        <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Concall Analysis Pipeline</h3>
+                        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                          <input
+                            type="text"
+                            placeholder="Enter NSE Ticker (e.g., RELIANCE)"
+                            value={concallTicker}
+                            onChange={(e) => setConcallTicker(e.target.value.toUpperCase())}
+                            onKeyDown={(e) => e.key === 'Enter' && triggerConcallAnalysis()}
+                            className="flex-1 px-4 py-3 bg-zinc-950 border border-app-border rounded-xl text-xs text-white focus:outline-none focus:border-gold font-semibold"
+                          />
+                          <button
+                            onClick={() => triggerConcallAnalysis()}
+                            disabled={analyzingConcall}
+                            className="px-6 py-3 bg-amber text-black font-black uppercase tracking-widest text-[9px] rounded-xl hover:bg-amber active:scale-95 transition-all flex items-center justify-center gap-2"
+                          >
+                            {analyzingConcall ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin" />
+                                <span>ANALYSING...</span>
+                              </>
+                            ) : (
+                              <>
+                                <MessageSquare className="w-3.5 h-3.5" /> Analyse Concall
+                              </>
+                            )}
+                          </button>
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">POPULAR CONCALLS</p>
+                          <div className="flex flex-wrap gap-2">
+                            {['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'TATAMOTORS', 'ITC'].map((sh) => (
+                              <button
+                                key={sh}
+                                onClick={() => { setConcallTicker(sh); triggerConcallAnalysis(sh); }}
+                                className={`px-3 py-1.5 bg-zinc-900 border ${concallTicker === sh ? 'border-gold text-gold' : 'border-app-border text-zinc-400 hover:text-white'} text-[9px] font-bold uppercase tracking-widest rounded-lg transition-colors cursor-pointer`}
+                              >
+                                {sh}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Loading Indicator — mirrors equity tab's animated panel */}
+                      {analyzingConcall && (
+                        <div className="flex flex-col items-center justify-center py-16 px-8 text-center bg-zinc-950/40 border border-gold/10 rounded-3xl min-h-[380px]">
+                          <div className="relative w-20 h-20 mb-7">
+                            <div className="absolute inset-0 rounded-full border-2 border-gold/20 animate-ping" />
+                            <div className="absolute inset-2 rounded-full border-2 border-gold/40 border-t-orange-500 animate-spin" style={{ animationDuration: '1.5s' }} />
+                            <div className="absolute inset-4 rounded-full border border-gold/10 flex items-center justify-center">
+                              <MessageSquare className="w-7 h-7 text-gold fill-current animate-pulse" />
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-2">Alphasynth Intelligence</span>
+                          <h3 className="text-lg font-display font-medium text-white mb-2">Concall Analysis Running</h3>
+                          <p className="text-xs text-zinc-500 font-mono mb-7 max-w-sm">
+                            Analysing latest earnings call transcript for <strong>{concallTicker}</strong>...
+                          </p>
+                          <div className="w-full max-w-md bg-zinc-900 border border-app-border rounded-xl p-4 text-left font-mono text-[10px] space-y-1.5 shadow-lg">
+                            <div className="flex justify-between text-zinc-400">
+                              <span className="font-bold flex items-center gap-1.5">
+                                <span className="w-1.5 h-1.5 rounded-full bg-amber animate-[ping_1.5s_infinite]" />
+                                {concallStatus || 'Initializing Concall Pipeline...'}
+                              </span>
+                              <span className="text-gold animate-pulse">RUNNING</span>
+                            </div>
+                            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden mt-2">
+                              <div className="h-full bg-gradient-to-r from-amber to-amber-500 animate-pulse" style={{ width: '70%' }} />
+                            </div>
+                            <div className="pt-2 text-[8px] text-zinc-600 space-y-1">
+                              <p>&gt; [SYS] CONCALL INTELLIGENCE PROTOCOL ACTIVE</p>
+                              <p>&gt; [FETCH] SCRAPING NSE TRANSCRIPT SOURCES...</p>
+                              <p>&gt; [AI] GEMINI GROUNDING SEARCH RUNNING...</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Error */}
+                      {concallError && (
+                        <div className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6">
+                          <p className="text-rose-400 text-xs font-bold font-mono uppercase">PIPELINE ERROR: {concallError}</p>
+                        </div>
+                      )}
+
+                      {/* Report Output */}
+                      {concallReport && !analyzingConcall && (
+                        <div className="space-y-6">
+
+                          {/* Header: Quarter + Score */}
+                          <div className="flex flex-col sm:flex-row gap-4">
+                            <div className="flex-1 p-5 bg-app-surface border border-app-border rounded-2xl flex items-center gap-4">
+                              <div className="w-10 h-10 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0">
+                                <MessageSquare className="w-5 h-5 text-gold" />
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Current Quarter</p>
+                                <p className="text-lg font-black text-white">{concallReport.currentQuarter || 'Latest Quarter'}</p>
+                                <p className="text-[9px] text-zinc-500">Promises evaluated from {concallReport.previousQuarter || 'previous quarter'}</p>
+                              </div>
+                            </div>
+                            <div className={`p-5 bg-app-surface border rounded-2xl flex items-center gap-4 ${
+                              (concallReport.reliabilityScore || 0) >= 7 ? 'border-emerald-500/30' :
+                              (concallReport.reliabilityScore || 0) >= 5 ? 'border-amber-500/30' : 'border-rose-500/30'
+                            }`}>
+                              <div className={`text-5xl font-display font-black leading-none ${
+                                (concallReport.reliabilityScore || 0) >= 7 ? 'text-emerald-400' :
+                                (concallReport.reliabilityScore || 0) >= 5 ? 'text-amber-400' : 'text-rose-400'
+                              }`}>
+                                {concallReport.reliabilityScore ?? 'N/A'}
+                              </div>
+                              <div>
+                                <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest">Reliability Score</p>
+                                <p className="text-xs text-zinc-400 font-medium">/10 — Management Transparency</p>
+                                <p className="text-[9px] text-zinc-600 mt-1">
+                                  {(concallReport.reliabilityScore || 0) >= 7 ? 'High credibility — management delivers' :
+                                   (concallReport.reliabilityScore || 0) >= 5 ? 'Moderate — mixed track record' : 'Low — promises often missed'}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Compare Toggle */}
+                          <div className="flex items-center justify-between p-4 bg-app-surface/40 border border-app-border rounded-xl">
+                            <div>
+                              <p className="text-xs font-black text-white uppercase tracking-wider">Compare with Previous Quarter</p>
+                              <p className="text-[10px] text-zinc-500">Toggle to see side-by-side promise vs delivery</p>
+                            </div>
+                            <button
+                              onClick={() => setShowConcallComparison(!showConcallComparison)}
+                              className={`relative w-12 h-6 rounded-full transition-colors ${showConcallComparison ? 'bg-gold' : 'bg-zinc-700'}`}
+                            >
+                              <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${showConcallComparison ? 'translate-x-7' : 'translate-x-1'}`} />
+                            </button>
+                          </div>
+
+                          {/* Management Promises Tracker */}
+                          {concallReport.managementPromises && concallReport.managementPromises.length > 0 && (
+                            <div className="bg-app-surface border border-app-border rounded-3xl overflow-hidden">
+                              <div className="px-6 py-4 border-b border-app-border bg-app-bg/40">
+                                <h3 className="text-[10px] font-black text-gold uppercase tracking-widest">Management Promises Tracker</h3>
+                                <p className="text-[9px] text-zinc-500 mt-0.5">{concallReport.previousQuarter} promises evaluated against {concallReport.currentQuarter} results</p>
+                              </div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                  <thead className="bg-app-bg/50 border-b border-app-border">
+                                    <tr>
+                                      <th className="px-5 py-3.5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-gold w-1/2">Promise Made</th>
+                                      {showConcallComparison && <th className="px-5 py-3.5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Quarter</th>}
+                                      <th className="px-5 py-3.5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Status</th>
+                                      <th className="px-5 py-3.5 text-left text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400">Actual Result</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {concallReport.managementPromises.map((p: any, i: number) => {
+                                      const status = (p.status || '').toLowerCase();
+                                      const isKept = status === 'kept';
+                                      const isMissed = status === 'missed';
+                                      return (
+                                        <tr key={i} className={`border-b border-app-border/50 ${i % 2 === 0 ? 'bg-app-surface/20' : ''}`}>
+                                          <td className="px-5 py-4 text-sm text-[#B0B8C8] leading-snug">{p.promise}</td>
+                                          {showConcallComparison && <td className="px-5 py-4 text-[10px] font-mono text-zinc-500">{p.previousQuarter || concallReport.previousQuarter}</td>}
+                                          <td className="px-5 py-4">
+                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                                              isKept ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                                              isMissed ? 'bg-rose-500/10 text-rose-400 border border-rose-500/20' :
+                                              'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                            }`}>
+                                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isKept ? 'bg-emerald-400' : isMissed ? 'bg-rose-400' : 'bg-amber-400'}`} />
+                                              {isKept ? 'Kept' : isMissed ? 'Missed' : 'Pending'}
+                                            </span>
+                                          </td>
+                                          <td className="px-5 py-4 text-[11px] text-zinc-400 leading-snug">{p.actualResult}</td>
+                                        </tr>
+                                      );
+                                    })}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Key Highlights */}
+                          {concallReport.keyHighlights && concallReport.keyHighlights.length > 0 && (
+                            <div className="bg-app-surface border border-app-border rounded-3xl p-6">
+                              <h3 className="text-[10px] font-black text-gold uppercase tracking-widest mb-4">Key Highlights</h3>
+                              <p className="text-[9px] text-zinc-500 uppercase tracking-wider mb-4">5 most important things management said — in plain English</p>
+                              <div className="space-y-3">
+                                {concallReport.keyHighlights.map((h: string, i: number) => (
+                                  <div key={i} className="flex gap-3 items-start">
+                                    <div className="w-5 h-5 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <span className="text-[9px] font-black text-gold">{i + 1}</span>
+                                    </div>
+                                    <p className="text-sm text-[#B0B8C8] leading-relaxed">{h}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Guidance Summary */}
+                          {concallReport.guidanceSummary && (
+                            <div className="bg-app-surface border border-app-border rounded-3xl p-6">
+                              <h3 className="text-[10px] font-black text-gold uppercase tracking-widest mb-4">Guidance Summary</h3>
+                              <p className="text-[9px] text-zinc-500 uppercase tracking-wider mb-4">Revenue, margins & capex outlook for next quarter and full year</p>
+                              <div className="prose prose-invert max-w-none">
+                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{concallReport.guidanceSummary}</Markdown>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Red Flags */}
+                          {concallReport.redFlags && concallReport.redFlags.length > 0 && (
+                            <div className="bg-rose-500/5 border border-rose-500/20 rounded-3xl p-6">
+                              <h3 className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-4">Red Flags</h3>
+                              <p className="text-[9px] text-zinc-500 uppercase tracking-wider mb-4">Concerning statements, evasive answers, and sudden guidance changes</p>
+                              <div className="space-y-3">
+                                {concallReport.redFlags.map((flag: string, i: number) => (
+                                  <div key={i} className="flex gap-3 items-start">
+                                    <div className="w-4 h-4 rounded-full bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                      <X className="w-2.5 h-2.5 text-rose-400" />
+                                    </div>
+                                    <p className="text-sm text-rose-300 leading-relaxed">{flag}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {concallReport.redFlags && concallReport.redFlags.length === 0 && (
+                            <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3">
+                              <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                              <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider">No significant red flags detected in this concall</p>
+                            </div>
+                          )}
+
+                          {/* Analyst Sentiment */}
+                          {concallReport.analystSentiment && (
+                            <div className="bg-app-surface border border-app-border rounded-3xl p-6">
+                              <h3 className="text-[10px] font-black text-gold uppercase tracking-widest mb-4">Analyst Sentiment</h3>
+                              <p className="text-[9px] text-zinc-500 uppercase tracking-wider mb-4">What analysts were concerned about and how management responded</p>
+                              <div className="prose prose-invert max-w-none">
+                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{concallReport.analystSentiment}</Markdown>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Source attribution */}
+                          {concallReport.sourceUrl && (
+                            <div className="p-4 bg-gold/5 border border-gold/20 rounded-2xl flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <ShieldCheck className="text-gold w-5 h-5" />
+                                <div>
+                                  <p className="text-[9px] font-black text-white uppercase tracking-widest">Grounded Analysis</p>
+                                  <p className="text-[9px] text-zinc-400 uppercase tracking-wider">Sourced from public concall data + Gemini search grounding</p>
+                                </div>
+                              </div>
+                              <a
+                                href={concallReport.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-3 py-1.5 bg-zinc-900 border border-app-border text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white rounded-lg truncate max-w-[150px]"
+                              >
+                                {(() => { try { return new URL(concallReport.sourceUrl).hostname; } catch { return 'Source'; } })()}
+                              </a>
+                            </div>
+                          )}
+
+                          <div className="pt-2 border-t border-app-border">
+                            <p className="text-[9px] text-zinc-600 leading-relaxed font-medium">
+                              This concall analysis is AI generated for informational purposes only. Management statements are interpreted and may not be verbatim. Always refer to official NSE/BSE filings and exchange disclosures before making investment decisions. This is not financial advice.
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Idle state */}
+                      {!concallReport && !analyzingConcall && (
+                        <div className="p-12 border border-app-border border-dashed rounded-3xl text-center bg-zinc-900/10">
+                          <MessageSquare className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
+                          <h4 className="text-xs font-black uppercase tracking-widest text-zinc-400">Concall Intelligence Workspace</h4>
+                          <p className="text-xs text-zinc-500 leading-relaxed max-w-sm mx-auto mt-2 font-medium">
+                            Enter any NSE ticker to analyse its latest earnings concall — promises tracker, red flags, guidance, and analyst sentiment.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Right Sidebar */}
+                    <div className="lg:col-span-4 space-y-6">
+                      <div className="p-6 bg-app-surface border border-app-border rounded-3xl">
+                        <span className="text-[8px] font-black px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold tracking-widest rounded uppercase">Intelligence Node</span>
+                        <h4 className="text-sm font-bold text-white uppercase mt-4 mb-2">What Concall Intelligence Analyses</h4>
+                        <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
+                          Reads the latest quarterly earnings call transcript to expose gaps between what management promised and what they delivered.
+                        </p>
+                        <div className="mt-6 pt-6 border-t border-app-border space-y-4">
+                          {[
+                            'Tracks promises from previous quarter vs this quarter\'s results',
+                            'Flags evasive answers and sudden changes in tone or guidance',
+                            'Scores management reliability on a 1–10 transparency scale',
+                            'Summarises analyst concerns and management responses',
+                          ].map((pt, i) => (
+                            <div key={i} className="flex gap-3">
+                              <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5 flex-shrink-0" />
+                              <p className="text-xs text-zinc-400 font-bold">{pt}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="p-6 bg-app-surface border border-app-border rounded-3xl">
+                        <h4 className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-4">Score Guide</h4>
+                        {[
+                          { range: '8–10', label: 'High Reliability', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20', desc: 'Management consistently delivers on promises' },
+                          { range: '5–7', label: 'Moderate', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/20', desc: 'Mixed track record — verify key claims' },
+                          { range: '1–4', label: 'Low Reliability', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/20', desc: 'Frequent misses — treat guidance cautiously' },
+                        ].map((s, i) => (
+                          <div key={i} className={`p-3 rounded-xl border ${s.bg} mb-3`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-lg font-display font-black ${s.color}`}>{s.range}</span>
+                              <span className={`text-[9px] font-black uppercase tracking-wider ${s.color}`}>{s.label}</span>
+                            </div>
+                            <p className="text-[10px] text-zinc-500">{s.desc}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        onClick={() => { setActiveTab('filings'); scrollToWorkflow(); }}
+                        className="w-full py-3 bg-zinc-900 border border-app-border hover:border-zinc-700 hover:text-white text-[9px] font-black uppercase tracking-wider text-zinc-400 rounded-xl transition-all cursor-pointer"
+                      >
+                        Switch to Filings Audit
+                      </button>
+                    </div>
                   </div>
                 </motion.div>
               )}

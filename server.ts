@@ -1022,6 +1022,145 @@ async function startServer() {
     }
   });
 
+  app.post("/api/pipeline/concall", async (req, res) => {
+    const { ticker, context } = req.body;
+    if (!ticker) return res.status(400).json({ error: "Ticker required" });
+
+    const ai = getGenAI();
+    const scraper = getFirecrawl();
+    const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+    const sqTicker = searchQueryTicker(cleanTicker);
+
+    const validation = validateTicker(cleanTicker);
+    if (!validation.isValid) {
+      return res.status(422).json({
+        error: "TICKER_NOT_FOUND",
+        message: `'${cleanTicker}' does not appear to be a valid NSE/BSE ticker. Valid examples: RELIANCE, TCS, HDFCBANK, INFY, TATAMOTORS.`
+      });
+    }
+
+    console.log(`[CONCALL] Starting analysis for: ${cleanTicker}`);
+    const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    try {
+      // Scrape concall transcript if no context provided
+      let transcriptContext = context || "";
+      let sourceUrl = "";
+
+      if (!transcriptContext && scraper) {
+        try {
+          const searchQuery = `${sqTicker} India earnings concall transcript quarterly results management commentary analyst questions site:tijorifinance.com OR site:screener.in OR site:nseindia.com OR site:moneycontrol.com`;
+          const searchRes: any = await scraper.search(searchQuery, { limit: 2 });
+          const topUrl = searchRes?.web?.[0]?.url || searchRes?.news?.[0]?.url;
+          if (topUrl) {
+            sourceUrl = topUrl;
+            const scrapeResult = await scraper.scrape(topUrl, { formats: ['markdown'], onlyMainContent: true });
+            const raw = scrapeResult?.markdown || "";
+            if (isScrapedContentUsable(raw)) {
+              transcriptContext = raw.substring(0, 8000);
+              console.log(`[CONCALL] Scraped ${transcriptContext.length} chars from ${topUrl}`);
+            }
+          }
+        } catch (scrapeErr: any) {
+          console.warn(`[CONCALL] Scrape failed: ${scrapeErr.message}`);
+        }
+      }
+
+      // Stage 1: Search grounding for latest concall data
+      const stage1Prompt = `You are an expert equity research analyst. Search for and analyse the most recent earnings concall transcript for ${cleanTicker} (${sqTicker}) listed on NSE India as of ${todayStr}.
+
+Find:
+1. The exact quarter (e.g. Q3FY25) and date of the most recent earnings concall
+2. Key management statements from CEO and CFO about revenue, margins, growth plans, and strategic direction
+3. What specific promises or guidance management gave in the PREVIOUS quarter (Q-1) and whether those were delivered this quarter
+4. Any red flags: evasive answers, sudden changes in tone, topics management avoided
+5. Analyst concerns raised during Q&A and how management responded
+6. Revenue guidance, margin guidance, and capex plans for next quarter and full year
+
+Focus exclusively on ${cleanTicker}. If transcript context is provided below, use it as primary source. Supplement with your search grounding.
+
+${transcriptContext ? `Transcript/Context available:\n---\n${transcriptContext.substring(0, 4000)}\n---` : "No direct transcript available — rely entirely on search grounding."}`;
+
+      const stage1Res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: stage1Prompt }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
+      });
+
+      const groundedData = stage1Res.text || "";
+      console.log(`[CONCALL] Stage 1 grounding: ${groundedData.length} chars`);
+
+      // Stage 2: JSON structuring
+      const stage2Prompt = `Using the concall research data below for ${cleanTicker}, produce a structured JSON analysis report.
+
+Research Data:
+---
+${groundedData.substring(0, 6000)}
+---
+
+Rules:
+- managementPromises: array of specific promises from the PREVIOUS quarter — for each state whether it was KEPT, MISSED, or PENDING this quarter. Include 3-6 entries.
+- keyHighlights: exactly 5 plain-English bullet points of the most important things management said — no jargon, no numbers without context.
+- guidanceSummary: 2-3 paragraphs covering revenue outlook, margin guidance, and capex plans for next quarter and full year.
+- redFlags: array of concerning statements, evasive answers, sudden guidance changes, or avoided topics. Leave empty array if none.
+- analystSentiment: 1-2 paragraphs summarising analyst concerns and how management addressed them.
+- reliabilityScore: integer 1-10 rating management transparency and consistency based on promises vs delivery history. 10 = very reliable.
+- currentQuarter: the quarter this concall covers (e.g. "Q3FY25")
+- previousQuarter: the quarter whose promises are being evaluated (e.g. "Q2FY25")`;
+
+      const concallSchema = {
+        type: "OBJECT",
+        properties: {
+          managementPromises: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                promise: { type: "STRING" },
+                previousQuarter: { type: "STRING" },
+                status: { type: "STRING" },
+                actualResult: { type: "STRING" }
+              },
+              required: ["promise", "previousQuarter", "status", "actualResult"]
+            }
+          },
+          keyHighlights: { type: "ARRAY", items: { type: "STRING" } },
+          guidanceSummary: { type: "STRING" },
+          redFlags: { type: "ARRAY", items: { type: "STRING" } },
+          analystSentiment: { type: "STRING" },
+          reliabilityScore: { type: "NUMBER" },
+          currentQuarter: { type: "STRING" },
+          previousQuarter: { type: "STRING" }
+        },
+        required: ["managementPromises", "keyHighlights", "guidanceSummary", "redFlags", "analystSentiment", "reliabilityScore", "currentQuarter", "previousQuarter"]
+      };
+
+      const stage2Res = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: stage2Prompt }] }],
+        config: { responseMimeType: "application/json", maxOutputTokens: 16384, responseSchema: concallSchema }
+      });
+
+      const rawJson = sanitizeGroundingJson(stage2Res.text || "");
+      const parsed = JSON.parse(rawJson);
+
+      // Normalise reliabilityScore to integer
+      if (parsed.reliabilityScore !== undefined) {
+        parsed.reliabilityScore = Math.round(Math.min(10, Math.max(1, Number(parsed.reliabilityScore))));
+      }
+
+      console.log(`[CONCALL] Complete for ${cleanTicker} | Q: ${parsed.currentQuarter} | Score: ${parsed.reliabilityScore}`);
+      return res.json({ ...parsed, ticker: cleanTicker, sourceUrl });
+
+    } catch (error: any) {
+      console.error(`[CONCALL] Error for ${cleanTicker}:`, error.message);
+      return res.status(500).json({
+        error: "Analysis failed",
+        message: `Unable to generate concall analysis for ${cleanTicker}. Please retry.`
+      });
+    }
+  });
+
   app.post("/api/email/briefing", async (req, res) => {
     const { email, reportContent } = req.body;
     const mailer = getResend();
