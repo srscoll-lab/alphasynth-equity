@@ -3772,42 +3772,42 @@ ${list}
                     {/* Main content — shown only when data is available */}
                     {!loadingFiiDii && fiiDiiData?.dataAvailable && (
                       <>
-                        {/* Summary Cards: FII Net + DII Net */}
-                        <div className="grid grid-cols-2 gap-4">
-                          {/* FII Net — no overflow-hidden on outer; glow isolated in inner wrapper */}
-                          <div className={`p-5 rounded-2xl border relative ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+                        {/* Summary Cards: FII Net + DII Net — stacked on small viewports, side-by-side on sm+ */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* FII Net */}
+                          <div className={`p-6 rounded-2xl border relative ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
                             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
-                              <div className="absolute top-0 right-0 w-20 h-20 opacity-5 blur-2xl rounded-full" style={{ background: (fiiDiiData.fiiNet ?? 0) >= 0 ? '#10b981' : '#f43f5e' }} />
+                              <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full" style={{ background: (fiiDiiData.fiiNet ?? 0) >= 0 ? '#10b981' : '#f43f5e' }} />
                             </div>
-                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">FII Net Flow</p>
-                            <p className="text-[10px] text-zinc-600 font-medium mb-2">Foreign Institutional Investors</p>
-                            <p className={`text-2xl font-display font-black leading-tight break-all ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">FII Net Flow</p>
+                            <p className="text-xs text-zinc-500 font-medium mb-3">Foreign Institutional Investors</p>
+                            <p className={`text-3xl font-display font-black leading-none whitespace-nowrap ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                               {fiiDiiData.fiiNet !== null ? `${(fiiDiiData.fiiNet ?? 0) >= 0 ? '+' : ''}${(fiiDiiData.fiiNet ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'N/A'}
                             </p>
                             {fiiDiiData.fiiNet !== null && (
-                              <p className="text-[9px] text-zinc-500 mt-1">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
+                              <p className="text-xs text-zinc-500 mt-2">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
                             )}
-                            <div className={`mt-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                              <span className={`w-1 h-1 rounded-full ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                            <div className={`mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-400' : 'bg-rose-400'}`} />
                               {(fiiDiiData.fiiNet ?? 0) >= 0 ? 'Net Buying' : 'Net Selling'}
                             </div>
                           </div>
 
-                          {/* DII Net — same overflow fix */}
-                          <div className={`p-5 rounded-2xl border relative ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/5 border-blue-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                          {/* DII Net */}
+                          <div className={`p-6 rounded-2xl border relative ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/5 border-blue-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
                             <div className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
-                              <div className="absolute top-0 right-0 w-20 h-20 opacity-5 blur-2xl rounded-full" style={{ background: (fiiDiiData.diiNet ?? 0) >= 0 ? '#3b82f6' : '#f59e0b' }} />
+                              <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full" style={{ background: (fiiDiiData.diiNet ?? 0) >= 0 ? '#3b82f6' : '#f59e0b' }} />
                             </div>
-                            <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">DII Net Flow</p>
-                            <p className="text-[10px] text-zinc-600 font-medium mb-2">Domestic Institutional Investors</p>
-                            <p className={`text-2xl font-display font-black leading-tight break-all ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
+                            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">DII Net Flow</p>
+                            <p className="text-xs text-zinc-500 font-medium mb-3">Domestic Institutional Investors</p>
+                            <p className={`text-3xl font-display font-black leading-none whitespace-nowrap ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
                               {fiiDiiData.diiNet !== null ? `${(fiiDiiData.diiNet ?? 0) >= 0 ? '+' : ''}${(fiiDiiData.diiNet ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'N/A'}
                             </p>
                             {fiiDiiData.diiNet !== null && (
-                              <p className="text-[9px] text-zinc-500 mt-1">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
+                              <p className="text-xs text-zinc-500 mt-2">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
                             )}
-                            <div className={`mt-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                              <span className={`w-1 h-1 rounded-full ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-400' : 'bg-amber-400'}`} />
+                            <div className={`mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-400' : 'bg-amber-400'}`} />
                               {(fiiDiiData.diiNet ?? 0) >= 0 ? 'Net Buying' : 'Net Selling'}
                             </div>
                           </div>
@@ -3868,21 +3868,21 @@ ${list}
                         <div className="bg-app-surface border border-app-border rounded-2xl p-6">
                           <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-5">Sector-wise FII Flow (₹ Crore)</p>
                           {fiiDiiData.sectorFlows && fiiDiiData.sectorFlows.length > 0 ? (
-                            <div className="space-y-3">
+                            <div className="space-y-4">
                               {fiiDiiData.sectorFlows.slice(0, 6).map((s: any, i: number) => {
                                 const maxAbs = Math.max(...fiiDiiData.sectorFlows.map((x: any) => Math.abs(x.fiiNet ?? 0)), 1);
                                 const pct = Math.abs(s.fiiNet ?? 0) / maxAbs * 100;
                                 const positive = (s.fiiNet ?? 0) >= 0;
                                 return (
                                   <div key={i} className="flex items-center gap-3">
-                                    <span className="text-[10px] text-zinc-400 font-bold w-28 flex-shrink-0 truncate">{s.sector}</span>
-                                    <div className="flex-1 h-3 bg-app-bg rounded-full overflow-hidden">
+                                    <span className="text-xs text-zinc-300 font-semibold w-40 flex-shrink-0 truncate">{s.sector}</span>
+                                    <div className="flex-1 h-4 bg-app-bg rounded-full overflow-hidden">
                                       <div
                                         className={`h-full rounded-full transition-all ${positive ? 'bg-emerald-500/70' : 'bg-rose-500/70'}`}
                                         style={{ width: `${pct}%` }}
                                       />
                                     </div>
-                                    <span className={`text-[10px] font-mono font-black w-20 text-right flex-shrink-0 ${positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    <span className={`text-xs font-mono font-black w-24 text-right flex-shrink-0 ${positive ? 'text-emerald-400' : 'text-rose-400'}`}>
                                       {s.fiiNet !== null ? `${positive ? '+' : ''}${Number(s.fiiNet).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'N/A'}
                                     </span>
                                   </div>
@@ -3890,7 +3890,7 @@ ${list}
                               })}
                             </div>
                           ) : (
-                            <p className="text-[11px] text-zinc-500 italic">Sector-wise flow data unavailable for this period.</p>
+                            <p className="text-xs text-zinc-500 italic">Sector-wise flow data unavailable for this period.</p>
                           )}
                         </div>
                       </>
