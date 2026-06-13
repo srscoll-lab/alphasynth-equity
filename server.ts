@@ -1022,7 +1022,7 @@ async function startServer() {
     }
   });
 
-  app.post("/api/pipeline/concall", async (req, res) => {
+  app.post("/api/pipeline/earnings-intelligence", async (req, res) => {
     const { ticker, context } = req.body;
     if (!ticker) return res.status(400).json({ error: "Ticker required" });
 
@@ -1039,17 +1039,17 @@ async function startServer() {
       });
     }
 
-    console.log(`[CONCALL] Starting analysis for: ${cleanTicker}`);
+    console.log(`[EARNINGS-INTEL] Starting unified analysis for: ${cleanTicker}`);
     const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
     try {
-      // Scrape concall transcript if no context provided
+      // Scrape concall transcript + financials page
       let transcriptContext = context || "";
       let sourceUrl = "";
 
       if (!transcriptContext && scraper) {
         try {
-          const searchQuery = `${sqTicker} India earnings concall transcript quarterly results management commentary analyst questions site:tijorifinance.com OR site:screener.in OR site:nseindia.com OR site:moneycontrol.com`;
+          const searchQuery = `${sqTicker} India quarterly earnings concall transcript results management commentary analyst questions`;
           const searchRes: any = await scraper.search(searchQuery, { limit: 2 });
           const topUrl = searchRes?.web?.[0]?.url || searchRes?.news?.[0]?.url;
           if (topUrl) {
@@ -1058,28 +1058,31 @@ async function startServer() {
             const raw = scrapeResult?.markdown || "";
             if (isScrapedContentUsable(raw)) {
               transcriptContext = raw.substring(0, 8000);
-              console.log(`[CONCALL] Scraped ${transcriptContext.length} chars from ${topUrl}`);
+              console.log(`[EARNINGS-INTEL] Scraped ${transcriptContext.length} chars from ${topUrl}`);
             }
           }
         } catch (scrapeErr: any) {
-          console.warn(`[CONCALL] Scrape failed: ${scrapeErr.message}`);
+          console.warn(`[EARNINGS-INTEL] Scrape failed: ${scrapeErr.message}`);
         }
       }
 
-      // Stage 1: Search grounding for latest concall data
-      const stage1Prompt = `You are an expert equity research analyst. Search for and analyse the most recent earnings concall transcript for ${cleanTicker} (${sqTicker}) listed on NSE India as of ${todayStr}.
+      const preamble = buildAnalystPreamble(cleanTicker);
 
-Find:
-1. The exact quarter (e.g. Q3FY25) and date of the most recent earnings concall
-2. Key management statements from CEO and CFO about revenue, margins, growth plans, and strategic direction
-3. What specific promises or guidance management gave in the PREVIOUS quarter (Q-1) and whether those were delivered this quarter
-4. Any red flags: evasive answers, sudden changes in tone, topics management avoided
-5. Analyst concerns raised during Q&A and how management responded
-6. Revenue guidance, margin guidance, and capex plans for next quarter and full year
+      // Stage 1: Search grounding — gathers both quantitative results AND transcript narrative
+      const stage1Prompt = `${preamble}
 
-Focus exclusively on ${cleanTicker}. If transcript context is provided below, use it as primary source. Supplement with your search grounding.
+CRITICAL: Each section covers DISTINCT information. Do not repeat the same data point, quote, or fact in multiple sections. If a number appears in Section 1, do not restate it in Sections 2-5 unless directly necessary for comparison. If a management quote appears in Section 2, do not repeat it in Section 4.
 
-${transcriptContext ? `Transcript/Context available:\n---\n${transcriptContext.substring(0, 4000)}\n---` : "No direct transcript available — rely entirely on search grounding."}`;
+You are generating a unified Earnings Intelligence report for ${cleanTicker} (search as "${sqTicker}") listed on NSE India as of ${todayStr}.
+
+Search for ALL of the following — you will need them to fill EACH section distinctly:
+1. QUANTITATIVE: Latest quarterly revenue, net profit, EBITDA, margins, EPS (₹ Crore), YoY and QoQ growth rates, P/E, ROCE, Debt/Equity.
+2. PROMISES: What specific commitments management made in the PREVIOUS quarter's concall vs what was delivered this quarter.
+3. GUIDANCE: CEO/CFO forward-looking statements — revenue targets, margin guidance, capex plans, expansion for next 1-4 quarters.
+4. CONCERNS: Analyst Q&A — evasive answers, contradictions, sudden tone changes, topics avoided.
+5. RELIABILITY: Pattern of management delivering on past promises.
+
+${transcriptContext ? `Transcript/Context (use as primary source for narrative sections):\n---\n${transcriptContext.substring(0, 4000)}\n---` : "No direct transcript available — rely on search grounding for all sections."}`;
 
       const stage1Res = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -1088,75 +1091,90 @@ ${transcriptContext ? `Transcript/Context available:\n---\n${transcriptContext.s
       });
 
       const groundedData = stage1Res.text || "";
-      console.log(`[CONCALL] Stage 1 grounding: ${groundedData.length} chars`);
+      console.log(`[EARNINGS-INTEL] Stage 1 grounding: ${groundedData.length} chars`);
 
-      // Stage 2: JSON structuring
-      const stage2Prompt = `Using the concall research data below for ${cleanTicker}, produce a structured JSON analysis report.
+      // Stage 2: Structured JSON — each field covers one distinct section
+      const stage2Prompt = `Using the research data below for ${cleanTicker}, produce a structured Earnings Intelligence JSON report with FIVE completely distinct sections. Apply this rule strictly: do not repeat the same fact, number, or quote across sections.
 
 Research Data:
 ---
 ${groundedData.substring(0, 6000)}
 ---
 
-Rules:
-- managementPromises: array of specific promises from the PREVIOUS quarter — for each state whether it was KEPT, MISSED, or PENDING this quarter. Include 3-6 entries.
-- keyHighlights: exactly 5 plain-English bullet points of the most important things management said — no jargon, no numbers without context.
-- guidanceSummary: 2-3 paragraphs covering revenue outlook, margin guidance, and capex plans for next quarter and full year.
-- redFlags: array of concerning statements, evasive answers, sudden guidance changes, or avoided topics. Leave empty array if none.
-- analystSentiment: 1-2 paragraphs summarising analyst concerns and how management addressed them.
-- reliabilityScore: integer 1-10 rating management transparency and consistency based on promises vs delivery history. 10 = very reliable.
-- currentQuarter: the quarter this concall covers (e.g. "Q3FY25")
-- previousQuarter: the quarter whose promises are being evaluated (e.g. "Q2FY25")`;
+Produce JSON with these exact fields:
 
-      const concallSchema = {
+currentQuarter: The quarter this report covers (e.g. "Q3FY25")
+previousQuarter: The quarter whose promises are evaluated (e.g. "Q2FY25")
+
+earningsSnapshot: SECTION 1 — QUANTITATIVE ONLY. Write a concise markdown report covering: Revenue (₹ Crore), Net Profit, EBITDA, margins (%), EPS, YoY growth, QoQ growth, P/E, ROCE, Debt/Equity. Include a markdown table of key metrics. No management quotes. No forward guidance. Pure numbers.
+
+managementPromises: SECTION 2 — NARRATIVE ONLY. Array of 4-6 specific commitments management made in the PREVIOUS quarter. For each: the exact promise (in management's own words if possible), whether it was KEPT/MISSED/PENDING, and the actual result in one sentence. Do not repeat the raw numbers already in earningsSnapshot unless directly verifying a specific promise.
+
+guidanceOutlook: SECTION 3 — FORWARD LOOKING ONLY. Markdown paragraphs covering: revenue targets, margin guidance, capex plans, expansion projects, demand outlook for next 1-4 quarters. Use management's specific forward-looking quotes. This must be distinct from historical numbers in Section 1 and promise-tracking in Section 2.
+
+redFlagsAndSentiment: SECTION 4 — CONCERNS ONLY. Markdown covering: analyst Q&A concerns not addressed in other sections, contradictions between guidance and results, evasive answers, sudden tone changes, avoided topics, overall analyst sentiment. Do NOT repeat content from Sections 1-3 — only flag new concerns.
+
+reliabilityScore: SECTION 5 — Integer 1-10 only. No text here.
+reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how well Section 1's actual numbers align with Section 2's promises and Section 3's guidance credibility. Do not re-explain the underlying data — synthesise only.`;
+
+      const earningsIntelSchema = {
         type: "OBJECT",
         properties: {
+          currentQuarter: { type: "STRING" },
+          previousQuarter: { type: "STRING" },
+          earningsSnapshot: { type: "STRING" },
           managementPromises: {
             type: "ARRAY",
             items: {
               type: "OBJECT",
               properties: {
                 promise: { type: "STRING" },
-                previousQuarter: { type: "STRING" },
                 status: { type: "STRING" },
                 actualResult: { type: "STRING" }
               },
-              required: ["promise", "previousQuarter", "status", "actualResult"]
+              required: ["promise", "status", "actualResult"]
             }
           },
-          keyHighlights: { type: "ARRAY", items: { type: "STRING" } },
-          guidanceSummary: { type: "STRING" },
-          redFlags: { type: "ARRAY", items: { type: "STRING" } },
-          analystSentiment: { type: "STRING" },
+          guidanceOutlook: { type: "STRING" },
+          redFlagsAndSentiment: { type: "STRING" },
           reliabilityScore: { type: "NUMBER" },
-          currentQuarter: { type: "STRING" },
-          previousQuarter: { type: "STRING" }
+          reliabilityJustification: { type: "STRING" }
         },
-        required: ["managementPromises", "keyHighlights", "guidanceSummary", "redFlags", "analystSentiment", "reliabilityScore", "currentQuarter", "previousQuarter"]
+        required: ["currentQuarter", "previousQuarter", "earningsSnapshot", "managementPromises", "guidanceOutlook", "redFlagsAndSentiment", "reliabilityScore", "reliabilityJustification"]
       };
 
       const stage2Res = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: 'user', parts: [{ text: stage2Prompt }] }],
-        config: { responseMimeType: "application/json", maxOutputTokens: 16384, responseSchema: concallSchema }
+        config: { responseMimeType: "application/json", maxOutputTokens: 32768, responseSchema: earningsIntelSchema }
       });
 
       const rawJson = sanitizeGroundingJson(stage2Res.text || "");
-      const parsed = JSON.parse(rawJson);
+      let parsed: any;
+      try {
+        parsed = JSON.parse(rawJson);
+      } catch {
+        throw new Error("Failed to parse structured earnings intelligence response");
+      }
 
-      // Normalise reliabilityScore to integer
+      // Normalise reliabilityScore
       if (parsed.reliabilityScore !== undefined) {
         parsed.reliabilityScore = Math.round(Math.min(10, Math.max(1, Number(parsed.reliabilityScore))));
       }
 
-      console.log(`[CONCALL] Complete for ${cleanTicker} | Q: ${parsed.currentQuarter} | Score: ${parsed.reliabilityScore}`);
+      // Validate minimum content
+      if (!parsed.earningsSnapshot || parsed.earningsSnapshot.length < 100) {
+        parsed.earningsSnapshot = `## Earnings Snapshot: ${cleanTicker}\n\nQuantitative data unavailable — please retry with an active connection for live grounding.`;
+      }
+
+      console.log(`[EARNINGS-INTEL] Complete for ${cleanTicker} | Q: ${parsed.currentQuarter} | Score: ${parsed.reliabilityScore} | Snapshot: ${parsed.earningsSnapshot?.length} chars`);
       return res.json({ ...parsed, ticker: cleanTicker, sourceUrl });
 
     } catch (error: any) {
-      console.error(`[CONCALL] Error for ${cleanTicker}:`, error.message);
+      console.error(`[EARNINGS-INTEL] Error for ${cleanTicker}:`, error.message);
       return res.status(500).json({
         error: "Analysis failed",
-        message: `Unable to generate concall analysis for ${cleanTicker}. Please retry.`
+        message: `Unable to generate Earnings Intelligence for ${cleanTicker}. Please retry.`
       });
     }
   });
