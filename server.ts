@@ -1179,6 +1179,186 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
     }
   });
 
+  app.get("/api/pipeline/fii-dii", async (req, res) => {
+    const ai = getGenAI();
+    const scraper = getFirecrawl();
+    const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    console.log(`[FII-DII] Fetching institutional flow data for ${todayStr}`);
+
+    let groundedText = "";
+    let sourceUrl = "";
+
+    // Stage 1: Try Firecrawl scrape of NSE FII/DII page
+    if (scraper) {
+      try {
+        const nseUrl = "https://www.nseindia.com/market-data/fii-dii-activity";
+        sourceUrl = nseUrl;
+        const scrapeResult = await scraper.scrape(nseUrl, { formats: ['markdown'], onlyMainContent: true });
+        const raw = scrapeResult?.markdown || "";
+        if (isScrapedContentUsable(raw)) {
+          groundedText = raw.substring(0, 6000);
+          console.log(`[FII-DII] NSE scrape succeeded: ${groundedText.length} chars`);
+        } else {
+          console.log(`[FII-DII] NSE scrape returned unusable content — falling back to search grounding`);
+          groundedText = "";
+        }
+      } catch (scrapeErr: any) {
+        console.warn(`[FII-DII] Firecrawl scrape failed: ${scrapeErr.message}`);
+      }
+    }
+
+    // Stage 2: Gemini search grounding fallback if scrape failed or returned no usable data
+    if (!groundedText) {
+      try {
+        const searchPrompt = `Search for the latest FII (Foreign Institutional Investor) and DII (Domestic Institutional Investor) net buy/sell activity in Indian equity markets for the most recent trading day as of ${todayStr}. Provide:
+1. Today's FII net flow in crores INR (positive = buying, negative = selling)
+2. Today's DII net flow in crores INR
+3. The last 10 trading days of FII and DII net flows with dates
+4. Sector-wise breakdown of which sectors saw the most FII buying/selling today
+Use NSE India, SEBI, or Moneycontrol as sources.`;
+        const searchRes = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [{ role: 'user', parts: [{ text: searchPrompt }] }],
+          config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
+        });
+        groundedText = searchRes.text || "";
+        sourceUrl = "Gemini search grounding";
+        console.log(`[FII-DII] Search grounding: ${groundedText.length} chars`);
+      } catch (searchErr: any) {
+        console.warn(`[FII-DII] Search grounding failed: ${searchErr.message}`);
+      }
+    }
+
+    if (!groundedText || groundedText.length < 100) {
+      console.warn(`[FII-DII] No usable data from any source`);
+      return res.json({
+        dataAvailable: false,
+        date: todayStr,
+        fiiNet: null,
+        diiNet: null,
+        last10Days: [],
+        sectorFlows: [],
+        aiInterpretation: "Institutional flow data is currently unavailable. Please check back after market hours for the latest figures.",
+        lastUpdated: new Date().toISOString()
+      });
+    }
+
+    // Stage 3: Structure into JSON
+    try {
+      const structPrompt = `Using the FII/DII data below, extract and structure it into clean JSON for the Indian equity market on ${todayStr}.
+
+Data:
+---
+${groundedText.substring(0, 5000)}
+---
+
+Rules:
+- fiiNet: today's FII net flow as a plain number in crores INR. Positive = net buying, Negative = net selling. Use null if genuinely unavailable.
+- diiNet: today's DII net flow as a plain number in crores INR. Positive = net buying, Negative = net selling. Use null if genuinely unavailable.
+- last10Days: array of up to 10 recent trading day objects with date (DD-Mon format), fiiNet (number or null), diiNet (number or null). Most recent first.
+- sectorFlows: array of up to 6 sector objects with sector (string), fiiNet (number in crores or null). Most active sectors first.
+- aiInterpretation: 2-3 sentences of plain English interpretation of what today's FII/DII activity means for Indian markets — no jargon, no numbers that aren't also in the data fields.
+- dataAvailable: true if we have at least today's fiiNet or diiNet, false otherwise.
+- date: the date of the most recent data (DD-Mon-YYYY or similar format).
+
+Do NOT invent or estimate numbers. If a value is not found in the source data, set it to null.`;
+
+      const structRes = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: 'user', parts: [{ text: structPrompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              date: { type: "STRING" },
+              fiiNet: { type: "NUMBER" },
+              diiNet: { type: "NUMBER" },
+              last10Days: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    date: { type: "STRING" },
+                    fiiNet: { type: "NUMBER" },
+                    diiNet: { type: "NUMBER" }
+                  },
+                  required: ["date"]
+                }
+              },
+              sectorFlows: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    sector: { type: "STRING" },
+                    fiiNet: { type: "NUMBER" }
+                  },
+                  required: ["sector"]
+                }
+              },
+              aiInterpretation: { type: "STRING" },
+              dataAvailable: { type: "BOOLEAN" }
+            },
+            required: ["date", "aiInterpretation", "dataAvailable", "last10Days", "sectorFlows"]
+          }
+        }
+      });
+
+      const rawJson = sanitizeGroundingJson(structRes.text || "");
+      const parsed = JSON.parse(rawJson);
+
+      // Validate aiInterpretation isn't nav content
+      if (!parsed.aiInterpretation || parsed.aiInterpretation.length < 20 || looksLikeNavMenu(parsed.aiInterpretation)) {
+        parsed.aiInterpretation = "Institutional flow interpretation is currently unavailable. Raw flow figures are shown above.";
+      }
+
+      // Normalise numbers — Gemini sometimes returns strings
+      const toNum = (v: any) => {
+        if (v === null || v === undefined) return null;
+        const n = typeof v === 'string' ? parseFloat(v.replace(/[^0-9.-]/g, '')) : Number(v);
+        return isNaN(n) ? null : n;
+      };
+      parsed.fiiNet = toNum(parsed.fiiNet);
+      parsed.diiNet = toNum(parsed.diiNet);
+      if (Array.isArray(parsed.last10Days)) {
+        parsed.last10Days = parsed.last10Days.map((d: any) => ({
+          date: d.date || '',
+          fiiNet: toNum(d.fiiNet),
+          diiNet: toNum(d.diiNet)
+        }));
+      }
+      if (Array.isArray(parsed.sectorFlows)) {
+        parsed.sectorFlows = parsed.sectorFlows.map((s: any) => ({
+          sector: s.sector || '',
+          fiiNet: toNum(s.fiiNet)
+        }));
+      }
+
+      const hasData = parsed.fiiNet !== null || parsed.diiNet !== null || (parsed.last10Days && parsed.last10Days.length > 0);
+      parsed.dataAvailable = hasData;
+      parsed.lastUpdated = new Date().toISOString();
+      parsed.sourceUrl = sourceUrl;
+
+      console.log(`[FII-DII] Complete | FII: ${parsed.fiiNet} | DII: ${parsed.diiNet} | Days: ${parsed.last10Days?.length} | Sectors: ${parsed.sectorFlows?.length}`);
+      return res.json(parsed);
+
+    } catch (structErr: any) {
+      console.error(`[FII-DII] Structuring failed: ${structErr.message}`);
+      return res.json({
+        dataAvailable: false,
+        date: todayStr,
+        fiiNet: null,
+        diiNet: null,
+        last10Days: [],
+        sectorFlows: [],
+        aiInterpretation: "Institutional flow data could not be parsed. Please retry.",
+        lastUpdated: new Date().toISOString()
+      });
+    }
+  });
+
   app.post("/api/email/briefing", async (req, res) => {
     const { email, reportContent } = req.body;
     const mailer = getResend();
