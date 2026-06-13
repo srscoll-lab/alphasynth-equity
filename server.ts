@@ -1210,12 +1210,15 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
     // Stage 2: Gemini search grounding fallback if scrape failed or returned no usable data
     if (!groundedText) {
       try {
-        const searchPrompt = `Search for the latest FII (Foreign Institutional Investor) and DII (Domestic Institutional Investor) net buy/sell activity in Indian equity markets for the most recent trading day as of ${todayStr}. Provide:
-1. Today's FII net flow in crores INR (positive = buying, negative = selling)
-2. Today's DII net flow in crores INR
-3. The last 10 trading days of FII and DII net flows with dates
-4. Sector-wise breakdown of which sectors saw the most FII buying/selling today
-Use NSE India, SEBI, or Moneycontrol as sources.`;
+        const searchPrompt = `Search for the latest FII (Foreign Institutional Investor) and DII (Domestic Institutional Investor) net buy/sell activity in Indian equity markets for the most recent trading day as of ${todayStr}.
+
+You MUST provide all four of the following:
+1. TODAY'S FII NET FLOW: exact figure in crores INR (positive = net buying, negative = net selling)
+2. TODAY'S DII NET FLOW: exact figure in crores INR
+3. LAST 10 TRADING DAYS: FII net and DII net flows with exact dates (DD-Mon format)
+4. SECTOR-WISE FII BREAKDOWN: net FII flow in crores for at least 5 major sectors — Banking, IT/Technology, Pharma, Auto, FMCG, Energy/Oil & Gas, Metals. If exact sector data is not available, provide your best estimate based on sector index movements and institutional activity signals that day, and clearly label each figure as "est."
+
+Sources: NSE India (nseindia.com), SEBI, Moneycontrol, Economic Times Markets.`;
         const searchRes = await ai.models.generateContent({
           model: "gemini-2.5-flash",
           contents: [{ role: 'user', parts: [{ text: searchPrompt }] }],
@@ -1256,12 +1259,12 @@ Rules:
 - fiiNet: today's FII net flow as a plain number in crores INR. Positive = net buying, Negative = net selling. Use null if genuinely unavailable.
 - diiNet: today's DII net flow as a plain number in crores INR. Positive = net buying, Negative = net selling. Use null if genuinely unavailable.
 - last10Days: array of up to 10 recent trading day objects with date (DD-Mon format), fiiNet (number or null), diiNet (number or null). Most recent first.
-- sectorFlows: array of up to 6 sector objects with sector (string), fiiNet (number in crores or null). Most active sectors first.
+- sectorFlows: array of 5-7 sector objects. REQUIRED — always populate this. For each: sector name (string), fiiNet (number in crores — positive=buying, negative=selling, or null if completely unknown). Include at minimum: Banking, IT, Pharma, Auto, FMCG. If exact numbers aren't in the source data, use reasonable estimates from sector index movements and mark the sector name with " (est)" suffix.
 - aiInterpretation: 2-3 sentences of plain English interpretation of what today's FII/DII activity means for Indian markets — no jargon, no numbers that aren't also in the data fields.
 - dataAvailable: true if we have at least today's fiiNet or diiNet, false otherwise.
 - date: the date of the most recent data (DD-Mon-YYYY or similar format).
 
-Do NOT invent or estimate numbers. If a value is not found in the source data, set it to null.`;
+For fiiNet and diiNet at the top level: use null only if genuinely unavailable. For sectorFlows: always provide at least 5 entries even if some values are estimates.`;
 
       const structRes = await ai.models.generateContent({
         model: "gemini-2.5-flash",
