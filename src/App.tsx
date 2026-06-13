@@ -3723,10 +3723,9 @@ ${list}
                           <p className="text-[9px] text-zinc-500 font-medium leading-relaxed px-4">Real-time analysis of volatility, momentum, and retail sentiment across Dalal Street.</p>
                        </div>
                     </div>
-                  </div>
 
-                  {/* ── Institutional Flow Monitor ── */}
-                  <div className="space-y-6 mt-8">
+                    {/* ── Institutional Flow Monitor ── */}
+                    <div className="space-y-6">
                     {/* Header row */}
                     <div className="flex items-center justify-between">
                       <div>
@@ -3901,8 +3900,8 @@ ${list}
                         ))}
                       </div>
                     )}
+                    </div>
                   </div>
-                  {/* ── end Institutional Flow Monitor ── */}
 
                   {/* Watchlist Sidebar */}
                   <div className="space-y-6">
