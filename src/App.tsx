@@ -4202,8 +4202,8 @@ ${list}
                                        >
                                           <td className="py-4 px-4">
                                              <div className="flex items-center gap-3">
-                                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs ${peer.isTarget ? "bg-amber text-black font-black" : "bg-zinc-900 border border-app-border text-zinc-400"}`}>
-                                                   {peer.ticker.replace(".NS", "").substring(0,3)}
+                                                <div className={`w-10 h-8 rounded-lg flex items-center justify-center font-bold text-[10px] tracking-tight ${peer.isTarget ? "bg-amber text-black font-black" : "bg-zinc-900 border border-app-border text-zinc-400"}`}>
+                                                   {peer.ticker.replace(".NS", "").substring(0,4)}
                                                 </div>
                                                 <div>
                                                    <div className="flex items-center gap-2">

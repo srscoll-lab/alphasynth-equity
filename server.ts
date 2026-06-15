@@ -165,6 +165,7 @@ STRICT RULES:
 4. Use the context provided only to extract specific data points like revenue figures or management quotes
 5. If the context contains website navigation or non-financial content, ignore it completely and rely on your own knowledge and search grounding
 6. Your report must contain original analysis, investment thesis, risks and opportunities
+7. When referring to this company, always use either its full proper name (e.g. "HDFC Bank Limited") or its exact NSE ticker symbol as provided: ${ticker}. Do NOT invent, shorten, or abbreviate the ticker into any other code — for example, never write "HDBK" for HDFCBANK, or any other variant. Use only "${ticker}" or the full company name.
 
 `;
 }
