@@ -204,6 +204,32 @@ STRICT RULES:
 // Warning prepended to scraped context block in every Stage 2 prompt
 const SCRAPED_CONTEXT_WARNING = `IMPORTANT INSTRUCTION: The text below is raw scraped data from financial websites. Do NOT summarise, reproduce, or reformat this raw data. Use it only as background reference to extract specific data points (revenue numbers, management quotes). Your response must be entirely your own original analytical writing.\n\n`;
 
+// Flexible scorecard parser for filings mode — handles all Gemini format variants:
+//   "Transcript Transparency: 8"       (target plain-text format)
+//   "**Transcript Transparency**: 8"   (bold label)
+//   "Transcript Transparency - 8"      (dash separator)
+//   "Transcript Transparency — 8"      (em dash)
+//   "Transcript Transparency (8)"      (parentheses)
+//   "Transcript Transparency: 8/10"    (with /10 suffix)
+//   "| Transcript Transparency | 8 |"  (markdown table row)
+function parseFilingsScore(text: string, label: string): number | null {
+  const esc = label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const patterns = [
+    // Plain text with colon, dash, em-dash, or open-paren — allow optional bold markers
+    new RegExp(`\\*{0,2}${esc}\\*{0,2}\\s*[:\\-—(]+\\s*\\[?(\\d+(?:\\.\\d+)?)(?:\\/10)?`, 'i'),
+    // Markdown table row: | Label | 8 | or | Label | 8/10 |
+    new RegExp(`\\|\\s*\\*{0,2}${esc}\\*{0,2}\\s*\\|\\s*(\\d+(?:\\.\\d+)?)(?:\\/10)?`, 'i'),
+  ];
+  for (const re of patterns) {
+    const m = text.match(re);
+    if (m) {
+      const v = parseFloat(m[1]);
+      if (!isNaN(v) && v >= 0 && v <= 10) return Math.min(Math.max(Math.round(v), 1), 10);
+    }
+  }
+  return null;
+}
+
 // Problem 3: Universal confidence scoring based on report length
 function assessConfidence(reportText: string): 'high' | 'medium' | 'low' {
   const len = (reportText || "").length;
@@ -662,12 +688,63 @@ async function startServer() {
       }
 
       const confidence = assessConfidence(reportText);
+
+      // ── Scorecard extraction for filings mode ──────────────────────────────
+      // Parse the 4 governance scores from the report text using the flexible
+      // multi-format regex. If any are still missing, make ONE small Gemini call
+      // to extract them from the already-generated report (self-healing fallback).
+      let scores: Record<string, number | null> | undefined;
+      if (isFilingsMode) {
+        scores = {
+          transparency: parseFilingsScore(reportText, 'Transcript Transparency'),
+          completeness: parseFilingsScore(reportText, 'Disclosure Completeness'),
+          conservatism: parseFilingsScore(reportText, 'Guideline Conservatism'),
+          governance:   parseFilingsScore(reportText, 'Governance Cleanliness'),
+        };
+        const anyMissing = Object.values(scores).some(v => v === null);
+        if (anyMissing) {
+          console.log(`[ANALYZE/SCORES] Flexible parse incomplete for ${cleanTicker} — triggering self-healing score extraction`);
+          try {
+            const scorePrompt = `You are analysing this filings report for ${cleanTicker}. Based on the content of the report below, assign a score from 1 to 10 for each governance metric.
+
+Report:
+---
+${reportText.substring(0, 8000)}
+---
+
+Output ONLY these 4 lines, replacing X with a single integer 1-10. No other text:
+Transcript Transparency: X
+Disclosure Completeness: X
+Guideline Conservatism: X
+Governance Cleanliness: X`;
+            const scoreRes = await ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: [{ role: 'user', parts: [{ text: scorePrompt }] }],
+              config: { maxOutputTokens: 128 }
+            });
+            const scoreText = scoreRes.text || "";
+            console.log(`[ANALYZE/SCORES] Fallback response for ${cleanTicker}: ${scoreText.trim()}`);
+            // Fill only values still null
+            if (scores.transparency === null) scores.transparency = parseFilingsScore(scoreText, 'Transcript Transparency');
+            if (scores.completeness === null) scores.completeness = parseFilingsScore(scoreText, 'Disclosure Completeness');
+            if (scores.conservatism === null) scores.conservatism = parseFilingsScore(scoreText, 'Guideline Conservatism');
+            if (scores.governance   === null) scores.governance   = parseFilingsScore(scoreText, 'Governance Cleanliness');
+          } catch (scoreErr: any) {
+            console.warn(`[ANALYZE/SCORES] Fallback extraction failed for ${cleanTicker}:`, scoreErr.message);
+          }
+        } else {
+          console.log(`[ANALYZE/SCORES] All 4 scores parsed directly for ${cleanTicker}: T=${scores.transparency} C=${scores.completeness} Gc=${scores.conservatism} Go=${scores.governance}`);
+        }
+      }
+      // ── end scorecard extraction ───────────────────────────────────────────
+
       console.log(`[ANALYZE] Analysis complete! report=${reportText.length} chars, confidence=${confidence}`);
       return res.json({
         report: reportText,
         benchmarking: parsedPayload.benchmarking || [],
         confidence,
-        modelUsed: "gemini-2.5-flash"
+        modelUsed: "gemini-2.5-flash",
+        ...(scores !== undefined && { scores })
       });
 
     } catch (error: any) {

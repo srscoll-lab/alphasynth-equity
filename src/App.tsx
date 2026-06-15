@@ -1385,23 +1385,25 @@ ${list}
       // Problem 4: only mark thin when content explicitly says no context was available
       const filingsScrapeThin = scrapedMarkdown.includes('Direct context unavailable');
 
+      // Server now returns data.scores with pre-parsed values (including self-healing
+      // fallback). Use those when present; only run local parseMetric as last resort.
       const parseMetric = (name: string): number | null => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Try "Label: 8" or "Label: [8]" (plain scorecard line)
-        const regexColon = new RegExp(`${escapedName}[:\\s]+\\[?(\\d+(?:\\.\\d+)?)`, 'i');
-        // Try "| Label | 8 |" or "| Label | 8/10 |" (markdown table row)
-        const regexTable = new RegExp(`\\|\\s*${escapedName}\\s*\\|\\s*(\\d+(?:\\.\\d+)?)`, 'i');
+        // Flexible multi-format regex matching all Gemini output variants
+        const regexColon = new RegExp(`\\*{0,2}${escapedName}\\*{0,2}\\s*[:\\-—(]+\\s*\\[?(\\d+(?:\\.\\d+)?)(?:\\/10)?`, 'i');
+        const regexTable = new RegExp(`\\|\\s*\\*{0,2}${escapedName}\\*{0,2}\\s*\\|\\s*(\\d+(?:\\.\\d+)?)(?:\\/10)?`, 'i');
         const match = report.match(regexColon) || report.match(regexTable);
         if (!match) return null;
         const val = parseFloat(match[1]);
         return isNaN(val) ? null : Math.min(Math.max(Math.round(val), 1), 10);
       };
 
+      const serverScores = data.scores || {};
       const metrics = {
-        transparency: parseMetric('Transcript Transparency'),
-        completeness: parseMetric('Disclosure Completeness'),
-        conservatism: parseMetric('Guideline Conservatism'),
-        governance: parseMetric('Governance Cleanliness')
+        transparency: serverScores.transparency ?? parseMetric('Transcript Transparency'),
+        completeness: serverScores.completeness ?? parseMetric('Disclosure Completeness'),
+        conservatism: serverScores.conservatism ?? parseMetric('Guideline Conservatism'),
+        governance:   serverScores.governance   ?? parseMetric('Governance Cleanliness'),
       };
 
       const filingsReportData = {
