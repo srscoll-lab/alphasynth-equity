@@ -1387,10 +1387,11 @@ ${list}
 
       const parseMetric = (name: string): number | null => {
         const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        // Match "Label: 8" or "Label: [8]" or "Label: [8 based on...]"
-        // Deliberately does NOT match "Label: [score 1-10 ...]" to avoid capturing "1" from "1-10"
-        const regex = new RegExp(`${escapedName}:\\s*\\[?(\\d+(?:\\.\\d+)?)`, 'i');
-        const match = report.match(regex);
+        // Try "Label: 8" or "Label: [8]" (plain scorecard line)
+        const regexColon = new RegExp(`${escapedName}[:\\s]+\\[?(\\d+(?:\\.\\d+)?)`, 'i');
+        // Try "| Label | 8 |" or "| Label | 8/10 |" (markdown table row)
+        const regexTable = new RegExp(`\\|\\s*${escapedName}\\s*\\|\\s*(\\d+(?:\\.\\d+)?)`, 'i');
+        const match = report.match(regexColon) || report.match(regexTable);
         if (!match) return null;
         const val = parseFloat(match[1]);
         return isNaN(val) ? null : Math.min(Math.max(Math.round(val), 1), 10);
@@ -4428,7 +4429,20 @@ ${list}
                                     <ShieldCheck className="text-gold w-5 h-5" />
                                     <div>
                                        <p className="text-[9px] font-black text-white uppercase tracking-widest">Fact-Grounded Analysis Shield</p>
-                                       <p className="text-[9px] text-zinc-400 uppercase tracking-wider">SECURED VIA DIRECT NSE DISCLOSURE FILING ENDPOINTS</p>
+                                       <p className="text-[9px] text-zinc-400 uppercase tracking-wider">
+                                         {filingsReport.sourceUrl
+                                           ? (() => {
+                                               try {
+                                                 const host = new URL(filingsReport.sourceUrl).hostname.toLowerCase();
+                                                 if (host.includes('nseindia')) return 'SECURED VIA NSE INDIA CORPORATE FILING ENDPOINTS';
+                                                 if (host.includes('screener')) return 'SECURED VIA SCREENER.IN FINANCIAL DATA';
+                                                 if (host.includes('moneycontrol')) return 'SECURED VIA MONEYCONTROL FINANCIAL DATA';
+                                                 if (host.includes('bseindia')) return 'SECURED VIA BSE INDIA CORPORATE FILING ENDPOINTS';
+                                                 return `SECURED VIA ${host.toUpperCase()}`;
+                                               } catch { return 'SECURED VIA FINANCIAL DATA AGGREGATOR'; }
+                                             })()
+                                           : 'SECURED VIA GEMINI SEARCH GROUNDING'}
+                                       </p>
                                     </div>
                                  </div>
                                  {filingsReport.sourceUrl && (
@@ -4503,8 +4517,9 @@ ${list}
                                      {filingsReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
                                    </div>
                                  )}
-                                 {/* Scrape quality notice */}
-                                 {filingsReport.scrapeQuality === 'thin' && (
+                                 {/* Scrape quality notice — only show when confidence is not already HIGH
+                                     (HIGH confidence + thin scrape would contradict each other) */}
+                                 {filingsReport.scrapeQuality === 'thin' && filingsReport.confidence !== 'high' && (
                                    <div className="mb-4 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg text-[10px] text-amber-400 font-medium leading-relaxed">
                                      Note: Limited source data was available for this analysis. This report relies primarily on AI knowledge rather than scraped financial data. Verify key figures independently.
                                    </div>

@@ -41,6 +41,35 @@ function getFirecrawl() {
   }
   return firecrawl;
 }
+// Lightweight JSON shell sanitizer — strips fences and citation markers but does NOT
+// touch ₹ or % signs. Use this for endpoints whose JSON contains markdown string
+// fields (earningsSnapshot etc.) where those characters must be preserved.
+function sanitizeJsonShell(jsonText: string): string {
+  if (!jsonText) return "";
+  let cleaned = jsonText.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/, "");
+    cleaned = cleaned.trim();
+  }
+  cleaned = cleaned.replace(/"\s*\.?\s*\[\d+\]/g, '"');
+  cleaned = cleaned.replace(/(\b\d+(?:\.\d+)?\b)\s*\.?\s*\[\d+\]/g, '$1');
+  cleaned = cleaned.replace(/(\btrue\b|\bfalse\b)\s*\.?\s*\[\d+\]/gi, '$1');
+  const firstBrace = cleaned.indexOf("{");
+  const lastBrace = cleaned.lastIndexOf("}");
+  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+    cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  }
+  return cleaned;
+}
+
+// Fix markdown tables that Gemini collapsed onto a single line (|| between rows).
+function repairMarkdownTables(text: string): string {
+  if (!text) return text;
+  // Replace || (two consecutive pipe chars) with a newline between them.
+  // This restores proper table row boundaries when Gemini omits \n in the JSON string.
+  return text.replace(/\|\|/g, '|\n|');
+}
+
 function sanitizeGroundingJson(jsonText: string): string {
   if (!jsonText) return "";
   let cleaned = jsonText.trim();
@@ -1152,7 +1181,9 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
         config: { responseMimeType: "application/json", maxOutputTokens: 32768, responseSchema: earningsIntelSchema }
       });
 
-      const rawJson = sanitizeGroundingJson(stage2Res.text || "");
+      // Use sanitizeJsonShell (not sanitizeGroundingJson) so ₹ and % inside
+      // markdown string fields like earningsSnapshot are preserved verbatim.
+      const rawJson = sanitizeJsonShell(stage2Res.text || "");
       let parsed: any;
       try {
         parsed = JSON.parse(rawJson);
@@ -1169,6 +1200,11 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
       if (!parsed.earningsSnapshot || parsed.earningsSnapshot.length < 100) {
         parsed.earningsSnapshot = `## Earnings Snapshot: ${cleanTicker}\n\nQuantitative data unavailable — please retry with an active connection for live grounding.`;
       }
+
+      // Fix tables collapsed onto one line (|| pattern → newline between rows)
+      parsed.earningsSnapshot = repairMarkdownTables(parsed.earningsSnapshot);
+      if (parsed.guidanceOutlook) parsed.guidanceOutlook = repairMarkdownTables(parsed.guidanceOutlook);
+      if (parsed.redFlagsAndSentiment) parsed.redFlagsAndSentiment = repairMarkdownTables(parsed.redFlagsAndSentiment);
 
       console.log(`[EARNINGS-INTEL] Complete for ${cleanTicker} | Q: ${parsed.currentQuarter} | Score: ${parsed.reliabilityScore} | Snapshot: ${parsed.earningsSnapshot?.length} chars`);
       return res.json({ ...parsed, ticker: cleanTicker, sourceUrl });
