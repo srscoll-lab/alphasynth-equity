@@ -879,6 +879,318 @@
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
     }
+
+    /* ─── scroll reveal ──────────────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+    }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── Section 1 · Stat Carousel ──────────────────────────────────────── */
+    .stats-section { padding: var(--space-16) 0 var(--space-20); }
+
+    .stats-header {
+      max-width: 80rem;
+      margin: 0 auto var(--space-10);
+      padding: 0 var(--space-6);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-6);
+    }
+    .stats-intro {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      max-width: 34ch;
+      line-height: 1.65;
+    }
+    .stats-track {
+      display: flex;
+      gap: var(--space-5);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      cursor: grab;
+    }
+    .stats-track:active { cursor: grabbing; }
+    .stats-track::-webkit-scrollbar { display: none; }
+
+    .stat-card {
+      flex: 0 0 min(252px, 74vw);
+      scroll-snap-align: start;
+      padding: var(--space-8) var(--space-7);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, oklch(0.86 0.16 82 / 0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-gold-bright), transparent);
+      opacity: 0.55;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 44px oklch(0.86 0.16 82 / 0.14);
+    }
+    @keyframes stat-float {
+      0%, 100% { transform: translateY(0px);  }
+      50%       { transform: translateY(-6px); }
+    }
+    .stat-card.do-float { animation: stat-float 5s ease-in-out infinite; }
+    .stat-card.do-float:hover { animation-play-state: paused; }
+    .stat-card.do-float:nth-child(2) { animation-delay: 1.0s; }
+    .stat-card.do-float:nth-child(3) { animation-delay: 0.5s; }
+    .stat-card.do-float:nth-child(4) { animation-delay: 1.5s; }
+    .stat-card.do-float:nth-child(5) { animation-delay: 0.8s; }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--color-gold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 40px oklch(0.86 0.16 82 / 0.35);
+      display: block;
+      margin-bottom: var(--space-4);
+    }
+    .stat-label {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+    .stat-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--color-text-label);
+      opacity: 0.60;
+      line-height: 1.55;
+      display: block;
+    }
+
+    /* ─── Section 2 · Persona Tabs ───────────────────────────────────────── */
+    .persona-section {
+      padding: var(--space-20) var(--space-6);
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+    .persona-head {
+      text-align: center;
+      margin-bottom: var(--space-10);
+    }
+    .persona-head .section-heading { margin-top: var(--space-4); overflow-wrap: anywhere; }
+
+    .tabs-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-10);
+    }
+    .tab-btn {
+      padding: 0.55rem var(--space-6);
+      border-radius: 9999px;
+      border: 1px solid var(--color-gold-border);
+      background: transparent;
+      color: var(--color-text-label);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      transition: background var(--dur-base) var(--ease-out),
+                  color    var(--dur-base) var(--ease-out),
+                  border-color var(--dur-base) var(--ease-out),
+                  transform    var(--dur-base) var(--ease-out),
+                  box-shadow   var(--dur-base) var(--ease-out);
+    }
+    .tab-btn:hover {
+      color: var(--color-text-primary);
+      border-color: var(--color-gold);
+      transform: translateY(-1px);
+    }
+    .tab-btn.is-active {
+      background: var(--color-gold);
+      color: var(--color-gold-on);
+      border-color: transparent;
+      box-shadow: 0 4px 16px var(--color-gold-glow);
+      transform: translateY(0);
+    }
+    .tab-btn:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.is-active {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: var(--space-5);
+      animation: tab-in 260ms var(--ease-out) both;
+    }
+    @keyframes tab-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .persona-card {
+      padding: var(--space-6);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 240ms var(--ease-out), transform 240ms var(--ease-out);
+    }
+    .persona-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 360ms var(--ease-out);
+    }
+    .persona-card:hover { border-color: var(--color-gold-border); transform: translateY(-3px); }
+    .persona-card:hover::after { transform: scaleX(1); }
+
+    .persona-icon {
+      width: 2.5rem; height: 2.5rem;
+      background: var(--color-gold-surface);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .persona-title {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .persona-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.65;
+      flex: 1;
+    }
+    .persona-tag {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      opacity: 0.65;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    /* ─── Section 3 · Benefit Grid ───────────────────────────────────────── */
+    .benefits-section { padding: var(--space-20) var(--space-6); }
+    .benefits-inner { max-width: 80rem; margin: 0 auto; }
+    .benefits-head {
+      text-align: center;
+      margin-bottom: var(--space-12);
+    }
+    .benefits-head .section-heading { margin-top: var(--space-4); overflow-wrap: anywhere; }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: var(--space-5);
+    }
+    .benefit-card {
+      padding: var(--space-6);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 240ms var(--ease-out),
+                  transform    240ms var(--ease-out),
+                  box-shadow   240ms var(--ease-out);
+    }
+    .benefit-card:hover {
+      border-color: var(--color-gold-border);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px oklch(0.86 0.16 82 / 0.09);
+    }
+    .benefit-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 360ms var(--ease-out);
+    }
+    .benefit-card:hover::after { transform: scaleX(1); }
+
+    .benefit-icon {
+      width: 2.75rem; height: 2.75rem;
+      background: var(--color-gold-surface);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .benefit-title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .benefit-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    /* ─── reduced-motion overrides ────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .stat-card.do-float { animation: none; }
+    }
+
+    /* ─── mobile tweaks ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .stats-header { flex-direction: column; align-items: flex-start; }
+      .tab-btn { padding: 0.45rem var(--space-4); font-size: var(--text-xs); }
+      .persona-section,
+      .benefits-section { padding: var(--space-12) var(--space-5); }
+    }
   </style>
 </head>
 <body>
@@ -930,6 +1242,309 @@
             Launch App
           </a>
           <a href="#features" class="btn-outline">Explore features ↓</a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 1: Stat Carousel ─────────────────────────────────────── -->
+    <section class="stats-section" aria-label="Platform statistics">
+      <div class="stats-header reveal">
+        <div>
+          <span class="section-eyebrow">By the numbers</span>
+          <h2 class="section-heading">Built for precision.<br/>Designed for depth.</h2>
+        </div>
+        <p class="stats-intro">Every number reflects a concrete product decision — no marketing estimates, no rounded figures.</p>
+      </div>
+
+      <div class="stats-track" id="stats-track" role="list" aria-label="Scroll through platform statistics">
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">5</span>
+          <span class="stat-label">Distinct AI Research Modes</span>
+          <span class="stat-sub">Equity Deep Dive · Earnings Intelligence · Explain the Move · Filings Audit · Portfolio Audit</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">9,000+</span>
+          <span class="stat-label">Characters per Institutional Report</span>
+          <span class="stat-sub">Two-stage Gemini pipeline — grounding search then structured JSON output</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">All NSE &amp; BSE</span>
+          <span class="stat-label">Stocks Supported</span>
+          <span class="stat-sub">Including special characters — M&amp;M, L&amp;T, BAJAJ-AUTO and all exchange-listed tickers</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">2 Hours</span>
+          <span class="stat-label">FII/DII Institutional Flow Refresh</span>
+          <span class="stat-sub">Auto-refreshes during market hours (9:15 AM – 3:30 PM IST) with NSE grounding</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">3-Stage</span>
+          <span class="stat-label">Hallucination Guard</span>
+          <span class="stat-sub">Validates every report — scrape → grounding → validation. Falls back gracefully on each failure</span>
+        </article>
+
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 2: Persona Tabs ───────────────────────────────────────── -->
+    <section class="persona-section" aria-label="Features by investor type">
+      <div class="persona-head reveal">
+        <span class="section-eyebrow">Who it's for</span>
+        <h2 class="section-heading">Research tools shaped<br/>around your workflow.</h2>
+      </div>
+
+      <nav class="tabs-nav reveal" role="tablist" aria-label="Investor persona tabs">
+        <button class="tab-btn is-active" role="tab" aria-selected="true"  aria-controls="tab-busy"  id="btn-busy">Busy Professional</button>
+        <button class="tab-btn"           role="tab" aria-selected="false" aria-controls="tab-diy"   id="btn-diy">DIY Investor</button>
+        <button class="tab-btn"           role="tab" aria-selected="false" aria-controls="tab-small" id="btn-small">Small-Cap Hunter</button>
+      </nav>
+
+      <div class="tab-panels">
+
+        <!-- Tab 1: Busy Professional -->
+        <div class="tab-panel is-active" id="tab-busy" role="tabpanel" aria-labelledby="btn-busy">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="7"/>
+                <polyline points="9,5 9,9 12,11"/>
+                <line x1="5" y1="3.5" x2="7" y2="1.5"/>
+                <line x1="13" y1="3.5" x2="11" y2="1.5"/>
+              </svg>
+            </div>
+            <p class="persona-title">Earnings Intelligence</p>
+            <p class="persona-desc">Management Promises Tracker shows what was committed last quarter versus what was actually delivered — with Kept / Missed / Pending badges and a Reliability Score out of 10.</p>
+            <span class="persona-tag">Earnings · Concall · Reliability</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,13 5.5,8.5 9,11 12.5,5.5 16,8"/>
+                <polyline points="12,5 16,5 16,9"/>
+              </svg>
+            </div>
+            <p class="persona-title">Explain the Move</p>
+            <p class="persona-desc">Understand why a stock moved today in minutes, not hours. Catalyst identification, block trade analysis, and short-term directional read — served as a plain-English brief.</p>
+            <span class="persona-tag">Price Action · Catalyst · NSE Volume</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2 L9 3"/>
+                <rect x="3" y="3" width="12" height="12" rx="2"/>
+                <polyline points="6,9 8,11 12,7"/>
+              </svg>
+            </div>
+            <p class="persona-title">Filings Audit</p>
+            <p class="persona-desc">Governance scorecard at a glance — Transcript Transparency, Disclosure Completeness, Guideline Conservatism, and Governance Cleanliness rated 1–10 with self-healing fallback parsing.</p>
+            <span class="persona-tag">SEBI · Governance · Disclosure</span>
+          </article>
+
+        </div>
+
+        <!-- Tab 2: DIY Investor -->
+        <div class="tab-panel" id="tab-diy" role="tabpanel" aria-labelledby="btn-diy">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="14" height="14" rx="2"/>
+                <line x1="9" y1="2"  x2="9" y2="16"/>
+                <path d="M5 6 L9 9 L5 12" fill="none"/>
+                <path d="M13 6 L9 9 L13 12" fill="none"/>
+              </svg>
+            </div>
+            <p class="persona-title">Equity Deep Dive</p>
+            <p class="persona-desc">Full bull case versus bear case, side by side. Institutional conviction metrics with entry zone, target price, and stop loss — structured like a real analyst report, not a chatbot summary.</p>
+            <span class="persona-tag">Bull · Bear · Entry · Target</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2"  y="9" width="3" height="7" rx="1"/>
+                <rect x="7"  y="5" width="3" height="11" rx="1"/>
+                <rect x="12" y="2" width="3" height="14" rx="1"/>
+                <line x1="1" y1="16" x2="17" y2="16"/>
+              </svg>
+            </div>
+            <p class="persona-title">Sector Peer Benchmarking</p>
+            <p class="persona-desc">Compare your target stock against its closest sector peers on P/E, ROCE, Debt/Equity, and Market Cap. Visualised as side-by-side bars with target highlighted in gold.</p>
+            <span class="persona-tag">PE · ROCE · Peers · Sector</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="7"/>
+                <line x1="9" y1="6" x2="9" y2="9"/>
+                <circle cx="9" cy="12" r="0.75" fill="oklch(0.86 0.16 82)"/>
+              </svg>
+            </div>
+            <p class="persona-title">Confidence Badges</p>
+            <p class="persona-desc">Every report displays a clear HIGH / MEDIUM / LOW data-quality badge based on source richness. Know immediately whether to treat the numbers as confirmed or estimated — no guessing.</p>
+            <span class="persona-tag">Data Quality · Grounding · Source</span>
+          </article>
+
+        </div>
+
+        <!-- Tab 3: Small-Cap Hunter -->
+        <div class="tab-panel" id="tab-small" role="tabpanel" aria-labelledby="btn-small">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="2" width="12" height="14" rx="1.5"/>
+                <circle cx="11" cy="11" r="3"/>
+                <line x1="13.1" y1="13.1" x2="15" y2="15"/>
+                <line x1="6" y1="6"  x2="9"  y2="6"/>
+                <line x1="6" y1="8.5" x2="8" y2="8.5"/>
+              </svg>
+            </div>
+            <p class="persona-title">Filings Audit</p>
+            <p class="persona-desc">Governance red flags surface faster with small caps. Pledged promoter shares, related-party transaction risks, audit qualifications — all forensically flagged with a Disclosure Scorecard.</p>
+            <span class="persona-tag">Disclosure · Pledging · Red Flags</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,9 6,5 10,9 14,5"/>
+                <polyline points="2,13 6,9 10,13 14,9"/>
+                <line x1="16" y1="5" x2="16" y2="13"/>
+              </svg>
+            </div>
+            <p class="persona-title">FII / DII Sector Flows</p>
+            <p class="persona-desc">Track institutional money movement by sector. See which sectors FIIs are accumulating or distributing today, with a 10-day net flow chart and AI plain-English interpretation.</p>
+            <span class="persona-tag">FII · DII · Sector · Flows</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="2.5"/>
+                <circle cx="9" cy="2.5" r="1.5"/>
+                <circle cx="9" cy="15.5" r="1.5"/>
+                <circle cx="2.5" cy="9" r="1.5"/>
+                <circle cx="15.5" cy="9" r="1.5"/>
+                <line x1="9" y1="4" x2="9" y2="6.5"/>
+                <line x1="9" y1="11.5" x2="9" y2="14"/>
+                <line x1="4" y1="9" x2="6.5" y2="9"/>
+                <line x1="11.5" y1="9" x2="14" y2="9"/>
+              </svg>
+            </div>
+            <p class="persona-title">Universal Ticker Support</p>
+            <p class="persona-desc">Works for any NSE or BSE listed company — including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. Pattern-validated client-side before any API call is made.</p>
+            <span class="persona-tag">NSE · BSE · Small Cap · Mid Cap</span>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 3: Benefit Grid ───────────────────────────────────────── -->
+    <section class="benefits-section" aria-label="Platform benefits">
+      <div class="benefits-inner">
+        <div class="benefits-head reveal">
+          <span class="section-eyebrow">Why Alphasynth</span>
+          <h2 class="section-heading">Six reasons serious<br/>investors choose the platform.</h2>
+        </div>
+
+        <div class="benefits-grid">
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2 L17 5.5 V10 C17 14 13.5 17.5 10 18 C6.5 17.5 3 14 3 10 V5.5 Z"/>
+                <polyline points="7,10 9,12 13,8"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Fact-Grounded Analysis Shield</h3>
+            <p class="benefit-desc">Every report is grounded in real financial data with source verification — not generic AI guesses. Firecrawl scrapes primary NSE/BSE endpoints; Gemini search grounds residual data.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="2"/>
+                <circle cx="10" cy="3"  r="1.5"/>
+                <circle cx="10" cy="17" r="1.5"/>
+                <circle cx="3"  cy="10" r="1.5"/>
+                <circle cx="17" cy="10" r="1.5"/>
+                <line x1="10" y1="4.5"  x2="10" y2="8"/>
+                <line x1="10" y1="12"   x2="10" y2="15.5"/>
+                <line x1="4.5"  y1="10" x2="8"  y2="10"/>
+                <line x1="12"   y1="10" x2="15.5" y2="10"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Universal Ticker Support</h3>
+            <p class="benefit-desc">Works for any NSE or BSE listed stock, including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. A pattern-validation layer runs client-side before any API call.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="10" height="13" rx="1.5"/>
+                <path d="M5 11 C3 11 2 12 2 14 L2 17 C2 17.6 2.4 18 3 18 L17 18 C17.6 18 18 17.6 18 17 L18 14 C18 12 17 11 15 11"/>
+                <polyline points="7,7 10,10 13,7"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Hallucination Guards</h3>
+            <p class="benefit-desc">A 3-attempt validation pipeline confirms every generated report meets quality thresholds. If any attempt fails, the system retries with progressively cleaner context before returning a result.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,14 6,10 10,12 14,6 18,8"/>
+                <rect x="2" y="15" width="3" height="3" rx="0.5"/>
+                <rect x="7" y="13" width="3" height="5" rx="0.5"/>
+                <rect x="12" y="9" width="3" height="9" rx="0.5"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Live Institutional Flow Monitor</h3>
+            <p class="benefit-desc">Track FII and DII buying and selling with sector-level breakdowns, a 10-day net flow chart, and an AI plain-English interpretation — auto-refreshing every 2 hours during market hours.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M10 6 L10 10 L14 12" stroke-linejoin="round"/>
+                <circle cx="10" cy="10" r="1" fill="oklch(0.86 0.16 82)" stroke="none"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Confidence Transparency</h3>
+            <p class="benefit-desc">Clear HIGH / MEDIUM / LOW badges tell you exactly how reliable each report is, based on whether primary-source scraping succeeded or Gemini grounding was the fallback — never hidden.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M10 2 L10 10 L16 10" fill="oklch(0.86 0.16 82 / 0.12)" stroke="oklch(0.86 0.16 82)" stroke-width="1.5"/>
+                <path d="M10 10 L5.5 14.5" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Portfolio Audit</h3>
+            <p class="benefit-desc">Upload your holdings via CSV export from Zerodha or Groww. Get instant P&amp;L analysis, hidden sector overlap diagnostics, and AI-generated audit commentary on each position.</p>
+          </article>
+
         </div>
       </div>
     </section>
@@ -1535,6 +2150,89 @@
     } else {
       frame();
     }
+  }());
+
+  /* ── Scroll-reveal via IntersectionObserver ───────────────────────────── */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(function (el) { obs.observe(el); });
+  }());
+
+  /* ── Stat carousel — add float animation after entry ─────────────────── */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('do-float');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-card').forEach(function (el) { obs.observe(el); });
+  }());
+
+  /* ── Stat carousel — drag-to-scroll ────────────────────────────────────── */
+  (function () {
+    var track = document.getElementById('stats-track');
+    if (!track) return;
+    var startX, startScroll, dragging = false;
+
+    track.addEventListener('mousedown', function (e) {
+      dragging  = true;
+      startX    = e.pageX - track.offsetLeft;
+      startScroll = track.scrollLeft;
+      track.style.userSelect = 'none';
+    });
+    document.addEventListener('mouseup', function () {
+      dragging = false;
+      if (track) track.style.userSelect = '';
+    });
+    track.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var x    = e.pageX - track.offsetLeft;
+      var walk = (x - startX) * 1.6;
+      track.scrollLeft = startScroll - walk;
+    });
+    track.addEventListener('mouseleave', function () { dragging = false; });
+  }());
+
+  /* ── Persona tabs ─────────────────────────────────────────────────────── */
+  (function () {
+    var btns   = document.querySelectorAll('.tab-btn');
+    var panels = document.querySelectorAll('.tab-panel');
+    if (!btns.length) return;
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = btn.getAttribute('aria-controls');
+
+        /* deactivate all */
+        btns.forEach(function (b) {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        panels.forEach(function (p) { p.classList.remove('is-active'); });
+
+        /* activate clicked */
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+        var panel = document.getElementById(target);
+        if (panel) panel.classList.add('is-active');
+      });
+    });
   }());
   </script>
 
