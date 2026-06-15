@@ -1,0 +1,2504 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alphasynth Intelligence — Where Serious Capital Finds Its Edge</title>
+  <meta name="description" content="Institutional-grade market research, analyst reports, and company data for serious retail and professional investors in the Indian market." />
+
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Alphasynth Intelligence — Where Serious Capital Finds Its Edge" />
+  <meta property="og:description" content="AI-powered investment intelligence for serious Indian market investors. NSE filings, analyst reports, real-time data — one platform." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700;1,900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Hallmark · macrostructure: Terminal Dashboard · tone: authoritative · anchor hue: oklch(0.86 0.16 82) */
+
+    /* ─── tokens ──────────────────────────────────────────────────────────── */
+    :root {
+      --color-bg:               #0a0f1e;
+      --color-surface:          #111827;
+      --color-surface-raised:   #161f34;
+      --color-surface-card:     #0f1628;
+      --color-border:           #1e2d4a;
+      --color-border-subtle:    #162038;
+
+      --color-text-primary:   oklch(0.98 0.004 82);
+      --color-text-secondary: oklch(0.92 0.005 82);
+      --color-text-body:      oklch(0.88 0.005 82);
+      --color-text-label:     oklch(0.80 0.006 82);
+
+      --color-gold:         oklch(0.86 0.16 82);
+      --color-gold-bright:  oklch(0.93 0.11 88);
+      --color-gold-rich:    oklch(0.74 0.18 76);
+      --color-gold-on:      #0a0f1e;
+      --color-gold-glow:    oklch(0.86 0.16 82 / 0.22);
+      --color-gold-border:  oklch(0.86 0.16 82 / 0.32);
+      --color-gold-surface: oklch(0.86 0.16 82 / 0.07);
+
+      --color-sky:      #7DD3FC;
+      --color-sky-glow: rgba(125, 211, 252, 0.22);
+
+      --color-positive: oklch(0.80 0.16 162);
+      --color-negative: oklch(0.72 0.17 25);
+
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body:    'Inter', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', ui-monospace, monospace;
+
+      --space-1:  0.25rem;  --space-2:  0.5rem;   --space-3:  0.75rem;
+      --space-4:  1rem;     --space-5:  1.25rem;  --space-6:  1.5rem;
+      --space-8:  2rem;     --space-10: 2.5rem;   --space-12: 3rem;
+      --space-16: 4rem;     --space-20: 5rem;     --space-24: 6rem;
+
+      --text-xs:   0.6875rem; --text-sm:  0.8125rem; --text-base: 1rem;
+      --text-lg:   1.125rem;  --text-xl:  1.25rem;   --text-2xl:  1.5rem;
+      --text-3xl:  1.875rem;  --text-4xl: 2.25rem;   --text-5xl:  3rem;
+      --text-6xl:  3.75rem;   --text-7xl: 4.5rem;    --text-8xl:  6rem;
+
+      --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1.0);
+      --dur-base: 220ms;  --dur-slow: 420ms;
+
+      --radius-sm: 3px;  --radius-md: 8px;
+      --radius-lg: 14px; --radius-xl: 20px;
+    }
+
+    /* ─── reset ───────────────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { overflow-x: clip; scroll-behavior: smooth; }
+
+    body {
+      overflow-x: clip;
+      background-color: var(--color-bg);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      html { scroll-behavior: auto; }
+      #bg-canvas { display: none; }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 3px;
+      border-radius: var(--radius-sm);
+    }
+
+    .sr-only {
+      position: absolute; width: 1px; height: 1px; padding: 0;
+      margin: -1px; overflow: hidden; clip: rect(0,0,0,0);
+      white-space: nowrap; border-width: 0;
+    }
+
+    /* ─── animated canvas background ─────────────────────────────────────── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      display: block;
+    }
+
+    /* everything above the canvas */
+    nav, main, footer { position: relative; z-index: 1; }
+
+    /* ─── nav ─────────────────────────────────────────────────────────────── */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      height: 4rem;
+      border-bottom: 1px solid transparent;
+      transition: background var(--dur-base) var(--ease-out),
+                  border-color var(--dur-base) var(--ease-out),
+                  backdrop-filter var(--dur-base) var(--ease-out);
+    }
+
+    .nav--scrolled {
+      background: rgba(10, 15, 30, 0.92);
+      border-color: var(--color-border-subtle);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    .nav-inner {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-wordmark {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      text-decoration: none;
+    }
+
+    .nav-logo {
+      width: 2rem;
+      height: 2rem;
+      background: var(--color-gold);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 20px var(--color-gold-glow);
+    }
+
+    .nav-name {
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      text-shadow: 0 1px 12px rgba(0,0,0,0.6);
+    }
+
+    .nav-right { display: flex; align-items: center; gap: var(--space-8); }
+
+    .nav-link {
+      font-size: var(--text-sm);
+      font-weight: 500;
+      color: oklch(0.88 0.005 82 / 0.80);
+      text-decoration: none;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.7);
+      transition: color var(--dur-base) var(--ease-out);
+    }
+    .nav-link:hover { color: var(--color-text-primary); }
+
+    .nav-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.5rem var(--space-5);
+      background: var(--color-gold);
+      color: var(--color-gold-on);
+      font-family: var(--font-body);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+    }
+    .nav-launch:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px var(--color-gold-glow);
+    }
+    .nav-launch:active { transform: translateY(0); box-shadow: none; }
+
+    /* ─── hero ────────────────────────────────────────────────────────────── */
+    .hero {
+      min-height: 100svh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: calc(4rem + var(--space-16) + 64px) var(--space-6) var(--space-20);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Hero canvas — sits behind all hero content */
+    #hero-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      display: block;
+    }
+
+    /* ─── candlestick skyline (concept 1) ───────────────────────────────── */
+    .hero-skyline {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      height: 55%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .hero-skyline svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Fade the skyline into the hero so it doesn't hard-cut */
+    .hero-skyline::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to bottom,
+        var(--color-bg) 0%,
+        transparent 22%,
+        transparent 78%,
+        var(--color-bg) 100%
+      );
+      pointer-events: none;
+    }
+
+    @keyframes candle-breathe {
+      0%, 100% { transform: scaleY(1)   translateY(0); }
+      50%       { transform: scaleY(0.96) translateY(2%); }
+    }
+
+    @keyframes wick-glow-pulse {
+      0%, 100% { opacity: 0.65; }
+      50%       { opacity: 1.00; }
+    }
+
+    .skyline-candle { transform-origin: 50% 100%; }
+
+    .hero-skyline .c0  { animation: candle-breathe 7.2s ease-in-out infinite 0.00s; }
+    .hero-skyline .c1  { animation: candle-breathe 6.8s ease-in-out infinite 0.40s; }
+    .hero-skyline .c2  { animation: candle-breathe 7.5s ease-in-out infinite 0.80s; }
+    .hero-skyline .c3  { animation: candle-breathe 6.4s ease-in-out infinite 1.20s; }
+    .hero-skyline .c4  { animation: candle-breathe 7.0s ease-in-out infinite 1.60s; }
+    .hero-skyline .c5  { animation: candle-breathe 6.6s ease-in-out infinite 2.00s; }
+    .hero-skyline .c6  { animation: candle-breathe 7.3s ease-in-out infinite 2.40s; }
+    .hero-skyline .c7  { animation: candle-breathe 6.9s ease-in-out infinite 2.80s; }
+    .hero-skyline .c8  { animation: candle-breathe 7.1s ease-in-out infinite 3.20s; }
+    .hero-skyline .c9  { animation: candle-breathe 6.7s ease-in-out infinite 3.60s; }
+    .hero-skyline .c10 { animation: candle-breathe 7.4s ease-in-out infinite 0.20s; }
+    .hero-skyline .c11 { animation: candle-breathe 6.5s ease-in-out infinite 0.60s; }
+    .hero-skyline .c12 { animation: candle-breathe 7.6s ease-in-out infinite 1.00s; }
+    .hero-skyline .c13 { animation: candle-breathe 6.3s ease-in-out infinite 1.40s; }
+    .hero-skyline .c14 { animation: candle-breathe 7.2s ease-in-out infinite 1.80s; }
+    .hero-skyline .c15 { animation: candle-breathe 6.8s ease-in-out infinite 2.20s; }
+    .hero-skyline .c16 { animation: candle-breathe 7.0s ease-in-out infinite 2.60s; }
+    .hero-skyline .c17 { animation: candle-breathe 6.6s ease-in-out infinite 3.00s; }
+
+    .skyline-wick-tip { animation: wick-glow-pulse 3.0s ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero-skyline .c0,  .hero-skyline .c1,  .hero-skyline .c2,
+      .hero-skyline .c3,  .hero-skyline .c4,  .hero-skyline .c5,
+      .hero-skyline .c6,  .hero-skyline .c7,  .hero-skyline .c8,
+      .hero-skyline .c9,  .hero-skyline .c10, .hero-skyline .c11,
+      .hero-skyline .c12, .hero-skyline .c13, .hero-skyline .c14,
+      .hero-skyline .c15, .hero-skyline .c16, .hero-skyline .c17 {
+        animation: none;
+      }
+      .skyline-wick-tip { animation: none; }
+    }
+
+    .hero-inner {
+      max-width: 80rem;
+      margin: 0 auto;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      margin-bottom: var(--space-6);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 100ms both;
+      text-shadow:
+        0 0 28px oklch(0.86 0.16 82 / 0.55),
+        0 1px 6px rgba(0,0,0,0.9);
+    }
+    .hero-kicker::before {
+      content: '';
+      display: block;
+      width: 2rem;
+      height: 2px;
+      background: var(--color-gold);
+      border-radius: 1px;
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--color-gold-glow);
+    }
+
+    .hero-headline {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-4xl), 7vw, var(--text-8xl));
+      font-weight: 900;
+      font-style: italic;
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+      color: var(--color-text-primary);
+      max-width: 14ch;
+      margin-bottom: var(--space-6);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 180ms both;
+      text-shadow:
+        0 2px 4px   rgba(0,0,0,0.98),
+        0 4px 24px  rgba(0,0,0,0.90),
+        0 8px 48px  rgba(0,0,0,0.65);
+    }
+
+    .hero-accent {
+      font-style: normal;
+      color: var(--color-gold);
+      text-shadow:
+        0 0 40px oklch(0.86 0.16 82 / 0.65),
+        0 0 80px oklch(0.86 0.16 82 / 0.30),
+        0 2px 8px rgba(0,0,0,0.95);
+    }
+
+    .hero-sub {
+      font-size: clamp(var(--text-base), 1.5vw, var(--text-xl));
+      font-weight: 400;
+      color: var(--color-text-secondary);
+      max-width: 54ch;
+      line-height: 1.75;
+      margin-bottom: var(--space-10);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 250ms both;
+      text-shadow:
+        0 1px 3px  rgba(0,0,0,0.98),
+        0 2px 18px rgba(0,0,0,0.80);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: var(--space-4);
+      opacity: 0;
+      animation: fade-up var(--dur-slow) var(--ease-out) 320ms both;
+    }
+
+    /* ─── buttons ─────────────────────────────────────────────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) var(--space-10);
+      background: var(--color-gold);
+      color: var(--color-gold-on);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+    .btn-primary:hover {
+      opacity: 0.88;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 36px var(--color-gold-glow);
+    }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    .btn-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: var(--space-5) var(--space-8);
+      background: transparent;
+      color: var(--color-text-secondary);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      font-weight: 600;
+      text-decoration: none;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: border-color var(--dur-base) var(--ease-out),
+                  color var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+    .btn-outline:hover {
+      border-color: var(--color-gold-border);
+      color: var(--color-gold);
+      transform: translateY(-2px);
+    }
+    .btn-outline:active { transform: translateY(0); }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) var(--space-12);
+      background: var(--color-gold);
+      color: var(--color-gold-on);
+      font-family: var(--font-body);
+      font-size: var(--text-lg);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+    .btn-cta:hover {
+      opacity: 0.88;
+      transform: translateY(-3px);
+      box-shadow: 0 16px 48px var(--color-gold-glow);
+    }
+    .btn-cta:active { transform: translateY(0); box-shadow: none; }
+
+    /* ─── section shell ───────────────────────────────────────────────────── */
+    .section {
+      padding: var(--space-24) var(--space-6);
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+
+    .section-divider {
+      border: none;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .section-eyebrow {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      display: block;
+      margin-bottom: var(--space-4);
+    }
+
+    .section-heading {
+      font-family: var(--font-body);
+      font-size: clamp(var(--text-3xl), 3.5vw, var(--text-5xl));
+      font-weight: 800;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--color-text-primary);
+    }
+
+    .section-sub {
+      margin-top: var(--space-4);
+      font-size: var(--text-lg);
+      font-weight: 400;
+      color: var(--color-text-body);
+      line-height: 1.72;
+      max-width: 52ch;
+    }
+
+    /* ─── market intelligence widget ─────────────────────────────────────── */
+    .mkt-wrap {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .mkt-inner {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: var(--space-8) var(--space-6);
+    }
+
+    .mkt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+      padding-bottom: var(--space-5);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .mkt-header-left { display: flex; align-items: center; gap: var(--space-4); }
+
+    .mkt-title {
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+    }
+
+    .mkt-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.25em 0.75em;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .mkt-badge-live {
+      background: oklch(0.86 0.16 82 / 0.10);
+      border: 1px solid oklch(0.86 0.16 82 / 0.30);
+      color: var(--color-gold);
+    }
+
+    .mkt-badge-closed {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--color-text-label);
+    }
+
+    .mkt-dot {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .mkt-dot-live {
+      background: var(--color-gold);
+      box-shadow: 0 0 8px var(--color-gold-glow);
+      animation: mkt-pulse 2s ease-in-out infinite;
+    }
+
+    .mkt-dot-closed { background: oklch(0.45 0.005 258); }
+
+    @keyframes mkt-pulse {
+      0%, 100% { opacity: 1;   box-shadow: 0 0 8px var(--color-gold-glow); }
+      50%       { opacity: 0.4; box-shadow: none; }
+    }
+
+    .mkt-snapshot-label {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: var(--color-text-label);
+    }
+
+    .mkt-indices {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+      margin-bottom: var(--space-6);
+    }
+
+    @media (max-width: 600px) {
+      .mkt-indices { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    .mkt-card {
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mkt-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+    }
+
+    .mkt-card-name {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+
+    .mkt-card-value {
+      font-family: var(--font-body);
+      font-size: var(--text-2xl);
+      font-weight: 800;
+      color: var(--color-text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+
+    .mkt-change {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3em;
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      padding: 0.2em 0.6em;
+      border-radius: var(--radius-sm);
+    }
+
+    .mkt-up   { color: var(--color-positive); background: oklch(0.80 0.16 162 / 0.12); }
+    .mkt-down { color: var(--color-negative); background: oklch(0.72 0.17 25 / 0.12);  }
+
+    .mkt-sentiment {
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5) var(--space-6);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-5);
+    }
+
+    .mkt-sentiment-tag {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .mkt-sentiment-text {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.65;
+    }
+
+    .mkt-footer {
+      margin-top: var(--space-4);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+    }
+
+    .mkt-timestamp {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      color: var(--color-text-label);
+      opacity: 0.65;
+      letter-spacing: 0.06em;
+    }
+
+    .mkt-disclaimer {
+      font-family: var(--font-mono);
+      font-size: 0.5625rem;
+      color: var(--color-text-label);
+      opacity: 0.40;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── features ────────────────────────────────────────────────────────── */
+    .features-bg {
+      background: var(--color-surface);
+      border-top: 1px solid var(--color-border-subtle);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .features-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: var(--space-12);
+      align-items: end;
+      margin-bottom: var(--space-12);
+      padding-bottom: var(--space-12);
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    @media (max-width: 640px) {
+      .features-header { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+    }
+
+    .features-intro {
+      font-size: var(--text-base);
+      color: var(--color-text-body);
+      line-height: 1.75;
+      max-width: 44ch;
+      align-self: end;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    @media (max-width: 960px) { .features-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .features-grid { grid-template-columns: minmax(0, 1fr); } }
+
+    .feat-card {
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-lg);
+      padding: var(--space-8);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--dur-base) var(--ease-out),
+                  background var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out);
+    }
+
+    .feat-card:hover {
+      border-color: var(--color-gold-border);
+      background: var(--color-surface-raised);
+      transform: translateY(-3px);
+    }
+
+    .feat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 400ms var(--ease-out);
+    }
+    .feat-card:hover::after { transform: scaleX(1); }
+
+    .feat-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      background: var(--color-gold-surface);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .feat-num {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--color-gold);
+      letter-spacing: 0.08em;
+    }
+
+    .feat-title {
+      font-family: var(--font-body);
+      font-size: var(--text-xl);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.25;
+      letter-spacing: -0.01em;
+    }
+
+    .feat-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.72;
+      flex: 1;
+    }
+
+    .feat-tag {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      opacity: 0.65;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border-subtle);
+      display: block;
+    }
+
+    /* ─── cta ─────────────────────────────────────────────────────────────── */
+    .cta-section {
+      position: relative;
+      padding: var(--space-24) var(--space-6);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .cta-ambient {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(
+        ellipse at center,
+        oklch(0.86 0.16 82 / 0.08) 0%,
+        transparent 65%
+      );
+      pointer-events: none;
+    }
+
+    .cta-inner {
+      position: relative;
+      z-index: 1;
+      max-width: 48rem;
+      margin: 0 auto;
+    }
+
+    .cta-heading {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-3xl), 4.5vw, var(--text-6xl));
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.025em;
+      line-height: 1.06;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-5);
+    }
+
+    .cta-heading span {
+      color: var(--color-gold);
+      font-style: normal;
+      text-shadow: 0 0 40px oklch(0.86 0.16 82 / 0.40);
+    }
+
+    .cta-sub {
+      font-size: var(--text-lg);
+      color: var(--color-text-body);
+      line-height: 1.7;
+      max-width: 48ch;
+      margin: 0 auto var(--space-10);
+    }
+
+    .cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+    }
+
+    /* ─── footer ──────────────────────────────────────────────────────────── */
+    .footer {
+      border-top: 1px solid var(--color-border-subtle);
+      background: var(--color-surface);
+      padding: var(--space-8) var(--space-6);
+    }
+
+    .footer-inner {
+      max-width: 80rem;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: var(--space-4);
+    }
+
+    .footer-wordmark {
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 700;
+      color: var(--color-text-label);
+      text-decoration: none;
+      letter-spacing: -0.01em;
+      transition: color var(--dur-base) var(--ease-out);
+    }
+    .footer-wordmark:hover { color: var(--color-text-primary); }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: var(--space-6);
+    }
+
+    .footer-link {
+      font-size: var(--text-xs);
+      color: var(--color-text-label);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color var(--dur-base) var(--ease-out);
+    }
+    .footer-link:hover { color: var(--color-gold); }
+
+    .footer-note {
+      font-family: var(--font-mono);
+      font-size: var(--text-xs);
+      color: var(--color-text-label);
+      opacity: 0.6;
+    }
+
+    /* ─── entrance animation ─────────────────────────────────────────────── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── scroll reveal ──────────────────────────────────────────────────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+    }
+    .reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+    /* ─── Section 1 · Stat Carousel ──────────────────────────────────────── */
+    .stats-section { padding: var(--space-16) 0 var(--space-20); }
+
+    .stats-header {
+      max-width: 80rem;
+      margin: 0 auto var(--space-10);
+      padding: 0 var(--space-6);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: var(--space-6);
+    }
+    .stats-intro {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      max-width: 34ch;
+      line-height: 1.65;
+    }
+    .stats-track {
+      display: flex;
+      gap: var(--space-5);
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: var(--space-4) var(--space-6) var(--space-6);
+      cursor: grab;
+    }
+    .stats-track:active { cursor: grabbing; }
+    .stats-track::-webkit-scrollbar { display: none; }
+
+    .stat-card {
+      flex: 0 0 min(252px, 74vw);
+      scroll-snap-align: start;
+      padding: var(--space-8) var(--space-7);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      transition: transform 300ms var(--ease-out), box-shadow 300ms var(--ease-out);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at top left, oklch(0.86 0.16 82 / 0.05) 0%, transparent 60%);
+      pointer-events: none;
+    }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 20%; right: 20%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--color-gold-bright), transparent);
+      opacity: 0.55;
+    }
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 44px oklch(0.86 0.16 82 / 0.14);
+    }
+    @keyframes stat-float {
+      0%, 100% { transform: translateY(0px);  }
+      50%       { transform: translateY(-6px); }
+    }
+    .stat-card.do-float { animation: stat-float 5s ease-in-out infinite; }
+    .stat-card.do-float:hover { animation-play-state: paused; }
+    .stat-card.do-float:nth-child(2) { animation-delay: 1.0s; }
+    .stat-card.do-float:nth-child(3) { animation-delay: 0.5s; }
+    .stat-card.do-float:nth-child(4) { animation-delay: 1.5s; }
+    .stat-card.do-float:nth-child(5) { animation-delay: 0.8s; }
+
+    .stat-number {
+      font-family: var(--font-display);
+      font-size: clamp(2.5rem, 5vw, 3.5rem);
+      font-weight: 900;
+      color: var(--color-gold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+      text-shadow: 0 0 40px oklch(0.86 0.16 82 / 0.35);
+      display: block;
+      margin-bottom: var(--space-4);
+    }
+    .stat-label {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      line-height: 1.3;
+      display: block;
+      margin-bottom: var(--space-2);
+    }
+    .stat-sub {
+      font-family: var(--font-mono);
+      font-size: 0.6875rem;
+      color: var(--color-text-label);
+      opacity: 0.60;
+      line-height: 1.55;
+      display: block;
+    }
+
+    /* ─── Section 2 · Persona Tabs ───────────────────────────────────────── */
+    .persona-section {
+      padding: var(--space-20) var(--space-6);
+      max-width: 80rem;
+      margin: 0 auto;
+    }
+    .persona-head {
+      text-align: center;
+      margin-bottom: var(--space-10);
+    }
+    .persona-head .section-heading { margin-top: var(--space-4); overflow-wrap: anywhere; }
+
+    .tabs-nav {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+      margin-bottom: var(--space-10);
+    }
+    .tab-btn {
+      padding: 0.55rem var(--space-6);
+      border-radius: 9999px;
+      border: 1px solid var(--color-gold-border);
+      background: transparent;
+      color: var(--color-text-label);
+      font-family: var(--font-body);
+      font-size: var(--text-sm);
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+      transition: background var(--dur-base) var(--ease-out),
+                  color    var(--dur-base) var(--ease-out),
+                  border-color var(--dur-base) var(--ease-out),
+                  transform    var(--dur-base) var(--ease-out),
+                  box-shadow   var(--dur-base) var(--ease-out);
+    }
+    .tab-btn:hover {
+      color: var(--color-text-primary);
+      border-color: var(--color-gold);
+      transform: translateY(-1px);
+    }
+    .tab-btn.is-active {
+      background: var(--color-gold);
+      color: var(--color-gold-on);
+      border-color: transparent;
+      box-shadow: 0 4px 16px var(--color-gold-glow);
+      transform: translateY(0);
+    }
+    .tab-btn:focus-visible { outline: 2px solid var(--color-gold); outline-offset: 3px; }
+
+    .tab-panel { display: none; }
+    .tab-panel.is-active {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+      gap: var(--space-5);
+      animation: tab-in 260ms var(--ease-out) both;
+    }
+    @keyframes tab-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .persona-card {
+      padding: var(--space-6);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 240ms var(--ease-out), transform 240ms var(--ease-out);
+    }
+    .persona-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 360ms var(--ease-out);
+    }
+    .persona-card:hover { border-color: var(--color-gold-border); transform: translateY(-3px); }
+    .persona-card:hover::after { transform: scaleX(1); }
+
+    .persona-icon {
+      width: 2.5rem; height: 2.5rem;
+      background: var(--color-gold-surface);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .persona-title {
+      font-size: var(--text-base);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .persona-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.65;
+      flex: 1;
+    }
+    .persona-tag {
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      opacity: 0.65;
+      padding-top: var(--space-3);
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    /* ─── Section 3 · Benefit Grid ───────────────────────────────────────── */
+    .benefits-section { padding: var(--space-20) var(--space-6); }
+    .benefits-inner { max-width: 80rem; margin: 0 auto; }
+    .benefits-head {
+      text-align: center;
+      margin-bottom: var(--space-12);
+    }
+    .benefits-head .section-heading { margin-top: var(--space-4); overflow-wrap: anywhere; }
+
+    .benefits-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+      gap: var(--space-5);
+    }
+    .benefit-card {
+      padding: var(--space-6);
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      position: relative;
+      overflow: hidden;
+      transition: border-color 240ms var(--ease-out),
+                  transform    240ms var(--ease-out),
+                  box-shadow   240ms var(--ease-out);
+    }
+    .benefit-card:hover {
+      border-color: var(--color-gold-border);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px oklch(0.86 0.16 82 / 0.09);
+    }
+    .benefit-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-gold-rich), var(--color-gold-bright));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 360ms var(--ease-out);
+    }
+    .benefit-card:hover::after { transform: scaleX(1); }
+
+    .benefit-icon {
+      width: 2.75rem; height: 2.75rem;
+      background: var(--color-gold-surface);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .benefit-title {
+      font-size: var(--text-lg);
+      font-weight: 700;
+      color: var(--color-text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .benefit-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    /* ─── reduced-motion overrides ────────────────────────────────────────── */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .stat-card.do-float { animation: none; }
+    }
+
+    /* ─── mobile tweaks ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .stats-header { flex-direction: column; align-items: flex-start; }
+      .tab-btn { padding: 0.45rem var(--space-4); font-size: var(--text-xs); }
+      .persona-section,
+      .benefits-section { padding: var(--space-12) var(--space-5); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Animated canvas background ───────────────────────────────────────── -->
+  <canvas id="bg-canvas" aria-hidden="true"></canvas>
+
+  <!-- ── Nav ──────────────────────────────────────────────────────────────── -->
+  <nav class="nav" id="main-nav" aria-label="Main navigation">
+    <div class="nav-inner">
+      <a href="landing-v2.html" class="nav-wordmark" aria-label="Alphasynth Intelligence home">
+        <div class="nav-logo" aria-hidden="true">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <polyline points="1,10 4,6 7,8 10,3 13,5"
+              stroke="#0a0f1e" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="nav-name">Alphasynth Intelligence</span>
+      </a>
+      <div class="nav-right">
+        <a href="#features"  class="nav-link">Features</a>
+        <a href="#markets"   class="nav-link">Markets</a>
+        <a href="index.html" class="nav-launch">Launch App →</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── Hero ───────────────────────────────────────────────────────────── -->
+    <section class="hero" aria-label="Introduction">
+      <canvas id="hero-canvas" aria-hidden="true"></canvas>
+
+      <!-- Candlestick skyline — 18 candles, sky-blue glowing wick tips -->
+      <div class="hero-skyline" aria-hidden="true">
+        <svg viewBox="0 0 1440 480" preserveAspectRatio="xMidYMax meet" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Sky-blue glow filter for wick tips -->
+            <filter id="wick-glow" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="blur"/>
+              <feColorMatrix in="blur" type="matrix"
+                values="0.49 0 0 0 0
+                        0.83 0 0 0 0
+                        0.99 0 0 0 0
+                        0    0 0 4 -1" result="sky"/>
+              <feMerge><feMergeNode in="sky"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+            <!-- Subtle glow for body borders -->
+            <filter id="body-glow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+
+          <!--
+            18 candles spaced 80px apart across a 1440px viewBox.
+            Centre of candle i = i*80 + 40.
+            Body width = 28px.  Wick width = 2px.
+            All candles bottom-align to y=480.
+            Heights create a skyline silhouette (shorter at edges, taller toward centre).
+            G = green (bullish), R = red (bearish).
+          -->
+
+          <!-- c0  x=40   h=90  G -->
+          <g class="skyline-candle c0">
+            <!-- upper wick -->
+            <line x1="40" y1="362" x2="40" y2="390" stroke="#1e2d4a" stroke-width="2"/>
+            <!-- upper wick tip (sky blue glow) -->
+            <line class="skyline-wick-tip" x1="40" y1="358" x2="40" y2="365" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <!-- body -->
+            <rect x="26" y="390" width="28" height="90" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <!-- lower wick -->
+            <line x1="40" y1="480" x2="40" y2="470" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c1  x=120  h=130 R -->
+          <g class="skyline-candle c1">
+            <line x1="120" y1="316" x2="120" y2="350" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="120" y1="311" x2="120" y2="319" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="106" y="350" width="28" height="130" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="120" y1="480" x2="120" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c2  x=200  h=175 G -->
+          <g class="skyline-candle c2">
+            <line x1="200" y1="274" x2="200" y2="305" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="200" y1="269" x2="200" y2="277" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="186" y="305" width="28" height="175" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="200" y1="480" x2="200" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c3  x=280  h=220 R -->
+          <g class="skyline-candle c3">
+            <line x1="280" y1="234" x2="280" y2="260" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="280" y1="229" x2="280" y2="237" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="266" y="260" width="28" height="220" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="280" y1="480" x2="280" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c4  x=360  h=260 G -->
+          <g class="skyline-candle c4">
+            <line x1="360" y1="192" x2="360" y2="220" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="360" y1="187" x2="360" y2="195" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="346" y="220" width="28" height="260" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="360" y1="480" x2="360" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c5  x=440  h=300 R -->
+          <g class="skyline-candle c5">
+            <line x1="440" y1="152" x2="440" y2="180" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="440" y1="147" x2="440" y2="155" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="426" y="180" width="28" height="300" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="440" y1="480" x2="440" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c6  x=520  h=330 G -->
+          <g class="skyline-candle c6">
+            <line x1="520" y1="116" x2="520" y2="150" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="520" y1="111" x2="520" y2="119" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="506" y="150" width="28" height="330" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="520" y1="480" x2="520" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c7  x=600  h=360 R -->
+          <g class="skyline-candle c7">
+            <line x1="600" y1="88"  x2="600" y2="120" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="600" y1="83"  x2="600" y2="91"  stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="586" y="120" width="28" height="360" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="600" y1="480" x2="600" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c8  x=680  h=395 G  (tallest on left half) -->
+          <g class="skyline-candle c8">
+            <line x1="680" y1="55"  x2="680" y2="85"  stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="680" y1="49"  x2="680" y2="58"  stroke="#7DD3FC" stroke-width="3" filter="url(#wick-glow)"/>
+            <rect x="666" y="85"  width="28" height="395" fill="rgba(0,200,83,0.20)" stroke="rgba(0,200,83,0.65)" stroke-width="1.5" rx="1"/>
+            <line x1="680" y1="480" x2="680" y2="464" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c9  x=760  h=418 R  (peak centre-right) -->
+          <g class="skyline-candle c9">
+            <line x1="760" y1="34"  x2="760" y2="62"  stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="760" y1="28"  x2="760" y2="37"  stroke="#7DD3FC" stroke-width="3" filter="url(#wick-glow)"/>
+            <rect x="746" y="62"  width="28" height="418" fill="rgba(255,61,87,0.20)" stroke="rgba(255,61,87,0.65)" stroke-width="1.5" rx="1"/>
+            <line x1="760" y1="480" x2="760" y2="464" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c10 x=840  h=405 G  (second peak) -->
+          <g class="skyline-candle c10">
+            <line x1="840" y1="42"  x2="840" y2="75"  stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="840" y1="37"  x2="840" y2="45"  stroke="#7DD3FC" stroke-width="3" filter="url(#wick-glow)"/>
+            <rect x="826" y="75"  width="28" height="405" fill="rgba(0,200,83,0.20)" stroke="rgba(0,200,83,0.65)" stroke-width="1.5" rx="1"/>
+            <line x1="840" y1="480" x2="840" y2="464" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c11 x=920  h=370 R -->
+          <g class="skyline-candle c11">
+            <line x1="920" y1="78"  x2="920" y2="110" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="920" y1="73"  x2="920" y2="81"  stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="906" y="110" width="28" height="370" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="920" y1="480" x2="920" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c12 x=1000 h=320 G -->
+          <g class="skyline-candle c12">
+            <line x1="1000" y1="128" x2="1000" y2="160" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1000" y1="123" x2="1000" y2="131" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="986"  y="160" width="28" height="320" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1000" y1="480" x2="1000" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c13 x=1080 h=275 R -->
+          <g class="skyline-candle c13">
+            <line x1="1080" y1="172" x2="1080" y2="205" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1080" y1="167" x2="1080" y2="175" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="1066" y="205" width="28" height="275" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1080" y1="480" x2="1080" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c14 x=1160 h=230 G -->
+          <g class="skyline-candle c14">
+            <line x1="1160" y1="214" x2="1160" y2="250" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1160" y1="209" x2="1160" y2="217" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="1146" y="250" width="28" height="230" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1160" y1="480" x2="1160" y2="466" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c15 x=1240 h=180 R -->
+          <g class="skyline-candle c15">
+            <line x1="1240" y1="268" x2="1240" y2="300" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1240" y1="263" x2="1240" y2="271" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="1226" y="300" width="28" height="180" fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1240" y1="480" x2="1240" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c16 x=1320 h=135 G -->
+          <g class="skyline-candle c16">
+            <line x1="1320" y1="315" x2="1320" y2="345" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1320" y1="310" x2="1320" y2="318" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="1306" y="345" width="28" height="135" fill="rgba(0,200,83,0.18)" stroke="rgba(0,200,83,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1320" y1="480" x2="1320" y2="468" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+          <!-- c17 x=1400 h=95  R -->
+          <g class="skyline-candle c17">
+            <line x1="1400" y1="357" x2="1400" y2="385" stroke="#1e2d4a" stroke-width="2"/>
+            <line class="skyline-wick-tip" x1="1400" y1="352" x2="1400" y2="360" stroke="#7DD3FC" stroke-width="2.5" filter="url(#wick-glow)"/>
+            <rect x="1386" y="385" width="28" height="95"  fill="rgba(255,61,87,0.18)" stroke="rgba(255,61,87,0.55)" stroke-width="1" rx="1"/>
+            <line x1="1400" y1="480" x2="1400" y2="470" stroke="#1e2d4a" stroke-width="2"/>
+          </g>
+
+        </svg>
+      </div>
+
+      <div class="hero-inner">
+        <p class="hero-kicker">Professional Indian Market Intelligence</p>
+        <h1 class="hero-headline">
+          Where serious<br/>capital finds<br/>its <span class="hero-accent">edge.</span>
+        </h1>
+        <p class="hero-sub">
+          Institutional-quality market research, AI-generated analyst reports, and live company data scraping — built exclusively for serious retail and professional investors in the Indian equity market.
+        </p>
+        <div class="hero-actions">
+          <a href="index.html" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <polyline points="2,11 5,7 8,9 11,4 14,6"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Launch App
+          </a>
+          <a href="#features" class="btn-outline">Explore features ↓</a>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 1: Stat Carousel ─────────────────────────────────────── -->
+    <section class="stats-section" aria-label="Platform statistics">
+      <div class="stats-header reveal">
+        <div>
+          <span class="section-eyebrow">By the numbers</span>
+          <h2 class="section-heading">Built for precision.<br/>Designed for depth.</h2>
+        </div>
+        <p class="stats-intro">Every number reflects a concrete product decision — no marketing estimates, no rounded figures.</p>
+      </div>
+
+      <div class="stats-track" id="stats-track" role="list" aria-label="Scroll through platform statistics">
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">5</span>
+          <span class="stat-label">Distinct AI Research Modes</span>
+          <span class="stat-sub">Equity Deep Dive · Earnings Intelligence · Explain the Move · Filings Audit · Portfolio Audit</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">9,000+</span>
+          <span class="stat-label">Characters per Institutional Report</span>
+          <span class="stat-sub">Two-stage Gemini pipeline — grounding search then structured JSON output</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">All NSE &amp; BSE</span>
+          <span class="stat-label">Stocks Supported</span>
+          <span class="stat-sub">Including special characters — M&amp;M, L&amp;T, BAJAJ-AUTO and all exchange-listed tickers</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">2 Hours</span>
+          <span class="stat-label">FII/DII Institutional Flow Refresh</span>
+          <span class="stat-sub">Auto-refreshes during market hours (9:15 AM – 3:30 PM IST) with NSE grounding</span>
+        </article>
+
+        <article class="stat-card" role="listitem">
+          <span class="stat-number">3-Stage</span>
+          <span class="stat-label">Hallucination Guard</span>
+          <span class="stat-sub">Validates every report — scrape → grounding → validation. Falls back gracefully on each failure</span>
+        </article>
+
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 2: Persona Tabs ───────────────────────────────────────── -->
+    <section class="persona-section" aria-label="Features by investor type">
+      <div class="persona-head reveal">
+        <span class="section-eyebrow">Who it's for</span>
+        <h2 class="section-heading">Research tools shaped<br/>around your workflow.</h2>
+      </div>
+
+      <nav class="tabs-nav reveal" role="tablist" aria-label="Investor persona tabs">
+        <button class="tab-btn is-active" role="tab" aria-selected="true"  aria-controls="tab-busy"  id="btn-busy">Busy Professional</button>
+        <button class="tab-btn"           role="tab" aria-selected="false" aria-controls="tab-diy"   id="btn-diy">DIY Investor</button>
+        <button class="tab-btn"           role="tab" aria-selected="false" aria-controls="tab-small" id="btn-small">Small-Cap Hunter</button>
+      </nav>
+
+      <div class="tab-panels">
+
+        <!-- Tab 1: Busy Professional -->
+        <div class="tab-panel is-active" id="tab-busy" role="tabpanel" aria-labelledby="btn-busy">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="7"/>
+                <polyline points="9,5 9,9 12,11"/>
+                <line x1="5" y1="3.5" x2="7" y2="1.5"/>
+                <line x1="13" y1="3.5" x2="11" y2="1.5"/>
+              </svg>
+            </div>
+            <p class="persona-title">Earnings Intelligence</p>
+            <p class="persona-desc">Management Promises Tracker shows what was committed last quarter versus what was actually delivered — with Kept / Missed / Pending badges and a Reliability Score out of 10.</p>
+            <span class="persona-tag">Earnings · Concall · Reliability</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,13 5.5,8.5 9,11 12.5,5.5 16,8"/>
+                <polyline points="12,5 16,5 16,9"/>
+              </svg>
+            </div>
+            <p class="persona-title">Explain the Move</p>
+            <p class="persona-desc">Understand why a stock moved today in minutes, not hours. Catalyst identification, block trade analysis, and short-term directional read — served as a plain-English brief.</p>
+            <span class="persona-tag">Price Action · Catalyst · NSE Volume</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 2 L9 3"/>
+                <rect x="3" y="3" width="12" height="12" rx="2"/>
+                <polyline points="6,9 8,11 12,7"/>
+              </svg>
+            </div>
+            <p class="persona-title">Filings Audit</p>
+            <p class="persona-desc">Governance scorecard at a glance — Transcript Transparency, Disclosure Completeness, Guideline Conservatism, and Governance Cleanliness rated 1–10 with self-healing fallback parsing.</p>
+            <span class="persona-tag">SEBI · Governance · Disclosure</span>
+          </article>
+
+        </div>
+
+        <!-- Tab 2: DIY Investor -->
+        <div class="tab-panel" id="tab-diy" role="tabpanel" aria-labelledby="btn-diy">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="14" height="14" rx="2"/>
+                <line x1="9" y1="2"  x2="9" y2="16"/>
+                <path d="M5 6 L9 9 L5 12" fill="none"/>
+                <path d="M13 6 L9 9 L13 12" fill="none"/>
+              </svg>
+            </div>
+            <p class="persona-title">Equity Deep Dive</p>
+            <p class="persona-desc">Full bull case versus bear case, side by side. Institutional conviction metrics with entry zone, target price, and stop loss — structured like a real analyst report, not a chatbot summary.</p>
+            <span class="persona-tag">Bull · Bear · Entry · Target</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2"  y="9" width="3" height="7" rx="1"/>
+                <rect x="7"  y="5" width="3" height="11" rx="1"/>
+                <rect x="12" y="2" width="3" height="14" rx="1"/>
+                <line x1="1" y1="16" x2="17" y2="16"/>
+              </svg>
+            </div>
+            <p class="persona-title">Sector Peer Benchmarking</p>
+            <p class="persona-desc">Compare your target stock against its closest sector peers on P/E, ROCE, Debt/Equity, and Market Cap. Visualised as side-by-side bars with target highlighted in gold.</p>
+            <span class="persona-tag">PE · ROCE · Peers · Sector</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="7"/>
+                <line x1="9" y1="6" x2="9" y2="9"/>
+                <circle cx="9" cy="12" r="0.75" fill="oklch(0.86 0.16 82)"/>
+              </svg>
+            </div>
+            <p class="persona-title">Confidence Badges</p>
+            <p class="persona-desc">Every report displays a clear HIGH / MEDIUM / LOW data-quality badge based on source richness. Know immediately whether to treat the numbers as confirmed or estimated — no guessing.</p>
+            <span class="persona-tag">Data Quality · Grounding · Source</span>
+          </article>
+
+        </div>
+
+        <!-- Tab 3: Small-Cap Hunter -->
+        <div class="tab-panel" id="tab-small" role="tabpanel" aria-labelledby="btn-small">
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="2" width="12" height="14" rx="1.5"/>
+                <circle cx="11" cy="11" r="3"/>
+                <line x1="13.1" y1="13.1" x2="15" y2="15"/>
+                <line x1="6" y1="6"  x2="9"  y2="6"/>
+                <line x1="6" y1="8.5" x2="8" y2="8.5"/>
+              </svg>
+            </div>
+            <p class="persona-title">Filings Audit</p>
+            <p class="persona-desc">Governance red flags surface faster with small caps. Pledged promoter shares, related-party transaction risks, audit qualifications — all forensically flagged with a Disclosure Scorecard.</p>
+            <span class="persona-tag">Disclosure · Pledging · Red Flags</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,9 6,5 10,9 14,5"/>
+                <polyline points="2,13 6,9 10,13 14,9"/>
+                <line x1="16" y1="5" x2="16" y2="13"/>
+              </svg>
+            </div>
+            <p class="persona-title">FII / DII Sector Flows</p>
+            <p class="persona-desc">Track institutional money movement by sector. See which sectors FIIs are accumulating or distributing today, with a 10-day net flow chart and AI plain-English interpretation.</p>
+            <span class="persona-tag">FII · DII · Sector · Flows</span>
+          </article>
+
+          <article class="persona-card">
+            <div class="persona-icon" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="9" cy="9" r="2.5"/>
+                <circle cx="9" cy="2.5" r="1.5"/>
+                <circle cx="9" cy="15.5" r="1.5"/>
+                <circle cx="2.5" cy="9" r="1.5"/>
+                <circle cx="15.5" cy="9" r="1.5"/>
+                <line x1="9" y1="4" x2="9" y2="6.5"/>
+                <line x1="9" y1="11.5" x2="9" y2="14"/>
+                <line x1="4" y1="9" x2="6.5" y2="9"/>
+                <line x1="11.5" y1="9" x2="14" y2="9"/>
+              </svg>
+            </div>
+            <p class="persona-title">Universal Ticker Support</p>
+            <p class="persona-desc">Works for any NSE or BSE listed company — including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. Pattern-validated client-side before any API call is made.</p>
+            <span class="persona-tag">NSE · BSE · Small Cap · Mid Cap</span>
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Section 3: Benefit Grid ───────────────────────────────────────── -->
+    <section class="benefits-section" aria-label="Platform benefits">
+      <div class="benefits-inner">
+        <div class="benefits-head reveal">
+          <span class="section-eyebrow">Why Alphasynth</span>
+          <h2 class="section-heading">Six reasons serious<br/>investors choose the platform.</h2>
+        </div>
+
+        <div class="benefits-grid">
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2 L17 5.5 V10 C17 14 13.5 17.5 10 18 C6.5 17.5 3 14 3 10 V5.5 Z"/>
+                <polyline points="7,10 9,12 13,8"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Fact-Grounded Analysis Shield</h3>
+            <p class="benefit-desc">Every report is grounded in real financial data with source verification — not generic AI guesses. Firecrawl scrapes primary NSE/BSE endpoints; Gemini search grounds residual data.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="2"/>
+                <circle cx="10" cy="3"  r="1.5"/>
+                <circle cx="10" cy="17" r="1.5"/>
+                <circle cx="3"  cy="10" r="1.5"/>
+                <circle cx="17" cy="10" r="1.5"/>
+                <line x1="10" y1="4.5"  x2="10" y2="8"/>
+                <line x1="10" y1="12"   x2="10" y2="15.5"/>
+                <line x1="4.5"  y1="10" x2="8"  y2="10"/>
+                <line x1="12"   y1="10" x2="15.5" y2="10"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Universal Ticker Support</h3>
+            <p class="benefit-desc">Works for any NSE or BSE listed stock, including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. A pattern-validation layer runs client-side before any API call.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="10" height="13" rx="1.5"/>
+                <path d="M5 11 C3 11 2 12 2 14 L2 17 C2 17.6 2.4 18 3 18 L17 18 C17.6 18 18 17.6 18 17 L18 14 C18 12 17 11 15 11"/>
+                <polyline points="7,7 10,10 13,7"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Hallucination Guards</h3>
+            <p class="benefit-desc">A 3-attempt validation pipeline confirms every generated report meets quality thresholds. If any attempt fails, the system retries with progressively cleaner context before returning a result.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,14 6,10 10,12 14,6 18,8"/>
+                <rect x="2" y="15" width="3" height="3" rx="0.5"/>
+                <rect x="7" y="13" width="3" height="5" rx="0.5"/>
+                <rect x="12" y="9" width="3" height="9" rx="0.5"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Live Institutional Flow Monitor</h3>
+            <p class="benefit-desc">Track FII and DII buying and selling with sector-level breakdowns, a 10-day net flow chart, and an AI plain-English interpretation — auto-refreshing every 2 hours during market hours.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M10 6 L10 10 L14 12" stroke-linejoin="round"/>
+                <circle cx="10" cy="10" r="1" fill="oklch(0.86 0.16 82)" stroke="none"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Confidence Transparency</h3>
+            <p class="benefit-desc">Clear HIGH / MEDIUM / LOW badges tell you exactly how reliable each report is, based on whether primary-source scraping succeeded or Gemini grounding was the fallback — never hidden.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="10" cy="10" r="8"/>
+                <path d="M10 2 L10 10 L16 10" fill="oklch(0.86 0.16 82 / 0.12)" stroke="oklch(0.86 0.16 82)" stroke-width="1.5"/>
+                <path d="M10 10 L5.5 14.5" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Portfolio Audit</h3>
+            <p class="benefit-desc">Upload your holdings via CSV export from Zerodha or Groww. Get instant P&amp;L analysis, hidden sector overlap diagnostics, and AI-generated audit commentary on each position.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Market Intelligence Widget ───────────────────────────────────── -->
+    <div class="mkt-wrap" id="markets" role="region" aria-label="Market intelligence snapshot">
+      <div class="mkt-inner">
+
+        <div class="mkt-header">
+          <div class="mkt-header-left">
+            <span class="mkt-title">Indian Markets</span>
+            <span class="mkt-badge mkt-badge-live" id="mkt-badge" aria-live="polite">
+              <span class="mkt-dot mkt-dot-live" id="mkt-dot" aria-hidden="true"></span>
+              <span id="mkt-status">LIVE</span>
+            </span>
+          </div>
+          <span class="mkt-snapshot-label" id="mkt-snapshot-label">NSE · BSE</span>
+        </div>
+
+        <div class="mkt-indices" role="list">
+          <div class="mkt-card" role="listitem">
+            <span class="mkt-card-name">Nifty 50</span>
+            <span class="mkt-card-value">24,634.20</span>
+            <span class="mkt-change mkt-up" aria-label="Up 0.48 percent">▲ 117.85 &thinsp;+0.48%</span>
+          </div>
+          <div class="mkt-card" role="listitem">
+            <span class="mkt-card-name">Sensex</span>
+            <span class="mkt-card-value">81,182.55</span>
+            <span class="mkt-change mkt-up" aria-label="Up 0.51 percent">▲ 412.30 &thinsp;+0.51%</span>
+          </div>
+          <div class="mkt-card" role="listitem">
+            <span class="mkt-card-name">Nifty Bank</span>
+            <span class="mkt-card-value">52,481.70</span>
+            <span class="mkt-change mkt-down" aria-label="Down 0.19 percent">▼ 101.40 &thinsp;−0.19%</span>
+          </div>
+        </div>
+
+        <div class="mkt-sentiment">
+          <span class="mkt-sentiment-tag">Sentiment</span>
+          <p class="mkt-sentiment-text">
+            Broad market tone cautiously positive. IT and FMCG sectors leading intraday gains on institutional buying. PSU Banks facing mild selling pressure ahead of RBI policy commentary. FII activity net positive for the third consecutive session. Midcap index outperforming large-cap benchmark by 0.3%.
+          </p>
+        </div>
+
+        <div class="mkt-footer">
+          <span class="mkt-timestamp" id="mkt-timestamp">Last updated: —</span>
+          <span class="mkt-disclaimer">Illustrative snapshot · Not financial advice · Source: NSE/BSE public data</span>
+        </div>
+
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── Features ───────────────────────────────────────────────────────── -->
+    <div class="features-bg" id="features">
+      <div class="section">
+        <div class="features-header">
+          <div>
+            <span class="section-eyebrow">Platform capabilities</span>
+            <h2 class="section-heading">Every tool serious<br/>investors demand.</h2>
+          </div>
+          <p class="features-intro">
+            Six purpose-built research modules covering the full investment workflow — from primary data discovery through to pre-filled broker execution on India's leading exchanges.
+          </p>
+        </div>
+
+        <div class="features-grid" role="list">
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <rect x="2" y="12" width="3" height="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
+                <rect x="8.5" y="8"  width="3" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
+                <rect x="15" y="4"   width="3" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
+                <polyline points="2,10 8,6 13,8 18,3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
+              </svg>
+            </div>
+            <span class="feat-num">01</span>
+            <h3 class="feat-title">Live Market Intelligence</h3>
+            <p class="feat-desc">Real-time trending signal extraction from NSE regulatory filings, sector sentiment indexing, and news impact scoring — grounded directly in live Google Search results, never cached feeds.</p>
+            <span class="feat-tag">Real-time · NSE · Grounded</span>
+          </article>
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="4" y="2" width="12" height="16" rx="1.5"/>
+                <line x1="7" y1="7"  x2="13" y2="7"/>
+                <line x1="7" y1="10" x2="13" y2="10"/>
+                <line x1="7" y1="13" x2="11" y2="13"/>
+              </svg>
+            </div>
+            <span class="feat-num">02</span>
+            <h3 class="feat-title">Analyst-Grade Reports</h3>
+            <p class="feat-desc">Two-stage AI synthesis produces institutional-quality equity reports: bull catalysts, bear case exposure, valuation entry zones, and peer benchmarking against verified exchange data.</p>
+            <span class="feat-tag">Deep Dive · Earnings · Move</span>
+          </article>
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2"  y="2"  width="7" height="7" rx="1"/>
+                <rect x="11" y="2"  width="7" height="7" rx="1"/>
+                <rect x="2"  y="11" width="7" height="7" rx="1"/>
+                <rect x="11" y="11" width="7" height="7" rx="1"/>
+              </svg>
+            </div>
+            <span class="feat-num">03</span>
+            <h3 class="feat-title">Company Listings</h3>
+            <p class="feat-desc">Comprehensive NSE and BSE listed company intelligence — financial metrics, ownership structure, regulatory filings history, and comparative sector positioning for any listed Indian company.</p>
+            <span class="feat-tag">NSE · BSE · SEBI</span>
+          </article>
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8.5" cy="8.5" r="5"/>
+                <line x1="12.5" y1="12.5" x2="17" y2="17"/>
+                <line x1="6.5" y1="8.5" x2="10.5" y2="8.5"/>
+                <line x1="8.5" y1="6.5" x2="8.5" y2="10.5"/>
+              </svg>
+            </div>
+            <span class="feat-num">04</span>
+            <h3 class="feat-title">Live Data Scraping</h3>
+            <p class="feat-desc">Firecrawl-powered primary-source extraction pulls authentic filing transcripts and corporate disclosures directly from NSE, BSE, and company portals — bypassing delayed aggregators.</p>
+            <span class="feat-tag">Firecrawl · Primary Sources</span>
+          </article>
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M10 2 L10 10 L16.9 13.5 A8 8 0 1 1 10 2"/>
+                <path d="M10 2 A8 8 0 0 1 18 10 L10 10"/>
+              </svg>
+            </div>
+            <span class="feat-num">05</span>
+            <h3 class="feat-title">Portfolio X-Ray</h3>
+            <p class="feat-desc">Import your holdings to surface hidden sector overlaps, concentration risk, and stress-tested exposure diagnostics — with AI-generated audit commentary on each position.</p>
+            <span class="feat-tag">Portfolio · Risk · Audit</span>
+          </article>
+
+          <article class="feat-card" role="listitem">
+            <div class="feat-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="10,2 10,11"/>
+                <polyline points="6,6 10,2 14,6"/>
+                <path d="M4 13 C4 13 3 18 10 18 C17 18 16 13 16 13"/>
+              </svg>
+            </div>
+            <span class="feat-num">06</span>
+            <h3 class="feat-title">Direct Broker Execution</h3>
+            <p class="feat-desc">AI research pre-populates trade parameters automatically. Route limit orders, GTT two-leg triggers, or market orders directly to Zerodha Kite with a single confirmation click.</p>
+            <span class="feat-tag">Zerodha · Kite · GTT</span>
+          </article>
+
+        </div>
+      </div>
+    </div>
+
+    <hr class="section-divider" />
+
+    <!-- ── CTA ────────────────────────────────────────────────────────────── -->
+    <section class="cta-section" aria-labelledby="cta-heading">
+      <div class="cta-ambient" aria-hidden="true"></div>
+      <div class="cta-inner">
+        <span class="section-eyebrow">Start researching</span>
+        <h2 class="cta-heading" id="cta-heading">
+          The research platform<br/>serious investors <span>deserve.</span>
+        </h2>
+        <p class="cta-sub">
+          Stop reading analyst summaries. Start reading the filing. Launch Alphasynth Intelligence and run your first institutional-quality Indian equity report in under two minutes.
+        </p>
+        <div class="cta-actions">
+          <a href="index.html" class="btn-cta">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+              <polyline points="2,12 5.5,7.5 9,10 12.5,4.5 16,7"
+                stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Launch App
+          </a>
+          <a href="#features" class="btn-outline">View all features</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── Footer ────────────────────────────────────────────────────────────── -->
+  <footer class="footer" aria-label="Site footer">
+    <div class="footer-inner">
+      <a href="landing-v2.html" class="footer-wordmark">Alphasynth Intelligence</a>
+      <div class="footer-links">
+        <a href="#features" class="footer-link">Features</a>
+        <a href="#markets"  class="footer-link">Markets</a>
+        <a href="index.html" class="footer-link">Launch App</a>
+      </div>
+      <span class="footer-note">© 2026 — For serious Indian market investors</span>
+    </div>
+  </footer>
+
+  <script>
+  /* ── Canvas animated background ─────────────────────────────────────────── */
+  (function () {
+    var canvas = document.getElementById('bg-canvas');
+    if (!canvas) return;
+    var ctx = canvas.getContext('2d');
+    var W, H, raf;
+
+    // Gold in RGB for canvas use (can't use oklch in canvas API)
+    var GR = 196, GG = 162, GB = 88;
+    function gold(a) { return 'rgba('+GR+','+GG+','+GB+','+a+')'; }
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    /* ── Generate price series (random walk, done once) ─────────────── */
+    var N = 900;
+
+    function makeSeries(start, vol, drift) {
+      var s = [start];
+      for (var i = 1; i < N; i++) {
+        var d = (Math.random() - 0.5 + drift) * vol;
+        s.push(Math.max(0.04, Math.min(0.96, s[i-1] + d)));
+      }
+      return s;
+    }
+
+    /* Pre-generate OHLC for candlesticks so shapes never flicker */
+    function makeOHLC(prices) {
+      var out = [];
+      for (var i = 0; i < prices.length - 1; i++) {
+        var o = prices[i], c = prices[i+1];
+        var range = Math.abs(o - c);
+        var wick  = range * (0.4 + Math.random() * 0.8);
+        out.push({
+          o: o, c: c,
+          h: Math.min(0.97, Math.max(o,c) + wick),
+          l: Math.max(0.03, Math.min(o,c) - wick)
+        });
+      }
+      return out;
+    }
+
+    var line1  = makeSeries(0.52, 0.014,  0.0004);
+    var line2  = makeSeries(0.44, 0.019, -0.0003);
+    var ohlc   = makeOHLC(makeSeries(0.50, 0.016, 0));
+
+    /* ── Animation state ─────────────────────────────────────────────── */
+    var VISIBLE = 110;   // data points in view
+    var SPEED   = 0.018; // data points per frame (~1.1/s at 60fps — very slow)
+    var progress = 0;
+    var gridScroll = 0;
+
+    /* ── Draw helpers ────────────────────────────────────────────────── */
+    function drawGrid() {
+      ctx.save();
+      // Horizontal lines
+      ctx.strokeStyle = gold(0.07);
+      ctx.lineWidth = 0.5;
+      var hCount = 9;
+      for (var i = 1; i < hCount; i++) {
+        var y = (H / hCount) * i;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+      // Vertical lines — scroll with progress
+      var vSpacing = W / 14;
+      var xOff = gridScroll % vSpacing;
+      ctx.strokeStyle = gold(0.05);
+      for (var x = -xOff; x <= W + vSpacing; x += vSpacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawLine(series, yTop, yBot, alpha, lw) {
+      var si = Math.floor(progress);
+      var ei = Math.min(si + VISIBLE, series.length);
+      if (ei - si < 2) return;
+      var yR = yBot - yTop;
+      ctx.save();
+      ctx.strokeStyle = gold(alpha);
+      ctx.lineWidth = lw;
+      ctx.lineJoin = 'round';
+      ctx.lineCap  = 'round';
+      ctx.beginPath();
+      for (var i = si; i < ei; i++) {
+        var t = (i - si) / (VISIBLE - 1);
+        var x = t * W;
+        var y = yTop + (1 - series[i]) * yR;
+        i === si ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawCandles(yTop, yBot, alpha) {
+      var si     = Math.floor(progress);
+      var cCount = Math.min(38, Math.floor(W / 22));
+      var cStep  = W / cCount;
+      var cBody  = Math.max(3, cStep * 0.45);
+      var yR     = yBot - yTop;
+
+      ctx.save();
+      ctx.strokeStyle = gold(alpha);
+      ctx.fillStyle   = gold(alpha * 0.45);
+      ctx.lineWidth   = 0.75;
+
+      for (var k = 0; k < cCount; k++) {
+        /* sub-pixel scrolling for smooth candle movement */
+        var xRaw  = k * cStep - (progress % 1) * cStep;
+        var cx    = xRaw + cStep * 0.5;
+        var dIdx  = (si + k) % ohlc.length;
+        var cd    = ohlc[dIdx];
+
+        var oy = yTop + (1 - cd.o) * yR;
+        var cy2= yTop + (1 - cd.c) * yR;
+        var hy = yTop + (1 - cd.h) * yR;
+        var ly = yTop + (1 - cd.l) * yR;
+
+        var bTop = Math.min(oy, cy2);
+        var bH   = Math.max(1, Math.abs(cy2 - oy));
+
+        /* Wick */
+        ctx.beginPath();
+        ctx.moveTo(cx, hy);
+        ctx.lineTo(cx, bTop);
+        ctx.moveTo(cx, bTop + bH);
+        ctx.lineTo(cx, ly);
+        ctx.stroke();
+
+        /* Body */
+        ctx.fillRect(cx - cBody / 2, bTop, cBody, bH);
+        ctx.strokeRect(cx - cBody / 2, bTop, cBody, bH);
+      }
+      ctx.restore();
+    }
+
+    /* ── Main render loop ────────────────────────────────────────────── */
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+
+      drawGrid();
+
+      /* Line 1 — upper chart area */
+      drawLine(line1, H * 0.08, H * 0.50, 0.14, 1.0);
+
+      /* Line 2 — lower chart area */
+      drawLine(line2, H * 0.42, H * 0.82, 0.09, 0.75);
+
+      /* Candlesticks — bottom strip */
+      drawCandles(H * 0.68, H * 0.94, 0.11);
+
+      progress   += SPEED;
+      gridScroll += SPEED * (W / VISIBLE);
+
+      /* Seamless loop */
+      if (progress >= N - VISIBLE - 1) progress = 0;
+
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* Respect prefers-reduced-motion */
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      /* Draw one static frame and stop */
+      frame();
+      cancelAnimationFrame(raf);
+    } else {
+      frame();
+    }
+  }());
+
+  /* ── Nav transparency on scroll ─────────────────────────────────────────── */
+  (function () {
+    var nav = document.getElementById('main-nav');
+    function update() {
+      nav.classList.toggle('nav--scrolled', window.scrollY > 60);
+    }
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+  }());
+
+  /* ── Market intelligence widget — IST-aware snapshot scheduler ───────────── */
+  (function () {
+    function pad(n) { return n < 10 ? '0' + n : String(n); }
+
+    function getIST() {
+      return new Date(Date.now() + 5.5 * 60 * 60 * 1000);
+    }
+
+    var ist      = getIST();
+    var day      = ist.getUTCDay();
+    var h        = ist.getUTCHours();
+    var m        = ist.getUTCMinutes();
+    var total    = h * 60 + m;
+    var OPEN     = 9  * 60 + 15;
+    var CLOSE    = 15 * 60 + 30;
+    var weekday  = day >= 1 && day <= 5;
+    var isOpen   = weekday && total >= OPEN && total < CLOSE;
+
+    var snaps = [
+      { min: 9  * 60 + 15, label: '9:15 AM IST'  },
+      { min: 11 * 60 + 15, label: '11:15 AM IST' },
+      { min: 13 * 60 + 15, label: '1:15 PM IST'  },
+      { min: 15 * 60 + 15, label: '3:15 PM IST'  },
+    ];
+
+    var snapLabel;
+    if (!weekday || total < OPEN || total >= CLOSE) {
+      snapLabel = 'Last Traded Price as of 3:30 PM IST';
+    } else {
+      var last = snaps[0];
+      for (var i = 0; i < snaps.length; i++) {
+        if (total >= snaps[i].min) last = snaps[i];
+      }
+      snapLabel = 'Snapshot · ' + last.label;
+    }
+
+    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
+                  'Jul','Aug','Sep','Oct','Nov','Dec'];
+    var dateStr = ist.getUTCDate() + ' ' + MONTHS[ist.getUTCMonth()] + ' ' + ist.getUTCFullYear();
+
+    var badge    = document.getElementById('mkt-badge');
+    var dot      = document.getElementById('mkt-dot');
+    var statusEl = document.getElementById('mkt-status');
+    var lblEl    = document.getElementById('mkt-snapshot-label');
+    var tsEl     = document.getElementById('mkt-timestamp');
+
+    if (isOpen) {
+      badge.className      = 'mkt-badge mkt-badge-live';
+      dot.className        = 'mkt-dot mkt-dot-live';
+      statusEl.textContent = 'LIVE';
+    } else {
+      badge.className      = 'mkt-badge mkt-badge-closed';
+      dot.className        = 'mkt-dot mkt-dot-closed';
+      statusEl.textContent = 'CLOSED';
+    }
+
+    if (lblEl) lblEl.textContent = snapLabel + ' · NSE/BSE';
+    if (tsEl)  tsEl.textContent  = 'Last updated: ' + snapLabel + ' · ' + dateStr;
+  }());
+
+  /* ── Hero section canvas — grid + 3 smooth flowing chart lines ───────────── */
+  (function () {
+    var section = document.querySelector('.hero');
+    var canvas  = document.getElementById('hero-canvas');
+    if (!section || !canvas) return;
+
+    var ctx = canvas.getContext('2d');
+    var W = 0, H = 0, raf;
+
+    /* Colour helpers — gold grid, market green (uptrend), market red (downtrend) */
+    function gold(a)  { return 'rgba(196,162,88,'  + a + ')'; }
+    function green(a) { return 'rgba(0,200,83,'    + a + ')'; }
+    function red(a)   { return 'rgba(255,61,87,'   + a + ')'; }
+
+    /* Size canvas to match the live hero section dimensions */
+    function resize() {
+      W = canvas.width  = section.offsetWidth;
+      H = canvas.height = section.offsetHeight;
+    }
+    resize();
+
+    /* Re-measure on resize — ResizeObserver is more accurate than window resize */
+    if (window.ResizeObserver) {
+      new ResizeObserver(resize).observe(section);
+    } else {
+      window.addEventListener('resize', resize, { passive: true });
+    }
+
+    /*
+     * Three flowing line series.
+     * Each line is a composite of three slow sine waves so it curves
+     * organically without any randomness (never jittery).
+     *
+     * base   — vertical centre as fraction of canvas height
+     * amp    — vertical swing amplitude as fraction of canvas height
+     * freq   — horizontal wave cycles across the canvas width (in radians)
+     * speed  — time advance per frame in radians (controls how slow)
+     * offset — phase shift so each line looks independent
+     */
+    /* Lines kept in upper (≤30%) and lower (≥70%) bands to frame text, not cross it */
+    var SERIES = [
+      { base: 0.13, amp: 0.07, freq: 4.40, speed: 0.0036, offset: 0.000 },
+      { base: 0.24, amp: 0.08, freq: 3.15, speed: 0.0024, offset: 2.094 },
+      { base: 0.84, amp: 0.07, freq: 5.20, speed: 0.0018, offset: 4.189 },
+    ];
+
+    /* colour function + opacity per line — green, green, red */
+    var LINE_COLOR = [green, green, red];
+    var ALPHA       = [0.40, 0.38, 0.40];
+    var t = 0;                        /* global time accumulator */
+
+    /* Compute y (pixels) for series s at horizontal position x, given time t */
+    function lineY(s, x) {
+      var phase = (x / W) * s.freq;
+      return H * (
+        s.base +
+        s.amp * (
+          Math.sin(phase + t * s.speed)                                * 0.55 +
+          Math.sin(phase * 1.618 + t * s.speed * 1.40 + s.offset)     * 0.28 +
+          Math.sin(phase * 2.618 + t * s.speed * 0.75 + s.offset * 1.7) * 0.17
+        )
+      );
+    }
+
+    /* Draw the static grid — horizontal + vertical thin gold lines */
+    function drawGrid() {
+      ctx.save();
+      ctx.strokeStyle = gold(0.10);
+      ctx.lineWidth   = 0.5;
+
+      /* Horizontal lines */
+      var hCount = 9;
+      for (var r = 1; r < hCount; r++) {
+        var y = (H / hCount) * r;
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      /* Vertical lines */
+      var vCount = 13;
+      for (var c = 1; c < vCount; c++) {
+        var x = (W / vCount) * c;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    /*
+     * Draw one flowing series using midpoint quadratic Bézier interpolation
+     * so the path is smooth even at low point counts.
+     */
+    function drawLine(s, colorFn, alpha) {
+      /* One sample every 3px gives smooth curves without heavy computation */
+      var steps = Math.ceil(W / 3);
+      if (steps < 2) return;
+
+      /* Build point array */
+      var pts = new Array(steps + 1);
+      for (var i = 0; i <= steps; i++) {
+        var px = (i / steps) * W;
+        pts[i] = { x: px, y: lineY(s, px) };
+      }
+
+      ctx.save();
+      ctx.strokeStyle = colorFn(alpha);
+      ctx.lineWidth   = 1.5;
+      ctx.lineJoin    = 'round';
+      ctx.lineCap     = 'round';
+      ctx.beginPath();
+
+      ctx.moveTo(pts[0].x, pts[0].y);
+
+      /* Midpoint quadratic Bézier — control point at pts[i], target at midpoint */
+      for (var j = 1; j < pts.length - 1; j++) {
+        var mx = (pts[j].x + pts[j + 1].x) * 0.5;
+        var my = (pts[j].y + pts[j + 1].y) * 0.5;
+        ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+      }
+      /* Close the last segment to the final point */
+      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function frame() {
+      ctx.clearRect(0, 0, W, H);
+
+      drawGrid();
+      drawLine(SERIES[0], LINE_COLOR[0], ALPHA[0]);
+      drawLine(SERIES[1], LINE_COLOR[1], ALPHA[1]);
+      drawLine(SERIES[2], LINE_COLOR[2], ALPHA[2]);
+
+      t++;
+      raf = requestAnimationFrame(frame);
+    }
+
+    /* Honour prefers-reduced-motion — one static frame, no loop */
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      frame();
+      cancelAnimationFrame(raf);
+    } else {
+      frame();
+    }
+  }());
+
+  /* ── Scroll-reveal via IntersectionObserver ───────────────────────────── */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('is-visible');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.reveal').forEach(function (el) { obs.observe(el); });
+  }());
+
+  /* ── Stat carousel — add float animation after entry ─────────────────── */
+  (function () {
+    if (!window.IntersectionObserver) return;
+    var prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduced) return;
+
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('do-float');
+        obs.unobserve(entry.target);
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-card').forEach(function (el) { obs.observe(el); });
+  }());
+
+  /* ── Stat carousel — drag-to-scroll ────────────────────────────────────── */
+  (function () {
+    var track = document.getElementById('stats-track');
+    if (!track) return;
+    var startX, startScroll, dragging = false;
+
+    track.addEventListener('mousedown', function (e) {
+      dragging  = true;
+      startX    = e.pageX - track.offsetLeft;
+      startScroll = track.scrollLeft;
+      track.style.userSelect = 'none';
+    });
+    document.addEventListener('mouseup', function () {
+      dragging = false;
+      if (track) track.style.userSelect = '';
+    });
+    track.addEventListener('mousemove', function (e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var x    = e.pageX - track.offsetLeft;
+      var walk = (x - startX) * 1.6;
+      track.scrollLeft = startScroll - walk;
+    });
+    track.addEventListener('mouseleave', function () { dragging = false; });
+  }());
+
+  /* ── Persona tabs ─────────────────────────────────────────────────────── */
+  (function () {
+    var btns   = document.querySelectorAll('.tab-btn');
+    var panels = document.querySelectorAll('.tab-panel');
+    if (!btns.length) return;
+
+    btns.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var target = btn.getAttribute('aria-controls');
+
+        /* deactivate all */
+        btns.forEach(function (b) {
+          b.classList.remove('is-active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        panels.forEach(function (p) { p.classList.remove('is-active'); });
+
+        /* activate clicked */
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-selected', 'true');
+        var panel = document.getElementById(target);
+        if (panel) panel.classList.add('is-active');
+      });
+    });
+  }());
+  </script>
+
+</body>
+</html>
