@@ -52,9 +52,11 @@ function sanitizeGroundingJson(jsonText: string): string {
   cleaned = cleaned.replace(/(\b\d+(?:\.\d+)?\b)\s*\.?\s*\[\d+\]/g, '$1');
   cleaned = cleaned.replace(/(\btrue\b|\bfalse\b)\s*\.?\s*\[\d+\]/gi, '$1');
   
-  // Wipe out currency markings and percentages that block chart population
+  // Strip ₹ and % only in numeric contexts (after a digit) so they don't block
+  // JSON.parse on chart/benchmark number fields. This preserves % inside markdown
+  // strings like "EBITDA Margin (%)" where % is NOT preceded by a digit.
   cleaned = cleaned.replace(/₹\s?/g, "");
-  cleaned = cleaned.replace(/%/g, "");
+  cleaned = cleaned.replace(/(\d)%/g, "$1");
 
   const firstBrace = cleaned.indexOf("{");
   const lastBrace = cleaned.lastIndexOf("}");

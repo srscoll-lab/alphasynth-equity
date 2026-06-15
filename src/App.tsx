@@ -2085,24 +2085,46 @@ ${list}
                              )}
                            </p>
                         </div>
-                        <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                           <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Target Price</p>
-                           <p className="text-xl font-display font-black text-positive">
-                             ₹{(lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0)) * 1.05)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                           </p>
-                        </div>
-                        <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                           <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Entry Zone</p>
-                           <p className="text-xl font-display font-black text-white">
-                             ₹{(lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : (scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0))).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                           </p>
-                        </div>
-                        <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                           <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Stop Loss</p>
-                           <p className="text-xl font-display font-black text-negative">
-                             ₹{(lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : ((scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0)) * 0.95)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                           </p>
-                        </div>
+                        {(() => {
+                           // For move and earnings_intelligence, derive from live LTP only.
+                           // For deep_dive, use parser-extracted prices with LTP fallback.
+                           const ltpForCalc = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase()
+                             ? scripLtp
+                             : (lastReport?.parsedLtp || 0);
+                           const useLtpDerived = lastReport.mode === 'move' || lastReport.mode === 'earnings_intelligence';
+                           const displayTarget = useLtpDerived
+                             ? ltpForCalc * 1.03
+                             : (lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : ltpForCalc * 1.05);
+                           const displayEntry = useLtpDerived
+                             ? ltpForCalc
+                             : (lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : ltpForCalc);
+                           const displayStop = useLtpDerived
+                             ? ltpForCalc * 0.98
+                             : (lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : ltpForCalc * 0.95);
+                           const fmt = (v: number) => v > 0 ? `₹${v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
+                           return (
+                             <>
+                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
+                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                                   Target Price{useLtpDerived ? ' (+3%)' : ''}
+                                 </p>
+                                 <p className="text-xl font-display font-black text-positive">{fmt(displayTarget)}</p>
+                               </div>
+                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
+                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                                   Entry Zone{useLtpDerived ? ' (at LTP)' : ''}
+                                 </p>
+                                 <p className="text-xl font-display font-black text-white">{fmt(displayEntry)}</p>
+                               </div>
+                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
+                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
+                                   Stop Loss{useLtpDerived ? ' (-2%)' : ''}
+                                 </p>
+                                 <p className="text-xl font-display font-black text-negative">{fmt(displayStop)}</p>
+                               </div>
+                             </>
+                           );
+                        })()}
                      </div>
                      <button 
                         onClick={() => {
@@ -2180,6 +2202,8 @@ ${list}
                       </div>
                   </div>
 
+                  {/* Conviction Engine — only meaningful for deep_dive which outputs all 5 scores */}
+                  {lastReport.mode === 'deep_dive' && (
                   <div className="p-6 bg-app-surface/50 border border-app-border rounded-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-4 opacity-10 text-zinc-800">
                         <Settings className="w-12 h-12" />
@@ -2198,6 +2222,7 @@ ${list}
                         </p>
                       </div>
                   </div>
+                  )}
 
                   <div className="p-6 bg-gold/5 border border-gold/20 rounded-2xl">
                       <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4">Earnings Diagnostic</h3>
