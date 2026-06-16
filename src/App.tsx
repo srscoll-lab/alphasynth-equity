@@ -105,13 +105,13 @@ enum OperationType {
 const MarkdownComponents = {
   h1: ({ children }: any) => (
     <h1 className="text-5xl font-serif font-black text-white italic tracking-tight mb-12 mt-16 border-b border-app-border pb-6 flex items-center gap-6">
-      <div className="w-2.5 h-12 bg-gold rounded-full shadow-[0_0_20px_rgba(212,168,67,0.3)]" />
+      <div className="w-2.5 h-12 bg-gold rounded-full shadow-[0_0_20px_rgba(201,145,42,0.3)]" />
       {children}
     </h1>
   ),
   h2: ({ children }: any) => (
     <h2 className="text-3xl font-display font-bold text-white tracking-tight mb-8 mt-14 flex items-center gap-4">
-      <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(212,168,67,0.5)]" />
+      <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(201,145,42,0.5)]" />
       {children}
     </h2>
   ),
@@ -2045,7 +2045,7 @@ ${list}
                                }}
                                className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                                  isActive 
-                                   ? 'bg-gold/10 border-gold/50 text-gold font-semibold shadow-[0_0_15px_rgba(212,168,67,0.1)]' 
+                                   ? 'bg-gold/10 border-gold/50 text-gold font-semibold shadow-[0_0_15px_rgba(201,145,42,0.1)]' 
                                    : 'bg-black/35 border-app-border text-zinc-400 hover:border-zinc-700 hover:text-white'
                                }`}
                              >
@@ -2784,7 +2784,7 @@ ${list}
             </div>
             <button 
               onClick={() => { setView('app'); }}
-              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-amber text-black rounded-lg hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(212,168,67,0.3)] hover:scale-105 active:scale-95 cursor-pointer"
+              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-amber text-black rounded-lg hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(201,145,42,0.3)] hover:scale-105 active:scale-95 cursor-pointer"
             >
               <BarChart3 className="w-3.5 h-3.5" /> Open Terminal
             </button>
@@ -2813,7 +2813,7 @@ ${list}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
                  <button 
                    onClick={() => { setView('app'); setActiveTab('news'); }}
-                   className="w-full sm:w-auto px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-amber transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(212,168,67,0.3)] flex items-center justify-center gap-2 cursor-pointer"
+                   className="w-full sm:w-auto px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-amber transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(201,145,42,0.3)] flex items-center justify-center gap-2 cursor-pointer"
                  >
                    <Zap className="w-4 h-4 fill-current animate-pulse" /> Launch Interactive Terminal
                  </button>
@@ -3003,7 +3003,7 @@ ${list}
               <div className="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-amber via-blue-500 to-positive" />
               
               <div className="p-10 md:p-14">
-                <div className="w-24 h-24 bg-gold/10 border-2 border-gold/20 rounded-[2rem] flex items-center justify-center mb-10 mx-auto shadow-[0_0_60px_rgba(212,168,67,0.15)] relative overflow-hidden group">
+                <div className="w-24 h-24 bg-gold/10 border-2 border-gold/20 rounded-[2rem] flex items-center justify-center mb-10 mx-auto shadow-[0_0_60px_rgba(201,145,42,0.15)] relative overflow-hidden group">
                    <div className="absolute inset-0 bg-gold/20 blur-xl group-hover:scale-150 transition-transform duration-700" />
                    <TrendingUp className="w-12 h-12 text-gold relative z-10" />
                 </div>
@@ -3055,7 +3055,7 @@ ${list}
                     completeOnboarding();
                     setTimeout(scrollToWorkflow, 100);
                   }}
-                  className="w-full py-5 bg-amber text-black font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl hover:bg-amber transition-all shadow-[0_10px_30px_rgba(212,168,67,0.3)] active:scale-[0.98]"
+                  className="w-full py-5 bg-amber text-black font-black uppercase tracking-[0.3em] text-[10px] rounded-2xl hover:bg-amber transition-all shadow-[0_10px_30px_rgba(201,145,42,0.3)] active:scale-[0.98]"
                 >
                   Enter NSE Research Terminal
                 </button>
@@ -3076,7 +3076,7 @@ ${list}
               {/* Header */}
               <div className="p-8 border-b border-app-border flex items-center justify-between bg-app-surface/40">
                 <div className="flex items-center gap-5">
-                  <div className="p-4 bg-amber rounded-2xl text-black shadow-[0_0_20px_rgba(212,168,67,0.3)]">
+                  <div className="p-4 bg-amber rounded-2xl text-black shadow-[0_0_20px_rgba(201,145,42,0.3)]">
                      <Shield className="w-8 h-8" />
                   </div>
                   <div>
@@ -3212,7 +3212,7 @@ ${list}
                  </button>
                  <button 
                   onClick={() => setViewingPortfolioAudit(false)}
-                  className="px-8 py-2.5 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber transition-all shadow-[0_4px_14px_rgba(212,168,67,0.3)]"
+                  className="px-8 py-2.5 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber transition-all shadow-[0_4px_14px_rgba(201,145,42,0.3)]"
                  >
                    Close Audit
                  </button>
@@ -3365,7 +3365,7 @@ ${list}
                 setView('landing');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-amber border border-gold rounded-lg text-[10px] font-black uppercase tracking-widest text-black hover:bg-white transition-all group shadow-[0_0_20px_rgba(212,168,67,0.4)]"
+              className="flex items-center gap-2 px-3 py-1.5 bg-amber border border-gold rounded-lg text-[10px] font-black uppercase tracking-widest text-black hover:bg-white transition-all group shadow-[0_0_20px_rgba(201,145,42,0.4)]"
             >
               <Zap className="w-3 h-3 group-hover:animate-pulse fill-current" />
               Landing Summary
@@ -3395,7 +3395,7 @@ ${list}
             ) : (
               <button 
                 onClick={handleLogin}
-                className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(212,168,67,0.3)] active:scale-95`}
+                className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(201,145,42,0.3)] active:scale-95`}
               >
                 <TrendingUp className="w-3 h-3" /> Start Free Research
               </button>
@@ -3513,7 +3513,7 @@ ${list}
                       : 'bg-app-surface/50 border-app-border text-zinc-500 hover:border-zinc-700'
                   }`}
                 >
-                  <div className={`w-1 h-1 rounded-full ${dataSources.includes(source.id) ? 'bg-amber shadow-[0_0_8px_rgba(212,168,67,0.5)]' : 'bg-app-border'}`} />
+                  <div className={`w-1 h-1 rounded-full ${dataSources.includes(source.id) ? 'bg-amber shadow-[0_0_8px_rgba(201,145,42,0.5)]' : 'bg-app-border'}`} />
                   {source.name}
                 </button>
               ))}
@@ -3540,7 +3540,7 @@ ${list}
               <button 
                 onClick={() => triggerAnalysis()}
                 disabled={analyzing}
-                className="px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 rounded-xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 min-w-[200px] shadow-[0_10px_20px_rgba(212,168,67,0.2)]"
+                className="px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 rounded-xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 min-w-[200px] shadow-[0_10px_20px_rgba(201,145,42,0.2)]"
               >
                 {analyzing ? (
                   <div className="flex items-center gap-3">
@@ -3601,7 +3601,7 @@ ${list}
                 onClick={() => { setActiveTab(tab); scrollToWorkflow(); }}
                 className={`px-8 py-3.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all relative overflow-hidden group ${
                   activeTab === tab
-                  ? 'bg-amber text-black shadow-[0_10px_25px_rgba(212,168,67,0.25)]'
+                  ? 'bg-amber text-black shadow-[0_10px_25px_rgba(201,145,42,0.25)]'
                   : 'bg-app-surface text-zinc-500 border border-app-border hover:border-zinc-700 hover:text-zinc-300'
                 }`}
               >
@@ -4704,7 +4704,7 @@ ${list}
                         <button 
                           onClick={triggerPortfolioAudit}
                           disabled={auditingPortfolio || holdings.length === 0}
-                          className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_10px_20px_rgba(212,168,67,0.1)]"
+                          className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-amber active:scale-[0.98] transition-all disabled:opacity-50 shadow-[0_10px_20px_rgba(201,145,42,0.1)]"
                         >
                           {auditingPortfolio ? 'Analyzing Portfolio Correlation...' : 'Execute AI Diagnostic audit'}
                         </button>
@@ -4790,7 +4790,7 @@ ${list}
                        </div>
                        <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                          <div className="flex items-center gap-6 text-left">
-                            <div className="w-16 h-16 bg-amber rounded-2xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(212,168,67,0.4)]">
+                            <div className="w-16 h-16 bg-amber rounded-2xl flex items-center justify-center text-black shadow-[0_0_30px_rgba(201,145,42,0.4)]">
                                <BarChart3 className="w-8 h-8" />
                             </div>
                             <div>
@@ -5212,7 +5212,7 @@ ${list}
                 desc: 'The professional standard for high-conviction research.',
                 features: ['Unlimited Deep Dives', 'Earnings Transcript Auditor', 'Portfolio Correlation Lab', 'PDF Report Export'],
                 cta: 'Upgrade Now',
-                accent: 'border-gold shadow-[0_0_30px_rgba(212,168,67,0.1)]',
+                accent: 'border-gold shadow-[0_0_30px_rgba(201,145,42,0.1)]',
                 popular: true,
                 action: () => { handleLogin(); }
               },
@@ -5383,7 +5383,7 @@ ${list}
                initial={{ opacity: 0, y: 50 }}
                animate={{ opacity: 1, y: 0 }}
                exit={{ opacity: 0, y: 50 }}
-               className="bg-app-bg border border-app-border w-full max-w-lg rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(212,168,67,0.15)] flex flex-col max-h-[90vh]"
+               className="bg-app-bg border border-app-border w-full max-w-lg rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(201,145,42,0.15)] flex flex-col max-h-[90vh]"
              >
                 <div className="p-6 border-b border-app-border bg-gold/10 flex justify-between items-center flex-shrink-0">
                    <div>
@@ -5614,7 +5614,7 @@ ${list}
                         </div>
                         <button
                           onClick={handleExecuteKiteJS}
-                          className="kite-buy w-full py-5 bg-amber text-black font-black uppercase tracking-[0.25em] rounded-2xl hover:bg-white hover:text-black transition-all shadow-[0_0_35px_rgba(212,168,67,0.4)] flex items-center justify-center gap-3 relative overflow-hidden"
+                          className="kite-buy w-full py-5 bg-amber text-black font-black uppercase tracking-[0.25em] rounded-2xl hover:bg-white hover:text-black transition-all shadow-[0_0_35px_rgba(201,145,42,0.4)] flex items-center justify-center gap-3 relative overflow-hidden"
                         >
                            <Zap className="w-5 h-5 fill-current" /> Execute via Kite
                         </button>
@@ -5670,7 +5670,7 @@ ${list}
                initial={{ opacity: 0, scale: 0.95 }}
                animate={{ opacity: 1, scale: 1 }}
                exit={{ opacity: 0, scale: 0.95 }}
-               className="bg-app-bg border border-app-border w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_120px_rgba(212,168,67,0.2)]"
+               className="bg-app-bg border border-app-border w-full max-w-md rounded-3xl overflow-hidden shadow-[0_0_120px_rgba(201,145,42,0.2)]"
              >
                 <div className="p-8 border-b border-app-border bg-gold/10 flex justify-between items-center">
                    <div>
@@ -5717,7 +5717,7 @@ ${list}
                        setBrokerConnected(true);
                        setShowBrokerAuthModal(false);
                      }}
-                     className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(212,168,67,0.2)] text-[11px]"
+                     className="w-full py-4 bg-amber text-black font-black uppercase tracking-widest rounded-xl hover:bg-white transition-all shadow-[0_0_20px_rgba(201,145,42,0.2)] text-[11px]"
                    >
                      Authorize & Activate Bridge
                    </button>

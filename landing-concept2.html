@@ -31,13 +31,13 @@
       --color-text-body:      oklch(0.88 0.005 82);
       --color-text-label:     oklch(0.80 0.006 82);
 
-      --color-gold:         oklch(0.86 0.16 82);
+      --color-gold:         #C9912A;
       --color-gold-bright:  oklch(0.93 0.11 88);
       --color-gold-rich:    oklch(0.74 0.18 76);
       --color-gold-on:      #0a0f1e;
-      --color-gold-glow:    oklch(0.86 0.16 82 / 0.22);
-      --color-gold-border:  oklch(0.86 0.16 82 / 0.32);
-      --color-gold-surface: oklch(0.86 0.16 82 / 0.07);
+      --color-gold-glow:    rgba(201, 145, 42, 0.22);
+      --color-gold-border:  rgba(201, 145, 42, 0.32);
+      --color-gold-surface: rgba(201, 145, 42, 0.07);
 
       --color-sky:      #7DD3FC;
       --color-sky-glow: rgba(125, 211, 252, 0.22);
@@ -255,7 +255,7 @@
       opacity: 0;
       animation: fade-up var(--dur-slow) var(--ease-out) 100ms both;
       text-shadow:
-        0 0 28px oklch(0.86 0.16 82 / 0.55),
+        0 0 28px rgba(201, 145, 42, 0.55),
         0 1px 6px rgba(0,0,0,0.9);
     }
     .hero-kicker::before {
@@ -291,8 +291,8 @@
       font-style: normal;
       color: var(--color-gold);
       text-shadow:
-        0 0 40px oklch(0.86 0.16 82 / 0.65),
-        0 0 80px oklch(0.86 0.16 82 / 0.30),
+        0 0 40px rgba(201, 145, 42, 0.65),
+        0 0 80px rgba(201, 145, 42, 0.30),
         0 2px 8px rgba(0,0,0,0.95);
     }
 
@@ -489,8 +489,8 @@
     }
 
     .mkt-badge-live {
-      background: oklch(0.86 0.16 82 / 0.10);
-      border: 1px solid oklch(0.86 0.16 82 / 0.30);
+      background: rgba(201, 145, 42, 0.10);
+      border: 1px solid rgba(201, 145, 42, 0.30);
       color: var(--color-gold);
     }
 
@@ -781,7 +781,7 @@
       height: 400px;
       background: radial-gradient(
         ellipse at center,
-        oklch(0.86 0.16 82 / 0.08) 0%,
+        rgba(201, 145, 42, 0.08) 0%,
         transparent 65%
       );
       pointer-events: none;
@@ -808,7 +808,7 @@
     .cta-heading span {
       color: var(--color-gold);
       font-style: normal;
-      text-shadow: 0 0 40px oklch(0.86 0.16 82 / 0.40);
+      text-shadow: 0 0 40px rgba(201, 145, 42, 0.40);
     }
 
     .cta-sub {
@@ -938,7 +938,7 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at top left, oklch(0.86 0.16 82 / 0.05) 0%, transparent 60%);
+      background: radial-gradient(ellipse at top left, rgba(201, 145, 42, 0.05) 0%, transparent 60%);
       pointer-events: none;
     }
     .stat-card::after {
@@ -951,7 +951,7 @@
     }
     .stat-card:hover {
       transform: translateY(-5px);
-      box-shadow: 0 14px 44px oklch(0.86 0.16 82 / 0.14);
+      box-shadow: 0 14px 44px rgba(201, 145, 42, 0.14);
     }
     @keyframes stat-float {
       0%, 100% { transform: translateY(0px);  }
@@ -971,7 +971,7 @@
       color: var(--color-gold);
       line-height: 1;
       letter-spacing: -0.02em;
-      text-shadow: 0 0 40px oklch(0.86 0.16 82 / 0.35);
+      text-shadow: 0 0 40px rgba(201, 145, 42, 0.35);
       display: block;
       margin-bottom: var(--space-4);
     }
@@ -1145,7 +1145,7 @@
     .benefit-card:hover {
       border-color: var(--color-gold-border);
       transform: translateY(-3px);
-      box-shadow: 0 8px 32px oklch(0.86 0.16 82 / 0.09);
+      box-shadow: 0 8px 32px rgba(201, 145, 42, 0.09);
     }
     .benefit-card::after {
       content: '';
@@ -1318,7 +1318,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="9" r="7"/>
                 <polyline points="9,5 9,9 12,11"/>
                 <line x1="5" y1="3.5" x2="7" y2="1.5"/>
@@ -1332,7 +1332,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="2,13 5.5,8.5 9,11 12.5,5.5 16,8"/>
                 <polyline points="12,5 16,5 16,9"/>
               </svg>
@@ -1344,7 +1344,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M9 2 L9 3"/>
                 <rect x="3" y="3" width="12" height="12" rx="2"/>
                 <polyline points="6,9 8,11 12,7"/>
@@ -1362,7 +1362,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="2" width="14" height="14" rx="2"/>
                 <line x1="9" y1="2"  x2="9" y2="16"/>
                 <path d="M5 6 L9 9 L5 12" fill="none"/>
@@ -1376,7 +1376,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2"  y="9" width="3" height="7" rx="1"/>
                 <rect x="7"  y="5" width="3" height="11" rx="1"/>
                 <rect x="12" y="2" width="3" height="14" rx="1"/>
@@ -1390,10 +1390,10 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="9" r="7"/>
                 <line x1="9" y1="6" x2="9" y2="9"/>
-                <circle cx="9" cy="12" r="0.75" fill="oklch(0.86 0.16 82)"/>
+                <circle cx="9" cy="12" r="0.75" fill="#C9912A"/>
               </svg>
             </div>
             <p class="persona-title">Confidence Badges</p>
@@ -1408,7 +1408,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="2" width="12" height="14" rx="1.5"/>
                 <circle cx="11" cy="11" r="3"/>
                 <line x1="13.1" y1="13.1" x2="15" y2="15"/>
@@ -1423,7 +1423,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="2,9 6,5 10,9 14,5"/>
                 <polyline points="2,13 6,9 10,13 14,9"/>
                 <line x1="16" y1="5" x2="16" y2="13"/>
@@ -1436,7 +1436,7 @@
 
           <article class="persona-card">
             <div class="persona-icon" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="9" cy="9" r="2.5"/>
                 <circle cx="9" cy="2.5" r="1.5"/>
                 <circle cx="9" cy="15.5" r="1.5"/>
@@ -1472,7 +1472,7 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 2 L17 5.5 V10 C17 14 13.5 17.5 10 18 C6.5 17.5 3 14 3 10 V5.5 Z"/>
                 <polyline points="7,10 9,12 13,8"/>
               </svg>
@@ -1483,7 +1483,7 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="10" cy="10" r="2"/>
                 <circle cx="10" cy="3"  r="1.5"/>
                 <circle cx="10" cy="17" r="1.5"/>
@@ -1501,7 +1501,7 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="5" y="2" width="10" height="13" rx="1.5"/>
                 <path d="M5 11 C3 11 2 12 2 14 L2 17 C2 17.6 2.4 18 3 18 L17 18 C17.6 18 18 17.6 18 17 L18 14 C18 12 17 11 15 11"/>
                 <polyline points="7,7 10,10 13,7"/>
@@ -1513,7 +1513,7 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="2,14 6,10 10,12 14,6 18,8"/>
                 <rect x="2" y="15" width="3" height="3" rx="0.5"/>
                 <rect x="7" y="13" width="3" height="5" rx="0.5"/>
@@ -1526,10 +1526,10 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="10" cy="10" r="8"/>
                 <path d="M10 6 L10 10 L14 12" stroke-linejoin="round"/>
-                <circle cx="10" cy="10" r="1" fill="oklch(0.86 0.16 82)" stroke="none"/>
+                <circle cx="10" cy="10" r="1" fill="#C9912A" stroke="none"/>
               </svg>
             </div>
             <h3 class="benefit-title">Confidence Transparency</h3>
@@ -1538,9 +1538,9 @@
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="10" cy="10" r="8"/>
-                <path d="M10 2 L10 10 L16 10" fill="oklch(0.86 0.16 82 / 0.12)" stroke="oklch(0.86 0.16 82)" stroke-width="1.5"/>
+                <path d="M10 2 L10 10 L16 10" fill="rgba(201, 145, 42, 0.12)" stroke="#C9912A" stroke-width="1.5"/>
                 <path d="M10 10 L5.5 14.5" stroke-width="1.5"/>
               </svg>
             </div>
@@ -1622,10 +1622,10 @@
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <rect x="2" y="12" width="3" height="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
-                <rect x="8.5" y="8"  width="3" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
-                <rect x="15" y="4"   width="3" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
-                <polyline points="2,10 8,6 13,8 18,3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:oklch(0.86 0.16 82)"/>
+                <rect x="2" y="12" width="3" height="6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:#C9912A"/>
+                <rect x="8.5" y="8"  width="3" height="10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:#C9912A"/>
+                <rect x="15" y="4"   width="3" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" style="color:#C9912A"/>
+                <polyline points="2,10 8,6 13,8 18,3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:#C9912A"/>
               </svg>
             </div>
             <span class="feat-num">01</span>
@@ -1636,7 +1636,7 @@
 
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="4" y="2" width="12" height="16" rx="1.5"/>
                 <line x1="7" y1="7"  x2="13" y2="7"/>
                 <line x1="7" y1="10" x2="13" y2="10"/>
@@ -1651,7 +1651,7 @@
 
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2"  y="2"  width="7" height="7" rx="1"/>
                 <rect x="11" y="2"  width="7" height="7" rx="1"/>
                 <rect x="2"  y="11" width="7" height="7" rx="1"/>
@@ -1666,7 +1666,7 @@
 
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="8.5" cy="8.5" r="5"/>
                 <line x1="12.5" y1="12.5" x2="17" y2="17"/>
                 <line x1="6.5" y1="8.5" x2="10.5" y2="8.5"/>
@@ -1681,7 +1681,7 @@
 
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M10 2 L10 10 L16.9 13.5 A8 8 0 1 1 10 2"/>
                 <path d="M10 2 A8 8 0 0 1 18 10 L10 10"/>
               </svg>
@@ -1694,7 +1694,7 @@
 
           <article class="feat-card" role="listitem">
             <div class="feat-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="oklch(0.86 0.16 82)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="10,2 10,11"/>
                 <polyline points="6,6 10,2 14,6"/>
                 <path d="M4 13 C4 13 3 18 10 18 C17 18 16 13 16 13"/>
