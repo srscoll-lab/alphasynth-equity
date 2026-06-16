@@ -2003,7 +2003,7 @@
     if (tsEl)  tsEl.textContent  = 'Last updated: ' + snapLabel + ' · ' + dateStr;
   }());
 
-  /* ── Hero — City Skyline in Candlesticks ────────────────────────────────── */
+  /* ── Hero — City Skyline in Candlesticks (v2 refined) ──────────────────── */
   (function () {
     var section = document.querySelector('.hero');
     var canvas  = document.getElementById('hero-canvas');
@@ -2033,99 +2033,114 @@
     /*
      * 28 candlestick buildings.
      * [xFrac, heightFrac, bodyW, type, wickFrac, speed, phase]
-     *   xFrac      — x-centre as fraction of W
-     *   heightFrac — body height as fraction of skyline zone (1.0 = tallest)
-     *   bodyW      — base pixel width of body rect
-     *   type       — 0 dark silhouette, 1 green-tinted, 2 red-tinted
-     *   wickFrac   — upper wick length as fraction of body height
-     *   speed      — breathing frequency in rad/frame (2π/speed = period in frames)
-     *   phase      — initial phase so candles breathe out of sync
+     *
+     * Speeds alternate fast/slow so no two adjacent candles share a period.
+     * fast ≈ 0.028–0.034 rad/frame → 3–4 s cycle
+     * slow ≈ 0.010–0.016 rad/frame → 6–10 s cycle
+     * Amplitude bumped to ±5% for smooth organic movement.
+     *
+     * Buildings with heightFrac ≥ 0.95 receive a gold body tint (refinement 5).
      */
     var D = 0, G = 1, R = 2;
     var BLDG = [
       /* far left — short */
-      [0.022, 0.20, 28, D, 0.30, 0.0145, 0.00],
-      [0.055, 0.28, 24, R, 0.25, 0.0170, 0.80],
-      [0.088, 0.38, 30, D, 0.32, 0.0130, 1.60],
-      [0.122, 0.50, 26, G, 0.28, 0.0185, 2.40],
+      [0.022, 0.20, 28, D, 0.30, 0.0115, 0.00],
+      [0.055, 0.28, 24, R, 0.25, 0.0320, 0.80],
+      [0.088, 0.38, 30, D, 0.32, 0.0148, 1.60],
+      [0.122, 0.50, 26, G, 0.28, 0.0285, 2.40],
       /* rising left */
-      [0.158, 0.60, 32, D, 0.35, 0.0155, 3.20],
-      [0.196, 0.68, 28, R, 0.38, 0.0175, 4.00],
-      [0.233, 0.76, 34, D, 0.40, 0.0135, 4.80],
+      [0.158, 0.60, 32, D, 0.35, 0.0120, 3.20],
+      [0.196, 0.68, 28, R, 0.38, 0.0270, 4.00],
+      [0.233, 0.76, 34, D, 0.40, 0.0155, 4.80],
       /* left cluster */
-      [0.270, 0.84, 38, G, 0.45, 0.0160, 5.60],
-      [0.306, 0.90, 42, D, 0.50, 0.0140, 0.40],
-      /* central skyscrapers */
-      [0.342, 0.95, 46, G, 0.55, 0.0150, 1.20],
-      [0.378, 0.98, 50, R, 0.58, 0.0130, 2.00],
-      [0.414, 1.00, 54, D, 0.65, 0.0125, 2.80], /* tallest */
-      [0.450, 0.97, 48, G, 0.60, 0.0145, 3.60],
+      [0.270, 0.84, 38, G, 0.45, 0.0310, 5.60],
+      [0.306, 0.90, 42, D, 0.50, 0.0130, 0.40],
+      /* central skyscrapers — 4 tallest flagged for gold accent */
+      [0.342, 0.95, 46, G, 0.55, 0.0295, 1.20],
+      [0.378, 0.98, 50, R, 0.58, 0.0140, 2.00],
+      [0.414, 1.00, 54, D, 0.65, 0.0105, 2.80], /* absolute tallest — stateliest pace */
+      [0.450, 0.97, 48, G, 0.60, 0.0320, 3.60],
       /* second cluster */
       [0.484, 0.92, 44, R, 0.52, 0.0165, 4.40],
-      [0.516, 0.87, 40, D, 0.45, 0.0135, 5.20],
+      [0.516, 0.87, 40, D, 0.45, 0.0280, 5.20],
       /* central medium */
-      [0.547, 0.79, 36, G, 0.38, 0.0175, 6.00],
-      [0.577, 0.73, 32, D, 0.32, 0.0155, 0.60],
-      /* right cluster building up */
-      [0.609, 0.80, 36, R, 0.38, 0.0160, 1.40],
-      [0.642, 0.88, 40, D, 0.44, 0.0135, 2.20],
-      [0.675, 0.92, 44, G, 0.48, 0.0150, 3.00],
-      [0.708, 0.85, 38, R, 0.42, 0.0170, 3.80],
+      [0.547, 0.79, 36, G, 0.38, 0.0125, 6.00],
+      [0.577, 0.73, 32, D, 0.32, 0.0340, 0.60],
+      /* right cluster */
+      [0.609, 0.80, 36, R, 0.38, 0.0150, 1.40],
+      [0.642, 0.88, 40, D, 0.44, 0.0305, 2.20],
+      [0.675, 0.92, 44, G, 0.48, 0.0120, 3.00],
+      [0.708, 0.85, 38, R, 0.42, 0.0265, 3.80],
       /* descending right */
       [0.740, 0.75, 34, D, 0.35, 0.0145, 4.60],
-      [0.772, 0.63, 30, G, 0.30, 0.0165, 5.40],
-      [0.804, 0.51, 28, D, 0.26, 0.0135, 6.20],
-      [0.836, 0.40, 26, R, 0.22, 0.0175, 0.80],
+      [0.772, 0.63, 30, G, 0.30, 0.0330, 5.40],
+      [0.804, 0.51, 28, D, 0.26, 0.0110, 6.20],
+      [0.836, 0.40, 26, R, 0.22, 0.0290, 0.80],
       /* far right — short */
-      [0.866, 0.30, 24, D, 0.20, 0.0155, 1.60],
-      [0.896, 0.21, 22, G, 0.18, 0.0160, 2.40],
-      [0.928, 0.14, 20, D, 0.14, 0.0145, 3.20],
+      [0.866, 0.30, 24, D, 0.20, 0.0135, 1.60],
+      [0.896, 0.21, 22, G, 0.18, 0.0315, 2.40],
+      [0.928, 0.14, 20, D, 0.14, 0.0108, 3.20],
     ];
 
-    /* Cloud wisps — [xFrac, yFrac, widthFrac, heightFrac, opacity, driftSpeed] */
+    /* Cloud wisps — bumped to 15-17% opacity so they are clearly visible */
     var WISPS = [
-      { x: 0.05,  y: 0.15, w: 0.30, h: 0.045, a: 0.09, s: 0.000280 },
-      { x: 0.48,  y: 0.26, w: 0.26, h: 0.038, a: 0.11, s: 0.000210 },
-      { x: 0.72,  y: 0.10, w: 0.23, h: 0.032, a: 0.08, s: 0.000340 },
-      { x: 0.22,  y: 0.38, w: 0.29, h: 0.040, a: 0.10, s: 0.000255 },
+      { x: 0.05,  y: 0.15, w: 0.30, h: 0.045, a: 0.16, s: 0.000280 },
+      { x: 0.48,  y: 0.26, w: 0.26, h: 0.038, a: 0.17, s: 0.000210 },
+      { x: 0.72,  y: 0.10, w: 0.23, h: 0.032, a: 0.15, s: 0.000340 },
+      { x: 0.22,  y: 0.38, w: 0.29, h: 0.040, a: 0.16, s: 0.000255 },
     ];
 
-    /* Colour sets per building type: fill, border, moonlight-edge */
+    /* Colour sets: fill, border, moonlight-edge */
     var COL = [
       { f: 'rgba(13,21,38,0.93)',  b: 'rgba(30,45,74,0.60)',   m: 'rgba(125,211,252,0.17)' },
       { f: 'rgba(6,78,59,0.32)',   b: 'rgba(0,200,83,0.52)',   m: 'rgba(125,211,252,0.22)' },
       { f: 'rgba(76,5,25,0.32)',   b: 'rgba(255,61,87,0.52)',  m: 'rgba(125,211,252,0.18)' },
     ];
 
-    /* Skyline zone bounds — buildings live between skyTop and skyBot */
     function sky() {
       return { top: H * 0.62, bot: H * 0.85, h: H * 0.23 };
     }
 
-    /* ── 1. Sky gradient with parallax ── */
+    /*
+     * Refinement 1 — left-to-right opacity fade.
+     * Left half (xFrac ≤ 0.42): 27% — candlesticks recede behind hero text.
+     * Right half (xFrac ≥ 0.60): 100% — full dramatic skyline.
+     * Smooth sine-eased lerp in between so the transition is natural.
+     */
+    function leftFade(xf) {
+      if (xf <= 0.42) return 0.27;
+      if (xf >= 0.60) return 1.0;
+      var u = (xf - 0.42) / (0.60 - 0.42);            /* 0→1 across transition */
+      var ease = 0.5 - 0.5 * Math.cos(u * Math.PI);   /* sine ease-in-out */
+      return 0.27 + ease * 0.73;
+    }
+
+    /* ── Sky gradient — strengthened horizon band (refinement 3) ── */
     function drawSky() {
       var p    = Math.min(scrollY * 0.22, H * 0.25);
       var grad = ctx.createLinearGradient(0, -p, 0, H - p * 0.4);
       grad.addColorStop(0.00, '#0a0f1e');
       grad.addColorStop(0.22, '#0c1628');
-      grad.addColorStop(0.48, '#0f1f3d');
-      grad.addColorStop(0.63, '#183550');
-      grad.addColorStop(0.74, '#0f1a2e');
+      grad.addColorStop(0.44, '#0f1f3d');
+      grad.addColorStop(0.56, '#1e3a5f'); /* sky-blue horizon band — wider and brighter */
+      grad.addColorStop(0.63, '#235070'); /* peak city-glow-on-horizon */
+      grad.addColorStop(0.72, '#112233');
       grad.addColorStop(1.00, '#070c18');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
 
-      /* Radial horizon glow */
+      /* Stronger radial horizon glow — city-light-on-horizon look */
       var hy = H * 0.63 - scrollY * 0.18;
-      var rg = ctx.createRadialGradient(W * 0.5, hy, 0, W * 0.5, hy, W * 0.55);
-      rg.addColorStop(0.0, 'rgba(28,75,115,0.24)');
-      rg.addColorStop(0.5, 'rgba(14,48,82,0.12)');
-      rg.addColorStop(1.0, 'rgba(0,0,0,0)');
+      var rg = ctx.createRadialGradient(W * 0.5, hy, 0, W * 0.5, hy, W * 0.58);
+      rg.addColorStop(0.00, 'rgba(30,105,170,0.44)');
+      rg.addColorStop(0.35, 'rgba(20,70,115,0.24)');
+      rg.addColorStop(0.65, 'rgba(10,40,80,0.10)');
+      rg.addColorStop(1.00, 'rgba(0,0,0,0)');
       ctx.fillStyle = rg;
       ctx.fillRect(0, 0, W, H);
     }
 
-    /* ── 2. Cloud wisps (slow horizontal drift + subtle parallax) ── */
+    /* ── Cloud wisps ── */
     function drawWisps() {
       var pY = scrollY * 0.12;
       WISPS.forEach(function (w) {
@@ -2150,31 +2165,35 @@
       });
     }
 
-    /* ── 3. Draw all buildings (shared by main pass and reflection) ── */
+    /* ── Draw buildings (main pass + reflection) ── */
     function drawBuildings(globalAlpha, isReflection, wavePhase) {
       var sk      = sky();
       var mobile  = W < 680;
-      /* Mobile: keep tallest ~14 buildings */
-      var list = mobile
+      var list    = mobile
         ? BLDG.filter(function (b, i) { return b[1] >= 0.60 || i % 3 === 0; })
         : BLDG;
 
       ctx.save();
-      ctx.globalAlpha = globalAlpha;
 
       list.forEach(function (b, idx) {
         var xf  = b[0], hf = b[1], bw = b[2] * (mobile ? 0.70 : 1.0);
         var ct  = b[3], wf = b[4], sp = b[5], ph = b[6];
 
-        /* Breathing: ±3.8% height variation */
-        var breathe = 1.0 + Math.sin(t * sp + ph) * 0.038;
+        /* Refinement 6 — smoother breathing: ±5%, widely varied speeds already in BLDG */
+        var breathe = 1.0 + Math.sin(t * sp + ph) * 0.050;
         var bh      = hf * sk.h * breathe;
-        var cx      = xf * W + (isReflection ? Math.sin(wavePhase + idx * 0.55) * 3.0 : 0);
-        var bL      = cx - bw * 0.5;
+
+        /* Refinement 4 — more pronounced wave jitter in reflection */
+        var cx  = xf * W + (isReflection ? Math.sin(wavePhase + idx * 0.55) * 5.5 : 0);
+        var bL  = cx - bw * 0.5;
         var bTop    = sk.bot - bh;
         var wickLen = wf * bh * 0.38;
         var wickTip = bTop - wickLen;
         var c       = COL[ct];
+
+        /* Refinement 1 — per-building alpha: left half fades, right stays full */
+        var perAlpha = isReflection ? globalAlpha : globalAlpha * leftFade(xf);
+        ctx.globalAlpha = perAlpha;
 
         /* Body */
         ctx.beginPath();
@@ -2184,6 +2203,16 @@
         ctx.strokeStyle = c.b;
         ctx.lineWidth   = 1;
         ctx.stroke();
+
+        /* Refinement 5 — gold warm-light tint on the 4 tallest skyscrapers */
+        if (!isReflection && hf >= 0.95) {
+          ctx.globalAlpha = 0.20;               /* fixed 20%, independent of left-fade */
+          ctx.fillStyle   = 'rgba(212,168,67,1.0)';
+          ctx.beginPath();
+          ctx.rect(bL, bTop, bw, bh);
+          ctx.fill();
+          ctx.globalAlpha = perAlpha;           /* restore building alpha */
+        }
 
         if (!isReflection) {
           /* Moonlight left-edge glow */
@@ -2196,25 +2225,41 @@
           ctx.stroke();
           ctx.restore();
 
-          /* Upper wick shaft */
+          /* Wick shaft */
           ctx.save();
-          ctx.strokeStyle = 'rgba(125,211,252,0.30)';
+          ctx.strokeStyle = 'rgba(125,211,252,0.35)';
           ctx.lineWidth   = 1.5;
           ctx.beginPath();
           ctx.moveTo(cx, bTop);
-          ctx.lineTo(cx, wickTip + 5);
+          ctx.lineTo(cx, wickTip + 6);
           ctx.stroke();
 
-          /* Glowing wick tip — pulses on ~3 s cycle (0.038 rad/frame ≈ 165 frames ≈ 2.75 s) */
-          var glow = 0.60 + Math.sin(t * 0.038 + ph) * 0.40;
+          /*
+           * Refinement 2 — pronounced wick-tip glow: two-layer halo.
+           * Outer halo: wide bloom (shadowBlur 24) at 30% opacity.
+           * Inner core: tight (shadowBlur 14) at 80-95% with slow pulse.
+           */
+          var glowPulse = 0.80 + Math.sin(t * 0.038 + ph) * 0.15;
+
+          /* outer halo */
           ctx.shadowColor = '#7DD3FC';
-          ctx.shadowBlur  = 10;
-          ctx.strokeStyle = 'rgba(125,211,252,' + glow + ')';
+          ctx.shadowBlur  = 24;
+          ctx.strokeStyle = 'rgba(125,211,252,0.30)';
+          ctx.lineWidth   = 5;
+          ctx.beginPath();
+          ctx.moveTo(cx, wickTip + 9);
+          ctx.lineTo(cx, wickTip);
+          ctx.stroke();
+
+          /* inner bright core */
+          ctx.shadowBlur  = 14;
+          ctx.strokeStyle = 'rgba(125,211,252,' + glowPulse + ')';
           ctx.lineWidth   = 2.5;
           ctx.beginPath();
           ctx.moveTo(cx, wickTip + 5);
           ctx.lineTo(cx, wickTip);
           ctx.stroke();
+
           ctx.shadowBlur  = 0;
           ctx.restore();
 
@@ -2229,9 +2274,9 @@
           ctx.restore();
 
         } else {
-          /* Reflection: faint wick stub only, no glow */
+          /* Reflection: faint wick stub only */
           ctx.save();
-          ctx.strokeStyle = 'rgba(125,211,252,0.12)';
+          ctx.strokeStyle = 'rgba(125,211,252,0.14)';
           ctx.lineWidth   = 1;
           ctx.beginPath();
           ctx.moveTo(cx, bTop);
@@ -2244,40 +2289,56 @@
       ctx.restore();
     }
 
-    /* ── 4. Water reflection strip ── */
+    /* ── Water reflection (refinement 4 — enhanced) ── */
     function drawReflection() {
       var sk = sky();
       var rH = H - sk.bot;
       if (rH < 10) return;
 
-      /* Flip around the water line (sk.bot) */
+      /* Flip around the water line; reflection opacity raised to 35% */
       ctx.save();
       ctx.beginPath();
       ctx.rect(0, sk.bot, W, rH);
       ctx.clip();
       ctx.translate(0, sk.bot * 2);
       ctx.scale(1, -1);
-      drawBuildings(0.18, true, t * 0.018);
+      drawBuildings(0.35, true, t * 0.018);
+      ctx.restore();
+
+      /* Sky-blue water-line shimmer at the skyline base */
+      ctx.save();
+      ctx.globalAlpha = 0.40;
+      ctx.strokeStyle = '#7DD3FC';
+      ctx.lineWidth   = 1.5;
+      ctx.shadowColor = '#7DD3FC';
+      ctx.shadowBlur  = 8;
+      ctx.beginPath();
+      for (var wx = 0; wx < W; wx += 2) {
+        var wly = sk.bot + Math.sin(wx * 0.015 + t * 0.015) * 1.5;
+        if (wx === 0) ctx.moveTo(wx, wly); else ctx.lineTo(wx, wly);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
       ctx.restore();
 
       /* Dark gradient fades the reflection out toward the bottom */
       var wg = ctx.createLinearGradient(0, sk.bot, 0, H);
       wg.addColorStop(0.0, 'rgba(7,12,24,0.0)');
-      wg.addColorStop(0.3, 'rgba(7,12,24,0.45)');
-      wg.addColorStop(1.0, 'rgba(7,12,24,0.90)');
+      wg.addColorStop(0.3, 'rgba(7,12,24,0.40)');
+      wg.addColorStop(1.0, 'rgba(7,12,24,0.88)');
       ctx.fillStyle = wg;
       ctx.fillRect(0, sk.bot, W, rH);
 
-      /* Shimmering water surface lines */
+      /* Shimmering water surface lines — more pronounced amplitude */
       ctx.save();
-      ctx.globalAlpha = 0.055;
+      ctx.globalAlpha = 0.065;
       ctx.strokeStyle = '#7DD3FC';
       ctx.lineWidth   = 1;
       for (var i = 0; i < 5; i++) {
         var wy = sk.bot + rH * (0.18 + i * 0.17);
         ctx.beginPath();
         for (var x = 0; x < W; x += 3) {
-          var yd = wy + Math.sin(x * 0.025 + t * 0.012 + i * 1.4) * 1.8;
+          var yd = wy + Math.sin(x * 0.025 + t * 0.012 + i * 1.4) * 2.4;
           if (x === 0) ctx.moveTo(x, yd); else ctx.lineTo(x, yd);
         }
         ctx.stroke();
@@ -2285,7 +2346,7 @@
       ctx.restore();
     }
 
-    /* ── 5. Text-legibility gradient overlay ── */
+    /* ── Text-legibility gradient overlay ── */
     function drawOverlay() {
       var grad = ctx.createLinearGradient(0, 0, 0, H);
       grad.addColorStop(0.00, 'rgba(10,15,30,0.00)');
