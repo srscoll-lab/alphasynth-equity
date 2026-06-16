@@ -1511,6 +1511,11 @@ For fiiNet and diiNet at the top level: use null only if genuinely unavailable. 
     }
   });
 
+  // Landing page — served at root in both dev and prod
+  app.get('/', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'landing-concept2.html'));
+  });
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({ server: { middlewareMode: true }, appType: "spa" });
     app.use(vite.middlewares);
