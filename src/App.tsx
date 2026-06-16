@@ -511,14 +511,21 @@ export default function App() {
     if (lastReport) {
       const isLtpMatch = scripLtp > 0 && scripLtpTicker === lastReport.ticker.toUpperCase();
       const livePriceToUse = isLtpMatch ? scripLtp : (lastReport.parsedLtp || 0);
-      const defaultPrice = lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : livePriceToUse;
-      const roundedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 100) / 100 : livePriceToUse;
+      const ltp = livePriceToUse;
+      const inRange = (v: number) => ltp > 0 && v >= ltp * 0.5 && v <= ltp * 2.0;
+
+      const rawEntry  = lastReport.entryPrice  ? (lastReport.entryPrice  > 10 ? lastReport.entryPrice  : lastReport.entryPrice  * 100) : 0;
+      const rawTarget = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : 0;
+      const rawSL     = lastReport.stopLoss    ? (lastReport.stopLoss    > 10 ? lastReport.stopLoss    : lastReport.stopLoss    * 100) : 0;
+
+      const defaultPrice = (rawEntry && inRange(rawEntry)) ? rawEntry : ltp;
+      const roundedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 100) / 100 : ltp;
       setTradePrice(roundedPrice.toFixed(2));
 
-      const defaultTarget = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : (roundedPrice * 1.05);
+      const defaultTarget = (rawTarget && inRange(rawTarget)) ? rawTarget : roundedPrice * 1.05;
       setTradeTargetPrice((Math.round(defaultTarget * 100) / 100).toFixed(2));
 
-      const defaultSL = lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : (roundedPrice * 0.95);
+      const defaultSL = (rawSL && inRange(rawSL)) ? rawSL : roundedPrice * 0.95;
       setTradeStopLoss((Math.round(defaultSL * 100) / 100).toFixed(2));
     } else {
       // Set defaults using scripLtp when lastReport is null
@@ -2089,38 +2096,53 @@ ${list}
                         </div>
                         {(() => {
                            // For move and earnings_intelligence, derive from live LTP only.
-                           // For deep_dive, use parser-extracted prices with LTP fallback.
+                           // For deep_dive, use parser-extracted prices with LTP-range sanity check.
                            const ltpForCalc = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase()
                              ? scripLtp
                              : (lastReport?.parsedLtp || 0);
                            const useLtpDerived = lastReport.mode === 'move' || lastReport.mode === 'earnings_intelligence';
-                           const displayTarget = useLtpDerived
-                             ? ltpForCalc * 1.03
-                             : (lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : ltpForCalc * 1.05);
-                           const displayEntry = useLtpDerived
-                             ? ltpForCalc
-                             : (lastReport.entryPrice ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100) : ltpForCalc);
-                           const displayStop = useLtpDerived
-                             ? ltpForCalc * 0.98
-                             : (lastReport.stopLoss ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100) : ltpForCalc * 0.95);
+
+                           // Reject any extracted price that is outside 50%–200% of LTP —
+                           // catches small numbers like "12" from "12x PE" or "12%" in the report.
+                           const isValidVsLtp = (price: number) =>
+                             ltpForCalc > 0 && price >= ltpForCalc * 0.5 && price <= ltpForCalc * 2.0;
+
+                           const rawTarget = lastReport.targetPrice
+                             ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100)
+                             : 0;
+                           const rawEntry = lastReport.entryPrice
+                             ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100)
+                             : 0;
+                           const rawStop = lastReport.stopLoss
+                             ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100)
+                             : 0;
+
+                           const targetIsEst = !useLtpDerived && (!rawTarget || !isValidVsLtp(rawTarget));
+                           const entryIsEst  = !useLtpDerived && (!rawEntry  || !isValidVsLtp(rawEntry));
+                           const stopIsEst   = !useLtpDerived && (!rawStop   || !isValidVsLtp(rawStop));
+
+                           const displayTarget = useLtpDerived ? ltpForCalc * 1.03 : (targetIsEst ? ltpForCalc * 1.05 : rawTarget);
+                           const displayEntry  = useLtpDerived ? ltpForCalc         : (entryIsEst  ? ltpForCalc         : rawEntry);
+                           const displayStop   = useLtpDerived ? ltpForCalc * 0.98  : (stopIsEst   ? ltpForCalc * 0.95  : rawStop);
+
                            const fmt = (v: number) => v > 0 ? `₹${v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
                            return (
                              <>
                                <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Target Price{useLtpDerived ? ' (+3%)' : ''}
+                                   Target Price{useLtpDerived ? ' (+3%)' : targetIsEst ? ' (est.)' : ''}
                                  </p>
                                  <p className="text-xl font-display font-black text-positive">{fmt(displayTarget)}</p>
                                </div>
                                <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Entry Zone{useLtpDerived ? ' (at LTP)' : ''}
+                                   Entry Zone{useLtpDerived ? ' (at LTP)' : entryIsEst ? ' (est.)' : ''}
                                  </p>
                                  <p className="text-xl font-display font-black text-white">{fmt(displayEntry)}</p>
                                </div>
                                <div className="p-4 bg-black/40 rounded-xl border border-app-border">
                                  <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Stop Loss{useLtpDerived ? ' (-2%)' : ''}
+                                   Stop Loss{useLtpDerived ? ' (-2%)' : stopIsEst ? ' (est.)' : ''}
                                  </p>
                                  <p className="text-xl font-display font-black text-negative">{fmt(displayStop)}</p>
                                </div>
