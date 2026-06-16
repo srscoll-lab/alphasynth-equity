@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Button Color Test — Alphasynth</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ─── tokens (from landing-concept2.html) ────────────────────────────── */
+    :root {
+      --color-bg:           #0a0f1e;
+      --color-surface:      #111827;
+      --color-surface-card: #0f1628;
+      --color-border:       #1e2d4a;
+
+      --font-body: 'Inter', system-ui, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+      --space-2:  0.5rem;
+      --space-3:  0.75rem;
+      --space-5:  1.25rem;
+      --space-8:  2rem;
+      --space-10: 2.5rem;
+
+      --text-xs:   0.6875rem;
+      --text-base: 1rem;
+
+      --radius-md: 8px;
+
+      --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1.0);
+      --dur-base: 220ms;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--color-bg);
+      font-family: var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      padding: 3rem 2rem 4rem;
+      min-height: 100vh;
+    }
+
+    /* ─── page header ─────────────────────────────────────────────────────── */
+    .page-title {
+      color: #f1f5f9;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 0.375rem;
+    }
+    .page-subtitle {
+      color: #64748b;
+      font-size: 0.8125rem;
+      margin-bottom: 3rem;
+    }
+
+    /* ─── grid ────────────────────────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ─── card ────────────────────────────────────────────────────────────── */
+    .card {
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      padding: 1.75rem 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ─── label block ─────────────────────────────────────────────────────── */
+    .label-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    .color-name {
+      color: #94a3b8;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .hex-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .hex-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .hex-code {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #cbd5e1;
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── section divider ─────────────────────────────────────────────────── */
+    .section-label {
+      font-size: 0.5625rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #475569;
+      margin-bottom: 0.625rem;
+    }
+
+    /* ─── btn-primary (exact landing-concept2.html spec) ─────────────────── */
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-3);
+      padding: var(--space-5) var(--space-10);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+      width: 100%;
+      justify-content: center;
+    }
+    .btn-primary:hover {
+      opacity: 0.88;
+      transform: translateY(-2px);
+    }
+    .btn-primary:active { transform: translateY(0); box-shadow: none; }
+
+    /* ─── nav-launch (exact landing-concept2.html spec) ──────────────────── */
+    .nav-launch {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--space-2);
+      padding: 0.5rem var(--space-5);
+      font-family: var(--font-body);
+      font-size: var(--text-xs);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      text-decoration: none;
+      border: none;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: opacity var(--dur-base) var(--ease-out),
+                  transform var(--dur-base) var(--ease-out),
+                  box-shadow var(--dur-base) var(--ease-out);
+      white-space: nowrap;
+    }
+    .nav-launch:hover {
+      opacity: 0.88;
+      transform: translateY(-1px);
+    }
+    .nav-launch:active { transform: translateY(0); box-shadow: none; }
+
+    /* ─── per-color button tokens ─────────────────────────────────────────── */
+
+    /* 1 · #D4A843 — Current Bright Gold */
+    .c1 .btn-primary,
+    .c1 .nav-launch {
+      background: #D4A843;
+      color: #0a0f1e;
+      box-shadow: 0 4px 18px rgba(212, 168, 67, 0.20);
+    }
+    .c1 .btn-primary:hover {
+      box-shadow: 0 12px 36px rgba(212, 168, 67, 0.35);
+    }
+    .c1 .nav-launch:hover {
+      box-shadow: 0 6px 20px rgba(212, 168, 67, 0.35);
+    }
+    .c1.card { border-top: 2px solid rgba(212, 168, 67, 0.5); }
+    .c1 .card-tag { background: rgba(212,168,67,0.12); color: #D4A843; }
+
+    /* 2 · #C9912A — Warm Gold */
+    .c2 .btn-primary,
+    .c2 .nav-launch {
+      background: #C9912A;
+      color: #0a0f1e;
+      box-shadow: 0 4px 18px rgba(201, 145, 42, 0.20);
+    }
+    .c2 .btn-primary:hover {
+      box-shadow: 0 12px 36px rgba(201, 145, 42, 0.35);
+    }
+    .c2 .nav-launch:hover {
+      box-shadow: 0 6px 20px rgba(201, 145, 42, 0.35);
+    }
+    .c2.card { border-top: 2px solid rgba(201, 145, 42, 0.5); }
+    .c2 .card-tag { background: rgba(201,145,42,0.12); color: #C9912A; }
+
+    /* 3 · #C07A1E — Amber Gold */
+    .c3 .btn-primary,
+    .c3 .nav-launch {
+      background: #C07A1E;
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(192, 122, 30, 0.20);
+    }
+    .c3 .btn-primary:hover {
+      box-shadow: 0 12px 36px rgba(192, 122, 30, 0.35);
+    }
+    .c3 .nav-launch:hover {
+      box-shadow: 0 6px 20px rgba(192, 122, 30, 0.35);
+    }
+    .c3.card { border-top: 2px solid rgba(192, 122, 30, 0.5); }
+    .c3 .card-tag { background: rgba(192,122,30,0.12); color: #C07A1E; }
+
+    /* 4 · #B86A14 — Deep Amber */
+    .c4 .btn-primary,
+    .c4 .nav-launch {
+      background: #B86A14;
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(184, 106, 20, 0.20);
+    }
+    .c4 .btn-primary:hover {
+      box-shadow: 0 12px 36px rgba(184, 106, 20, 0.35);
+    }
+    .c4 .nav-launch:hover {
+      box-shadow: 0 6px 20px rgba(184, 106, 20, 0.35);
+    }
+    .c4.card { border-top: 2px solid rgba(184, 106, 20, 0.5); }
+    .c4 .card-tag { background: rgba(184,106,20,0.12); color: #D4850A; }
+
+    /* 5 · #A0520D — Burnt Sienna */
+    .c5 .btn-primary,
+    .c5 .nav-launch {
+      background: #A0520D;
+      color: #ffffff;
+      box-shadow: 0 4px 18px rgba(160, 82, 13, 0.20);
+    }
+    .c5 .btn-primary:hover {
+      box-shadow: 0 12px 36px rgba(160, 82, 13, 0.35);
+    }
+    .c5 .nav-launch:hover {
+      box-shadow: 0 6px 20px rgba(160, 82, 13, 0.35);
+    }
+    .c5.card { border-top: 2px solid rgba(160, 82, 13, 0.5); }
+    .c5 .card-tag { background: rgba(160,82,13,0.12); color: #C0622D; }
+
+    /* ─── card-tag chip ───────────────────────────────────────────────────── */
+    .card-tag {
+      display: inline-block;
+      font-size: 0.5625rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      margin-bottom: 0.25rem;
+    }
+
+    /* ─── button group ────────────────────────────────────────────────────── */
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.875rem;
+    }
+
+    /* ─── dark preview strip (simulates nav bar) ──────────────────────────── */
+    .nav-preview {
+      background: #0d1427;
+      border: 1px solid #1e2d4a;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .nav-preview-wordmark {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #475569;
+    }
+
+    /* ─── contrast note ───────────────────────────────────────────────────── */
+    .contrast-note {
+      font-size: 0.5625rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      text-align: center;
+      margin-top: 0.25rem;
+    }
+
+    /* ─── currently-deployed badge ────────────────────────────────────────── */
+    .deployed-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.5625rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #14b8a6;
+      background: rgba(20, 184, 166, 0.1);
+      border: 1px solid rgba(20, 184, 166, 0.25);
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+    }
+    .deployed-badge::before {
+      content: '';
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #14b8a6;
+      box-shadow: 0 0 6px rgba(20, 184, 166, 0.7);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+
+  <p class="page-title">Button Color Test — Hero &amp; Nav Pill Variants</p>
+  <p class="page-subtitle">Dark navy (#0a0f1e) background · exact landing-concept2.html sizing &amp; radius · hover to preview glow</p>
+
+  <div class="grid">
+
+    <!-- ── 1 · #D4A843 Current Bright Gold ──────────────────────────────── -->
+    <div class="card c1">
+      <div class="label-block">
+        <span class="deployed-badge">Live &amp; Deployed</span>
+        <span class="color-name" style="margin-top:0.5rem">Current Bright Gold</span>
+        <div class="hex-badge">
+          <span class="hex-swatch" style="background:#D4A843"></span>
+          <span class="hex-code">#D4A843</span>
+        </div>
+        <span class="card-tag">Text: #0a0f1e dark</span>
+      </div>
+
+      <div class="button-group">
+        <div>
+          <p class="section-label">Hero Button</p>
+          <button class="btn-primary">Launch App →</button>
+          <p class="contrast-note">padding 1.25rem 2.5rem · 1rem · bold</p>
+        </div>
+        <div>
+          <p class="section-label">Nav Pill</p>
+          <div class="nav-preview">
+            <span class="nav-preview-wordmark">Alphasynth</span>
+            <button class="nav-launch">LAUNCH APP →</button>
+          </div>
+          <p class="contrast-note">padding 0.5rem 1.25rem · 0.69rem · uppercase</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 2 · #C9912A Warm Gold ─────────────────────────────────────────── -->
+    <div class="card c2">
+      <div class="label-block">
+        <span class="color-name">Warm Gold</span>
+        <div class="hex-badge">
+          <span class="hex-swatch" style="background:#C9912A"></span>
+          <span class="hex-code">#C9912A</span>
+        </div>
+        <span class="card-tag">Text: #0a0f1e dark</span>
+      </div>
+
+      <div class="button-group">
+        <div>
+          <p class="section-label">Hero Button</p>
+          <button class="btn-primary">Launch App →</button>
+          <p class="contrast-note">padding 1.25rem 2.5rem · 1rem · bold</p>
+        </div>
+        <div>
+          <p class="section-label">Nav Pill</p>
+          <div class="nav-preview">
+            <span class="nav-preview-wordmark">Alphasynth</span>
+            <button class="nav-launch">LAUNCH APP →</button>
+          </div>
+          <p class="contrast-note">padding 0.5rem 1.25rem · 0.69rem · uppercase</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 3 · #C07A1E Amber Gold ─────────────────────────────────────────── -->
+    <div class="card c3">
+      <div class="label-block">
+        <span class="color-name">Amber Gold</span>
+        <div class="hex-badge">
+          <span class="hex-swatch" style="background:#C07A1E"></span>
+          <span class="hex-code">#C07A1E</span>
+        </div>
+        <span class="card-tag">Text: #ffffff white</span>
+      </div>
+
+      <div class="button-group">
+        <div>
+          <p class="section-label">Hero Button</p>
+          <button class="btn-primary">Launch App →</button>
+          <p class="contrast-note">padding 1.25rem 2.5rem · 1rem · bold</p>
+        </div>
+        <div>
+          <p class="section-label">Nav Pill</p>
+          <div class="nav-preview">
+            <span class="nav-preview-wordmark">Alphasynth</span>
+            <button class="nav-launch">LAUNCH APP →</button>
+          </div>
+          <p class="contrast-note">padding 0.5rem 1.25rem · 0.69rem · uppercase</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 4 · #B86A14 Deep Amber ─────────────────────────────────────────── -->
+    <div class="card c4">
+      <div class="label-block">
+        <span class="color-name">Deep Amber</span>
+        <div class="hex-badge">
+          <span class="hex-swatch" style="background:#B86A14"></span>
+          <span class="hex-code">#B86A14</span>
+        </div>
+        <span class="card-tag">Text: #ffffff white</span>
+      </div>
+
+      <div class="button-group">
+        <div>
+          <p class="section-label">Hero Button</p>
+          <button class="btn-primary">Launch App →</button>
+          <p class="contrast-note">padding 1.25rem 2.5rem · 1rem · bold</p>
+        </div>
+        <div>
+          <p class="section-label">Nav Pill</p>
+          <div class="nav-preview">
+            <span class="nav-preview-wordmark">Alphasynth</span>
+            <button class="nav-launch">LAUNCH APP →</button>
+          </div>
+          <p class="contrast-note">padding 0.5rem 1.25rem · 0.69rem · uppercase</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 5 · #A0520D Burnt Sienna ───────────────────────────────────────── -->
+    <div class="card c5">
+      <div class="label-block">
+        <span class="color-name">Burnt Sienna</span>
+        <div class="hex-badge">
+          <span class="hex-swatch" style="background:#A0520D"></span>
+          <span class="hex-code">#A0520D</span>
+        </div>
+        <span class="card-tag">Text: #ffffff white</span>
+      </div>
+
+      <div class="button-group">
+        <div>
+          <p class="section-label">Hero Button</p>
+          <button class="btn-primary">Launch App →</button>
+          <p class="contrast-note">padding 1.25rem 2.5rem · 1rem · bold</p>
+        </div>
+        <div>
+          <p class="section-label">Nav Pill</p>
+          <div class="nav-preview">
+            <span class="nav-preview-wordmark">Alphasynth</span>
+            <button class="nav-launch">LAUNCH APP →</button>
+          </div>
+          <p class="contrast-note">padding 0.5rem 1.25rem · 0.69rem · uppercase</p>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /grid -->
+
+</body>
+</html>
