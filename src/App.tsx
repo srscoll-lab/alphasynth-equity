@@ -361,8 +361,7 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('news');
-  const [view, setView] = useState<'landing' | 'app'>('landing');
+  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
   const [searchUrl, setSearchUrl] = useState('');
@@ -2771,224 +2770,6 @@ ${list}
     );
   }
 
-  if (view === 'landing') {
-    return (
-      <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30 overflow-x-hidden`}>
-        <nav className="fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50">
-          <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('landing')}>
-              <div className="w-8 h-8 bg-amber rounded flex items-center justify-center">
-                <TrendingUp className="text-black w-5 h-5" />
-              </div>
-              <span className="font-bold text-xl tracking-tight text-white">Alphasynth Intelligence</span>
-            </div>
-            <button 
-              onClick={() => { setView('app'); }}
-              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-widest bg-amber text-black rounded-lg hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(201,145,42,0.3)] hover:scale-105 active:scale-95 cursor-pointer"
-            >
-              <BarChart3 className="w-3.5 h-3.5" /> Open Terminal
-            </button>
-          </div>
-        </nav>
-
-        <section className="pt-32 pb-16 px-6 relative overflow-hidden">
-          {/* Glowing visual backdrop */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
-          <div className="max-w-4xl mx-auto text-center mt-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <span className="inline-block px-4 py-1.5 bg-app-surface border border-app-border rounded-full text-[9px] font-black uppercase tracking-widest text-gold mb-6 font-display">
-                AI-SYNTHESIZED EQUITY INTELLIGENCE COCKPIT
-              </span>
-              <h1 className="text-5xl md:text-7xl font-display font-black text-white italic tracking-tighter leading-none mb-6">
-                COGNITIVE AI <br/>RESEARCH & <span className="text-gold font-serif">ACTION GATEWAY.</span>
-              </h1>
-              <p className="text-zinc-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed mb-10 font-medium">
-                Harness specialized neural AI agents to scrape SEBI corporate disclosures, audit management meeting transcripts, and instantly generate pre-filled trades ready for single-click execution on India's premier brokerages.
-              </p>
-              
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-                 <button 
-                   onClick={() => { setView('app'); setActiveTab('news'); }}
-                   className="w-full sm:w-auto px-8 py-4 bg-amber text-black font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-amber transition-all hover:scale-105 active:scale-95 shadow-[0_10px_30px_rgba(201,145,42,0.3)] flex items-center justify-center gap-2 cursor-pointer"
-                 >
-                   <Zap className="w-4 h-4 fill-current animate-pulse" /> Launch Interactive Terminal
-                 </button>
-                 <button
-                   onClick={() => { setView('app'); setActiveTab('filings'); }}
-                   className="w-full sm:w-auto px-8 py-4 bg-zinc-900 border border-app-border text-zinc-300 font-black uppercase tracking-widest text-[10px] rounded-xl hover:border-zinc-750 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer"
-                 >
-                   <FileText className="w-4 h-4 text-gold" /> Go to Corporate Filings
-                 </button>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Quick Stats Grid */}
-        <section className="py-2.5 border-t border-b border-app-border bg-app-surface/20">
-          <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-             {[
-               { label: "GROUNDED ENGINE", val: "100% NSE/SEBI FILINGS" },
-               { label: "TRANSPARENCY SCORE", val: "MANAGEMENT TRANSCRIPTS AUDITING" },
-               { label: "SYSTEM GATEWAY", val: "ZERO-COST API BROKER NODE" }
-             ].map((stat, i) => (
-               <div key={i} className="py-3 flex flex-col items-center justify-center">
-                 <span className="text-[8px] font-black text-zinc-500 uppercase tracking-widest mb-1">{stat.label}</span>
-                 <span className="text-xs font-mono font-black text-white uppercase tracking-wider">{stat.val}</span>
-               </div>
-             ))}
-          </div>
-        </section>
-
-        {/* Bento-Grid Features Section */}
-        <section className="py-24 px-6 bg-app-bg relative">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-               <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">SYSTEM ARCHITECTURE</p>
-               <h2 className="text-3xl md:text-5xl font-display font-black text-white italic tracking-tighter">MODULAR RESEARCH CORE</h2>
-               <p className="text-zinc-500 text-xs max-w-md mx-auto mt-3 font-medium">Select any of the six professional terminal nodes below to bypass manual reports and dive straight into the analytical cockpit.</p>
-            </div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-               {[
-                 {
-                   tab: 'news' as const,
-                   title: '01. Market Intelligence Pulse',
-                   desc: 'Live regulatory compliance tracking, sector sentiment shift indexing, and real-time news impact score mapping.',
-                   badge: 'REAL-TIME SIGNALS',
-                   icon: Zap,
-                   accent: 'border-gold/30'
-                 },
-                 {
-                   tab: 'equity' as const,
-                   title: '02. Capital Conviction Lab',
-                   desc: 'Advanced bullish catalyst synthesis, deep-dive contrarian bear case exposure, and tactical entry valuation zones.',
-                   badge: 'VALUATION RESEARCH',
-                   icon: TrendingUp,
-                   accent: 'border-blue-500/30'
-                 },
-                 {
-                   tab: 'filings' as const,
-                   title: '03. SEBI Filings & Meet Transcripts',
-                   desc: 'Separate, highly-specialized module parsing investor analyst calls, audit disclosures, and executive reliability checklists.',
-                   badge: 'DEDICATED COGNITIVE AUDIT',
-                   icon: FileText,
-                   accent: 'border-yellow-500/30'
-                 },
-                 {
-                   tab: 'portfolio' as const,
-                   title: '04. Sector Correlation Studio',
-                   desc: 'Import your personal list of assets to discover secret sector overlaps, exposure stress-testing, and risk mitigation audits.',
-                   badge: 'PORTFOLIO HYPER-X-RAY',
-                   icon: Layout,
-                   accent: 'border-emerald-500/30'
-                 },
-                 {
-                   tab: 'marketing' as const,
-                   title: '05. Strategic Growth Engine',
-                   desc: 'Trace capital deployment efficiency coefficients, customer metric pipelines, and systemic competitive moats.',
-                   badge: 'HENCELING & SCALING METER',
-                   icon: BarChart3,
-                   accent: 'border-rose-500/30'
-                 },
-                 {
-                   tab: 'community' as const,
-                   title: '06. Social Arbitrage Radar',
-                   desc: 'Map retail stock-market forums, scrape community conversation density, and analyze speculative focus drift vectors.',
-                   badge: 'FORUM CONTAGION FLOW',
-                   icon: Users,
-                   accent: 'border-purple-500/30'
-                 }
-               ].map((node, i) => (
-                  <motion.div
-                    key={i}
-                    whileHover={{ y: -4, borderColor: 'rgba(196, 98, 45, 0.5)' }}
-                    onClick={() => { setView('app'); setActiveTab(node.tab); setTimeout(scrollToWorkflow, 100); }}
-                    className={`p-8 bg-app-surface border border-app-border rounded-3xl cursor-pointer transition-all flex flex-col justify-between group shadow-xl h-[260px] relative overflow-hidden text-left`}
-                  >
-                    <div className="absolute top-0 right-0 p-4 opacity-5 text-gold max-h-0 group-hover:opacity-10 transition-opacity">
-                      <node.icon className="w-24 h-24" />
-                    </div>
-                    <div>
-                       <div className="flex items-center justify-between mb-4">
-                          <span className="text-[8px] font-black px-2 py-0.5 rounded bg-zinc-900 border border-app-border text-zinc-400 group-hover:border-gold/30 group-hover:text-gold tracking-widest">{node.badge}</span>
-                          <node.icon className="w-4 h-4 text-zinc-500 group-hover:text-gold transition-colors" />
-                       </div>
-                       <h3 className="text-base font-bold text-zinc-100 group-hover:text-white mb-2 leading-tight font-display">{node.title}</h3>
-                       <p className="text-xs text-zinc-400 group-hover:text-zinc-300 leading-relaxed font-semibold line-clamp-3">{node.desc}</p>
-                    </div>
-                    <div className="text-[9px] font-black uppercase tracking-widest text-gold/80 flex items-center gap-1 mt-4">
-                      <Zap className="w-3 h-3 fill-current" /> Initialize Node Console →
-                    </div>
-                    <div className="absolute bottom-0 left-0 h-0.5 w-0 bg-amber group-hover:w-full transition-all duration-300" />
-                  </motion.div>
-               ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Interactive Live Terminal Feed Simulator */}
-        <section className="py-20 px-6 bg-app-surface/15 border-t border-app-border relative">
-          <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center text-left">
-            <div>
-               <p className="text-[10px] font-black text-gold uppercase tracking-widest mb-2">SYSTEM CONDUIT</p>
-               <h2 className="text-3xl md:text-5xl font-display font-black text-white italic tracking-tighter leading-none mb-6">SECURE DIRECT EDGE ANCHORING</h2>
-               <p className="text-zinc-400 text-xs leading-relaxed mb-6 font-semibold">Alphasynth Intelligence is equipped with zero-delay data scraping endpoints that extract authentic filing transcripts from company portals. Avoid delayed, watered-down second-hand newsletters.</p>
-               <div className="space-y-4">
-                  {[
-                    { title: "Dual-Pass Hallucination Filters", desc: "Verifies numbers against official quarterly balance sheets inside the vector layer." },
-                    { title: "CEO Guidance Reliability Auditing", desc: "Flags management when previous estimates deviate significantly from actual reports." }
-                  ].map((item, idx) => (
-                     <div key={idx} className="flex gap-4 p-4 border border-app-border rounded-2xl bg-app-bg/40">
-                        <div className="p-2 bg-gold/10 rounded-lg text-gold h-fit">
-                           <ShieldCheck className="w-5 h-5" />
-                         </div>
-                        <div>
-                           <h4 className="text-xs font-black text-zinc-200 uppercase tracking-wide mb-1">{item.title}</h4>
-                           <p className="text-[11px] text-zinc-500 leading-snug font-medium">{item.desc}</p>
-                        </div>
-                     </div>
-                  ))}
-               </div>
-            </div>
-
-            <div className="bg-zinc-950 border border-app-border rounded-3xl p-6 font-mono text-zinc-400 text-[10px] relative overflow-hidden shadow-2xl h-[340px]">
-               <div className="absolute top-0 left-0 w-full bg-zinc-900 border-b border-app-border px-6 py-2 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                     <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
-                     <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/40" />
-                     <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
-                  </div>
-                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-wider">CONDUIT_LOGS_STREAM.TXT</span>
-               </div>
-               
-               <div className="mt-8 space-y-3 leading-relaxed overflow-y-auto h-[250px] no-scrollbar">
-                  <p className="text-zinc-600 font-bold">[SYS] BOOTING ALPHASYNTH INSTANCES v4.0.2...</p>
-                  <p className="text-gold font-bold">[DB] SECURE KEY GRANTED: LOCAL_MOCK_ENV_ACTIVE</p>
-                  <p className="text-zinc-500">[FETCH] Connected to NSE India corporate disclosure servers.</p>
-                  <p className="text-zinc-500">[PARSER] Ingesting quarterly SEBI transcript docs for RELIANCE.NS</p>
-                  <p className="text-emerald-400 font-bold">[VERIFIER] Cross-matching PAT and EBITDA revisions against sector median.</p>
-                  <p className="text-zinc-500">[MODEL] Invoking Alphasynth AI-flash with compliance guidelines...</p>
-                  <p className="text-gold">[CONVICTION] Transcript Transparency Index parsed at 8.7/10 (High Quality)</p>
-                  <p className="text-zinc-500">[SYSTEM] Session active. Standby for new user commands...</p>
-               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Minimalist Footer */}
-        <footer className="py-12 border-t border-app-border text-center text-zinc-600 bg-app-bg text-[10px] font-bold uppercase tracking-widest">
-          <p className="mb-2">© 2026 ALPHASYNTH INTELLIGENCE • ALL SYSTEMS DISCLOSORIES SHIELDED</p>
-          <p className="text-[8px] text-zinc-750">Financial data loaded by high-speed neural search nodes. Disclaimer: No financial advisory model provided.</p>
-        </footer>
-      </div>
-    );
-  }
-
   return (
     <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30`}>
       <AnimatePresence>
@@ -3350,26 +3131,13 @@ ${list}
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50`}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div 
-            className="flex items-center gap-2 cursor-pointer group"
-            onClick={() => setView('landing')}
-          >
+          <a href="/" className="flex items-center gap-2 group">
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
             </div>
             <span className="font-bold text-xl tracking-tight text-white group-hover:text-gold transition-colors">Alphasynth Intelligence</span>
-          </div>
+          </a>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={() => {
-                setView('landing');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="flex items-center gap-2 px-3 py-1.5 bg-amber border border-gold rounded-lg text-[10px] font-black uppercase tracking-widest text-black hover:bg-white transition-all group shadow-[0_0_20px_rgba(201,145,42,0.4)]"
-            >
-              <Zap className="w-3 h-3 group-hover:animate-pulse fill-current" />
-              Landing Summary
-            </button>
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                <button onClick={() => { setActiveTab('news'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
                <button onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
