@@ -5074,12 +5074,12 @@ ${list}
       {/* Footer */}
       <footer className={`py-12 border-t ${COLORS.border} px-6`}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="flex items-center gap-2">
+          <a href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className={`w-6 h-6 ${COLORS.accentBg} rounded flex items-center justify-center`}>
               <TrendingUp className="text-black w-4 h-4" />
             </div>
             <span className="font-bold text-lg tracking-tight">Alphasynth Intelligence</span>
-          </div>
+          </a>
           <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-zinc-500">
             <a href="#" className="hover:text-gold transition-colors">Twitter</a>
             <a href="#" className="hover:text-gold transition-colors">LinkedIn</a>
