@@ -2003,7 +2003,7 @@
     if (tsEl)  tsEl.textContent  = 'Last updated: ' + snapLabel + ' · ' + dateStr;
   }());
 
-  /* ── Hero section canvas — grid + 3 smooth flowing chart lines ───────────── */
+  /* ── Hero — City Skyline in Candlesticks ────────────────────────────────── */
   (function () {
     var section = document.querySelector('.hero');
     var canvas  = document.getElementById('hero-canvas');
@@ -2011,20 +2011,19 @@
 
     var ctx = canvas.getContext('2d');
     var W = 0, H = 0, raf;
+    var scrollY = 0;
+    var t = 0;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* Colour helpers — gold grid, market green (uptrend), market red (downtrend) */
-    function gold(a)  { return 'rgba(196,162,88,'  + a + ')'; }
-    function green(a) { return 'rgba(0,200,83,'    + a + ')'; }
-    function red(a)   { return 'rgba(255,61,87,'   + a + ')'; }
+    window.addEventListener('scroll', function () {
+      scrollY = window.pageYOffset || document.documentElement.scrollTop;
+    }, { passive: true });
 
-    /* Size canvas to match the live hero section dimensions */
     function resize() {
       W = canvas.width  = section.offsetWidth;
       H = canvas.height = section.offsetHeight;
     }
     resize();
-
-    /* Re-measure on resize — ResizeObserver is more accurate than window resize */
     if (window.ResizeObserver) {
       new ResizeObserver(resize).observe(section);
     } else {
@@ -2032,122 +2031,285 @@
     }
 
     /*
-     * Three flowing line series.
-     * Each line is a composite of three slow sine waves so it curves
-     * organically without any randomness (never jittery).
-     *
-     * base   — vertical centre as fraction of canvas height
-     * amp    — vertical swing amplitude as fraction of canvas height
-     * freq   — horizontal wave cycles across the canvas width (in radians)
-     * speed  — time advance per frame in radians (controls how slow)
-     * offset — phase shift so each line looks independent
+     * 28 candlestick buildings.
+     * [xFrac, heightFrac, bodyW, type, wickFrac, speed, phase]
+     *   xFrac      — x-centre as fraction of W
+     *   heightFrac — body height as fraction of skyline zone (1.0 = tallest)
+     *   bodyW      — base pixel width of body rect
+     *   type       — 0 dark silhouette, 1 green-tinted, 2 red-tinted
+     *   wickFrac   — upper wick length as fraction of body height
+     *   speed      — breathing frequency in rad/frame (2π/speed = period in frames)
+     *   phase      — initial phase so candles breathe out of sync
      */
-    /* Lines kept in upper (≤30%) and lower (≥70%) bands to frame text, not cross it */
-    var SERIES = [
-      { base: 0.13, amp: 0.07, freq: 4.40, speed: 0.0036, offset: 0.000 },
-      { base: 0.24, amp: 0.08, freq: 3.15, speed: 0.0024, offset: 2.094 },
-      { base: 0.84, amp: 0.07, freq: 5.20, speed: 0.0018, offset: 4.189 },
+    var D = 0, G = 1, R = 2;
+    var BLDG = [
+      /* far left — short */
+      [0.022, 0.20, 28, D, 0.30, 0.0145, 0.00],
+      [0.055, 0.28, 24, R, 0.25, 0.0170, 0.80],
+      [0.088, 0.38, 30, D, 0.32, 0.0130, 1.60],
+      [0.122, 0.50, 26, G, 0.28, 0.0185, 2.40],
+      /* rising left */
+      [0.158, 0.60, 32, D, 0.35, 0.0155, 3.20],
+      [0.196, 0.68, 28, R, 0.38, 0.0175, 4.00],
+      [0.233, 0.76, 34, D, 0.40, 0.0135, 4.80],
+      /* left cluster */
+      [0.270, 0.84, 38, G, 0.45, 0.0160, 5.60],
+      [0.306, 0.90, 42, D, 0.50, 0.0140, 0.40],
+      /* central skyscrapers */
+      [0.342, 0.95, 46, G, 0.55, 0.0150, 1.20],
+      [0.378, 0.98, 50, R, 0.58, 0.0130, 2.00],
+      [0.414, 1.00, 54, D, 0.65, 0.0125, 2.80], /* tallest */
+      [0.450, 0.97, 48, G, 0.60, 0.0145, 3.60],
+      /* second cluster */
+      [0.484, 0.92, 44, R, 0.52, 0.0165, 4.40],
+      [0.516, 0.87, 40, D, 0.45, 0.0135, 5.20],
+      /* central medium */
+      [0.547, 0.79, 36, G, 0.38, 0.0175, 6.00],
+      [0.577, 0.73, 32, D, 0.32, 0.0155, 0.60],
+      /* right cluster building up */
+      [0.609, 0.80, 36, R, 0.38, 0.0160, 1.40],
+      [0.642, 0.88, 40, D, 0.44, 0.0135, 2.20],
+      [0.675, 0.92, 44, G, 0.48, 0.0150, 3.00],
+      [0.708, 0.85, 38, R, 0.42, 0.0170, 3.80],
+      /* descending right */
+      [0.740, 0.75, 34, D, 0.35, 0.0145, 4.60],
+      [0.772, 0.63, 30, G, 0.30, 0.0165, 5.40],
+      [0.804, 0.51, 28, D, 0.26, 0.0135, 6.20],
+      [0.836, 0.40, 26, R, 0.22, 0.0175, 0.80],
+      /* far right — short */
+      [0.866, 0.30, 24, D, 0.20, 0.0155, 1.60],
+      [0.896, 0.21, 22, G, 0.18, 0.0160, 2.40],
+      [0.928, 0.14, 20, D, 0.14, 0.0145, 3.20],
     ];
 
-    /* colour function + opacity per line — green, green, red */
-    var LINE_COLOR = [green, green, red];
-    var ALPHA       = [0.40, 0.38, 0.40];
-    var t = 0;                        /* global time accumulator */
+    /* Cloud wisps — [xFrac, yFrac, widthFrac, heightFrac, opacity, driftSpeed] */
+    var WISPS = [
+      { x: 0.05,  y: 0.15, w: 0.30, h: 0.045, a: 0.09, s: 0.000280 },
+      { x: 0.48,  y: 0.26, w: 0.26, h: 0.038, a: 0.11, s: 0.000210 },
+      { x: 0.72,  y: 0.10, w: 0.23, h: 0.032, a: 0.08, s: 0.000340 },
+      { x: 0.22,  y: 0.38, w: 0.29, h: 0.040, a: 0.10, s: 0.000255 },
+    ];
 
-    /* Compute y (pixels) for series s at horizontal position x, given time t */
-    function lineY(s, x) {
-      var phase = (x / W) * s.freq;
-      return H * (
-        s.base +
-        s.amp * (
-          Math.sin(phase + t * s.speed)                                * 0.55 +
-          Math.sin(phase * 1.618 + t * s.speed * 1.40 + s.offset)     * 0.28 +
-          Math.sin(phase * 2.618 + t * s.speed * 0.75 + s.offset * 1.7) * 0.17
-        )
-      );
+    /* Colour sets per building type: fill, border, moonlight-edge */
+    var COL = [
+      { f: 'rgba(13,21,38,0.93)',  b: 'rgba(30,45,74,0.60)',   m: 'rgba(125,211,252,0.17)' },
+      { f: 'rgba(6,78,59,0.32)',   b: 'rgba(0,200,83,0.52)',   m: 'rgba(125,211,252,0.22)' },
+      { f: 'rgba(76,5,25,0.32)',   b: 'rgba(255,61,87,0.52)',  m: 'rgba(125,211,252,0.18)' },
+    ];
+
+    /* Skyline zone bounds — buildings live between skyTop and skyBot */
+    function sky() {
+      return { top: H * 0.62, bot: H * 0.85, h: H * 0.23 };
     }
 
-    /* Draw the static grid — horizontal + vertical thin gold lines */
-    function drawGrid() {
+    /* ── 1. Sky gradient with parallax ── */
+    function drawSky() {
+      var p    = Math.min(scrollY * 0.22, H * 0.25);
+      var grad = ctx.createLinearGradient(0, -p, 0, H - p * 0.4);
+      grad.addColorStop(0.00, '#0a0f1e');
+      grad.addColorStop(0.22, '#0c1628');
+      grad.addColorStop(0.48, '#0f1f3d');
+      grad.addColorStop(0.63, '#183550');
+      grad.addColorStop(0.74, '#0f1a2e');
+      grad.addColorStop(1.00, '#070c18');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      /* Radial horizon glow */
+      var hy = H * 0.63 - scrollY * 0.18;
+      var rg = ctx.createRadialGradient(W * 0.5, hy, 0, W * 0.5, hy, W * 0.55);
+      rg.addColorStop(0.0, 'rgba(28,75,115,0.24)');
+      rg.addColorStop(0.5, 'rgba(14,48,82,0.12)');
+      rg.addColorStop(1.0, 'rgba(0,0,0,0)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    /* ── 2. Cloud wisps (slow horizontal drift + subtle parallax) ── */
+    function drawWisps() {
+      var pY = scrollY * 0.12;
+      WISPS.forEach(function (w) {
+        var xPos = ((w.x + w.s * t) % 1.3) - 0.15;
+        var cx   = xPos * W;
+        var cy   = w.y * H - pY;
+        var rx   = w.w * W * 0.5;
+        var ry   = w.h * H * 0.5;
+        if (rx < 1) return;
+        var gr = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+        gr.addColorStop(0.0, 'rgba(125,211,252,' + w.a + ')');
+        gr.addColorStop(0.5, 'rgba(125,211,252,' + (w.a * 0.55) + ')');
+        gr.addColorStop(1.0, 'rgba(125,211,252,0)');
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.scale(1.0, ry / rx);
+        ctx.beginPath();
+        ctx.arc(0, 0, rx, 0, Math.PI * 2);
+        ctx.fillStyle = gr;
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    /* ── 3. Draw all buildings (shared by main pass and reflection) ── */
+    function drawBuildings(globalAlpha, isReflection, wavePhase) {
+      var sk      = sky();
+      var mobile  = W < 680;
+      /* Mobile: keep tallest ~14 buildings */
+      var list = mobile
+        ? BLDG.filter(function (b, i) { return b[1] >= 0.60 || i % 3 === 0; })
+        : BLDG;
+
       ctx.save();
-      ctx.strokeStyle = gold(0.10);
-      ctx.lineWidth   = 0.5;
+      ctx.globalAlpha = globalAlpha;
 
-      /* Horizontal lines */
-      var hCount = 9;
-      for (var r = 1; r < hCount; r++) {
-        var y = (H / hCount) * r;
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
+      list.forEach(function (b, idx) {
+        var xf  = b[0], hf = b[1], bw = b[2] * (mobile ? 0.70 : 1.0);
+        var ct  = b[3], wf = b[4], sp = b[5], ph = b[6];
 
-      /* Vertical lines */
-      var vCount = 13;
-      for (var c = 1; c < vCount; c++) {
-        var x = (W / vCount) * c;
+        /* Breathing: ±3.8% height variation */
+        var breathe = 1.0 + Math.sin(t * sp + ph) * 0.038;
+        var bh      = hf * sk.h * breathe;
+        var cx      = xf * W + (isReflection ? Math.sin(wavePhase + idx * 0.55) * 3.0 : 0);
+        var bL      = cx - bw * 0.5;
+        var bTop    = sk.bot - bh;
+        var wickLen = wf * bh * 0.38;
+        var wickTip = bTop - wickLen;
+        var c       = COL[ct];
+
+        /* Body */
         ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, H);
+        ctx.rect(bL, bTop, bw, bh);
+        ctx.fillStyle   = c.f;
+        ctx.fill();
+        ctx.strokeStyle = c.b;
+        ctx.lineWidth   = 1;
         ctx.stroke();
-      }
+
+        if (!isReflection) {
+          /* Moonlight left-edge glow */
+          ctx.save();
+          ctx.strokeStyle = c.m;
+          ctx.lineWidth   = 2;
+          ctx.beginPath();
+          ctx.moveTo(bL + 1.5, bTop + 2);
+          ctx.lineTo(bL + 1.5, sk.bot - 2);
+          ctx.stroke();
+          ctx.restore();
+
+          /* Upper wick shaft */
+          ctx.save();
+          ctx.strokeStyle = 'rgba(125,211,252,0.30)';
+          ctx.lineWidth   = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, bTop);
+          ctx.lineTo(cx, wickTip + 5);
+          ctx.stroke();
+
+          /* Glowing wick tip — pulses on ~3 s cycle (0.038 rad/frame ≈ 165 frames ≈ 2.75 s) */
+          var glow = 0.60 + Math.sin(t * 0.038 + ph) * 0.40;
+          ctx.shadowColor = '#7DD3FC';
+          ctx.shadowBlur  = 10;
+          ctx.strokeStyle = 'rgba(125,211,252,' + glow + ')';
+          ctx.lineWidth   = 2.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, wickTip + 5);
+          ctx.lineTo(cx, wickTip);
+          ctx.stroke();
+          ctx.shadowBlur  = 0;
+          ctx.restore();
+
+          /* Short bottom wick */
+          ctx.save();
+          ctx.strokeStyle = 'rgba(20,35,60,0.50)';
+          ctx.lineWidth   = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(cx, sk.bot);
+          ctx.lineTo(cx, sk.bot + bh * 0.04);
+          ctx.stroke();
+          ctx.restore();
+
+        } else {
+          /* Reflection: faint wick stub only, no glow */
+          ctx.save();
+          ctx.strokeStyle = 'rgba(125,211,252,0.12)';
+          ctx.lineWidth   = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, bTop);
+          ctx.lineTo(cx, bTop - wickLen * 0.4);
+          ctx.stroke();
+          ctx.restore();
+        }
+      });
 
       ctx.restore();
     }
 
-    /*
-     * Draw one flowing series using midpoint quadratic Bézier interpolation
-     * so the path is smooth even at low point counts.
-     */
-    function drawLine(s, colorFn, alpha) {
-      /* One sample every 3px gives smooth curves without heavy computation */
-      var steps = Math.ceil(W / 3);
-      if (steps < 2) return;
+    /* ── 4. Water reflection strip ── */
+    function drawReflection() {
+      var sk = sky();
+      var rH = H - sk.bot;
+      if (rH < 10) return;
 
-      /* Build point array */
-      var pts = new Array(steps + 1);
-      for (var i = 0; i <= steps; i++) {
-        var px = (i / steps) * W;
-        pts[i] = { x: px, y: lineY(s, px) };
-      }
-
+      /* Flip around the water line (sk.bot) */
       ctx.save();
-      ctx.strokeStyle = colorFn(alpha);
-      ctx.lineWidth   = 1.5;
-      ctx.lineJoin    = 'round';
-      ctx.lineCap     = 'round';
       ctx.beginPath();
+      ctx.rect(0, sk.bot, W, rH);
+      ctx.clip();
+      ctx.translate(0, sk.bot * 2);
+      ctx.scale(1, -1);
+      drawBuildings(0.18, true, t * 0.018);
+      ctx.restore();
 
-      ctx.moveTo(pts[0].x, pts[0].y);
+      /* Dark gradient fades the reflection out toward the bottom */
+      var wg = ctx.createLinearGradient(0, sk.bot, 0, H);
+      wg.addColorStop(0.0, 'rgba(7,12,24,0.0)');
+      wg.addColorStop(0.3, 'rgba(7,12,24,0.45)');
+      wg.addColorStop(1.0, 'rgba(7,12,24,0.90)');
+      ctx.fillStyle = wg;
+      ctx.fillRect(0, sk.bot, W, rH);
 
-      /* Midpoint quadratic Bézier — control point at pts[i], target at midpoint */
-      for (var j = 1; j < pts.length - 1; j++) {
-        var mx = (pts[j].x + pts[j + 1].x) * 0.5;
-        var my = (pts[j].y + pts[j + 1].y) * 0.5;
-        ctx.quadraticCurveTo(pts[j].x, pts[j].y, mx, my);
+      /* Shimmering water surface lines */
+      ctx.save();
+      ctx.globalAlpha = 0.055;
+      ctx.strokeStyle = '#7DD3FC';
+      ctx.lineWidth   = 1;
+      for (var i = 0; i < 5; i++) {
+        var wy = sk.bot + rH * (0.18 + i * 0.17);
+        ctx.beginPath();
+        for (var x = 0; x < W; x += 3) {
+          var yd = wy + Math.sin(x * 0.025 + t * 0.012 + i * 1.4) * 1.8;
+          if (x === 0) ctx.moveTo(x, yd); else ctx.lineTo(x, yd);
+        }
+        ctx.stroke();
       }
-      /* Close the last segment to the final point */
-      ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-
-      ctx.stroke();
       ctx.restore();
     }
 
+    /* ── 5. Text-legibility gradient overlay ── */
+    function drawOverlay() {
+      var grad = ctx.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0.00, 'rgba(10,15,30,0.00)');
+      grad.addColorStop(0.30, 'rgba(10,15,30,0.08)');
+      grad.addColorStop(0.52, 'rgba(10,15,30,0.38)');
+      grad.addColorStop(0.72, 'rgba(10,15,30,0.60)');
+      grad.addColorStop(1.00, 'rgba(10,15,30,0.82)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    /* ── Main loop ── */
     function frame() {
       ctx.clearRect(0, 0, W, H);
-
-      drawGrid();
-      drawLine(SERIES[0], LINE_COLOR[0], ALPHA[0]);
-      drawLine(SERIES[1], LINE_COLOR[1], ALPHA[1]);
-      drawLine(SERIES[2], LINE_COLOR[2], ALPHA[2]);
-
-      t++;
+      drawSky();
+      drawWisps();
+      drawBuildings(1.0, false, 0);
+      drawReflection();
+      drawOverlay();
+      if (!reduced) t++;
       raf = requestAnimationFrame(frame);
     }
 
-    /* Honour prefers-reduced-motion — one static frame, no loop */
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (reduced) {
       frame();
       cancelAnimationFrame(raf);
     } else {
