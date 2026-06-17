@@ -672,6 +672,8 @@ export default function App() {
   const [backendConfig, setBackendConfig] = useState<{scraper: boolean, mailer: boolean}>({scraper: false, mailer: false});
   const auditContentRef = useRef<HTMLDivElement>(null);
   const reportContentRef = useRef<HTMLDivElement>(null);
+  // Abort controller for the active SSE stream — cancels any in-flight stream when a new analysis starts
+  const streamAbortRef = useRef<AbortController | null>(null);
 
 
 
@@ -1701,6 +1703,12 @@ ${list}
       return;
     }
 
+    // Cancel any in-flight SSE stream from a previous analysis before starting a new one
+    if (streamAbortRef.current) {
+      streamAbortRef.current.abort();
+      streamAbortRef.current = null;
+    }
+
     setAnalyzing(true);
     setTickerValidationFailed(false);
     if (!keepReportOpen) {
@@ -1809,11 +1817,14 @@ ${list}
       setReportFromCache(false);
       const activeMode = targetMode || workflowMode;
 
-      // ── Streaming SSE fetch ────────────────────────────────────────────────
+      // ── Streaming SSE fetch — abortable so switching tickers cancels the old stream ──
+      const streamAbort = new AbortController();
+      streamAbortRef.current = streamAbort;
       const streamRes = await fetch("/api/pipeline/analyze/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker, context: scrapedMarkdown.substring(0, 10000), mode: activeMode })
+        body: JSON.stringify({ ticker, context: scrapedMarkdown.substring(0, 10000), mode: activeMode }),
+        signal: streamAbort.signal
       });
 
       if (!streamRes.ok) {
@@ -1862,8 +1873,13 @@ ${list}
             }
           }
         }
+      } catch (streamReadErr: any) {
+        // AbortError means a new analysis was started — silently discard this stream
+        if (streamReadErr.name === 'AbortError') return;
+        throw streamReadErr;
       } finally {
         reader.releaseLock();
+        if (streamAbortRef.current === streamAbort) streamAbortRef.current = null;
       }
 
       const report = accumulated;
