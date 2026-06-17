@@ -678,6 +678,13 @@ export default function App() {
   // Any async callback that holds an older generation discards its result silently.
   const analysisGenRef = useRef(0);
 
+  // Share Scorecard refs + state
+  const scorecardSquareRef = useRef<HTMLDivElement>(null);
+  const scorecardPortraitRef = useRef<HTMLDivElement>(null);
+  const scorecardLandscapeRef = useRef<HTMLDivElement>(null);
+  const [sharingScorecard, setSharingScorecard] = useState<false | 'generating' | 'done'>(false);
+  const [scorecardMobileUrl, setScorecardMobileUrl] = useState<string | null>(null);
+
 
 
   const handleExportPDF = () => {
@@ -688,6 +695,42 @@ export default function App() {
         return;
     }
     exportToPDF(auditContentRef.current?.innerHTML || portfolioAudit, `Institutional-Portfolio-Audit-${new Date().toISOString().slice(0, 10)}`);
+  };
+
+  const shareScorecard = async () => {
+    if (!earningsIntelReport || !lastReport) return;
+    setSharingScorecard('generating');
+    setScorecardMobileUrl(null);
+    try {
+      const h2c = (window as any).html2canvas;
+      if (!h2c) throw new Error('html2canvas not loaded');
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const configs = [
+        { ref: scorecardSquareRef,   name: `alphasynth-${lastReport.ticker}-square.png` },
+        { ref: scorecardPortraitRef, name: `alphasynth-${lastReport.ticker}-portrait.png` },
+        { ref: scorecardLandscapeRef,name: `alphasynth-${lastReport.ticker}-landscape.png` },
+      ];
+      for (const { ref, name } of configs) {
+        if (!ref.current) continue;
+        const canvas = await h2c(ref.current, { backgroundColor: '#0a0f1e', scale: 1, useCORS: true, logging: false, allowTaint: true });
+        const url = canvas.toDataURL('image/png');
+        if (isMobile) {
+          setScorecardMobileUrl(url);
+        } else {
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+      }
+      setSharingScorecard('done');
+      setTimeout(() => setSharingScorecard(false), 2500);
+    } catch (err) {
+      console.error('[SCORECARD] Generation failed:', err);
+      setSharingScorecard(false);
+    }
   };
 
   const exportToPDF = (content: string, filename: string) => {
@@ -2694,8 +2737,23 @@ ${list}
                   )}
 
                   <div className="pt-8 border-t border-app-border flex flex-col md:flex-row items-center justify-between gap-6">
-                    <div className="flex items-center gap-4">
-                      <button 
+                    <div className="flex items-center gap-4 flex-wrap">
+                      {lastReport.mode === 'earnings_intelligence' && earningsIntelReport && (
+                        <button
+                          onClick={shareScorecard}
+                          disabled={sharingScorecard === 'generating'}
+                          className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 bg-[#C9912A] text-black hover:bg-amber disabled:opacity-60"
+                        >
+                          {sharingScorecard === 'generating' ? (
+                            <><div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</>
+                          ) : sharingScorecard === 'done' ? (
+                            <><Share2 className="w-3.5 h-3.5" /> Downloaded! ✓</>
+                          ) : (
+                            <><Share2 className="w-3.5 h-3.5" /> Share Scorecard</>
+                          )}
+                        </button>
+                      )}
+                      <button
                         onClick={handleExportPDF}
                         className="px-6 py-2.5 bg-app-surface border border-app-border rounded-xl text-[10px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all flex items-center gap-2"
                       >
@@ -5613,6 +5671,208 @@ ${list}
           </div>
         )}
       </AnimatePresence>
+
+      {/* ── Hidden Scorecard Canvases — off-screen, captured by html2canvas ─── */}
+      {earningsIntelReport && lastReport?.mode === 'earnings_intelligence' && (() => {
+        const tkr = lastReport.ticker || '';
+        const quarter = earningsIntelReport.currentQuarter || 'Latest Quarter';
+        const score = earningsIntelReport.reliabilityScore ?? '—';
+        const rating = (lastReport.rating || 'hold').toUpperCase();
+        const ratingColor = rating === 'BUY' ? '#10b981' : rating === 'SELL' ? '#ef4444' : '#C9912A';
+        const eiLtp = scripLtp > 0 && scripLtpTicker === tkr ? scripLtp : (lastReport.parsedLtp || 0);
+        const rawTgt = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : 0;
+        const fmtPrice = (n: number) => n > 0 ? `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
+        const stripMd = (s: string = '') => s.replace(/[#*_`[\]()>~]/g, '').replace(/\n+/g, ' ').trim();
+        const promises = (earningsIntelReport.managementPromises || []).slice(0, 4);
+        const bullSnippet = stripMd(earningsIntelReport.guidanceOutlook || '').substring(0, 90) || '—';
+        const bearSnippet = stripMd(earningsIntelReport.redFlagsAndSentiment || '').substring(0, 90) || '—';
+        const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+        const BASE: React.CSSProperties = {
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+          backgroundColor: '#0a0f1e',
+          color: '#ffffff',
+          position: 'fixed',
+          top: 0,
+          left: '-9999px',
+          overflow: 'hidden',
+        };
+
+        const PromiseRow = ({ p }: { p: any }) => {
+          const st = (p.status || '').toLowerCase();
+          const kept = st === 'kept'; const missed = st === 'missed';
+          const icon = kept ? '✓' : missed ? '✗' : '◷';
+          const color = kept ? '#10b981' : missed ? '#ef4444' : '#f59e0b';
+          const label = kept ? 'DELIVERED' : missed ? 'MISSED' : 'PENDING';
+          const badge: React.CSSProperties = { backgroundColor: color + '22', color, border: `1px solid ${color}55`, borderRadius: 4, padding: '2px 7px', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em', whiteSpace: 'nowrap' as const };
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+              <span style={{ color, fontWeight: 900, width: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ fontSize: 11, color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{(p.promise || '').substring(0, 52)}</span>
+              <span style={badge}>{label}</span>
+            </div>
+          );
+        };
+
+        const Header = () => (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <span style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const }}>ALPHASYNTH INTELLIGENCE</span>
+            <span style={{ color: '#C9912A', fontSize: 16 }}>◈</span>
+          </div>
+        );
+
+        const Divider = () => <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 16 }} />;
+
+        const Footer = ({ pad = 0 }: { pad?: number }) => (
+          <div style={{ marginTop: pad || 16 }}>
+            <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 10 }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ color: '#94a3b8', fontSize: 10 }}>alphasynth.app</span>
+              <span style={{ color: '#94a3b8', fontSize: 10 }}>{today}</span>
+              <span style={{ color: '#C9912A', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em' }}>PROFESSIONAL INDIAN MARKET INTELLIGENCE</span>
+            </div>
+            <div style={{ marginTop: 6, textAlign: 'center' as const }}>
+              <span style={{ color: '#475569', fontSize: 8 }}>Not financial advice. For informational purposes only.</span>
+            </div>
+          </div>
+        );
+
+        const PriceCard = ({ label, value, color = '#ffffff' }: { label: string; value: string; color?: string }) => (
+          <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 10, padding: '12px 14px' }}>
+            <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{label}</div>
+            <div style={{ color, fontSize: 20, fontWeight: 900 }}>{value}</div>
+          </div>
+        );
+
+        return (
+          <>
+            {/* SQUARE 1080×1080 */}
+            <div ref={scorecardSquareRef} style={{ ...BASE, width: 1080, height: 1080, padding: 60 }}>
+              <Header />
+              <Divider />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 700, marginTop: 6 }}>{quarter}</div>
+                </div>
+                <div style={{ textAlign: 'right' as const }}>
+                  <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 8, padding: '6px 20px', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 6 }}>Analyst Rating</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
+                <PriceCard label="LTP" value={fmtPrice(eiLtp)} />
+                <PriceCard label="Target Price" value={fmtPrice(rawTgt)} color="#C9912A" />
+                <PriceCard label="Reliability Score" value={`${score}/10`} color={Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444'} />
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ color: '#C9912A', fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 12 }}>PROMISE vs DELIVERY</div>
+                {promises.length > 0 ? promises.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked for this quarter.</div>}
+              </div>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+                <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 10, padding: 16 }}>
+                  <div style={{ color: '#10b981', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BULL CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bullSnippet}{bullSnippet.length >= 90 ? '…' : ''}</div>
+                </div>
+                <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 10, padding: 16 }}>
+                  <div style={{ color: '#ef4444', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BEAR CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bearSnippet}{bearSnippet.length >= 90 ? '…' : ''}</div>
+                </div>
+              </div>
+              <Footer />
+            </div>
+
+            {/* PORTRAIT 1080×1920 */}
+            <div ref={scorecardPortraitRef} style={{ ...BASE, width: 1080, height: 1920, padding: 80 }}>
+              <Header />
+              <Divider />
+              <div style={{ textAlign: 'center' as const, margin: '40px 0 30px' }}>
+                <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>{tkr}</div>
+                <div style={{ color: '#C9912A', fontSize: 18, fontWeight: 700, marginTop: 10 }}>{quarter}</div>
+                <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 10, padding: '8px 28px', fontSize: 16, fontWeight: 900, letterSpacing: '0.18em', marginTop: 16 }}>{rating}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 16, marginBottom: 48 }}>
+                <PriceCard label="LTP" value={fmtPrice(eiLtp)} />
+                <PriceCard label="Target" value={fmtPrice(rawTgt)} color="#C9912A" />
+                <PriceCard label="Reliability" value={`${score}/10`} color={Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444'} />
+              </div>
+              <div style={{ marginBottom: 48 }}>
+                <div style={{ color: '#C9912A', fontSize: 13, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 18 }}>PROMISE vs DELIVERY</div>
+                {promises.length > 0 ? promises.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 13 }}>No promises tracked.</div>}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16, marginBottom: 48 }}>
+                <div style={{ backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 14, padding: 24 }}>
+                  <div style={{ color: '#10b981', fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 10 }}>BULL CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.6 }}>{bullSnippet}{bullSnippet.length >= 90 ? '…' : ''}</div>
+                </div>
+                <div style={{ backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 14, padding: 24 }}>
+                  <div style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 10 }}>BEAR CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.6 }}>{bearSnippet}{bearSnippet.length >= 90 ? '…' : ''}</div>
+                </div>
+              </div>
+              <Footer pad={40} />
+            </div>
+
+            {/* LANDSCAPE 1200×630 */}
+            <div ref={scorecardLandscapeRef} style={{ ...BASE, width: 1200, height: 630, padding: 48 }}>
+              <div style={{ display: 'flex', gap: 48, height: '100%' }}>
+                {/* Left column */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const }}>
+                  <Header />
+                  <Divider />
+                  <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1, marginBottom: 6 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{quarter}</div>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+                    <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 6, padding: '4px 14px', fontSize: 12, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 'auto' as const }}>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>LTP</div>
+                      <div style={{ color: '#ffffff', fontSize: 15, fontWeight: 900 }}>{fmtPrice(eiLtp)}</div>
+                    </div>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>TARGET</div>
+                      <div style={{ color: '#C9912A', fontSize: 15, fontWeight: 900 }}>{fmtPrice(rawTgt)}</div>
+                    </div>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>RELIABILITY</div>
+                      <div style={{ color: Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444', fontSize: 15, fontWeight: 900 }}>{score}/10</div>
+                    </div>
+                  </div>
+                  <Footer />
+                </div>
+                {/* Divider */}
+                <div style={{ width: 1, backgroundColor: '#C9912A33' }} />
+                {/* Right column */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const }}>
+                  <div style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 14 }}>PROMISE vs DELIVERY</div>
+                  {promises.slice(0, 3).map((p: any, i: number) => <PromiseRow key={i} p={p} />)}
+                  {promises.length === 0 && <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked.</div>}
+                  <div style={{ marginTop: 16, display: 'flex', gap: 10, flex: 1, alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 8, padding: 12 }}>
+                      <div style={{ color: '#10b981', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BULL</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{bullSnippet.substring(0, 70)}{bullSnippet.length >= 70 ? '…' : ''}</div>
+                    </div>
+                    <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 8, padding: 12 }}>
+                      <div style={{ color: '#ef4444', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BEAR</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{bearSnippet.substring(0, 70)}{bearSnippet.length >= 70 ? '…' : ''}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </>
+        );
+      })()}
+
+      {/* ── Mobile scorecard preview modal ─────────────────────────────────── */}
+      {scorecardMobileUrl && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <p style={{ color: '#C9912A', fontWeight: 900, fontSize: 13, letterSpacing: '0.15em', marginBottom: 12, textTransform: 'uppercase' }}>LONG-PRESS IMAGE TO SAVE</p>
+          <img src={scorecardMobileUrl} alt="Scorecard" style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, border: '1px solid #C9912A44' }} />
+          <button onClick={() => setScorecardMobileUrl(null)} style={{ marginTop: 20, padding: '10px 28px', backgroundColor: '#C9912A', color: '#000', fontWeight: 900, fontSize: 11, borderRadius: 10, border: 'none', cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Close</button>
+        </div>
+      )}
     </div>
   );
 }
