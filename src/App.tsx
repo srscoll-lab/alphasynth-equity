@@ -1444,7 +1444,7 @@ ${list}
   };
 
   const triggerEarningsIntelligence = async (tickerOverride?: string) => {
-    const tkr = (tickerOverride || ticker || 'RELIANCE').toUpperCase().trim();
+    const tkr = (tickerOverride || ticker).toUpperCase().trim();
     if (!isValidTickerPattern(tkr)) {
       setError(`'${tkr}' does not appear to be a valid NSE/BSE ticker. Example symbols: RELIANCE, TCS, HDFCBANK, INFY.`);
       return;
@@ -1690,6 +1690,10 @@ ${list}
   const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false) => {
     const tkr = tickerOverride || ticker;
     if (!tkr) return;
+    // Redirect to the dedicated earnings intelligence pipeline when that mode is active
+    if (!modeOverride && workflowMode === 'earnings_intelligence') {
+      return triggerEarningsIntelligence(tkr);
+    }
     const targetMode = (typeof modeOverride === 'string' ? modeOverride : workflowMode) as 'deep_dive' | 'earnings' | 'move';
 
     // Problem 2: client-side pattern check before any API call
