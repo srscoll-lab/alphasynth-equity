@@ -685,6 +685,8 @@ export default function App() {
   const [sharingScorecard, setSharingScorecard] = useState<false | 'generating' | 'done'>(false);
   const [scorecardMobileUrl, setScorecardMobileUrl] = useState<string | null>(null);
   const [scorecardSuccess, setScorecardSuccess] = useState(false);
+  // Holds the LTP fetched on-demand when Share is clicked (EI mode has no streaming price parse)
+  const [scorecardLtpOverride, setScorecardLtpOverride] = useState<number>(0);
 
 
 
@@ -706,8 +708,31 @@ export default function App() {
     try {
       const h2c = (window as any).html2canvas;
       if (!h2c) throw new Error('html2canvas not loaded');
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
       const tkr = lastReport.ticker || 'STOCK';
+      console.log('[SCORECARD] Ticker value being rendered:', tkr);
+      console.log('[SCORECARD] scripLtp:', scripLtp, typeof scripLtp, '| scripLtpTicker:', scripLtpTicker);
+
+      // Ensure LTP is populated — EI mode skips the streaming pipeline so scripLtp may be 0
+      let resolvedLtp = scripLtp > 0 ? scripLtp : (lastReport.parsedLtp || 0);
+      if (resolvedLtp === 0) {
+        try {
+          const priceRes = await fetch('/api/pipeline/price', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ticker: tkr }),
+          });
+          if (priceRes.ok) {
+            const pd = await priceRes.json();
+            resolvedLtp = pd.price || 0;
+          }
+        } catch {}
+      }
+      console.log('[SCORECARD] Resolved LTP:', resolvedLtp, '| Target:', resolvedLtp > 0 ? (resolvedLtp * 1.03).toFixed(2) : '—');
+      setScorecardLtpOverride(resolvedLtp);
+      // Wait for React to re-render the hidden cards with the resolved price
+      await new Promise(r => setTimeout(r, 200));
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
       const configs = [
         { ref: scorecardSquareRef,    name: `alphasynth-${tkr}-square.png` },
         { ref: scorecardPortraitRef,  name: `alphasynth-${tkr}-portrait.png` },
@@ -729,7 +754,6 @@ export default function App() {
         }
       }
       if (isMobile && squareUrl) {
-        // Try Web Share API first (supported in modern iOS/Android Chrome)
         if (navigator.canShare) {
           try {
             const blob = await (await fetch(squareUrl)).blob();
@@ -5701,21 +5725,20 @@ ${list}
 
       {/* ── Hidden Scorecard Canvases — off-screen, captured by html2canvas ─── */}
       {earningsIntelReport && lastReport?.mode === 'earnings_intelligence' && (() => {
-        // FIX 1: ticker taken directly from lastReport with no transformation
+        // ISSUE 1: ticker read directly, no transformation
         const tkr = lastReport.ticker || '';
         const quarter = earningsIntelReport.currentQuarter || 'Latest Quarter';
         const score = earningsIntelReport.reliabilityScore ?? '—';
         const rating = (lastReport.rating || 'hold').toUpperCase();
         const ratingColor = rating === 'BUY' ? '#10b981' : rating === 'SELL' ? '#ef4444' : '#C9912A';
-        const eiLtp = scripLtp > 0 && scripLtpTicker === tkr ? scripLtp : (lastReport.parsedLtp || 0);
+        // ISSUE 2: use scorecardLtpOverride (set by shareScorecard() after fetching price on-demand)
+        const displayLtp = scorecardLtpOverride > 0 ? scorecardLtpOverride : (scripLtp > 0 ? scripLtp : (lastReport.parsedLtp || 0));
         const rawTgt = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : 0;
-        // FIX 3: fallback to LTP×1.03 when no explicit target
-        const scorecardTgtPrice = rawTgt > 0 ? rawTgt : eiLtp > 0 ? parseFloat((eiLtp * 1.03).toFixed(2)) : 0;
+        const scorecardTgtPrice = rawTgt > 0 ? rawTgt : displayLtp > 0 ? parseFloat((displayLtp * 1.03).toFixed(2)) : 0;
         const scorecardTgtIsFallback = rawTgt === 0 && scorecardTgtPrice > 0;
         const fmtPrice = (n: number) => n > 0 ? `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
         const fmtTgt = scorecardTgtPrice > 0 ? `${fmtPrice(scorecardTgtPrice)}${scorecardTgtIsFallback ? ' (+3%)' : ''}` : '—';
         const stripMd = (s: string = '') => s.replace(/[#*_`[\]()>~]/g, '').replace(/\n+/g, ' ').trim();
-        // FIX 4: 70-char word-boundary truncation
         const truncWord = (s: string, max: number) => {
           if (!s || s.length <= max) return s;
           const cut = s.substring(0, max);
@@ -5728,9 +5751,11 @@ ${list}
         const bullSnippet = truncWord(stripMd(earningsIntelReport.guidanceOutlook || ''), 90) || '—';
         const bearSnippet = truncWord(stripMd(earningsIntelReport.redFlagsAndSentiment || ''), 90) || '—';
         const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+        const scoreColor = Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444';
 
+        // ISSUE 1 FIX: Arial only — avoids SF Pro ligature rendering bugs in html2canvas
         const BASE: React.CSSProperties = {
-          fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif",
+          fontFamily: "Arial, 'Helvetica Neue', Helvetica, sans-serif",
           backgroundColor: '#0a0f1e',
           color: '#ffffff',
           position: 'fixed',
@@ -5738,193 +5763,195 @@ ${list}
           left: '-9999px',
           overflow: 'visible',
         };
+        // Ticker text style — disable all font features that could cause character substitution
+        const TKR_STYLE: React.CSSProperties = {
+          fontFeatureSettings: '"liga" 0, "calt" 0, "kern" 0',
+          WebkitFontFeatureSettings: '"liga" 0, "calt" 0',
+          letterSpacing: 0,
+          fontFamily: "Arial, 'Helvetica Neue', Helvetica, sans-serif",
+          fontWeight: 900,
+          lineHeight: 1,
+          color: '#ffffff',
+        };
 
-        // FIX 4: updated PromiseRow with 70-char truncation
         const PromiseRow = ({ p, fontSize = 11 }: { p: any; fontSize?: number }) => {
           const st = (p.status || '').toLowerCase();
           const kept = st === 'kept'; const missed = st === 'missed';
-          const icon = kept ? '✓' : missed ? '✗' : '◷';
+          const icon = kept ? '✓' : missed ? '✗' : '○';
           const color = kept ? '#10b981' : missed ? '#ef4444' : '#f59e0b';
           const label = kept ? 'DELIVERED' : missed ? 'MISSED' : 'PENDING';
-          const badge: React.CSSProperties = { backgroundColor: color + '22', color, border: `1px solid ${color}55`, borderRadius: 4, padding: '2px 7px', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em', whiteSpace: 'nowrap' as const };
+          const badge: React.CSSProperties = { backgroundColor: color + '22', color, border: `1px solid ${color}55`, borderRadius: 4, padding: '2px 7px', fontSize: 9, fontWeight: 700, letterSpacing: '0.05em', whiteSpace: 'nowrap' as const, fontFamily: 'Arial, sans-serif' };
           return (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-              <span style={{ color, fontWeight: 900, width: 16, flexShrink: 0, fontSize: fontSize + 1 }}>{icon}</span>
-              <span style={{ fontSize, color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{truncWord(p.promise || '', 70)}</span>
+              <span style={{ color, fontWeight: 700, width: 14, flexShrink: 0, fontSize: fontSize, fontFamily: 'Arial, sans-serif' }}>{icon}</span>
+              <span style={{ fontSize, color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const, fontFamily: 'Arial, sans-serif' }}>{truncWord(p.promise || '', 70)}</span>
               <span style={badge}>{label}</span>
             </div>
           );
         };
 
-        // FIX 5: prominent branding header
-        const Header = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
-          const fs = size === 'lg' ? 17 : size === 'sm' ? 12 : 15;
-          const iconSize = size === 'lg' ? 30 : size === 'sm' ? 20 : 26;
-          return (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                <div style={{ width: iconSize, height: iconSize, backgroundColor: '#C9912A22', border: '1px solid #C9912A66', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px #C9912A33' }}>
-                  <span style={{ color: '#C9912A', fontSize: iconSize * 0.55, fontWeight: 900, lineHeight: 1 }}>◈</span>
-                </div>
-                <span style={{ color: '#C9912A', fontSize: fs, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase' as const, textShadow: '0 0 12px #C9912A55' }}>ALPHASYNTH INTELLIGENCE</span>
-              </div>
+        const Header = ({ fs = 15, iconSize = 26 }: { fs?: number; iconSize?: number }) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 12 }}>
+            <div style={{ width: iconSize, height: iconSize, backgroundColor: '#C9912A22', border: '1px solid #C9912A66', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ color: '#C9912A', fontSize: Math.round(iconSize * 0.52), fontWeight: 900, lineHeight: 1, fontFamily: 'Arial, sans-serif' }}>◈</span>
             </div>
-          );
-        };
+            <span style={{ color: '#C9912A', fontSize: fs, fontWeight: 900, letterSpacing: '0.12em', textTransform: 'uppercase' as const, fontFamily: 'Arial, sans-serif' }}>ALPHASYNTH INTELLIGENCE</span>
+          </div>
+        );
 
-        const Divider = () => <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 18 }} />;
+        const Divider = () => <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 16 }} />;
 
         const Footer = ({ mt = 16 }: { mt?: number }) => (
           <div style={{ marginTop: mt }}>
             <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 10 }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#C9912A', fontSize: 13, fontWeight: 800 }}>alphasynth.app</span>
-              <span style={{ color: '#94a3b8', fontSize: 10 }}>{today}</span>
-              <span style={{ color: '#C9912A', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em' }}>PROFESSIONAL INDIAN MARKET INTELLIGENCE</span>
+              <span style={{ color: '#C9912A', fontSize: 13, fontWeight: 700, fontFamily: 'Arial, sans-serif' }}>alphasynth.app</span>
+              <span style={{ color: '#94a3b8', fontSize: 10, fontFamily: 'Arial, sans-serif' }}>{today}</span>
+              <span style={{ color: '#C9912A', fontSize: 9, fontWeight: 700, fontFamily: 'Arial, sans-serif' }}>PROFESSIONAL INDIAN MARKET INTELLIGENCE</span>
             </div>
             <div style={{ marginTop: 5, textAlign: 'center' as const }}>
-              <span style={{ color: '#475569', fontSize: 8 }}>Not financial advice. For informational purposes only.</span>
+              <span style={{ color: '#475569', fontSize: 8, fontFamily: 'Arial, sans-serif' }}>Not financial advice. For informational purposes only.</span>
             </div>
           </div>
         );
 
         const PriceCard = ({ label, value, color = '#ffffff', fontSize = 20 }: { label: string; value: string; color?: string; fontSize?: number }) => (
           <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 10, padding: '12px 14px' }}>
-            <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{label}</div>
-            <div style={{ color, fontSize, fontWeight: 900, lineHeight: 1.2 }}>{value}</div>
+            <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: 4, fontFamily: 'Arial, sans-serif' }}>{label}</div>
+            <div style={{ color, fontSize, fontWeight: 900, lineHeight: 1.2, fontFamily: 'Arial, sans-serif' }}>{value}</div>
           </div>
         );
 
-        // FIX 2 portrait: decorative candlestick bars
+        // ISSUE 5: decorative bars at 40% of previous size, with label
         const DecorativeBars = () => (
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 14, padding: '60px 0', opacity: 0.18 }}>
-            {[100, 160, 70, 200, 130, 90, 180, 110, 150, 80].map((h, i) => (
-              <div key={i} style={{ width: 20, height: h, backgroundColor: '#C9912A', borderRadius: 4 }} />
-            ))}
+          <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', gap: 8, opacity: 0.22 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 90 }}>
+              {[40, 64, 28, 80, 52, 36, 72, 44, 60, 32].map((h, i) => (
+                <div key={i} style={{ width: 12, height: h, backgroundColor: '#C9912A', borderRadius: 3 }} />
+              ))}
+            </div>
+            <span style={{ color: '#C9912A', fontSize: 13, fontWeight: 700, letterSpacing: '0.1em', fontFamily: 'Arial, sans-serif', marginTop: 4 }}>alphasynth.app</span>
           </div>
         );
-
-        const scoreColor = Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444';
 
         return (
           <>
-            {/* SQUARE 1080 — FIX 2: flex column + auto-fill, minHeight not fixed */}
+            {/* SQUARE 1080 — ISSUE 3: no ghostly watermark, clean footer fill */}
             <div ref={scorecardSquareRef} style={{ ...BASE, width: 1080, minHeight: 1080, padding: 60, display: 'flex', flexDirection: 'column' as const }}>
-              <Header size="md" />
+              <Header fs={15} iconSize={26} />
               <Divider />
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
                 <div>
-                  <div style={{ fontSize: 54, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1 }}>{tkr}</div>
-                  <div style={{ color: '#C9912A', fontSize: 15, fontWeight: 700, marginTop: 7 }}>{quarter}</div>
+                  <div style={{ ...TKR_STYLE, fontSize: 54 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 15, fontWeight: 700, marginTop: 8, fontFamily: 'Arial, sans-serif' }}>{quarter}</div>
                 </div>
                 <div style={{ textAlign: 'right' as const }}>
-                  <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 8, padding: '7px 22px', fontSize: 15, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
-                  <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 6 }}>Analyst Rating</div>
+                  <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 8, padding: '7px 22px', fontSize: 15, fontWeight: 900, letterSpacing: '0.1em', fontFamily: 'Arial, sans-serif' }}>{rating}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 6, fontFamily: 'Arial, sans-serif' }}>Analyst Rating</div>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 12, marginBottom: 30 }}>
-                <PriceCard label="LTP" value={fmtPrice(eiLtp)} />
-                <PriceCard label="Target Price" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 15 : 20} />
+                <PriceCard label="LTP" value={fmtPrice(displayLtp)} />
+                <PriceCard label="Target Price" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 14 : 20} />
                 <PriceCard label="Reliability Score" value={`${score}/10`} color={scoreColor} />
               </div>
               <div style={{ marginBottom: 22 }}>
-                <div style={{ color: '#C9912A', fontSize: 12, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 14 }}>PROMISE vs DELIVERY</div>
-                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked for this quarter.</div>}
+                <div style={{ color: '#C9912A', fontSize: 12, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 14, fontFamily: 'Arial, sans-serif' }}>PROMISE vs DELIVERY</div>
+                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 11, fontFamily: 'Arial, sans-serif' }}>No promises tracked for this quarter.</div>}
               </div>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
                 <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 10, padding: 16 }}>
-                  <div style={{ color: '#10b981', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BULL CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bullSnippet}</div>
+                  <div style={{ color: '#10b981', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 6, fontFamily: 'Arial, sans-serif' }}>BULL CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5, fontFamily: 'Arial, sans-serif' }}>{bullSnippet}</div>
                 </div>
                 <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 10, padding: 16 }}>
-                  <div style={{ color: '#ef4444', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BEAR CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bearSnippet}</div>
+                  <div style={{ color: '#ef4444', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 6, fontFamily: 'Arial, sans-serif' }}>BEAR CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5, fontFamily: 'Arial, sans-serif' }}>{bearSnippet}</div>
                 </div>
               </div>
-              {/* Spacer with decorative branding watermark to fill square */}
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '20px 0', opacity: 0.12 }}>
-                <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: '0.2em', color: '#C9912A', textAlign: 'center' as const, lineHeight: 1 }}>ALPHASYNTH</div>
-              </div>
+              {/* ISSUE 3: elegant spacer — no ghostly watermark */}
+              <div style={{ flex: 1 }} />
               <Footer />
             </div>
 
-            {/* PORTRAIT 1080×1920 — FIX 2: decorative bars fill space */}
+            {/* PORTRAIT 1080×1920 — ISSUE 5: smaller bars with label */}
             <div ref={scorecardPortraitRef} style={{ ...BASE, width: 1080, minHeight: 1920, padding: 80, display: 'flex', flexDirection: 'column' as const }}>
-              <Header size="lg" />
+              <Header fs={17} iconSize={30} />
               <Divider />
               <div style={{ textAlign: 'center' as const, margin: '44px 0 36px' }}>
-                <div style={{ fontSize: 80, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>{tkr}</div>
-                <div style={{ color: '#C9912A', fontSize: 20, fontWeight: 700, marginTop: 12 }}>{quarter}</div>
-                <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 10, padding: '9px 30px', fontSize: 17, fontWeight: 900, letterSpacing: '0.18em', marginTop: 18 }}>{rating}</div>
+                <div style={{ ...TKR_STYLE, fontSize: 80, textAlign: 'center' as const }}>{tkr}</div>
+                <div style={{ color: '#C9912A', fontSize: 20, fontWeight: 700, marginTop: 12, fontFamily: 'Arial, sans-serif' }}>{quarter}</div>
+                <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 10, padding: '9px 30px', fontSize: 17, fontWeight: 900, marginTop: 18, fontFamily: 'Arial, sans-serif' }}>{rating}</div>
               </div>
               <div style={{ display: 'flex', gap: 18, marginBottom: 52 }}>
-                <PriceCard label="LTP" value={fmtPrice(eiLtp)} fontSize={22} />
-                <PriceCard label="Target" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 16 : 22} />
+                <PriceCard label="LTP" value={fmtPrice(displayLtp)} fontSize={22} />
+                <PriceCard label="Target" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 15 : 22} />
                 <PriceCard label="Reliability" value={`${score}/10`} color={scoreColor} fontSize={22} />
               </div>
               <div style={{ marginBottom: 52 }}>
-                <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 20 }}>PROMISE vs DELIVERY</div>
-                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={14} />) : <div style={{ color: '#475569', fontSize: 14 }}>No promises tracked.</div>}
+                <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 20, fontFamily: 'Arial, sans-serif' }}>PROMISE vs DELIVERY</div>
+                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={14} />) : <div style={{ color: '#475569', fontSize: 14, fontFamily: 'Arial, sans-serif' }}>No promises tracked.</div>}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 18, marginBottom: 40 }}>
                 <div style={{ backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 14, padding: 28 }}>
-                  <div style={{ color: '#10b981', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 12 }}>BULL CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{bullSnippet}</div>
+                  <div style={{ color: '#10b981', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, fontFamily: 'Arial, sans-serif' }}>BULL CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6, fontFamily: 'Arial, sans-serif' }}>{bullSnippet}</div>
                 </div>
                 <div style={{ backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 14, padding: 28 }}>
-                  <div style={{ color: '#ef4444', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 12 }}>BEAR CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{bearSnippet}</div>
+                  <div style={{ color: '#ef4444', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', marginBottom: 12, fontFamily: 'Arial, sans-serif' }}>BEAR CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6, fontFamily: 'Arial, sans-serif' }}>{bearSnippet}</div>
                 </div>
               </div>
-              {/* Decorative candlestick bars fill vertical space */}
+              {/* ISSUE 5: compact decorative bars at 40% size with label */}
               <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <DecorativeBars />
               </div>
               <Footer mt={40} />
             </div>
 
-            {/* LANDSCAPE 1200×630 — FIX 2: show 5 promises */}
-            <div ref={scorecardLandscapeRef} style={{ ...BASE, width: 1200, minHeight: 630, padding: 48, display: 'flex', flexDirection: 'column' as const }}>
-              <div style={{ display: 'flex', gap: 48, flex: 1 }}>
-                {/* Left column */}
+            {/* LANDSCAPE 1200×630 — ISSUE 4: bull/bear directly below promises in right column */}
+            <div ref={scorecardLandscapeRef} style={{ ...BASE, width: 1200, minHeight: 630, padding: 44, display: 'flex', flexDirection: 'column' as const }}>
+              <div style={{ display: 'flex', gap: 44, flex: 1 }}>
+                {/* Left column: header + company + price cards */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const }}>
-                  <Header size="sm" />
+                  <Header fs={12} iconSize={20} />
                   <Divider />
-                  <div style={{ fontSize: 46, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1, marginBottom: 7 }}>{tkr}</div>
-                  <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{quarter}</div>
-                  <div style={{ marginBottom: 18 }}>
-                    <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 6, padding: '5px 16px', fontSize: 13, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
+                  <div style={{ ...TKR_STYLE, fontSize: 44, marginBottom: 6 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 13, fontWeight: 700, marginBottom: 12, fontFamily: 'Arial, sans-serif' }}>{quarter}</div>
+                  <div style={{ marginBottom: 16 }}>
+                    <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 6, padding: '4px 14px', fontSize: 12, fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>{rating}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, marginBottom: 'auto' as const }}>
-                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
-                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>LTP</div>
-                      <div style={{ color: '#ffffff', fontSize: 15, fontWeight: 900 }}>{fmtPrice(eiLtp)}</div>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 0 }}>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 11px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 700, marginBottom: 3, fontFamily: 'Arial, sans-serif' }}>LTP</div>
+                      <div style={{ color: '#ffffff', fontSize: 14, fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>{fmtPrice(displayLtp)}</div>
                     </div>
-                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
-                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>TARGET</div>
-                      <div style={{ color: '#C9912A', fontSize: fmtTgt.length > 12 ? 11 : 15, fontWeight: 900 }}>{fmtTgt}</div>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 11px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 700, marginBottom: 3, fontFamily: 'Arial, sans-serif' }}>TARGET</div>
+                      <div style={{ color: '#C9912A', fontSize: fmtTgt.length > 13 ? 10 : 14, fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>{fmtTgt}</div>
                     </div>
-                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
-                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>RELIABILITY</div>
-                      <div style={{ color: scoreColor, fontSize: 15, fontWeight: 900 }}>{score}/10</div>
+                    <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 11px' }}>
+                      <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 700, marginBottom: 3, fontFamily: 'Arial, sans-serif' }}>RELIABILITY</div>
+                      <div style={{ color: scoreColor, fontSize: 14, fontWeight: 900, fontFamily: 'Arial, sans-serif' }}>{score}/10</div>
                     </div>
                   </div>
-                  <Footer mt={16} />
+                  <div style={{ flex: 1 }} />
+                  <Footer mt={14} />
                 </div>
                 {/* Vertical divider */}
                 <div style={{ width: 1, backgroundColor: '#C9912A33', alignSelf: 'stretch' }} />
-                {/* Right column — FIX 2: 5 promises */}
+                {/* ISSUE 4 FIX: Right column — promises then bull/bear directly below, no gap */}
                 <div style={{ flex: 1.1, display: 'flex', flexDirection: 'column' as const }}>
-                  <div style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 14 }}>PROMISE vs DELIVERY</div>
-                  {promises5.length > 0 ? promises5.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={10} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked.</div>}
-                  <div style={{ marginTop: 'auto' as const, display: 'flex', gap: 10 }}>
-                    <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 8, padding: 12 }}>
-                      <div style={{ color: '#10b981', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BULL</div>
-                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{truncWord(bullSnippet, 70)}</div>
+                  <div style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 12, fontFamily: 'Arial, sans-serif' }}>PROMISE vs DELIVERY</div>
+                  {promises5.length > 0 ? promises5.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={10} />) : <div style={{ color: '#475569', fontSize: 10, fontFamily: 'Arial, sans-serif' }}>No promises tracked.</div>}
+                  <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+                    <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 8, padding: 11 }}>
+                      <div style={{ color: '#10b981', fontSize: 8, fontWeight: 700, marginBottom: 5, fontFamily: 'Arial, sans-serif' }}>BULL CASE</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5, fontFamily: 'Arial, sans-serif' }}>{truncWord(bullSnippet, 70)}</div>
                     </div>
-                    <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 8, padding: 12 }}>
-                      <div style={{ color: '#ef4444', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BEAR</div>
-                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{truncWord(bearSnippet, 70)}</div>
+                    <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 8, padding: 11 }}>
+                      <div style={{ color: '#ef4444', fontSize: 8, fontWeight: 700, marginBottom: 5, fontFamily: 'Arial, sans-serif' }}>BEAR CASE</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5, fontFamily: 'Arial, sans-serif' }}>{truncWord(bearSnippet, 70)}</div>
                     </div>
                   </div>
                 </div>
