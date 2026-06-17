@@ -674,6 +674,9 @@ export default function App() {
   const reportContentRef = useRef<HTMLDivElement>(null);
   // Abort controller for the active SSE stream — cancels any in-flight stream when a new analysis starts
   const streamAbortRef = useRef<AbortController | null>(null);
+  // Generation counter — incremented on every new triggerAnalysis call.
+  // Any async callback that holds an older generation discards its result silently.
+  const analysisGenRef = useRef(0);
 
 
 
@@ -1703,17 +1706,21 @@ ${list}
       return;
     }
 
+    // Claim this generation — any older async operation will check this and discard its result
+    const myGen = ++analysisGenRef.current;
+
     // Cancel any in-flight SSE stream from a previous analysis before starting a new one
     if (streamAbortRef.current) {
       streamAbortRef.current.abort();
       streamAbortRef.current = null;
     }
 
+    // Clear stale content immediately so no old ticker's report is visible during load
+    setLastReport(null);
+    setStreamingReport('');
     setAnalyzing(true);
     setTickerValidationFailed(false);
     if (!keepReportOpen) {
-      setLastReport(null);
-      setStreamingReport('');
       setPeersData([]);
       setPeersError(null);
       setScripLtp(0);
@@ -1768,10 +1775,10 @@ ${list}
               setSearchUrl(data.sourceUrl);
             }
             const finalUsedUrl = data.sourceUrl || activeUrl;
-            await runGeminiAnalysis(scrapedMarkdown, tkr, finalUsedUrl, targetMode);
+            await runGeminiAnalysis(scrapedMarkdown, tkr, finalUsedUrl, targetMode, myGen);
           } else {
             scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
-            await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
+            await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode, myGen);
           }
         } else {
           let errData: any = {};
@@ -1780,13 +1787,13 @@ ${list}
             throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${tkr.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
           }
           scrapedMarkdown = "Scraping service unavailable. Proceeding with search grounding.";
-          await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
+          await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode, myGen);
         }
       } catch (scrapeErr: any) {
         clearTimeout(timeoutId);
         if (scrapeErr.message?.startsWith('TICKER_INVALID:')) throw scrapeErr;
         scrapedMarkdown = "Scraping fallback triggered. Relying on Gemini search grounding.";
-        await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode);
+        await runGeminiAnalysis(scrapedMarkdown, tkr, activeUrl, targetMode, myGen);
       }
     } catch (err: any) {
       console.warn("Analysis conduit exception:", err.message);
@@ -1811,7 +1818,10 @@ ${list}
     }
   };
 
-  const runGeminiAnalysis = async (scrapedMarkdown: string, ticker: string, usedUrl: string, targetMode?: 'deep_dive' | 'earnings' | 'move') => {
+  const runGeminiAnalysis = async (scrapedMarkdown: string, ticker: string, usedUrl: string, targetMode?: 'deep_dive' | 'earnings' | 'move', generation?: number) => {
+      const myGen = generation ?? analysisGenRef.current;
+      const isStale = () => analysisGenRef.current !== myGen;
+
       setIsShareMode(false);
       setStreamingReport('');
       setReportFromCache(false);
@@ -1855,6 +1865,8 @@ ${list}
             if (!event.startsWith('data: ')) continue;
             try {
               const ev = JSON.parse(event.slice(6));
+              // Discard chunks if a newer analysis has started
+              if (isStale()) { reader.cancel(); return; }
               if (ev.type === 'chunk') {
                 accumulated += ev.text;
                 setStreamingReport(accumulated);
@@ -1881,6 +1893,9 @@ ${list}
         reader.releaseLock();
         if (streamAbortRef.current === streamAbort) streamAbortRef.current = null;
       }
+
+      // Discard results if a newer analysis has already started
+      if (isStale()) return;
 
       const report = accumulated;
       if (!report) {
@@ -1969,6 +1984,9 @@ ${list}
           confidence: (data.confidence as 'high' | 'medium' | 'low') || (report.length > 3000 ? 'high' : report.length > 1000 ? 'medium' : 'low'),
           scrapeQuality
         };
+
+        // Final staleness check — do not overwrite a newer ticker's report
+        if (isStale()) return;
 
         if (parsedLtpValue && parsedLtpValue > 0) {
           setScripLtp(parsedLtpValue);
