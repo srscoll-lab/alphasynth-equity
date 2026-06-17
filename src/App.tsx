@@ -684,6 +684,7 @@ export default function App() {
   const scorecardLandscapeRef = useRef<HTMLDivElement>(null);
   const [sharingScorecard, setSharingScorecard] = useState<false | 'generating' | 'done'>(false);
   const [scorecardMobileUrl, setScorecardMobileUrl] = useState<string | null>(null);
+  const [scorecardSuccess, setScorecardSuccess] = useState(false);
 
 
 
@@ -701,22 +702,24 @@ export default function App() {
     if (!earningsIntelReport || !lastReport) return;
     setSharingScorecard('generating');
     setScorecardMobileUrl(null);
+    setScorecardSuccess(false);
     try {
       const h2c = (window as any).html2canvas;
       if (!h2c) throw new Error('html2canvas not loaded');
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const tkr = lastReport.ticker || 'STOCK';
       const configs = [
-        { ref: scorecardSquareRef,   name: `alphasynth-${lastReport.ticker}-square.png` },
-        { ref: scorecardPortraitRef, name: `alphasynth-${lastReport.ticker}-portrait.png` },
-        { ref: scorecardLandscapeRef,name: `alphasynth-${lastReport.ticker}-landscape.png` },
+        { ref: scorecardSquareRef,    name: `alphasynth-${tkr}-square.png` },
+        { ref: scorecardPortraitRef,  name: `alphasynth-${tkr}-portrait.png` },
+        { ref: scorecardLandscapeRef, name: `alphasynth-${tkr}-landscape.png` },
       ];
+      let squareUrl = '';
       for (const { ref, name } of configs) {
         if (!ref.current) continue;
         const canvas = await h2c(ref.current, { backgroundColor: '#0a0f1e', scale: 1, useCORS: true, logging: false, allowTaint: true });
         const url = canvas.toDataURL('image/png');
-        if (isMobile) {
-          setScorecardMobileUrl(url);
-        } else {
+        if (!squareUrl) squareUrl = url;
+        if (!isMobile) {
           const a = document.createElement('a');
           a.href = url;
           a.download = name;
@@ -724,6 +727,25 @@ export default function App() {
           a.click();
           document.body.removeChild(a);
         }
+      }
+      if (isMobile && squareUrl) {
+        // Try Web Share API first (supported in modern iOS/Android Chrome)
+        if (navigator.canShare) {
+          try {
+            const blob = await (await fetch(squareUrl)).blob();
+            const file = new File([blob], `alphasynth-${tkr}-square.png`, { type: 'image/png' });
+            if (navigator.canShare({ files: [file] })) {
+              await navigator.share({ files: [file], title: `${tkr} Earnings Scorecard`, text: `${tkr} Earnings Intelligence — Alphasynth` });
+              setSharingScorecard('done');
+              setTimeout(() => setSharingScorecard(false), 2500);
+              return;
+            }
+          } catch {}
+        }
+        setScorecardMobileUrl(squareUrl);
+      } else {
+        setScorecardSuccess(true);
+        setTimeout(() => setScorecardSuccess(false), 8000);
       }
       setSharingScorecard('done');
       setTimeout(() => setSharingScorecard(false), 2500);
@@ -2742,14 +2764,19 @@ ${list}
                         <button
                           onClick={shareScorecard}
                           disabled={sharingScorecard === 'generating'}
-                          className="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 bg-[#C9912A] text-black hover:bg-amber disabled:opacity-60"
+                          className="px-7 py-3 rounded-xl transition-all flex flex-col items-center gap-0.5 bg-[#C9912A] text-black hover:bg-amber disabled:opacity-60 shadow-[0_4px_14px_rgba(201,145,42,0.35)]"
                         >
-                          {sharingScorecard === 'generating' ? (
-                            <><div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</>
-                          ) : sharingScorecard === 'done' ? (
-                            <><Share2 className="w-3.5 h-3.5" /> Downloaded! ✓</>
-                          ) : (
-                            <><Share2 className="w-3.5 h-3.5" /> Share Scorecard</>
+                          <span className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest">
+                            {sharingScorecard === 'generating' ? (
+                              <><div className="w-3.5 h-3.5 border-2 border-black/30 border-t-black rounded-full animate-spin" /> Generating...</>
+                            ) : sharingScorecard === 'done' ? (
+                              <><Share2 className="w-3.5 h-3.5" /> Downloaded! ✓</>
+                            ) : (
+                              <><Share2 className="w-3.5 h-3.5" /> Share Scorecard</>
+                            )}
+                          </span>
+                          {sharingScorecard === false && (
+                            <span className="text-[8px] font-medium opacity-70 tracking-wide normal-case">Download image for WhatsApp · Twitter · Instagram</span>
                           )}
                         </button>
                       )}
@@ -5674,6 +5701,7 @@ ${list}
 
       {/* ── Hidden Scorecard Canvases — off-screen, captured by html2canvas ─── */}
       {earningsIntelReport && lastReport?.mode === 'earnings_intelligence' && (() => {
+        // FIX 1: ticker taken directly from lastReport with no transformation
         const tkr = lastReport.ticker || '';
         const quarter = earningsIntelReport.currentQuarter || 'Latest Quarter';
         const score = earningsIntelReport.reliabilityScore ?? '—';
@@ -5681,11 +5709,24 @@ ${list}
         const ratingColor = rating === 'BUY' ? '#10b981' : rating === 'SELL' ? '#ef4444' : '#C9912A';
         const eiLtp = scripLtp > 0 && scripLtpTicker === tkr ? scripLtp : (lastReport.parsedLtp || 0);
         const rawTgt = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : 0;
+        // FIX 3: fallback to LTP×1.03 when no explicit target
+        const scorecardTgtPrice = rawTgt > 0 ? rawTgt : eiLtp > 0 ? parseFloat((eiLtp * 1.03).toFixed(2)) : 0;
+        const scorecardTgtIsFallback = rawTgt === 0 && scorecardTgtPrice > 0;
         const fmtPrice = (n: number) => n > 0 ? `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
+        const fmtTgt = scorecardTgtPrice > 0 ? `${fmtPrice(scorecardTgtPrice)}${scorecardTgtIsFallback ? ' (+3%)' : ''}` : '—';
         const stripMd = (s: string = '') => s.replace(/[#*_`[\]()>~]/g, '').replace(/\n+/g, ' ').trim();
-        const promises = (earningsIntelReport.managementPromises || []).slice(0, 4);
-        const bullSnippet = stripMd(earningsIntelReport.guidanceOutlook || '').substring(0, 90) || '—';
-        const bearSnippet = stripMd(earningsIntelReport.redFlagsAndSentiment || '').substring(0, 90) || '—';
+        // FIX 4: 70-char word-boundary truncation
+        const truncWord = (s: string, max: number) => {
+          if (!s || s.length <= max) return s;
+          const cut = s.substring(0, max);
+          const sp = cut.lastIndexOf(' ');
+          return (sp > max * 0.65 ? cut.substring(0, sp) : cut) + '…';
+        };
+        const allPromises = (earningsIntelReport.managementPromises || []);
+        const promises4 = allPromises.slice(0, 4);
+        const promises5 = allPromises.slice(0, 5);
+        const bullSnippet = truncWord(stripMd(earningsIntelReport.guidanceOutlook || ''), 90) || '—';
+        const bearSnippet = truncWord(stripMd(earningsIntelReport.redFlagsAndSentiment || ''), 90) || '—';
         const today = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
 
         const BASE: React.CSSProperties = {
@@ -5695,10 +5736,11 @@ ${list}
           position: 'fixed',
           top: 0,
           left: '-9999px',
-          overflow: 'hidden',
+          overflow: 'visible',
         };
 
-        const PromiseRow = ({ p }: { p: any }) => {
+        // FIX 4: updated PromiseRow with 70-char truncation
+        const PromiseRow = ({ p, fontSize = 11 }: { p: any; fontSize?: number }) => {
           const st = (p.status || '').toLowerCase();
           const kept = st === 'kept'; const missed = st === 'missed';
           const icon = kept ? '✓' : missed ? '✗' : '◷';
@@ -5706,124 +5748,152 @@ ${list}
           const label = kept ? 'DELIVERED' : missed ? 'MISSED' : 'PENDING';
           const badge: React.CSSProperties = { backgroundColor: color + '22', color, border: `1px solid ${color}55`, borderRadius: 4, padding: '2px 7px', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em', whiteSpace: 'nowrap' as const };
           return (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-              <span style={{ color, fontWeight: 900, width: 14, flexShrink: 0 }}>{icon}</span>
-              <span style={{ fontSize: 11, color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{(p.promise || '').substring(0, 52)}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ color, fontWeight: 900, width: 16, flexShrink: 0, fontSize: fontSize + 1 }}>{icon}</span>
+              <span style={{ fontSize, color: '#94a3b8', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{truncWord(p.promise || '', 70)}</span>
               <span style={badge}>{label}</span>
             </div>
           );
         };
 
-        const Header = () => (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <span style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const }}>ALPHASYNTH INTELLIGENCE</span>
-            <span style={{ color: '#C9912A', fontSize: 16 }}>◈</span>
-          </div>
-        );
+        // FIX 5: prominent branding header
+        const Header = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
+          const fs = size === 'lg' ? 17 : size === 'sm' ? 12 : 15;
+          const iconSize = size === 'lg' ? 30 : size === 'sm' ? 20 : 26;
+          return (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                <div style={{ width: iconSize, height: iconSize, backgroundColor: '#C9912A22', border: '1px solid #C9912A66', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px #C9912A33' }}>
+                  <span style={{ color: '#C9912A', fontSize: iconSize * 0.55, fontWeight: 900, lineHeight: 1 }}>◈</span>
+                </div>
+                <span style={{ color: '#C9912A', fontSize: fs, fontWeight: 900, letterSpacing: '0.16em', textTransform: 'uppercase' as const, textShadow: '0 0 12px #C9912A55' }}>ALPHASYNTH INTELLIGENCE</span>
+              </div>
+            </div>
+          );
+        };
 
-        const Divider = () => <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 16 }} />;
+        const Divider = () => <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 18 }} />;
 
-        const Footer = ({ pad = 0 }: { pad?: number }) => (
-          <div style={{ marginTop: pad || 16 }}>
+        const Footer = ({ mt = 16 }: { mt?: number }) => (
+          <div style={{ marginTop: mt }}>
             <div style={{ height: 1, backgroundColor: '#C9912A44', marginBottom: 10 }} />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ color: '#94a3b8', fontSize: 10 }}>alphasynth.app</span>
+              <span style={{ color: '#C9912A', fontSize: 13, fontWeight: 800 }}>alphasynth.app</span>
               <span style={{ color: '#94a3b8', fontSize: 10 }}>{today}</span>
               <span style={{ color: '#C9912A', fontSize: 9, fontWeight: 900, letterSpacing: '0.1em' }}>PROFESSIONAL INDIAN MARKET INTELLIGENCE</span>
             </div>
-            <div style={{ marginTop: 6, textAlign: 'center' as const }}>
+            <div style={{ marginTop: 5, textAlign: 'center' as const }}>
               <span style={{ color: '#475569', fontSize: 8 }}>Not financial advice. For informational purposes only.</span>
             </div>
           </div>
         );
 
-        const PriceCard = ({ label, value, color = '#ffffff' }: { label: string; value: string; color?: string }) => (
+        const PriceCard = ({ label, value, color = '#ffffff', fontSize = 20 }: { label: string; value: string; color?: string; fontSize?: number }) => (
           <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 10, padding: '12px 14px' }}>
             <div style={{ color: '#94a3b8', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', textTransform: 'uppercase' as const, marginBottom: 4 }}>{label}</div>
-            <div style={{ color, fontSize: 20, fontWeight: 900 }}>{value}</div>
+            <div style={{ color, fontSize, fontWeight: 900, lineHeight: 1.2 }}>{value}</div>
           </div>
         );
 
+        // FIX 2 portrait: decorative candlestick bars
+        const DecorativeBars = () => (
+          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 14, padding: '60px 0', opacity: 0.18 }}>
+            {[100, 160, 70, 200, 130, 90, 180, 110, 150, 80].map((h, i) => (
+              <div key={i} style={{ width: 20, height: h, backgroundColor: '#C9912A', borderRadius: 4 }} />
+            ))}
+          </div>
+        );
+
+        const scoreColor = Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444';
+
         return (
           <>
-            {/* SQUARE 1080×1080 */}
-            <div ref={scorecardSquareRef} style={{ ...BASE, width: 1080, height: 1080, padding: 60 }}>
-              <Header />
+            {/* SQUARE 1080 — FIX 2: flex column + auto-fill, minHeight not fixed */}
+            <div ref={scorecardSquareRef} style={{ ...BASE, width: 1080, minHeight: 1080, padding: 60, display: 'flex', flexDirection: 'column' as const }}>
+              <Header size="md" />
               <Divider />
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 22 }}>
                 <div>
-                  <div style={{ fontSize: 52, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1 }}>{tkr}</div>
-                  <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 700, marginTop: 6 }}>{quarter}</div>
+                  <div style={{ fontSize: 54, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 15, fontWeight: 700, marginTop: 7 }}>{quarter}</div>
                 </div>
                 <div style={{ textAlign: 'right' as const }}>
-                  <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 8, padding: '6px 20px', fontSize: 14, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
+                  <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 8, padding: '7px 22px', fontSize: 15, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
                   <div style={{ color: '#94a3b8', fontSize: 10, marginTop: 6 }}>Analyst Rating</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 28 }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 30 }}>
                 <PriceCard label="LTP" value={fmtPrice(eiLtp)} />
-                <PriceCard label="Target Price" value={fmtPrice(rawTgt)} color="#C9912A" />
-                <PriceCard label="Reliability Score" value={`${score}/10`} color={Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444'} />
+                <PriceCard label="Target Price" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 15 : 20} />
+                <PriceCard label="Reliability Score" value={`${score}/10`} color={scoreColor} />
               </div>
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ color: '#C9912A', fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 12 }}>PROMISE vs DELIVERY</div>
-                {promises.length > 0 ? promises.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked for this quarter.</div>}
+              <div style={{ marginBottom: 22 }}>
+                <div style={{ color: '#C9912A', fontSize: 12, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 14 }}>PROMISE vs DELIVERY</div>
+                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked for this quarter.</div>}
               </div>
-              <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
                 <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 10, padding: 16 }}>
                   <div style={{ color: '#10b981', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BULL CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bullSnippet}{bullSnippet.length >= 90 ? '…' : ''}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bullSnippet}</div>
                 </div>
                 <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 10, padding: 16 }}>
                   <div style={{ color: '#ef4444', fontSize: 9, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 6 }}>BEAR CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bearSnippet}{bearSnippet.length >= 90 ? '…' : ''}</div>
+                  <div style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.5 }}>{bearSnippet}</div>
                 </div>
+              </div>
+              {/* Spacer with decorative branding watermark to fill square */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '20px 0', opacity: 0.12 }}>
+                <div style={{ fontSize: 64, fontWeight: 900, letterSpacing: '0.2em', color: '#C9912A', textAlign: 'center' as const, lineHeight: 1 }}>ALPHASYNTH</div>
               </div>
               <Footer />
             </div>
 
-            {/* PORTRAIT 1080×1920 */}
-            <div ref={scorecardPortraitRef} style={{ ...BASE, width: 1080, height: 1920, padding: 80 }}>
-              <Header />
+            {/* PORTRAIT 1080×1920 — FIX 2: decorative bars fill space */}
+            <div ref={scorecardPortraitRef} style={{ ...BASE, width: 1080, minHeight: 1920, padding: 80, display: 'flex', flexDirection: 'column' as const }}>
+              <Header size="lg" />
               <Divider />
-              <div style={{ textAlign: 'center' as const, margin: '40px 0 30px' }}>
-                <div style={{ fontSize: 72, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>{tkr}</div>
-                <div style={{ color: '#C9912A', fontSize: 18, fontWeight: 700, marginTop: 10 }}>{quarter}</div>
-                <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 10, padding: '8px 28px', fontSize: 16, fontWeight: 900, letterSpacing: '0.18em', marginTop: 16 }}>{rating}</div>
+              <div style={{ textAlign: 'center' as const, margin: '44px 0 36px' }}>
+                <div style={{ fontSize: 80, fontWeight: 900, letterSpacing: '-3px', lineHeight: 1 }}>{tkr}</div>
+                <div style={{ color: '#C9912A', fontSize: 20, fontWeight: 700, marginTop: 12 }}>{quarter}</div>
+                <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 10, padding: '9px 30px', fontSize: 17, fontWeight: 900, letterSpacing: '0.18em', marginTop: 18 }}>{rating}</div>
               </div>
-              <div style={{ display: 'flex', gap: 16, marginBottom: 48 }}>
-                <PriceCard label="LTP" value={fmtPrice(eiLtp)} />
-                <PriceCard label="Target" value={fmtPrice(rawTgt)} color="#C9912A" />
-                <PriceCard label="Reliability" value={`${score}/10`} color={Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444'} />
+              <div style={{ display: 'flex', gap: 18, marginBottom: 52 }}>
+                <PriceCard label="LTP" value={fmtPrice(eiLtp)} fontSize={22} />
+                <PriceCard label="Target" value={fmtTgt} color="#C9912A" fontSize={fmtTgt.length > 14 ? 16 : 22} />
+                <PriceCard label="Reliability" value={`${score}/10`} color={scoreColor} fontSize={22} />
               </div>
-              <div style={{ marginBottom: 48 }}>
-                <div style={{ color: '#C9912A', fontSize: 13, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 18 }}>PROMISE vs DELIVERY</div>
-                {promises.length > 0 ? promises.map((p: any, i: number) => <PromiseRow key={i} p={p} />) : <div style={{ color: '#475569', fontSize: 13 }}>No promises tracked.</div>}
+              <div style={{ marginBottom: 52 }}>
+                <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 20 }}>PROMISE vs DELIVERY</div>
+                {promises4.length > 0 ? promises4.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={14} />) : <div style={{ color: '#475569', fontSize: 14 }}>No promises tracked.</div>}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 16, marginBottom: 48 }}>
-                <div style={{ backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 14, padding: 24 }}>
-                  <div style={{ color: '#10b981', fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 10 }}>BULL CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.6 }}>{bullSnippet}{bullSnippet.length >= 90 ? '…' : ''}</div>
+              <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 18, marginBottom: 40 }}>
+                <div style={{ backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 14, padding: 28 }}>
+                  <div style={{ color: '#10b981', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 12 }}>BULL CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{bullSnippet}</div>
                 </div>
-                <div style={{ backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 14, padding: 24 }}>
-                  <div style={{ color: '#ef4444', fontSize: 10, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 10 }}>BEAR CASE</div>
-                  <div style={{ color: '#94a3b8', fontSize: 14, lineHeight: 1.6 }}>{bearSnippet}{bearSnippet.length >= 90 ? '…' : ''}</div>
+                <div style={{ backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 14, padding: 28 }}>
+                  <div style={{ color: '#ef4444', fontSize: 11, fontWeight: 900, letterSpacing: '0.15em', marginBottom: 12 }}>BEAR CASE</div>
+                  <div style={{ color: '#94a3b8', fontSize: 15, lineHeight: 1.6 }}>{bearSnippet}</div>
                 </div>
               </div>
-              <Footer pad={40} />
+              {/* Decorative candlestick bars fill vertical space */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <DecorativeBars />
+              </div>
+              <Footer mt={40} />
             </div>
 
-            {/* LANDSCAPE 1200×630 */}
-            <div ref={scorecardLandscapeRef} style={{ ...BASE, width: 1200, height: 630, padding: 48 }}>
-              <div style={{ display: 'flex', gap: 48, height: '100%' }}>
+            {/* LANDSCAPE 1200×630 — FIX 2: show 5 promises */}
+            <div ref={scorecardLandscapeRef} style={{ ...BASE, width: 1200, minHeight: 630, padding: 48, display: 'flex', flexDirection: 'column' as const }}>
+              <div style={{ display: 'flex', gap: 48, flex: 1 }}>
                 {/* Left column */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const }}>
-                  <Header />
+                  <Header size="sm" />
                   <Divider />
-                  <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1, marginBottom: 6 }}>{tkr}</div>
-                  <div style={{ color: '#C9912A', fontSize: 13, fontWeight: 700, marginBottom: 16 }}>{quarter}</div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-                    <div style={{ backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 6, padding: '4px 14px', fontSize: 12, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
+                  <div style={{ fontSize: 46, fontWeight: 900, letterSpacing: '-2px', lineHeight: 1, marginBottom: 7 }}>{tkr}</div>
+                  <div style={{ color: '#C9912A', fontSize: 14, fontWeight: 700, marginBottom: 14 }}>{quarter}</div>
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'inline-block', backgroundColor: ratingColor + '22', color: ratingColor, border: `1px solid ${ratingColor}66`, borderRadius: 6, padding: '5px 16px', fontSize: 13, fontWeight: 900, letterSpacing: '0.15em' }}>{rating}</div>
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginBottom: 'auto' as const }}>
                     <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
@@ -5832,30 +5902,29 @@ ${list}
                     </div>
                     <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
                       <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>TARGET</div>
-                      <div style={{ color: '#C9912A', fontSize: 15, fontWeight: 900 }}>{fmtPrice(rawTgt)}</div>
+                      <div style={{ color: '#C9912A', fontSize: fmtTgt.length > 12 ? 11 : 15, fontWeight: 900 }}>{fmtTgt}</div>
                     </div>
                     <div style={{ flex: 1, backgroundColor: '#0f1f3d', border: '1px solid #C9912A44', borderRadius: 8, padding: '10px 12px' }}>
                       <div style={{ color: '#94a3b8', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 3 }}>RELIABILITY</div>
-                      <div style={{ color: Number(score) >= 7 ? '#10b981' : Number(score) >= 5 ? '#f59e0b' : '#ef4444', fontSize: 15, fontWeight: 900 }}>{score}/10</div>
+                      <div style={{ color: scoreColor, fontSize: 15, fontWeight: 900 }}>{score}/10</div>
                     </div>
                   </div>
-                  <Footer />
+                  <Footer mt={16} />
                 </div>
-                {/* Divider */}
-                <div style={{ width: 1, backgroundColor: '#C9912A33' }} />
-                {/* Right column */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' as const }}>
+                {/* Vertical divider */}
+                <div style={{ width: 1, backgroundColor: '#C9912A33', alignSelf: 'stretch' }} />
+                {/* Right column — FIX 2: 5 promises */}
+                <div style={{ flex: 1.1, display: 'flex', flexDirection: 'column' as const }}>
                   <div style={{ color: '#C9912A', fontSize: 10, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase' as const, marginBottom: 14 }}>PROMISE vs DELIVERY</div>
-                  {promises.slice(0, 3).map((p: any, i: number) => <PromiseRow key={i} p={p} />)}
-                  {promises.length === 0 && <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked.</div>}
-                  <div style={{ marginTop: 16, display: 'flex', gap: 10, flex: 1, alignItems: 'flex-start' }}>
+                  {promises5.length > 0 ? promises5.map((p: any, i: number) => <PromiseRow key={i} p={p} fontSize={10} />) : <div style={{ color: '#475569', fontSize: 11 }}>No promises tracked.</div>}
+                  <div style={{ marginTop: 'auto' as const, display: 'flex', gap: 10 }}>
                     <div style={{ flex: 1, backgroundColor: '#10b98111', border: '1px solid #10b98133', borderRadius: 8, padding: 12 }}>
                       <div style={{ color: '#10b981', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BULL</div>
-                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{bullSnippet.substring(0, 70)}{bullSnippet.length >= 70 ? '…' : ''}</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{truncWord(bullSnippet, 70)}</div>
                     </div>
                     <div style={{ flex: 1, backgroundColor: '#ef444411', border: '1px solid #ef444433', borderRadius: 8, padding: 12 }}>
                       <div style={{ color: '#ef4444', fontSize: 8, fontWeight: 900, letterSpacing: '0.12em', marginBottom: 5 }}>BEAR</div>
-                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{bearSnippet.substring(0, 70)}{bearSnippet.length >= 70 ? '…' : ''}</div>
+                      <div style={{ color: '#94a3b8', fontSize: 10, lineHeight: 1.5 }}>{truncWord(bearSnippet, 70)}</div>
                     </div>
                   </div>
                 </div>
@@ -5867,10 +5936,31 @@ ${list}
 
       {/* ── Mobile scorecard preview modal ─────────────────────────────────── */}
       {scorecardMobileUrl && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-          <p style={{ color: '#C9912A', fontWeight: 900, fontSize: 13, letterSpacing: '0.15em', marginBottom: 12, textTransform: 'uppercase' }}>LONG-PRESS IMAGE TO SAVE</p>
-          <img src={scorecardMobileUrl} alt="Scorecard" style={{ maxWidth: '100%', maxHeight: '70vh', borderRadius: 12, border: '1px solid #C9912A44' }} />
-          <button onClick={() => setScorecardMobileUrl(null)} style={{ marginTop: 20, padding: '10px 28px', backgroundColor: '#C9912A', color: '#000', fontWeight: 900, fontSize: 11, borderRadius: 10, border: 'none', cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Close</button>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 9999, backgroundColor: 'rgba(0,0,0,0.9)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <p style={{ color: '#C9912A', fontWeight: 900, fontSize: 14, letterSpacing: '0.12em', marginBottom: 6, textTransform: 'uppercase' }}>Long-press image to save to Photos</p>
+          <p style={{ color: '#94a3b8', fontSize: 11, marginBottom: 16 }}>Then share on WhatsApp, Instagram, or Twitter</p>
+          <img src={scorecardMobileUrl} alt="Earnings Scorecard" style={{ maxWidth: '100%', maxHeight: '65vh', borderRadius: 12, border: '1px solid #C9912A44' }} />
+          <button onClick={() => setScorecardMobileUrl(null)} style={{ marginTop: 20, padding: '12px 32px', backgroundColor: '#C9912A', color: '#000', fontWeight: 900, fontSize: 12, borderRadius: 10, border: 'none', cursor: 'pointer', letterSpacing: '0.12em', textTransform: 'uppercase' }}>Close</button>
+        </div>
+      )}
+
+      {/* ── Post-download success modal (FIX 7) ───────────────────────────── */}
+      {scorecardSuccess && (
+        <div style={{ position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)', zIndex: 9999, backgroundColor: '#0f1f3d', border: '1px solid #C9912A66', borderRadius: 16, padding: '24px 32px', maxWidth: 480, width: 'calc(100% - 48px)', boxShadow: '0 8px 40px rgba(0,0,0,0.6)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span style={{ color: '#10b981', fontSize: 20 }}>✓</span>
+            <span style={{ color: '#ffffff', fontWeight: 900, fontSize: 14, letterSpacing: '0.05em' }}>Scorecard Downloaded!</span>
+          </div>
+          <p style={{ color: '#94a3b8', fontSize: 11, lineHeight: 1.7, marginBottom: 14 }}>
+            Three sizes saved to your Downloads folder:<br />
+            <span style={{ color: '#C9912A' }}>■</span> Square (1080×1080) — Instagram feed<br />
+            <span style={{ color: '#C9912A' }}>■</span> Portrait (1080×1920) — WhatsApp Status &amp; Stories<br />
+            <span style={{ color: '#C9912A' }}>■</span> Landscape (1200×630) — Twitter &amp; LinkedIn
+          </p>
+          <p style={{ color: '#64748b', fontSize: 10, lineHeight: 1.6, marginBottom: 16 }}>
+            To share on WhatsApp: Open WhatsApp → any chat → attach image → select from Downloads
+          </p>
+          <button onClick={() => setScorecardSuccess(false)} style={{ padding: '8px 20px', backgroundColor: '#C9912A', color: '#000', fontWeight: 900, fontSize: 11, borderRadius: 8, border: 'none', cursor: 'pointer', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Got it</button>
         </div>
       )}
     </div>
