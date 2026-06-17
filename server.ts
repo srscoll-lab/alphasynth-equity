@@ -267,18 +267,19 @@ const SERVER_INTEL_FALLBACK = {
   sources: [],
   snapshotTime: new Date().toISOString()
 };
-// ── In-memory report cache — DISABLED (wrong-ticker-content bug under investigation) ──
+// ── In-memory report cache — keyed by "TICKER_mode", 30-minute TTL ────────
 const reportCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS = 30 * 60 * 1000;
-reportCache.clear(); // clear any pre-existing entries on startup
 
-function getCached(_key: string): any | null {
-  // CACHE DISABLED — always return null until root cause is confirmed
-  return null;
+function getCached(key: string): any | null {
+  const entry = reportCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) { reportCache.delete(key); return null; }
+  return entry.data;
 }
 
-function setCached(_key: string, _data: any): void {
-  // CACHE DISABLED — do not store anything
+function setCached(key: string, data: any): void {
+  reportCache.set(key, { data, timestamp: Date.now() });
 }
 
 // ── Nifty 50 static skip list — great Gemini grounding, Firecrawl returns nav ──
@@ -862,11 +863,27 @@ Governance Cleanliness: X`;
     }, 120000);
 
     try {
-      // ── Cache check — DISABLED (wrong-ticker-content bug; re-enable after root cause fix) ──
-      const cacheKey = `${cleanTicker}_${mode || 'deep_dive'}`;
-      // const cached = getCached(cacheKey);
-      // if (cached) { ... serve from cache ... }
-      console.log(`[CACHE] DISABLED — key would be: ${cacheKey}`);
+      // ── Cache check — strict ticker + mode validation on every hit ──────────
+      const resolvedMode = mode || 'deep_dive';
+      const cacheKey = `${cleanTicker}_${resolvedMode}`;
+      const cached = getCached(cacheKey);
+      if (cached) {
+        const tickerMatch = cached.ticker?.toUpperCase() === cleanTicker.toUpperCase();
+        const modeMatch  = cached.mode === resolvedMode;
+        if (!tickerMatch || !modeMatch) {
+          console.warn(`[CACHE] MISMATCH — deleting bad entry for key ${cacheKey} (stored ticker=${cached.ticker} mode=${cached.mode})`);
+          reportCache.delete(cacheKey);
+        } else {
+          console.log(`[CACHE] HIT — ${cacheKey} (ticker validated ✓)`);
+          send({ type: 'replace', text: cached.report });
+          if (cached.benchmarking) send({ type: 'benchmarking', data: cached.benchmarking });
+          send({ type: 'done', confidence: cached.confidence, fromCache: true });
+          res.end();
+          return;
+        }
+      } else {
+        console.log(`[CACHE] MISS — ${cacheKey}`);
+      }
 
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -1071,9 +1088,9 @@ Governance Cleanliness: X`;
 
       send({ type: 'benchmarking', data: benchmarking });
       const streamConfidence = assessConfidence(accumulatedReport);
-      // ── Cache write — DISABLED (wrong-ticker-content bug; re-enable after root cause fix) ──
-      // setCached(cacheKey, { ticker: cleanTicker, report: accumulatedReport, benchmarking, confidence: streamConfidence });
-      console.log(`[CACHE] DISABLED — skipping write for key: ${cacheKey}`);
+      // ── Cache write — only after full stream completion, with ticker+mode stored for validation ──
+      setCached(cacheKey, { ticker: cleanTicker, mode: resolvedMode, report: accumulatedReport, benchmarking, confidence: streamConfidence });
+      console.log(`[CACHE] WRITTEN — ${cacheKey} (${accumulatedReport.length} chars)`);
       console.log(`[ANALYZE/STREAM] Complete. report=${accumulatedReport.length} chars, confidence=${streamConfidence}`);
       send({ type: 'done', confidence: streamConfidence });
       res.end();
