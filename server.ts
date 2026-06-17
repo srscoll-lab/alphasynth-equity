@@ -267,6 +267,39 @@ const SERVER_INTEL_FALLBACK = {
   sources: [],
   snapshotTime: new Date().toISOString()
 };
+// ── In-memory report cache — keyed by "TICKER_mode", 30-minute TTL ────────
+const reportCache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_TTL_MS = 30 * 60 * 1000;
+
+function getCached(key: string): any | null {
+  const entry = reportCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.timestamp > CACHE_TTL_MS) { reportCache.delete(key); return null; }
+  return entry.data;
+}
+
+function setCached(key: string, data: any): void {
+  reportCache.set(key, { data, timestamp: Date.now() });
+}
+
+// ── Nifty 50 static skip list — great Gemini grounding, Firecrawl returns nav ──
+const NIFTY50_SKIP_SCRAPE = new Set([
+  'RELIANCE','TCS','HDFCBANK','INFY','HINDUNILVR','ICICIBANK','KOTAKBANK',
+  'AXISBANK','SBIN','BAJFINANCE','BHARTIARTL','ASIANPAINT','MARUTI',
+  'TATAMOTORS','WIPRO','ULTRACEMCO','NESTLEIND','POWERGRID','NTPC','ONGC',
+  'TITAN','SUNPHARMA','DRREDDY','DIVISLAB','CIPLA','BAJAJFINSV','TECHM',
+  'HCLTECH','ADANIENT','ADANIPORTS','TATASTEEL','JSWSTEEL','HINDALCO',
+  'COALINDIA','GRASIM','BRITANNIA','EICHERMOT','HEROMOTOCO','BAJAJ-AUTO',
+  'M&M','LT','L&T','INDUSINDBK','HDFCLIFE','SBILIFE','BPCL','IOC',
+  'TATACONSUM','APOLLOHOSP','VEDL'
+]);
+
+// ── Adaptive failure tracker for mid/small cap scrape skipping ───────────────
+const scrapeFailureTracker = new Map<string, { failures: number; lastAttempt: number }>();
+const runtimeSkipSet = new Set<string>();
+const MAX_FAILURES_BEFORE_SKIP = 3;
+const FAILURE_MEMORY_MS = 24 * 60 * 60 * 1000;
+
 async function startServer() {
   app.use(express.json());
 
@@ -284,9 +317,11 @@ async function startServer() {
     const { url, ticker, mode } = req.body;
     const scraper = getFirecrawl();
     if (!scraper) return res.status(500).json({ error: "Scraper offline" });
-    // Problem 2: Pure pattern validation — synchronous, no API calls
+
+    const cleanTicker = ticker ? ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim() : "";
+
+    // Validation (skip for URL-based scrapes)
     if (ticker && !url) {
-      const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
       const validation = validateTicker(cleanTicker);
       if (!validation.isValid) {
         return res.status(422).json({
@@ -295,6 +330,30 @@ async function startServer() {
         });
       }
     }
+
+    // Layer 1: Static Nifty50 skip — Firecrawl returns nav content for these
+    if (cleanTicker && !url && NIFTY50_SKIP_SCRAPE.has(cleanTicker)) {
+      console.log(`[SCRAPE] Skipping Nifty50 ticker ${cleanTicker} - going straight to Gemini grounding`);
+      return res.json({ scrapedMarkdown: "Large-cap skip — Gemini grounding is the primary source.", sourceUrl: "", searchMode: true });
+    }
+
+    // Layer 2: Adaptive skip — tickers with 3 consecutive scrape failures in 24h
+    if (cleanTicker && !url && runtimeSkipSet.has(cleanTicker)) {
+      const entry = scrapeFailureTracker.get(cleanTicker);
+      if (entry && (Date.now() - entry.lastAttempt) < FAILURE_MEMORY_MS) {
+        console.log(`[SCRAPE] Skipping ${cleanTicker} after ${MAX_FAILURES_BEFORE_SKIP} consecutive failures - using Gemini grounding`);
+        return res.json({ scrapedMarkdown: "Scrape skip after repeated failures — Gemini grounding is primary.", sourceUrl: "", searchMode: true });
+      }
+      // Reset after 24h
+      runtimeSkipSet.delete(cleanTicker);
+      scrapeFailureTracker.delete(cleanTicker);
+    }
+
+    const prevFailures = scrapeFailureTracker.get(cleanTicker)?.failures || 0;
+    if (cleanTicker && !url) {
+      console.log(`[SCRAPE] Attempting scrape for ${cleanTicker} (${prevFailures} previous failures)`);
+    }
+
     try {
       let finalUrl = url;
       if (!finalUrl && ticker) {
@@ -321,9 +380,18 @@ async function startServer() {
         const rawContent = scrapeResult?.markdown || (typeof scrapeResult === 'string' ? scrapeResult : "");
         if (isScrapedContentUsable(rawContent)) {
           scrapedMarkdown = rawContent;
-          console.log(`[SCRAPER] Accepted ${rawContent.length} chars for ${ticker} (${mode})`);
+          console.log(`[SCRAPE] ${cleanTicker} scrape succeeded and passed content check (${rawContent.length} chars)`);
+          // Reset failure count on success
+          if (cleanTicker) scrapeFailureTracker.set(cleanTicker, { failures: 0, lastAttempt: Date.now() });
         } else {
-          console.log(`[SCRAPER] Rejected scraped content for ${ticker} (${mode}) — nav/non-financial content detected`);
+          const prev = scrapeFailureTracker.get(cleanTicker) || { failures: 0, lastAttempt: 0 };
+          const newFailures = prev.failures + 1;
+          if (cleanTicker) scrapeFailureTracker.set(cleanTicker, { failures: newFailures, lastAttempt: Date.now() });
+          console.log(`[SCRAPE] ${cleanTicker} scrape failed content check (failure ${newFailures}/${MAX_FAILURES_BEFORE_SKIP})`);
+          if (newFailures >= MAX_FAILURES_BEFORE_SKIP && cleanTicker) {
+            runtimeSkipSet.add(cleanTicker);
+            console.log(`[SCRAPE] Skipping ${cleanTicker} after ${MAX_FAILURES_BEFORE_SKIP} consecutive failures - using Gemini grounding`);
+          }
         }
       }
       res.json({ scrapedMarkdown, ticker, sourceUrl: finalUrl });
@@ -795,6 +863,18 @@ Governance Cleanliness: X`;
     }, 120000);
 
     try {
+      // ── Cache check ────────────────────────────────────────────────────────
+      const cacheKey = `${cleanTicker}_${mode || 'deep_dive'}`;
+      const cached = getCached(cacheKey);
+      if (cached) {
+        console.log(`[ANALYZE/STREAM] Cache hit for ${cacheKey} — returning cached result`);
+        send({ type: 'replace', text: cached.report });
+        if (cached.benchmarking) send({ type: 'benchmarking', data: cached.benchmarking });
+        send({ type: 'done', confidence: cached.confidence, fromCache: true });
+        res.end();
+        return;
+      }
+
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
       const streamSearchTicker = searchQueryTicker(cleanTicker);
@@ -998,6 +1078,8 @@ Governance Cleanliness: X`;
 
       send({ type: 'benchmarking', data: benchmarking });
       const streamConfidence = assessConfidence(accumulatedReport);
+      // ── Cache write ────────────────────────────────────────────────────────
+      setCached(cacheKey, { report: accumulatedReport, benchmarking, confidence: streamConfidence });
       console.log(`[ANALYZE/STREAM] Complete. report=${accumulatedReport.length} chars, confidence=${streamConfidence}`);
       send({ type: 'done', confidence: streamConfidence });
       res.end();

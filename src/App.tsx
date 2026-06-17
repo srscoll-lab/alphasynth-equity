@@ -362,6 +362,8 @@ function isValidTickerPattern(ticker: string): boolean {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
+  const [streamingReport, setStreamingReport] = useState<string>('');
+  const [reportFromCache, setReportFromCache] = useState<boolean>(false);
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
   const [searchUrl, setSearchUrl] = useState('');
@@ -1677,11 +1679,8 @@ ${list}
     }
   };
 
-  useEffect(() => {
-    if (lastReport?.ticker) {
-      fetchPeers(lastReport.ticker);
-    }
-  }, [lastReport?.ticker]);
+  // Peers are fetched in parallel from triggerAnalysis — no auto-fetch on lastReport change
+  // (manual refresh still available via the Refresh Peers button)
 
   const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false) => {
     const tkr = tickerOverride || ticker;
@@ -1706,6 +1705,7 @@ ${list}
     setTickerValidationFailed(false);
     if (!keepReportOpen) {
       setLastReport(null);
+      setStreamingReport('');
       setPeersData([]);
       setPeersError(null);
       setScripLtp(0);
@@ -1713,6 +1713,8 @@ ${list}
     }
     setError(null);
     setAnalysisStatus('Initializing Analysis Pipeline...');
+    // Kick off peers fetch in parallel — resolves independently while analysis runs
+    fetchPeers(tkr);
 
     // Cycle through status messages while the multi-stage server pipeline runs
     const analysisStages = [
@@ -1803,43 +1805,79 @@ ${list}
 
   const runGeminiAnalysis = async (scrapedMarkdown: string, ticker: string, usedUrl: string, targetMode?: 'deep_dive' | 'earnings' | 'move') => {
       setIsShareMode(false);
+      setStreamingReport('');
+      setReportFromCache(false);
       const activeMode = targetMode || workflowMode;
-      
+
+      // ── Streaming SSE fetch ────────────────────────────────────────────────
+      const streamRes = await fetch("/api/pipeline/analyze/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker, context: scrapedMarkdown.substring(0, 10000), mode: activeMode })
+      });
+
+      if (!streamRes.ok) {
+        const text = await streamRes.text();
+        let errData: any = {};
+        try { errData = JSON.parse(text); } catch {}
+        if (errData.error === 'TICKER_NOT_FOUND' || errData.error === 'INSUFFICIENT_DATA') {
+          throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${ticker.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
+        }
+        throw new Error(errData.message || text || "Analysis server returned an error.");
+      }
+
+      // Parse SSE chunks
+      const reader = streamRes.body!.getReader();
+      const decoder = new TextDecoder();
+      let sseBuffer = '';
+      let accumulated = '';
+      let fromCache = false;
+
       try {
-        const response = await fetch("/api/pipeline/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            ticker, 
-            context: scrapedMarkdown.substring(0, 10000), 
-            sourceUrl: usedUrl,
-            mode: activeMode,
-            dataSources
-          })
-        });
-
-        if (!response.ok) {
-          const text = await response.text();
-          let errData: any = {};
-          try { errData = JSON.parse(text); } catch {}
-          if (errData.error === 'TICKER_NOT_FOUND' || errData.error === 'INSUFFICIENT_DATA') {
-            throw new Error(`TICKER_INVALID:${errData.message || `We could not find '${ticker.toUpperCase()}' listed on NSE or BSE. Please verify the stock symbol and try again. Example valid symbols: RELIANCE, TCS, HDFCBANK, INFY (Infosys), TATAMOTORS`}`);
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          sseBuffer += decoder.decode(value, { stream: true });
+          const events = sseBuffer.split('\n\n');
+          sseBuffer = events.pop() || '';
+          for (const event of events) {
+            if (!event.startsWith('data: ')) continue;
+            try {
+              const ev = JSON.parse(event.slice(6));
+              if (ev.type === 'chunk') {
+                accumulated += ev.text;
+                setStreamingReport(accumulated);
+              } else if (ev.type === 'replace') {
+                accumulated = ev.text;
+                setStreamingReport(accumulated);
+              } else if (ev.type === 'stage') {
+                setAnalysisStatus(ev.message);
+              } else if (ev.type === 'done') {
+                fromCache = !!ev.fromCache;
+              } else if (ev.type === 'error') {
+                throw new Error(ev.message || 'Stream error');
+              }
+            } catch (parseErr: any) {
+              if (parseErr.message?.startsWith('Stream error')) throw parseErr;
+            }
           }
-          throw new Error(errData.message || text || "Analysis server returned an error.");
         }
+      } finally {
+        reader.releaseLock();
+      }
 
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          const text = await response.text();
-          throw new Error(`Expected JSON but got: ${text.substring(0, 50)}`);
-        }
+      const report = accumulated;
+      if (!report) {
+        throw new Error("Gemini returned an empty response.");
+      }
 
-        const data = await response.json();
-        const { report } = data;
+      setReportFromCache(fromCache);
 
-        if (!report) {
-          throw new Error("Gemini returned an empty response.");
-        }
+      // (data object shim for confidence — stream sends confidence in 'done' event,
+      //  but we assess it from the report length directly here for consistency)
+      const data = { confidence: undefined as any };
+
+      try {
 
         // Problem 4: only mark thin when content explicitly says no context was available
         const scrapeQuality: 'good' | 'thin' = scrapedMarkdown.includes('Direct context unavailable') ? 'thin' : 'good';
@@ -1912,7 +1950,7 @@ ${list}
           targetPrice: parsePrice('Consensus Target Price'),
           stopLoss: parsePrice('Strategic Stop Loss'),
           parsedLtp: parsedLtpValue,
-          confidence: (data.confidence as 'high' | 'medium' | 'low') || 'medium',
+          confidence: (data.confidence as 'high' | 'medium' | 'low') || (report.length > 3000 ? 'high' : report.length > 1000 ? 'medium' : 'low'),
           scrapeQuality
         };
 
@@ -2259,6 +2297,19 @@ ${list}
                 {/* Main Content */}
                 <div className="lg:col-span-8 space-y-12">
                   {analyzing ? (
+                    streamingReport.length >= 100 ? (
+                      /* ── Streaming report view — shows as text arrives ── */
+                      <div className="relative">
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
+                          <span className="text-[9px] font-black text-gold uppercase tracking-widest">{analysisStatus || 'Streaming report...'}</span>
+                        </div>
+                        <div className="prose prose-invert prose-sm max-w-none leading-relaxed text-zinc-300 selection:bg-gold/30">
+                          <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{streamingReport}</Markdown>
+                        </div>
+                        <span className="inline-block w-2 h-4 bg-gold/70 animate-pulse ml-1 align-middle rounded-sm" />
+                      </div>
+                    ) : (
                     <div className="flex flex-col items-center justify-center py-20 px-8 text-center bg-zinc-950/40 border border-gold/10 rounded-3xl min-h-[500px]">
                       <div className="relative w-24 h-24 mb-8">
                         {/* Radial Scanning Rings */}
@@ -2268,7 +2319,7 @@ ${list}
                           <Zap className="w-8 h-8 text-gold fill-current animate-pulse" />
                         </div>
                       </div>
-                      
+
                       <span className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-2">Alphasynth Intelligence</span>
                       <h3 className="text-xl font-display font-medium text-white mb-2">
                         {workflowMode === 'earnings_intelligence' ? 'Building Earnings Intelligence' : workflowMode === 'move' ? 'Analysing Price Action' : 'Running Deep Dive Research'}
@@ -2293,6 +2344,7 @@ ${list}
                         </div>
                       </div>
                     </div>
+                    )
                   ) : (
                     <div ref={reportContentRef} className="no-scrollbar">
                       {/* Interactive Visual Differential Widgets based on Mode */}
@@ -2567,6 +2619,7 @@ ${list}
 
                       {/* Data confidence + scrape quality — placed after content as a subtle footer indicator */}
                       <div className="mt-8 pt-4 border-t border-app-border flex flex-col gap-2">
+                        <div className="flex flex-wrap gap-2">
                         {lastReport.confidence && (
                           <div className={`flex items-center gap-2 px-2.5 py-1 rounded border text-[9px] font-bold tracking-wider w-fit ${
                             lastReport.confidence === 'high'
@@ -2584,6 +2637,12 @@ ${list}
                             {lastReport.confidence === 'low' && 'LOW CONFIDENCE: Minimal data found, treat this report with caution'}
                           </div>
                         )}
+                        {reportFromCache && (
+                          <span className="px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            ⚡ CACHED
+                          </span>
+                        )}
+                        </div>
                         {lastReport.scrapeQuality === 'thin' && (
                           <p className="text-[9px] text-amber-600/70 font-medium">
                             Limited scraped source data — report relies primarily on AI search grounding. Verify key figures from official NSE/BSE filings.
