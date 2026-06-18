@@ -269,7 +269,8 @@ const SERVER_INTEL_FALLBACK = {
 };
 // ── In-memory report cache — keyed by "TICKER_mode", 30-minute TTL ────────
 const reportCache = new Map<string, { data: any; timestamp: number }>();
-const CACHE_TTL_MS = 30 * 60 * 1000;
+const CACHE_TTL_MS       = 30 * 60 * 1000;  // 30 min for reports
+const PEERS_CACHE_TTL_MS =  2 * 60 * 60 * 1000;  // 2 hr for peers
 
 function getCached(key: string): any | null {
   const entry = reportCache.get(key);
@@ -1109,6 +1110,16 @@ Governance Cleanliness: X`;
     if (!ticker) return res.status(500).json({ error: "Setup missing" });
     const ai = getGenAI();
     const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+
+    // Peers cache — 2-hour TTL
+    const peersCacheKey = `PEERS_${cleanTicker}`;
+    const peersEntry = reportCache.get(peersCacheKey);
+    if (peersEntry && (Date.now() - peersEntry.timestamp) < PEERS_CACHE_TTL_MS) {
+      console.log(`[CACHE] PEERS HIT — ${cleanTicker}`);
+      return res.json(peersEntry.data);
+    }
+    console.log(`[CACHE] PEERS MISS — ${cleanTicker}`);
+
     try {
       const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -1217,6 +1228,8 @@ Governance Cleanliness: X`;
       }
 
       console.log(`[peers/${cleanTicker}] Final peers payload (${parsedData?.peers?.length ?? 0} companies):`, JSON.stringify(parsedData?.peers, null, 2));
+      reportCache.set(peersCacheKey, { data: parsedData, timestamp: Date.now() });
+      console.log(`[CACHE] PEERS WRITTEN — ${cleanTicker}`);
       res.json(parsedData);
     } catch (error: any) {
       console.error(`[peers/${cleanTicker}] Error:`, error?.message || error);
@@ -1607,6 +1620,11 @@ For fiiNet and diiNet at the top level: use null only if genuinely unavailable. 
   // Landing page — served at root in both dev and prod
   app.get('/', (req, res) => {
     res.sendFile(path.join(process.cwd(), 'landing-concept2.html'));
+  });
+
+  // Landing page assets — served individually from project root
+  app.get('/sample-report.png', (req, res) => {
+    res.sendFile(path.join(process.cwd(), 'sample-report.png'));
   });
 
   if (process.env.NODE_ENV !== "production") {

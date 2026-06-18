@@ -3252,11 +3252,17 @@ ${list}
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50`}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 group">
+          <a href="/" className="flex items-center gap-2 group relative cursor-pointer" title="Back to home">
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-white group-hover:text-gold transition-colors">Alphasynth Intelligence</span>
+            <span className="font-bold text-xl tracking-tight text-white group-hover:text-gold transition-colors">
+              Alphasynth Intelligence
+              <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
+            </span>
+            <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
+              ← Home
+            </span>
           </a>
           <div className="flex items-center gap-4">
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
@@ -4027,6 +4033,9 @@ ${list}
                            </h3>
                            <p className="text-xs text-zinc-400 mt-1 font-medium leading-relaxed">
                               Real-time side-by-side comparative diagnostics of key valuation and capital efficiency metrics for <strong className="text-white">{(lastReport?.ticker || ticker).toUpperCase()}</strong> and its closest sector competitors.
+                           </p>
+                           <p className="text-xs text-zinc-600 italic mt-1.5 leading-relaxed">
+                              Peers are AI-selected based on sector classification and may vary between sessions. Data sourced via live market grounding.
                            </p>
                         </div>
                         
