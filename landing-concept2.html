@@ -938,7 +938,9 @@
       content: '';
       position: absolute;
       inset: 0;
-      background: radial-gradient(ellipse at top left, rgba(201, 145, 42, 0.05) 0%, transparent 60%);
+      background:
+        radial-gradient(ellipse at top left, rgba(201, 145, 42, 0.05) 0%, transparent 60%),
+        linear-gradient(to bottom, transparent 60%, rgba(201, 145, 42, 0.04) 100%);
       pointer-events: none;
     }
     .stat-card::after {
@@ -1059,14 +1061,25 @@
     .persona-card {
       padding: var(--space-6);
       background: var(--color-surface-card);
-      border: 1px solid var(--color-border);
+      border: 1px solid rgba(201, 145, 42, 0.12);
       border-radius: var(--radius-lg);
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
       position: relative;
       overflow: hidden;
-      transition: border-color 240ms var(--ease-out), transform 240ms var(--ease-out);
+      isolation: isolate;
+      transition: border-color 300ms ease, transform 300ms ease, box-shadow 300ms ease;
+    }
+    .persona-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 60%, rgba(201, 145, 42, 0.08) 100%);
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.5;
+      transition: opacity 300ms ease;
     }
     .persona-card::after {
       content: '';
@@ -1078,7 +1091,12 @@
       transform-origin: left;
       transition: transform 360ms var(--ease-out);
     }
-    .persona-card:hover { border-color: var(--color-gold-border); transform: translateY(-3px); }
+    .persona-card:hover {
+      border-color: rgba(201, 145, 42, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 24px rgba(201, 145, 42, 0.08);
+    }
+    .persona-card:hover::before { opacity: 1; }
     .persona-card:hover::after { transform: scaleX(1); }
 
     .persona-icon {
@@ -1131,21 +1149,30 @@
     .benefit-card {
       padding: var(--space-6);
       background: var(--color-surface-card);
-      border: 1px solid var(--color-border);
+      border: 1px solid rgba(201, 145, 42, 0.12);
       border-radius: var(--radius-lg);
       display: flex;
       flex-direction: column;
       gap: var(--space-4);
       position: relative;
       overflow: hidden;
-      transition: border-color 240ms var(--ease-out),
-                  transform    240ms var(--ease-out),
-                  box-shadow   240ms var(--ease-out);
+      isolation: isolate;
+      transition: border-color 300ms ease, transform 300ms ease, box-shadow 300ms ease;
+    }
+    .benefit-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 60%, rgba(201, 145, 42, 0.08) 100%);
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.5;
+      transition: opacity 300ms ease;
     }
     .benefit-card:hover {
-      border-color: var(--color-gold-border);
-      transform: translateY(-3px);
-      box-shadow: 0 8px 32px rgba(201, 145, 42, 0.09);
+      border-color: rgba(201, 145, 42, 0.35);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 24px rgba(201, 145, 42, 0.08);
     }
     .benefit-card::after {
       content: '';
@@ -1157,6 +1184,7 @@
       transform-origin: left;
       transition: transform 360ms var(--ease-out);
     }
+    .benefit-card:hover::before { opacity: 1; }
     .benefit-card:hover::after { transform: scaleX(1); }
 
     .benefit-icon {
@@ -1185,6 +1213,8 @@
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1; transform: none; transition: none; }
       .stat-card.do-float { animation: none; }
+      .benefit-card::before,
+      .persona-card::before { transition: none; }
     }
 
     /* ─── mobile tweaks ───────────────────────────────────────────────────── */
@@ -1195,8 +1225,14 @@
       .benefits-section { padding: var(--space-12) var(--space-5); }
     }
 
+    /* ─── touch: slightly stronger gold tinge at rest (no hover state) ──── */
+    @media (hover: none) {
+      .benefit-card::before,
+      .persona-card::before { opacity: 0.75; }
+    }
+
     /* ─── Before vs After Comparison ──────────────────────────────────────── */
-    .compare-section { padding: var(--space-24) var(--space-6); }
+    .compare-section { padding: var(--space-16) var(--space-6); }
     .compare-inner   { max-width: 80rem; margin: 0 auto; }
     .compare-head    { text-align: center; margin-bottom: var(--space-12); }
     .compare-head .section-heading { margin-top: var(--space-4); }
@@ -1252,7 +1288,7 @@
     }
 
     /* ─── Sample Report Section ──────────────────────────────────────────── */
-    .sample-section { padding: var(--space-24) var(--space-6); text-align: center; }
+    .sample-section { padding: var(--space-16) var(--space-6); text-align: center; }
     .sample-inner   { max-width: 80rem; margin: 0 auto; }
     .sample-head    { margin-bottom: var(--space-10); }
     .sample-head .section-heading { margin-top: var(--space-4); }
@@ -1751,14 +1787,15 @@
 
     <hr class="section-divider" />
 
-    <!-- ── Use Case Cards ────────────────────────────────────────────────── -->
-    <section class="usecases-section" aria-label="What you can do with Alphasynth" id="features">
-      <div class="usecases-inner">
-        <div class="usecases-head reveal">
-          <span class="section-eyebrow">What You Can Do</span>
-          <h2 class="section-heading">Six research tasks.<br/>All in one place.</h2>
+    <!-- ── What Alphasynth Does For You ─────────────────────────────────── -->
+    <section class="benefits-section" aria-label="What Alphasynth does for you" id="features">
+      <div class="benefits-inner">
+        <div class="benefits-head reveal">
+          <span class="section-eyebrow">What Alphasynth Does For You</span>
+          <h2 class="section-heading">Six reasons serious<br/>investors use it daily.</h2>
         </div>
-        <div class="usecases-grid">
+
+        <div class="benefits-grid">
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
@@ -1770,20 +1807,22 @@
               </svg>
             </div>
             <h3 class="benefit-title">Find Hidden Red Flags</h3>
-            <p class="benefit-desc">Detect governance concerns, management inconsistencies and SEBI disclosure gaps before they hit the price.</p>
+            <p class="benefit-desc">Detect governance concerns, management inconsistencies and SEBI disclosure gaps before they hit the price. Every report verified against real NSE/BSE data.</p>
+            <span class="feat-tag">Governance · Filings · SEBI</span>
           </article>
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="3" height="7" rx="0.5"/>
-                <rect x="8.5" y="7" width="3" height="11" rx="0.5"/>
-                <rect x="14" y="3" width="3" height="15" rx="0.5"/>
-                <polyline points="3,9 8,5 13,8 18,3"/>
+                <circle cx="10" cy="10" r="8"/>
+                <polyline points="10,6 10,10 13,12"/>
+                <line x1="6.5" y1="3.5" x2="8" y2="1.5"/>
+                <line x1="13.5" y1="3.5" x2="12" y2="1.5"/>
               </svg>
             </div>
-            <h3 class="benefit-title">Understand Earnings Instantly</h3>
-            <p class="benefit-desc">Get a full earnings summary with management promises tracked against actual delivery — quarter by quarter.</p>
+            <h3 class="benefit-title">Track Management Promises</h3>
+            <p class="benefit-desc">See exactly what management committed to last quarter and whether they delivered — with a reliability score out of 10.</p>
+            <span class="feat-tag">Earnings · Concall · Accountability</span>
           </article>
 
           <article class="benefit-card reveal">
@@ -1794,62 +1833,22 @@
               </svg>
             </div>
             <h3 class="benefit-title">Know Why a Stock Moved</h3>
-            <p class="benefit-desc">Identify the catalyst behind any price spike or crash — news, volumes, sector moves or institutional activity.</p>
+            <p class="benefit-desc">Identify the catalyst behind any price spike or crash — news, delivery volumes, sector flows or institutional activity.</p>
+            <span class="feat-tag">Price Action · Catalyst · NSE</span>
           </article>
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="8" width="14" height="10" rx="1.5"/>
-                <path d="M7 8 L7 5.5 C7 3.5 13 3.5 13 5.5 L13 8"/>
-                <line x1="7" y1="13" x2="13" y2="13"/>
+                <polyline points="2,9 6,5 10,9 14,5"/>
+                <polyline points="2,13 6,9 10,13 14,9"/>
+                <line x1="16" y1="5" x2="16" y2="13"/>
               </svg>
             </div>
-            <h3 class="benefit-title">Track Institutional Money</h3>
-            <p class="benefit-desc">See what FIIs and DIIs are buying or selling today, with sector-level flow breakdowns and AI interpretation.</p>
+            <h3 class="benefit-title">Follow Institutional Money</h3>
+            <p class="benefit-desc">See what FIIs and DIIs are buying or selling today with sector-level breakdowns updated every 2 hours during market hours.</p>
+            <span class="feat-tag">FII · DII · Sector Flows</span>
           </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2" y="6" width="16" height="11" rx="1.5"/>
-                <path d="M6 6 L6 4.5 C6 3 14 3 14 4.5 L14 6"/>
-                <line x1="2" y1="10" x2="18" y2="10"/>
-                <line x1="7" y1="14" x2="13" y2="14"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Audit Your Portfolio</h3>
-            <p class="benefit-desc">Upload your holdings and get an instant profit/loss analysis, concentration risk assessment and sector breakdown.</p>
-          </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="2"  y="10" width="3" height="8" rx="0.5"/>
-                <rect x="7"  y="6"  width="3" height="12" rx="0.5"/>
-                <rect x="12" y="8"  width="3" height="10" rx="0.5"/>
-                <line x1="1" y1="18" x2="19" y2="18"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Compare Against Rivals</h3>
-            <p class="benefit-desc">Benchmark any stock against its closest sector peers on PE, ROCE, margins and debt — side by side.</p>
-          </article>
-
-        </div>
-      </div>
-    </section>
-
-    <hr class="section-divider" />
-
-    <!-- ── Section 3: Benefit Grid ───────────────────────────────────────── -->
-    <section class="benefits-section" aria-label="Platform benefits">
-      <div class="benefits-inner">
-        <div class="benefits-head reveal">
-          <span class="section-eyebrow">Why Alphasynth</span>
-          <h2 class="section-heading">Six reasons serious<br/>investors choose the platform.</h2>
-        </div>
-
-        <div class="benefits-grid">
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
@@ -1858,83 +1857,23 @@
                 <polyline points="7,10 9,12 13,8"/>
               </svg>
             </div>
-            <h3 class="benefit-title">Powered by Real Data</h3>
-            <p class="benefit-desc">Every Alphasynth report is grounded in live data from verified Indian financial sources — never fabricated or estimated without disclosure.</p>
-            <div class="source-badges">
-              <span class="source-badge">NSE India</span>
-              <span class="source-badge">BSE India</span>
-              <span class="source-badge">SEBI Filings</span>
-              <span class="source-badge">Company Disclosures</span>
-              <span class="source-badge">Google Search Grounding</span>
-              <span class="source-badge">Firecrawl Web Intelligence</span>
-            </div>
+            <h3 class="benefit-title">Research Any Listed Stock</h3>
+            <p class="benefit-desc">Works for every NSE and BSE listed company — large caps, mid caps, small caps and special character tickers like M&amp;M and L&amp;T.</p>
+            <span class="feat-tag">NSE · BSE · All Tickers</span>
           </article>
 
           <article class="benefit-card reveal">
             <div class="benefit-icon" aria-hidden="true">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="10" cy="10" r="2"/>
-                <circle cx="10" cy="3"  r="1.5"/>
-                <circle cx="10" cy="17" r="1.5"/>
-                <circle cx="3"  cy="10" r="1.5"/>
-                <circle cx="17" cy="10" r="1.5"/>
-                <line x1="10" y1="4.5"  x2="10" y2="8"/>
-                <line x1="10" y1="12"   x2="10" y2="15.5"/>
-                <line x1="4.5"  y1="10" x2="8"  y2="10"/>
-                <line x1="12"   y1="10" x2="15.5" y2="10"/>
+                <circle cx="10" cy="11" r="7"/>
+                <path d="M10 8 L10 11 L13 13" stroke-linejoin="round"/>
+                <line x1="7" y1="2" x2="13" y2="2"/>
+                <line x1="10" y1="2" x2="10" y2="4"/>
               </svg>
             </div>
-            <h3 class="benefit-title">Universal Ticker Support</h3>
-            <p class="benefit-desc">Works for any NSE or BSE listed stock, including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. A pattern-validation layer runs client-side before any API call.</p>
-          </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="5" y="2" width="10" height="13" rx="1.5"/>
-                <path d="M5 11 C3 11 2 12 2 14 L2 17 C2 17.6 2.4 18 3 18 L17 18 C17.6 18 18 17.6 18 17 L18 14 C18 12 17 11 15 11"/>
-                <polyline points="7,7 10,10 13,7"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Hallucination Guards</h3>
-            <p class="benefit-desc">A 3-attempt validation pipeline confirms every generated report meets quality thresholds. If any attempt fails, the system retries with progressively cleaner context before returning a result.</p>
-          </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="2,14 6,10 10,12 14,6 18,8"/>
-                <rect x="2" y="15" width="3" height="3" rx="0.5"/>
-                <rect x="7" y="13" width="3" height="5" rx="0.5"/>
-                <rect x="12" y="9" width="3" height="9" rx="0.5"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Live Institutional Flow Monitor</h3>
-            <p class="benefit-desc">Track FII and DII buying and selling with sector-level breakdowns, a 10-day net flow chart, and an AI plain-English interpretation — auto-refreshing every 2 hours during market hours.</p>
-          </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="10" cy="10" r="8"/>
-                <path d="M10 6 L10 10 L14 12" stroke-linejoin="round"/>
-                <circle cx="10" cy="10" r="1" fill="#C9912A" stroke="none"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Confidence Transparency</h3>
-            <p class="benefit-desc">Clear HIGH / MEDIUM / LOW badges tell you exactly how reliable each report is, based on whether primary-source scraping succeeded or Gemini grounding was the fallback — never hidden.</p>
-          </article>
-
-          <article class="benefit-card reveal">
-            <div class="benefit-icon" aria-hidden="true">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="10" cy="10" r="8"/>
-                <path d="M10 2 L10 10 L16 10" fill="rgba(201, 145, 42, 0.12)" stroke="#C9912A" stroke-width="1.5"/>
-                <path d="M10 10 L5.5 14.5" stroke-width="1.5"/>
-              </svg>
-            </div>
-            <h3 class="benefit-title">Portfolio Audit</h3>
-            <p class="benefit-desc">Upload your holdings via CSV export from Zerodha or Groww. Get instant P&amp;L analysis, hidden sector overlap diagnostics, and AI-generated audit commentary on each position.</p>
+            <h3 class="benefit-title">3 Minutes. Not 3 Hours.</h3>
+            <p class="benefit-desc">From blank screen to full institutional-quality report with bull case, bear case, peer benchmarking and trade parameters.</p>
+            <span class="feat-tag">Speed · Depth · Accuracy</span>
           </article>
 
         </div>
