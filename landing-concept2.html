@@ -277,7 +277,7 @@
       line-height: 1.04;
       letter-spacing: -0.03em;
       color: var(--color-text-primary);
-      max-width: 14ch;
+      max-width: 28ch;
       margin-bottom: var(--space-6);
       opacity: 0;
       animation: fade-up var(--dur-slow) var(--ease-out) 180ms both;
@@ -1194,6 +1194,175 @@
       .persona-section,
       .benefits-section { padding: var(--space-12) var(--space-5); }
     }
+
+    /* ─── Before vs After Comparison ──────────────────────────────────────── */
+    .compare-section { padding: var(--space-24) var(--space-6); }
+    .compare-inner   { max-width: 80rem; margin: 0 auto; }
+    .compare-head    { text-align: center; margin-bottom: var(--space-12); }
+    .compare-head .section-heading { margin-top: var(--space-4); }
+    .compare-table {
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .compare-row-wrap {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-bottom: 1px solid var(--color-border-subtle);
+      position: relative;
+    }
+    .compare-row-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; bottom: 0; left: 50%;
+      width: 1px;
+      background: var(--color-gold-border);
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    .compare-row-wrap:last-child { border-bottom: none; }
+    .compare-row-header { border-bottom: 1px solid var(--color-gold-border) !important; }
+    .compare-cell {
+      padding: var(--space-4) var(--space-6);
+      font-size: var(--text-sm);
+      color: var(--color-text-body);
+      line-height: 1.55;
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      min-height: 3.25rem;
+    }
+    .compare-row-header .compare-cell {
+      padding: var(--space-5) var(--space-6);
+      font-weight: 700;
+      font-size: var(--text-base);
+      color: var(--color-text-primary);
+    }
+    .compare-cell-left  { background: rgba(200, 50, 50, 0.04); }
+    .compare-cell-right { background: rgba(30, 160, 80, 0.04); }
+    .compare-row-wrap:nth-child(even) .compare-cell-left  { background: rgba(200, 50, 50, 0.07); }
+    .compare-row-wrap:nth-child(even) .compare-cell-right { background: rgba(30, 160, 80, 0.07); }
+    .compare-row-header .compare-cell-left  { background: rgba(200, 50, 50, 0.12) !important; }
+    .compare-row-header .compare-cell-right { background: rgba(30, 160, 80, 0.12) !important; }
+
+    @media (max-width: 600px) {
+      .compare-row-wrap { grid-template-columns: 1fr; }
+      .compare-row-wrap::before { display: none; }
+      .compare-cell-right { border-top: 1px solid var(--color-border-subtle); }
+    }
+
+    /* ─── Sample Report Section ──────────────────────────────────────────── */
+    .sample-section { padding: var(--space-24) var(--space-6); text-align: center; }
+    .sample-inner   { max-width: 80rem; margin: 0 auto; }
+    .sample-head    { margin-bottom: var(--space-10); }
+    .sample-head .section-heading { margin-top: var(--space-4); }
+    .sample-subtext {
+      font-size: var(--text-base);
+      color: var(--color-text-body);
+      margin-top: var(--space-3);
+      font-style: italic;
+    }
+    .sample-img-wrap {
+      display: flex;
+      justify-content: center;
+      margin-bottom: var(--space-10);
+    }
+    .sample-placeholder {
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16/9;
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-gold-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-4);
+      color: var(--color-text-label);
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── Use Case Cards ──────────────────────────────────────────────────── */
+    .usecases-section { padding: var(--space-20) var(--space-6); }
+    .usecases-inner   { max-width: 80rem; margin: 0 auto; }
+    .usecases-head    { text-align: center; margin-bottom: var(--space-12); }
+    .usecases-head .section-heading { margin-top: var(--space-4); }
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+    @media (max-width: 960px) { .usecases-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 560px) { .usecases-grid { grid-template-columns: minmax(0, 1fr); } }
+
+    /* ─── Data source badges ─────────────────────────────────────────────── */
+    .source-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-5);
+    }
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25em 0.7em;
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-gold-border);
+      border-radius: 9999px;
+      font-family: var(--font-mono);
+      font-size: 0.625rem;
+      font-weight: 600;
+      color: var(--color-gold);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    /* ─── Final CTA Section ──────────────────────────────────────────────── */
+    .final-cta-wrap  { padding: var(--space-20) var(--space-6); }
+    .final-cta-inner { max-width: 80rem; margin: 0 auto; }
+    .final-cta-card {
+      background: var(--color-surface-card);
+      border: 1px solid var(--color-gold-border);
+      border-radius: var(--radius-xl);
+      padding: clamp(var(--space-12), 6vw, var(--space-16)) clamp(var(--space-8), 5vw, var(--space-12));
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(201, 145, 42, 0.12);
+    }
+    .final-cta-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at center, rgba(201, 145, 42, 0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .final-cta-heading {
+      font-family: var(--font-display);
+      font-size: clamp(var(--text-3xl), 4vw, var(--text-5xl));
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -0.025em;
+      color: var(--color-text-primary);
+      margin-bottom: var(--space-4);
+      position: relative;
+    }
+    .final-cta-sub {
+      font-size: var(--text-lg);
+      color: var(--color-text-body);
+      margin-bottom: var(--space-10);
+      position: relative;
+    }
+    .final-cta-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: var(--space-4);
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -1217,7 +1386,7 @@
       <div class="nav-right">
         <a href="#features"  class="nav-link">Features</a>
         <a href="#markets"   class="nav-link">Markets</a>
-        <a href="/app" class="nav-launch">Launch App →</a>
+        <a href="/app" class="nav-launch">Try Free →</a>
       </div>
     </div>
   </nav>
@@ -1230,10 +1399,10 @@
       <div class="hero-inner">
         <p class="hero-kicker">Professional Indian Market Intelligence</p>
         <h1 class="hero-headline">
-          Where serious<br/>capital finds<br/>its <span class="hero-accent">edge.</span>
+          Institutional-Grade Stock Research<br/>for Indian <span class="hero-accent">Retail Investors</span>
         </h1>
         <p class="hero-sub">
-          Institutional-quality market research, AI-generated analyst reports, and live company data scraping — built exclusively for serious retail and professional investors in the Indian equity market.
+          Analyse any NSE or BSE stock. Identify risks, track institutional flows, audit filings and generate analyst-style reports — in minutes, not hours.
         </p>
         <div class="hero-actions">
           <a href="/app" class="btn-primary">
@@ -1242,7 +1411,7 @@
                 stroke="currentColor" stroke-width="2.2"
                 stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
-            Launch App
+            Analyse a Stock Free →
           </a>
           <a href="#features" class="btn-outline">Explore features ↓</a>
         </div>
@@ -1264,35 +1433,158 @@
       <div class="stats-track" id="stats-track" role="list" aria-label="Scroll through platform statistics">
 
         <article class="stat-card" role="listitem">
-          <span class="stat-number">5</span>
-          <span class="stat-label">Distinct AI Research Modes</span>
-          <span class="stat-sub">Equity Deep Dive · Earnings Intelligence · Explain the Move · Filings Audit · Portfolio Audit</span>
+          <span class="stat-number">3 Min</span>
+          <span class="stat-label">From ticker to full analyst-style report — no manual research needed</span>
         </article>
 
         <article class="stat-card" role="listitem">
-          <span class="stat-number">9,000+</span>
-          <span class="stat-label">Characters per Institutional Report</span>
-          <span class="stat-sub">Two-stage Gemini pipeline — grounding search then structured JSON output</span>
+          <span class="stat-number">90%</span>
+          <span class="stat-label">Reduction in stock research time vs traditional manual methods</span>
         </article>
 
         <article class="stat-card" role="listitem">
-          <span class="stat-number">All NSE &amp; BSE</span>
-          <span class="stat-label">Stocks Supported</span>
-          <span class="stat-sub">Including special characters — M&amp;M, L&amp;T, BAJAJ-AUTO and all exchange-listed tickers</span>
+          <span class="stat-number">Every Stock</span>
+          <span class="stat-label">NSE and BSE listed — including M&amp;M, L&amp;T, BAJAJ-AUTO and small caps</span>
         </article>
 
         <article class="stat-card" role="listitem">
-          <span class="stat-number">2 Hours</span>
-          <span class="stat-label">FII/DII Institutional Flow Refresh</span>
-          <span class="stat-sub">Auto-refreshes during market hours (9:15 AM – 3:30 PM IST) with NSE grounding</span>
+          <span class="stat-number">Real Data</span>
+          <span class="stat-label">Every report verified against live NSE/BSE data — not AI guesswork</span>
         </article>
 
         <article class="stat-card" role="listitem">
-          <span class="stat-number">3-Stage</span>
-          <span class="stat-label">Hallucination Guard</span>
-          <span class="stat-sub">Validates every report — scrape → grounding → validation. Falls back gracefully on each failure</span>
+          <span class="stat-number">5 Ways</span>
+          <span class="stat-label">To research any stock — earnings, filings, price moves, flows and deep dive</span>
         </article>
 
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Before vs After Comparison ───────────────────────────────────── -->
+    <section class="compare-section" aria-label="Before vs After comparison" id="compare">
+      <div class="compare-inner">
+        <div class="compare-head reveal">
+          <span class="section-eyebrow">Why Alphasynth</span>
+          <h2 class="section-heading">Research that used to take hours.<br/>Now takes minutes.</h2>
+        </div>
+        <div class="compare-table reveal">
+
+          <div class="compare-row-wrap compare-row-header">
+            <div class="compare-cell compare-cell-left">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0">
+                <circle cx="9" cy="9" r="7"/>
+                <path d="M9 5 L9 9 L12 11" stroke-linejoin="round"/>
+              </svg>
+              Traditional Research
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0">
+                <polyline points="3,9 7,14 15,4"/>
+              </svg>
+              With Alphasynth
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Read 5+ annual reports manually
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              AI synthesises all sources in seconds
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Listen to 90-minute earnings calls
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              Management promises tracked automatically
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Search SEBI filings manually
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              Governance scorecard generated instantly
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Monitor FII/DII data across sites
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              Live institutional flow dashboard included
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Build your own comparison model
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              Peer benchmarking across sector rivals
+            </div>
+          </div>
+
+          <div class="compare-row-wrap">
+            <div class="compare-cell compare-cell-left">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><line x1="2" y1="2" x2="11" y2="11"/><line x1="11" y1="2" x2="2" y2="11"/></svg>
+              Compile everything into a summary
+            </div>
+            <div class="compare-cell compare-cell-right">
+              <svg width="13" height="13" viewBox="0 0 13 13" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" aria-hidden="true" style="flex-shrink:0"><polyline points="1.5,6.5 4.5,9.5 11.5,2.5"/></svg>
+              Full analyst-style report, ready to share
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Sample Report Section ─────────────────────────────────────────── -->
+    <section class="sample-section" aria-label="Sample report" id="sample-report">
+      <div class="sample-inner">
+        <div class="sample-head reveal">
+          <span class="section-eyebrow">See It in Action</span>
+          <h2 class="section-heading">A real report. Generated in under 3 minutes.</h2>
+          <p class="sample-subtext">This is an actual Alphasynth report for TCS — not a mockup.</p>
+        </div>
+        <div class="sample-img-wrap reveal">
+          <img src="sample-report.png"
+               alt="Sample Alphasynth Intelligence report for TCS"
+               style="width:100%; max-width:800px; border-radius:12px; border:1px solid #C9912A; box-shadow: 0 0 40px rgba(201,145,42,0.2);"
+               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+          <div class="sample-placeholder" style="display:none;">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="6" y="4" width="36" height="40" rx="3"/>
+              <line x1="14" y1="14" x2="34" y2="14"/>
+              <line x1="14" y1="21" x2="34" y2="21"/>
+              <line x1="14" y1="28" x2="26" y2="28"/>
+            </svg>
+            Sample report screenshot — coming soon
+          </div>
+        </div>
+        <div class="reveal">
+          <a href="/app" class="btn-primary">Generate Your Own Report Free →</a>
+        </div>
       </div>
     </section>
 
@@ -1326,7 +1618,7 @@
               </svg>
             </div>
             <p class="persona-title">Earnings Intelligence</p>
-            <p class="persona-desc">Management Promises Tracker shows what was committed last quarter versus what was actually delivered — with Kept / Missed / Pending badges and a Reliability Score out of 10.</p>
+            <p class="persona-desc">Know exactly what management promised and whether they delivered — without listening to 90-minute calls</p>
             <span class="persona-tag">Earnings · Concall · Reliability</span>
           </article>
 
@@ -1338,7 +1630,7 @@
               </svg>
             </div>
             <p class="persona-title">Explain the Move</p>
-            <p class="persona-desc">Understand why a stock moved today in minutes, not hours. Catalyst identification, block trade analysis, and short-term directional read — served as a plain-English brief.</p>
+            <p class="persona-desc">Understand why your stock moved today in plain English — in under 2 minutes</p>
             <span class="persona-tag">Price Action · Catalyst · NSE Volume</span>
           </article>
 
@@ -1351,7 +1643,7 @@
               </svg>
             </div>
             <p class="persona-title">Filings Audit</p>
-            <p class="persona-desc">Governance scorecard at a glance — Transcript Transparency, Disclosure Completeness, Guideline Conservatism, and Governance Cleanliness rated 1–10 with self-healing fallback parsing.</p>
+            <p class="persona-desc">Get a governance scorecard for any company without reading hundreds of pages of SEBI filings</p>
             <span class="persona-tag">SEBI · Governance · Disclosure</span>
           </article>
 
@@ -1370,7 +1662,7 @@
               </svg>
             </div>
             <p class="persona-title">Equity Deep Dive</p>
-            <p class="persona-desc">Full bull case versus bear case, side by side. Institutional conviction metrics with entry zone, target price, and stop loss — structured like a real analyst report, not a chatbot summary.</p>
+            <p class="persona-desc">Get both sides of every investment case — bull thesis and bear risks — clearly laid out</p>
             <span class="persona-tag">Bull · Bear · Entry · Target</span>
           </article>
 
@@ -1384,7 +1676,7 @@
               </svg>
             </div>
             <p class="persona-title">Sector Peer Benchmarking</p>
-            <p class="persona-desc">Compare your target stock against its closest sector peers on P/E, ROCE, Debt/Equity, and Market Cap. Visualised as side-by-side bars with target highlighted in gold.</p>
+            <p class="persona-desc">See how your stock stacks up against rivals on the metrics that actually matter</p>
             <span class="persona-tag">PE · ROCE · Peers · Sector</span>
           </article>
 
@@ -1397,7 +1689,7 @@
               </svg>
             </div>
             <p class="persona-title">Confidence Badges</p>
-            <p class="persona-desc">Every report displays a clear HIGH / MEDIUM / LOW data-quality badge based on source richness. Know immediately whether to treat the numbers as confirmed or estimated — no guessing.</p>
+            <p class="persona-desc">Always know how reliable the data is — HIGH, MEDIUM or LOW confidence shown on every report</p>
             <span class="persona-tag">Data Quality · Grounding · Source</span>
           </article>
 
@@ -1417,7 +1709,7 @@
               </svg>
             </div>
             <p class="persona-title">Filings Audit</p>
-            <p class="persona-desc">Governance red flags surface faster with small caps. Pledged promoter shares, related-party transaction risks, audit qualifications — all forensically flagged with a Disclosure Scorecard.</p>
+            <p class="persona-desc">Spot governance red flags early in small caps before they become price crashes</p>
             <span class="persona-tag">Disclosure · Pledging · Red Flags</span>
           </article>
 
@@ -1430,7 +1722,7 @@
               </svg>
             </div>
             <p class="persona-title">FII / DII Sector Flows</p>
-            <p class="persona-desc">Track institutional money movement by sector. See which sectors FIIs are accumulating or distributing today, with a 10-day net flow chart and AI plain-English interpretation.</p>
+            <p class="persona-desc">Follow institutional money into sectors before the broader market notices</p>
             <span class="persona-tag">FII · DII · Sector · Flows</span>
           </article>
 
@@ -1449,12 +1741,102 @@
               </svg>
             </div>
             <p class="persona-title">Universal Ticker Support</p>
-            <p class="persona-desc">Works for any NSE or BSE listed company — including special-character tickers like M&amp;M, L&amp;T, and BAJAJ-AUTO. Pattern-validated client-side before any API call is made.</p>
+            <p class="persona-desc">Research any listed Indian stock — even obscure small caps with limited coverage</p>
             <span class="persona-tag">NSE · BSE · Small Cap · Mid Cap</span>
           </article>
 
         </div>
 
+      </div>
+    </section>
+
+    <hr class="section-divider" />
+
+    <!-- ── Use Case Cards ────────────────────────────────────────────────── -->
+    <section class="usecases-section" aria-label="What you can do with Alphasynth">
+      <div class="usecases-inner">
+        <div class="usecases-head reveal">
+          <span class="section-eyebrow">What You Can Do</span>
+          <h2 class="section-heading">Six research tasks.<br/>All in one place.</h2>
+        </div>
+        <div class="usecases-grid">
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8.5" cy="8.5" r="5.5"/>
+                <line x1="12.5" y1="12.5" x2="17" y2="17"/>
+                <line x1="6.5" y1="8.5" x2="10.5" y2="8.5"/>
+                <line x1="8.5" y1="6.5" x2="8.5" y2="10.5"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Find Hidden Red Flags</h3>
+            <p class="benefit-desc">Detect governance concerns, management inconsistencies and SEBI disclosure gaps before they hit the price.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="3" height="7" rx="0.5"/>
+                <rect x="8.5" y="7" width="3" height="11" rx="0.5"/>
+                <rect x="14" y="3" width="3" height="15" rx="0.5"/>
+                <polyline points="3,9 8,5 13,8 18,3"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Understand Earnings Instantly</h3>
+            <p class="benefit-desc">Get a full earnings summary with management promises tracked against actual delivery — quarter by quarter.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="2,14 6,9 10,11 14,5 18,7"/>
+                <polyline points="14,5 18,5 18,9"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Know Why a Stock Moved</h3>
+            <p class="benefit-desc">Identify the catalyst behind any price spike or crash — news, volumes, sector moves or institutional activity.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="8" width="14" height="10" rx="1.5"/>
+                <path d="M7 8 L7 5.5 C7 3.5 13 3.5 13 5.5 L13 8"/>
+                <line x1="7" y1="13" x2="13" y2="13"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Track Institutional Money</h3>
+            <p class="benefit-desc">See what FIIs and DIIs are buying or selling today, with sector-level flow breakdowns and AI interpretation.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="16" height="11" rx="1.5"/>
+                <path d="M6 6 L6 4.5 C6 3 14 3 14 4.5 L14 6"/>
+                <line x1="2" y1="10" x2="18" y2="10"/>
+                <line x1="7" y1="14" x2="13" y2="14"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Audit Your Portfolio</h3>
+            <p class="benefit-desc">Upload your holdings and get an instant profit/loss analysis, concentration risk assessment and sector breakdown.</p>
+          </article>
+
+          <article class="benefit-card reveal">
+            <div class="benefit-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#C9912A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2"  y="10" width="3" height="8" rx="0.5"/>
+                <rect x="7"  y="6"  width="3" height="12" rx="0.5"/>
+                <rect x="12" y="8"  width="3" height="10" rx="0.5"/>
+                <line x1="1" y1="18" x2="19" y2="18"/>
+              </svg>
+            </div>
+            <h3 class="benefit-title">Compare Against Rivals</h3>
+            <p class="benefit-desc">Benchmark any stock against its closest sector peers on PE, ROCE, margins and debt — side by side.</p>
+          </article>
+
+        </div>
       </div>
     </section>
 
@@ -1477,8 +1859,16 @@
                 <polyline points="7,10 9,12 13,8"/>
               </svg>
             </div>
-            <h3 class="benefit-title">Fact-Grounded Analysis Shield</h3>
-            <p class="benefit-desc">Every report is grounded in real financial data with source verification — not generic AI guesses. Firecrawl scrapes primary NSE/BSE endpoints; Gemini search grounds residual data.</p>
+            <h3 class="benefit-title">Powered by Real Data</h3>
+            <p class="benefit-desc">Every Alphasynth report is grounded in live data from verified Indian financial sources — never fabricated or estimated without disclosure.</p>
+            <div class="source-badges">
+              <span class="source-badge">NSE India</span>
+              <span class="source-badge">BSE India</span>
+              <span class="source-badge">SEBI Filings</span>
+              <span class="source-badge">Company Disclosures</span>
+              <span class="source-badge">Google Search Grounding</span>
+              <span class="source-badge">Firecrawl Web Intelligence</span>
+            </div>
           </article>
 
           <article class="benefit-card reveal">
@@ -1733,6 +2123,20 @@
             Launch App
           </a>
           <a href="#features" class="btn-outline">View all features</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Final CTA ──────────────────────────────────────────────────────── -->
+    <section class="final-cta-wrap" aria-labelledby="final-cta-heading">
+      <div class="final-cta-inner">
+        <div class="final-cta-card reveal">
+          <h2 class="final-cta-heading" id="final-cta-heading">Start researching smarter today.</h2>
+          <p class="final-cta-sub">Free to use. No signup required. Any NSE or BSE stock.</p>
+          <div class="final-cta-actions">
+            <a href="/app" class="btn-cta">Analyse a Stock Free →</a>
+            <a href="#sample-report" class="btn-outline">See Sample Report ↓</a>
+          </div>
         </div>
       </div>
     </section>
