@@ -853,6 +853,7 @@ export default function App() {
   };
   const [isShareMode, setIsShareMode] = useState(false);
   const [showIframeWarning, setShowIframeWarning] = useState(false);
+  const [showBetaBanner, setShowBetaBanner] = useState<boolean>(() => localStorage.getItem('beta_banner_dismissed') !== 'true');
 
   useEffect(() => {
     fetchMarketIntel();
@@ -3249,8 +3250,26 @@ ${list}
         )}
       </AnimatePresence>
 
+      {/* Beta Banner */}
+      {showBetaBanner && (
+        <div
+          className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-center py-1.5 px-6"
+          style={{ background: 'rgba(201,145,42,0.15)', borderBottom: '1px solid rgba(201,145,42,0.3)' }}
+        >
+          <p className="text-[11px] font-medium text-amber text-center">
+            🚀 Beta — Free access to all features.&nbsp;Share feedback:&nbsp;
+            <a href="mailto:srscoll@gmail.com" className="underline hover:text-white transition-colors">srscoll@gmail.com</a>
+          </p>
+          <button
+            onClick={() => { setShowBetaBanner(false); localStorage.setItem('beta_banner_dismissed', 'true'); }}
+            className="absolute right-4 text-amber/70 hover:text-amber text-base leading-none transition-colors"
+            aria-label="Dismiss beta banner"
+          >×</button>
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50`}>
+      <nav className={`fixed ${showBetaBanner ? 'top-[30px]' : 'top-0'} w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50`}>
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2 group relative cursor-pointer" title="Back to home">
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
@@ -3277,7 +3296,7 @@ ${list}
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
                   <p className="text-xs font-bold text-white leading-none mb-1">{user.displayName}</p>
-                  <p className="text-[10px] text-zinc-500 font-mono">Institutional Tier</p>
+                  <p className="text-[10px] text-zinc-500 font-mono">Beta Access</p>
                 </div>
                 <button 
                   onClick={handleLogout}
@@ -4875,27 +4894,18 @@ ${list}
                   exit={{ opacity: 0, scale: 0.95 }}
                   className="w-full"
                 >
-                  {/* Promotional Banner */}
-                  <div className="mb-12 p-1 bg-gradient-to-r from-amber via-yellow-500 to-amber rounded-2xl animate-pulse">
-                    <div className="bg-app-bg rounded-[calc(1rem-1px)] p-4 flex flex-col md:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 text-left">
-                        <div className="w-10 h-10 rounded-full bg-amber flex items-center justify-center flex-shrink-0">
-                          <TrendingUp className="text-black w-6 h-6" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-white leading-tight uppercase tracking-tight">Founding Member Promotion</h3>
-                          <p className="text-xs text-gold font-medium tracking-tight">All Institutional Reports are currently UNLOCKED for the next 48 hours.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="px-3 py-1.5 border border-app-border rounded-lg text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
-                          Normal: ₹1,499/report
-                        </div>
-                        <div className="px-3 py-1.5 bg-amber rounded-lg text-[10px] font-black text-black uppercase tracking-widest">
-                          Current: FREE
-                        </div>
+                  {/* Beta Access Banner */}
+                  <div className="mb-12 p-4 rounded-2xl border border-gold/20 bg-gold/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xl">🚀</span>
+                      <div>
+                        <p className="text-sm font-bold text-white">Beta Access — All features unlocked.</p>
+                        <p className="text-xs text-zinc-400 mt-0.5">Free during beta. Share your feedback to help shape what we build next.</p>
                       </div>
                     </div>
+                    <a href="mailto:srscoll@gmail.com" className="px-3 py-1.5 bg-gold/10 border border-gold/30 rounded-lg text-[10px] font-bold text-gold uppercase tracking-widest whitespace-nowrap hover:bg-gold/20 transition-colors flex-shrink-0" style={{textDecoration:'none'}}>
+                      Send Feedback →
+                    </a>
                   </div>
 
                   <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
@@ -4964,7 +4974,7 @@ ${list}
                           <div className="px-3 py-1 bg-app-bg rounded-full border border-app-border flex items-center gap-2">
                             <span className="text-sm font-black text-white">{item.ticker}</span>
                             <div className="w-1 h-1 rounded-full bg-amber" />
-                            <span className="text-[8px] font-bold text-gold uppercase tracking-tighter">PRO</span>
+                            <span className="text-[8px] font-bold text-gold uppercase tracking-tighter">BETA</span>
                           </div>
                           <div className="flex flex-col items-end">
                             <span className={`text-[10px] font-bold uppercase tracking-widest ${
@@ -5083,74 +5093,49 @@ ${list}
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section className="py-32 px-6 border-t border-app-border bg-app-bg">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter mb-4">
-              Intelligence Tiers<span className="text-gold">.</span>
-            </h2>
-            <p className="text-zinc-400 max-w-xl mx-auto">Scale your research from casual mapping to institutional deep-dives.</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* Beta Access Section */}
+      <section className="py-24 px-6 border-t border-app-border bg-app-bg">
+        <div className="max-w-2xl mx-auto text-center">
+          <span className="text-[10px] font-black tracking-[0.3em] text-gold uppercase mb-4 block">Beta Access</span>
+          <h2 className="text-4xl md:text-5xl font-display font-black text-white italic tracking-tighter mb-3">
+            Free During Beta<span className="text-gold">.</span>
+          </h2>
+          <p className="text-zinc-400 text-lg mb-10">No credit card. No signup. Full access to every feature.</p>
+
+          <div className="p-8 rounded-3xl bg-app-surface border border-gold/20 text-left mb-8 space-y-5">
             {[
-              { 
-                plan: 'Retail Pulse', 
-                price: 'Free', 
-                desc: 'Perfect for casual traders tracing the daily buzz.',
-                features: ['Market Pulse Snapshot', 'Basic Equity Research', 'Social Alpha grounding'],
-                cta: 'Start Free',
-                accent: 'border-app-border',
-                action: () => { setActiveTab('news'); scrollToWorkflow(); }
-              },
-              { 
-                plan: 'Institutional', 
-                price: '₹2,400/mo', 
-                desc: 'The professional standard for high-conviction research.',
-                features: ['Unlimited Deep Dives', 'Earnings Transcript Auditor', 'Portfolio Correlation Lab', 'PDF Report Export'],
-                cta: 'Upgrade Now',
-                accent: 'border-gold shadow-[0_0_30px_rgba(201,145,42,0.1)]',
-                popular: true,
-                action: () => { handleLogin(); }
-              },
-              { 
-                plan: 'Collective', 
-                price: 'Custom', 
-                desc: 'For proprietary desks and private fund workflows.',
-                features: ['Custom Scraping Nodes', 'API Access (v4.0)', 'Priority Grounding Queue', 'Direct Analyst Support'],
-                cta: 'Contact Sales',
-                accent: 'border-app-border',
-                action: () => { window.open('mailto:analyst@insight.ai'); }
-              }
-            ].map((tier) => (
-              <div key={tier.plan} className={`p-10 rounded-[2.5rem] bg-app-surface border ${tier.accent} relative overflow-hidden flex flex-col`}>
-                {tier.popular && (
-                  <div className="absolute top-0 right-0 py-2 px-6 bg-amber text-black text-[10px] font-black uppercase tracking-widest rounded-bl-2xl">
-                    Most Conviction
-                  </div>
-                )}
-                <h3 className="text-xl font-bold text-white mb-2">{tier.plan}</h3>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-4xl font-display font-black text-white tracking-tighter">{tier.price}</span>
-                  {tier.price !== 'Free' && tier.price !== 'Custom' && <span className="text-zinc-500 text-xs font-bold uppercase">/month</span>}
-                </div>
-                <p className="text-sm text-zinc-400 mb-8 leading-relaxed">{tier.desc}</p>
-                <div className="space-y-4 mb-10 flex-1">
-                   {tier.features.map(f => (
-                     <div key={f} className="flex items-center gap-3 text-xs text-zinc-300">
-                        <ShieldCheck className="w-4 h-4 text-gold" /> {f}
-                     </div>
-                   ))}
-                </div>
-                <button 
-                  onClick={tier.action}
-                  className={`w-full py-4 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${tier.popular ? 'bg-amber text-black hover:bg-amber' : 'bg-app-bg border border-app-border text-zinc-400 hover:text-white hover:border-zinc-700'}`}
-                >
-                   {tier.cta}
-                </button>
+              'All 5 research modes — Equity Deep Dive, Earnings Intelligence, Explain the Move, Filings Audit, Portfolio Audit',
+              'FII/DII Institutional Flow Monitor — live during market hours',
+              'Sector Peer Benchmarking — across all NSE/BSE listed stocks'
+            ].map((benefit) => (
+              <div key={benefit} className="flex items-start gap-3">
+                <ShieldCheck className="w-4 h-4 text-gold mt-0.5 flex-shrink-0" />
+                <span className="text-sm text-zinc-200 leading-relaxed">{benefit}</span>
               </div>
             ))}
+          </div>
+
+          <div className="h-px bg-gold/20 mb-8" />
+
+          <p className="text-xs text-zinc-500 mb-10 leading-relaxed max-w-lg mx-auto">
+            Alphasynth Intelligence is currently in invite-only beta. Early users will receive preferential pricing when we launch commercially. Pricing will be announced based on feedback from this beta cohort.
+          </p>
+
+          <button
+            onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }}
+            className="px-10 py-4 bg-amber text-black font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-transform text-sm"
+          >
+            Start Researching Free →
+          </button>
+
+          <div className="mt-12 pt-8 border-t border-app-border">
+            <p className="text-sm text-zinc-500 mb-2">Already using Alphasynth? We read every reply.</p>
+            <a
+              href="mailto:srscoll@gmail.com"
+              className="text-sm text-gold hover:text-amber transition-colors font-medium"
+            >
+              Share your feedback →
+            </a>
           </div>
         </div>
       </section>
@@ -5624,6 +5609,15 @@ ${list}
           </div>
         )}
       </AnimatePresence>
+
+      {/* Persistent Feedback Button */}
+      <a
+        href="mailto:srscoll@gmail.com?subject=Alphasynth Beta Feedback&body=Stock I tested: %0D%0AWhat worked well: %0D%0AWhat needs improvement: %0D%0AFeatures I%27d like to see: "
+        className="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-4 py-2.5 rounded-full text-xs font-bold text-gold hover:bg-gold/10 transition-all shadow-lg"
+        style={{ background: 'rgba(10,15,30,0.95)', border: '1px solid rgba(201,145,42,0.4)', textDecoration: 'none' }}
+      >
+        💬 Send Feedback
+      </a>
 
     </div>
   );
