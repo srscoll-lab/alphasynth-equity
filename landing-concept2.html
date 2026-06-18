@@ -2162,66 +2162,6 @@
     update();
   }());
 
-  /* ── Market intelligence widget — IST-aware snapshot scheduler ───────────── */
-  (function () {
-    function pad(n) { return n < 10 ? '0' + n : String(n); }
-
-    function getIST() {
-      return new Date(Date.now() + 5.5 * 60 * 60 * 1000);
-    }
-
-    var ist      = getIST();
-    var day      = ist.getUTCDay();
-    var h        = ist.getUTCHours();
-    var m        = ist.getUTCMinutes();
-    var total    = h * 60 + m;
-    var OPEN     = 9  * 60 + 15;
-    var CLOSE    = 15 * 60 + 30;
-    var weekday  = day >= 1 && day <= 5;
-    var isOpen   = weekday && total >= OPEN && total < CLOSE;
-
-    var snaps = [
-      { min: 9  * 60 + 15, label: '9:15 AM IST'  },
-      { min: 11 * 60 + 15, label: '11:15 AM IST' },
-      { min: 13 * 60 + 15, label: '1:15 PM IST'  },
-      { min: 15 * 60 + 15, label: '3:15 PM IST'  },
-    ];
-
-    var snapLabel;
-    if (!weekday || total < OPEN || total >= CLOSE) {
-      snapLabel = 'Last Traded Price as of 3:30 PM IST';
-    } else {
-      var last = snaps[0];
-      for (var i = 0; i < snaps.length; i++) {
-        if (total >= snaps[i].min) last = snaps[i];
-      }
-      snapLabel = 'Snapshot · ' + last.label;
-    }
-
-    var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun',
-                  'Jul','Aug','Sep','Oct','Nov','Dec'];
-    var dateStr = ist.getUTCDate() + ' ' + MONTHS[ist.getUTCMonth()] + ' ' + ist.getUTCFullYear();
-
-    var badge    = document.getElementById('mkt-badge');
-    var dot      = document.getElementById('mkt-dot');
-    var statusEl = document.getElementById('mkt-status');
-    var lblEl    = document.getElementById('mkt-snapshot-label');
-    var tsEl     = document.getElementById('mkt-timestamp');
-
-    if (isOpen) {
-      badge.className      = 'mkt-badge mkt-badge-live';
-      dot.className        = 'mkt-dot mkt-dot-live';
-      statusEl.textContent = 'LIVE';
-    } else {
-      badge.className      = 'mkt-badge mkt-badge-closed';
-      dot.className        = 'mkt-dot mkt-dot-closed';
-      statusEl.textContent = 'CLOSED';
-    }
-
-    if (lblEl) lblEl.textContent = snapLabel + ' · NSE/BSE';
-    if (tsEl)  tsEl.textContent  = 'Last updated: ' + snapLabel + ' · ' + dateStr;
-  }());
-
   /* ── Hero — City Skyline in Candlesticks (v2 refined) ──────────────────── */
   (function () {
     var section = document.querySelector('.hero');
