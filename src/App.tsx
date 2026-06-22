@@ -502,11 +502,8 @@ export default function App() {
   }, [lastReport?.ticker, ticker]);
 
   useEffect(() => {
-    const savedKey = localStorage.getItem('capital_pulse_zerodha_api');
-    if (savedKey) {
-      setZerodhaApiKey(savedKey);
-      setBrokerConnected(true);
-    }
+    // Broker integration disabled during beta — clear any previously stored keys
+    localStorage.removeItem('capital_pulse_zerodha_api');
   }, []);
 
   useEffect(() => {
@@ -2229,46 +2226,12 @@ ${list}
                            );
                         })()}
                      </div>
-                     <button 
-                        onClick={() => {
-                          if (brokerConnected) {
-                            setShowTradeModal(true);
-                          } else {
-                            setShowBrokerAuthModal(true);
-                          }
-                        }}
-                        className={`w-full mt-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-xl ${
-                          brokerConnected 
-                            ? 'bg-amber text-black hover:bg-white animate-pulse' 
-                            : 'bg-zinc-800 text-zinc-500 hover:bg-zinc-700 hover:text-white border border-app-border'
-                        }`}
+                     <button
+                        disabled
+                        className="w-full mt-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed flex items-center justify-center gap-2"
                       >
-                        {brokerConnected ? (
-                          <>
-                            <Zap className="w-4 h-4 fill-current" /> Execute Trade Protocol
-                          </>
-                        ) : (
-                          <>
-                            <LockIcon className="w-3.5 h-3.5" /> Link Broker API
-                          </>
-                        )}
+                        <LockIcon className="w-3.5 h-3.5" /> Broker Execution — Coming Soon
                       </button>
-                      {brokerConnected && (
-                        <div className="mt-3 flex items-center justify-between text-[9px] uppercase tracking-widest text-zinc-500 font-mono px-1">
-                          <span className="flex items-center gap-1.5 font-bold"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>Kite API: {zerodhaApiKey ? `...${zerodhaApiKey.slice(-4)}` : "MOCK"}</span>
-                          <button 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              localStorage.removeItem('capital_pulse_zerodha_api');
-                              setZerodhaApiKey('');
-                              setBrokerConnected(false);
-                            }}
-                            className="text-rose-500 hover:text-rose-400 transition-colors font-black uppercase tracking-wider font-sans"
-                          >
-                            Disconnect
-                          </button>
-                        </div>
-                      )}
 
                       {/* Actionable Direct Broker Gateways */}
                       <div className="mt-6 pt-4 border-t border-zinc-800/80 space-y-2">
@@ -5258,9 +5221,9 @@ ${list}
         </div>
       </footer>
 
-      {/* Trade execution Modals */}
+      {/* Trade execution Modals — disabled during beta, broker integration coming later */}
       <AnimatePresence>
-        {showTradeModal && lastReport && (
+        {false && showTradeModal && lastReport && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl">
              <motion.div 
                initial={{ opacity: 0, y: 50 }}
@@ -5547,7 +5510,7 @@ ${list}
           </motion.div>
         )}
 
-        {showBrokerAuthModal && (
+        {false && showBrokerAuthModal && (
           <div className="fixed inset-0 z-[250] flex items-center justify-center p-4 bg-black/95 backdrop-blur-2xl">
              <motion.div 
                initial={{ opacity: 0, scale: 0.95 }}
