@@ -670,11 +670,13 @@ export default function App() {
     const last10 = fiiData?.last10Days || [];
     let fiiNet = fiiData?.fiiNet ?? 0;
     let diiNet = fiiData?.diiNet ?? 0;
-    // Fall back to the most recent day in last10Days when today's flow reads zero (markets closed / pre-open).
+    let dataDate = fiiData?.date || 'latest available data';
+    // Fall back to the most recent published day (last10Days[0]) when today's flow reads zero (markets closed / pre-open).
     if (fiiNet === 0 && last10.length > 0) {
-      const recent = last10[last10.length - 1] || last10[0];
+      const recent = last10[0];
       fiiNet = recent?.fiiNet ?? 0;
       if (diiNet === 0) diiNet = recent?.diiNet ?? 0;
+      dataDate = recent?.date || dataDate;
     }
     const fmt = (v: number) => `${v >= 0 ? '+' : '-'}₹${Math.abs(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
     const fiiPhrase = fiiNet >= 0
@@ -690,7 +692,13 @@ export default function App() {
       : '';
     const movers = (intel?.trending || []).slice(0, 3).map((t: any) => (t.ticker || '').split('.')[0]).filter(Boolean);
     const moversPhrase = movers.length ? ` Keep an eye on ${movers.join(', ')} for momentum today.` : '';
-    setDailyBrief(`Good morning. ${fiiPhrase}, while ${diiPhrase}. ${sentiment}${moodPhrase}${moversPhrase}`);
+    // Dynamic time-based greeting anchored to IST market hours (9:15 = 555 min, 15:30 = 930 min).
+    const now = new Date();
+    const [istH, istM] = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false }).format(now).split(':').map(Number);
+    const istMinutes = istH * 60 + istM;
+    const greeting = istMinutes < 555 ? 'Pre-market update' : istMinutes <= 930 ? 'Intraday update' : 'Post-market update';
+    const timeStr = new Intl.DateTimeFormat('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit', hour12: true }).format(now).toUpperCase();
+    setDailyBrief(`${greeting} (${timeStr} IST), as of ${dataDate}: ${fiiPhrase}, while ${diiPhrase}. ${sentiment}${moodPhrase}${moversPhrase}`);
   };
 
   // Rank the trending tickers by an estimated institutional flow magnitude and surface the top movers.
@@ -3724,52 +3732,56 @@ ${list}
                       )}
                     </div>
 
-                    {/* RIGHT: Smart Money Leaderboard */}
+                    {/* RIGHT: FII/DII Flow Summary */}
                     <div style={{ background: '#13161f', border: '1px solid #2a2d3a', borderRadius: 14, padding: 24 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981', flexShrink: 0 }} />
-                        <span style={{ color: '#10b981', fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Smart Money Leaderboard</span>
-                      </div>
-                      {smartMoneyLeaderboard.length > 0 ? (
-                        <div>
-                          {(() => {
-                            const maxFlow = Math.max(...smartMoneyLeaderboard.map((x: any) => x.flow || 0), 1);
-                            return smartMoneyLeaderboard.slice(0, 5).map((item: any, i: number) => {
-                              const strong = i < 2;
-                              const pct = (item.flow / maxFlow) * 100;
-                              return (
-                                <div
-                                  key={item.ticker}
-                                  onClick={() => {
-                                    setTicker(item.ticker);
-                                    setWorkflowMode('deep_dive');
-                                    setActiveTab('equity');
-                                    document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', cursor: 'pointer', borderBottom: i < 4 ? '1px solid #20232e' : 'none' }}
-                                >
-                                  <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 800, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                      <span style={{ color: '#e5e7eb', fontSize: 13, fontWeight: 700 }}>{item.ticker}</span>
-                                      <span style={{ padding: '2px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', background: strong ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: strong ? '#10b981' : '#f59e0b' }}>{strong ? 'Strong' : 'Moderate'}</span>
-                                    </div>
-                                    <div style={{ height: 8, background: '#0c0e15', borderRadius: 999, overflow: 'hidden' }}>
-                                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: '#10b981' }} />
-                                    </div>
+                      {(() => {
+                        const last10 = fiiDiiData?.last10Days || [];
+                        let fiiNet = fiiDiiData?.fiiNet ?? 0;
+                        let diiNet = fiiDiiData?.diiNet ?? 0;
+                        let dataDate = fiiDiiData?.date || 'Latest available';
+                        // Use last10Days[0] when today's reading is still zero (pre-close).
+                        if (fiiNet === 0 && last10.length > 0) {
+                          const r = last10[0];
+                          fiiNet = r?.fiiNet ?? 0;
+                          diiNet = r?.diiNet ?? 0;
+                          dataDate = r?.date || dataDate;
+                        }
+                        const fiiColor = fiiNet >= 0 ? '#10b981' : '#f43f5e';
+                        const diiColor = diiNet >= 0 ? '#3b82f6' : '#f59e0b';
+                        const fmtNum = (v: number) => `${v >= 0 ? '+' : ''}${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
+                        return (
+                          <>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#c9a84c', display: 'inline-block' }} />
+                              <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 800, letterSpacing: '0.12em', textTransform: 'uppercase' as const }}>FII/DII Flow Summary</span>
+                            </div>
+                            <p style={{ fontSize: 11, color: '#6b7280', margin: '0 0 22px' }}>As of {dataDate}</p>
+                            {fiiDiiData ? (
+                              <>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                                  <div>
+                                    <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, margin: '0 0 8px' }}>FII Net</p>
+                                    <p style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: fiiColor, margin: 0, whiteSpace: 'nowrap' }}>{fmtNum(fiiNet)}</p>
+                                    <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>₹ Crore</p>
+                                  </div>
+                                  <div>
+                                    <p style={{ fontSize: 10, color: '#6b7280', fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase' as const, margin: '0 0 8px' }}>DII Net</p>
+                                    <p style={{ fontSize: 30, fontWeight: 800, lineHeight: 1, color: diiColor, margin: 0, whiteSpace: 'nowrap' }}>{fmtNum(diiNet)}</p>
+                                    <p style={{ fontSize: 11, color: '#6b7280', margin: '6px 0 0' }}>₹ Crore</p>
                                   </div>
                                 </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
-                          <div className="animate-spin" style={{ width: 24, height: 24, border: '2px solid #2a2d3a', borderTopColor: '#10b981', borderRadius: '50%' }} />
-                        </div>
-                      )}
+                                <p style={{ fontSize: 10, color: '#4b5563', margin: 0, lineHeight: 1.5 }}>Today's data available after market close (3:30 PM IST)</p>
+                              </>
+                            ) : (
+                              <div style={{ display: 'flex', flexDirection: 'column' as const, alignItems: 'center', justifyContent: 'center', padding: '28px 0', gap: 10 }}>
+                                <div className='animate-spin' style={{ width: 24, height: 24, border: '2px solid #2a2d3a', borderTopColor: '#c9a84c', borderRadius: '50%' }} />
+                                <span style={{ fontSize: 12, color: '#6b7280' }}>Loading flow summary...</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
-
                   </div>
                   {/* ──────────────────────────────────────────────────────────────────── */}
 
@@ -3870,7 +3882,7 @@ ${list}
                                      initial={{ strokeDashoffset: 364 }}
                                      animate={{ strokeDashoffset: 364 - (364 * liveIntel.marketMoodScore / 100) }}
                                      cx="64" cy="64" r="58" fill="none"
-                                     stroke={liveIntel.marketMoodScore > 70 ? 'var(--color-positive)' : liveIntel.marketMoodScore > 40 ? 'var(--color-gold)' : 'var(--color-negative)'}
+                                     stroke={(fiiDiiData?.last10Days || []).slice(0, 5).filter((d: any) => (d.fiiNet ?? 0) < 0).length >= 3 ? '#f59e0b' : liveIntel.marketMoodScore > 70 ? 'var(--color-positive)' : liveIntel.marketMoodScore > 40 ? 'var(--color-gold)' : 'var(--color-negative)'}
                                      strokeWidth="12" strokeDasharray="364" strokeLinecap="round"
                                    />
                                  </svg>
@@ -3878,7 +3890,7 @@ ${list}
                                    <span className="text-3xl font-display font-black text-white leading-none">
                                      {loadingIntel ? "..." : liveIntel.marketMoodScore}
                                    </span>
-                                   <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${liveIntel.marketMoodScore > 70 ? 'text-positive' : liveIntel.marketMoodScore > 40 ? 'text-gold' : 'text-negative'}`}>
+                                   <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${(fiiDiiData?.last10Days || []).slice(0, 5).filter((d: any) => (d.fiiNet ?? 0) < 0).length >= 3 ? 'text-amber' : liveIntel.marketMoodScore > 70 ? 'text-positive' : liveIntel.marketMoodScore > 40 ? 'text-gold' : 'text-negative'}`}>
                                      {(() => { const score = liveIntel.marketMoodScore; const fiiBias = fiiDiiData?.last10Days?.slice(0,3).filter((d:any)=>d.fiiNet<0).length >= 2; if (fiiBias && score > 60) return 'Caution'; return score > 80 ? 'Exuberance' : score > 60 ? 'Greed' : score > 40 ? 'Neutral' : score > 20 ? 'Fear' : 'Panic'; })()}
                                    </span>
                                  </div>
@@ -3895,6 +3907,7 @@ ${list}
                              )}
                           </div>
                           <p className="text-[9px] text-zinc-500 font-medium leading-relaxed px-4">Real-time analysis of volatility, momentum, and retail sentiment across Dalal Street.</p>
+                          <p className="text-[9px] text-zinc-600 font-medium leading-relaxed px-4 mt-3 italic">Note: Based on AI sentiment analysis of market data. Cross-reference with FII flows above for complete picture.</p>
                        </div>
                     </div>
 
@@ -3946,42 +3959,53 @@ ${list}
                     {!loadingFiiDii && fiiDiiData?.dataAvailable && (
                       <>
                         {/* Summary Cards: FII Net + DII Net */}
+                        {(() => {
+                          const last10 = fiiDiiData.last10Days || [];
+                          let fiiNet = fiiDiiData.fiiNet ?? 0;
+                          let diiNet = fiiDiiData.diiNet ?? 0;
+                          let dataDate = fiiDiiData.date || 'Latest';
+                          // Fall back to last10Days[0] when today's reading is still zero (pre-close).
+                          if (fiiNet === 0 && last10.length > 0) {
+                            const r = last10[0];
+                            fiiNet = r?.fiiNet ?? 0;
+                            diiNet = r?.diiNet ?? 0;
+                            dataDate = r?.date || dataDate;
+                          }
+                          return (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {/* FII Net */}
-                          <div className={`p-6 rounded-2xl border relative overflow-hidden ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
+                          <div className={`p-6 rounded-2xl border relative overflow-hidden ${fiiNet >= 0 ? 'bg-emerald-500/5 border-emerald-500/20' : 'bg-rose-500/5 border-rose-500/20'}`}>
                             {/* Glow — sits inside the overflow-hidden card so it can't escape */}
-                            <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full pointer-events-none" style={{ background: (fiiDiiData.fiiNet ?? 0) >= 0 ? '#10b981' : '#f43f5e' }} />
+                            <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full pointer-events-none" style={{ background: fiiNet >= 0 ? '#10b981' : '#f43f5e' }} />
                             <p className="relative text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">FII Net Flow</p>
                             <p className="relative text-xs text-zinc-500 font-medium mb-3">Foreign Institutional Investors</p>
-                            <p className={`relative text-3xl font-display font-black leading-none whitespace-nowrap ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                              {fiiDiiData.fiiNet !== null ? `${(fiiDiiData.fiiNet ?? 0) >= 0 ? '+' : ''}${(fiiDiiData.fiiNet ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'N/A'}
+                            <p className={`relative text-3xl font-display font-black leading-none whitespace-nowrap ${fiiNet >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {`${fiiNet >= 0 ? '+' : ''}${fiiNet.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
                             </p>
-                            {fiiDiiData.fiiNet !== null && (
-                              <p className="relative text-xs text-zinc-500 mt-2">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
-                            )}
-                            <div className={`relative mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(fiiDiiData.fiiNet ?? 0) >= 0 ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                              {(fiiDiiData.fiiNet ?? 0) >= 0 ? 'Net Buying' : 'Net Selling'}
+                            <p className="relative text-xs text-zinc-500 mt-2">₹ Crore · {dataDate}</p>
+                            <div className={`relative mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${fiiNet >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${fiiNet >= 0 ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                              {fiiNet >= 0 ? 'Net Buying' : 'Net Selling'}
                             </div>
                           </div>
 
                           {/* DII Net */}
-                          <div className={`p-6 rounded-2xl border relative overflow-hidden ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/5 border-blue-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
-                            <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full pointer-events-none" style={{ background: (fiiDiiData.diiNet ?? 0) >= 0 ? '#3b82f6' : '#f59e0b' }} />
+                          <div className={`p-6 rounded-2xl border relative overflow-hidden ${diiNet >= 0 ? 'bg-blue-500/5 border-blue-500/20' : 'bg-amber-500/5 border-amber-500/20'}`}>
+                            <div className="absolute top-0 right-0 w-24 h-24 opacity-5 blur-2xl rounded-full pointer-events-none" style={{ background: diiNet >= 0 ? '#3b82f6' : '#f59e0b' }} />
                             <p className="relative text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-1">DII Net Flow</p>
                             <p className="relative text-xs text-zinc-500 font-medium mb-3">Domestic Institutional Investors</p>
-                            <p className={`relative text-3xl font-display font-black leading-none whitespace-nowrap ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
-                              {fiiDiiData.diiNet !== null ? `${(fiiDiiData.diiNet ?? 0) >= 0 ? '+' : ''}${(fiiDiiData.diiNet ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}` : 'N/A'}
+                            <p className={`relative text-3xl font-display font-black leading-none whitespace-nowrap ${diiNet >= 0 ? 'text-blue-400' : 'text-amber-400'}`}>
+                              {`${diiNet >= 0 ? '+' : ''}${diiNet.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
                             </p>
-                            {fiiDiiData.diiNet !== null && (
-                              <p className="relative text-xs text-zinc-500 mt-2">₹ Crore · {fiiDiiData.date || 'Latest'}</p>
-                            )}
-                            <div className={`relative mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${(fiiDiiData.diiNet ?? 0) >= 0 ? 'bg-blue-400' : 'bg-amber-400'}`} />
-                              {(fiiDiiData.diiNet ?? 0) >= 0 ? 'Net Buying' : 'Net Selling'}
+                            <p className="relative text-xs text-zinc-500 mt-2">₹ Crore · {dataDate}</p>
+                            <div className={`relative mt-4 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${diiNet >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-amber-500/10 text-amber-400'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${diiNet >= 0 ? 'bg-blue-400' : 'bg-amber-400'}`} />
+                              {diiNet >= 0 ? 'Net Buying' : 'Net Selling'}
                             </div>
                           </div>
                         </div>
+                          );
+                        })()}
 
                         {/* 10-Day Flow Chart */}
                         {fiiDiiData.last10Days && fiiDiiData.last10Days.length > 0 && (
@@ -4036,7 +4060,8 @@ ${list}
 
                         {/* Sector Flow Breakdown — always render the card; show message when empty */}
                         <div className="bg-app-surface border border-app-border rounded-2xl p-6">
-                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-5">Sector-wise FII Flow (₹ Crore)</p>
+                          <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest mb-1">Sector-wise FII Flow (₹ Crore)</p>
+                          <p className="text-[11px] text-zinc-300 mb-5">Fortnightly sector allocation data from NSE · Updated every two weeks via NSE SEBI disclosures</p>
                           {fiiDiiData.sectorFlows && fiiDiiData.sectorFlows.length > 0 ? (
                             <div className="space-y-4">
                               {fiiDiiData.sectorFlows.slice(0, 6).map((s: any, i: number) => {
