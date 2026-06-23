@@ -79,13 +79,6 @@ import {
   YAxis
 } from 'recharts';
 
-// Inject spinner keyframe
-if (typeof document !== 'undefined') {
-  const s = document.createElement('style');
-  s.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
-  document.head.appendChild(s);
-}
-
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
@@ -319,89 +312,35 @@ const getStopLossVsLtpLabel = (slStr: string, priceStr: string, ltp: number) => 
   );
 };
 
-const RatingBadge = ({ rating, mode }: { rating: string, mode?: string }) => {
-  const r = rating?.toLowerCase();
-  const config: any = {
-    buy:  { label: 'Signal: Positive', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
-    sell: { label: 'Signal: Negative', cls: 'bg-red-500/15 text-red-400 border-red-500/40' },
-    hold: { label: 'Signal: Neutral',  cls: 'bg-zinc-500/15 text-zinc-400 border-zinc-500/40' },
+const RatingBadge = ({ rating }: { rating: string }) => {
+  const colors: any = {
+    buy: 'bg-positive/20 text-positive border-positive/50',
+    sell: 'bg-negative/20 text-negative border-negative/50',
+    hold: 'bg-gold/20 text-gold border-gold/50'
   };
-  const { label, cls } = config[r] || { label: 'Signal: Cautious', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/40' };
-  const context = mode === 'earnings_intelligence' ? 'Recent earnings' : mode === 'move' ? 'Price action' : mode === 'filings' ? 'Filings audit' : 'Long-term fundamentals';
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${cls}`}>
-        {label}
-      </span>
-      <span style={{fontSize:9,color:'#6b7280',letterSpacing:'0.05em',paddingLeft:4}}>{context}</span>
-    </div>
+    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${colors[rating?.toLowerCase()] || colors.hold}`}>
+      {rating || 'HOLD'}
+    </span>
   );
 };
 
-const MetricBar = ({ label, score, ticker }: { label: string, score: number | null, ticker?: string }) => {
-  const [open, setOpen] = React.useState(false);
-  const [loading, setLoading] = React.useState(false);
-  const [explanation, setExplanation] = React.useState('');
-  const handleExplain = async () => {
-    if (open) { setOpen(false); return; }
-    setOpen(true);
-    if (explanation) return;
-    setLoading(true);
-    try {
-      const res = await fetch('/api/explain-metric', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticker: ticker || '', metricName: label, metricValue: score !== null ? score + '/10' : 'N/A', companyName: ticker || '' })
-      });
-      const data = await res.json();
-      setExplanation(data.explanation || 'Unable to generate explanation.');
-    } catch { setExplanation('Unable to generate explanation at this time.'); }
-    setLoading(false);
-  };
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-zinc-400 cursor-pointer hover:text-zinc-200 transition-colors group" onClick={handleExplain}>
-        <span className="flex items-center gap-1.5">
-          {label}
-          <span style={{color:'#6366f1',opacity:0.7,fontSize:11}} className="group-hover:opacity-100 transition-opacity">&#10022;</span>
-        </span>
-        <span style={{color: score !== null && score !== undefined ? score > 7 ? '#10b981' : score > 5 ? '#f59e0b' : '#ef4444' : '#71717a', fontWeight:700}}>{score !== null && score !== undefined ? score + '/10' : 'N/A'}</span>
-      </div>
-      <div className="h-1 bg-app-border rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: score !== null && score !== undefined ? (score * 10) + '%' : '0%' }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          style={{background: score !== null && score !== undefined ? score > 7 ? '#10b981' : score > 5 ? '#f59e0b' : '#ef4444' : '#3f3f46'}}
-          className="h-full"
-        />
-      </div>
-      {open && (
-        <div style={{background:'#13161f',border:'1px solid #6366f1',borderRadius:10,padding:'12px 14px',marginTop:8}}>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8}}>
-            <div style={{display:'flex',alignItems:'center',gap:6}}>
-              <span style={{width:6,height:6,borderRadius:'50%',background:'#6366f1',display:'inline-block'}}></span>
-              <span style={{fontSize:10,color:'#6366f1',fontWeight:700,textTransform:'uppercase',letterSpacing:'0.08em'}}>AI Insight - {label}</span>
-            </div>
-            <button onClick={(e)=>{e.stopPropagation();setOpen(false);}} style={{color:'#6366f1',background:'rgba(99,102,241,0.1)',border:'1px solid rgba(99,102,241,0.3)',borderRadius:4,cursor:'pointer',fontSize:11,lineHeight:1,padding:'2px 6px',fontWeight:700}}>x</button>
-          </div>
-          <div style={{height:'1px',background:'rgba(99,102,241,0.2)',marginBottom:8}}></div>
-          {loading ? (
-            <div style={{display:'flex',alignItems:'center',gap:8,fontSize:11,color:'#6366f1'}}>
-              <div style={{width:12,height:12,border:'2px solid rgba(99,102,241,0.2)',borderTopColor:'#6366f1',borderRadius:'50%',animation:'spin 0.8s linear infinite'}} />
-              <span>Generating explanation...</span>
-            </div>
-          ) : (
-            <p style={{fontSize:12,color:'#d1d5db',lineHeight:1.65,margin:0}}>{explanation}</p>
-          )}
-          <div style={{marginTop:8,paddingTop:6,borderTop:'1px solid rgba(99,102,241,0.1)',fontSize:9,color:'#4b5563',textTransform:'uppercase'}}>
-            Alphasynth AI - Informational only - Not financial advice
-          </div>
-        </div>
-      )}
+const MetricBar = ({ label, score }: { label: string, score: number | null }) => (
+  <div className="space-y-1.5">
+    <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-zinc-400">
+      <span>{label}</span>
+      <span className="text-zinc-200">{score !== null && score !== undefined ? `${score}/10` : 'N/A'}</span>
     </div>
-  );
-};
+    <div className="h-1 bg-app-border rounded-full overflow-hidden">
+      <motion.div
+        initial={{ width: 0 }}
+        animate={{ width: score !== null && score !== undefined ? `${score * 10}%` : '0%' }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        className={`h-full ${score !== null && score !== undefined ? (score > 7 ? 'bg-gold' : score > 4 ? 'bg-zinc-400' : 'bg-negative') : 'bg-zinc-700'}`}
+      />
+    </div>
+  </div>
+);
 
 // Problem 2: Universal ticker pattern validation — mirrors server-side logic exactly
 const BLOCKED_TICKERS_FE = new Set([
@@ -445,15 +384,11 @@ export default function App() {
 
   // Earnings Intelligence unified state
   const [earningsIntelReport, setEarningsIntelReport] = useState<any>(null);
-  const [cachedDeepDive, setCachedDeepDive] = useState<any>(null);
-  const [cachedEarnings, setCachedEarnings] = useState<any>(null);
 
   // FII/DII Institutional Flow Monitor state
   const [fiiDiiData, setFiiDiiData] = useState<any>(null);
   const [loadingFiiDii, setLoadingFiiDii] = useState(false);
   const [fiiDiiStatus, setFiiDiiStatus] = useState('');
-  const [dailyBrief, setDailyBrief] = useState<string>('');
-  const [smartMoneyLeaderboard, setSmartMoneyLeaderboard] = useState<any[]>([]);
 
   // Dynamic Peer Benchmarking states
   const [peersData, setPeersData] = useState<any[]>([]);
@@ -663,61 +598,6 @@ export default function App() {
     }, 2000);
   };
 
-  // Build a morning summary string from the latest institutional flow + market intel.
-  // Both args are passed explicitly so callers can use freshly-fetched data (state is async/stale).
-  const generateDailyBrief = (fiiData: any, intel: any) => {
-    if (!fiiData && !intel) { setDailyBrief(''); return; }
-    const last10 = fiiData?.last10Days || [];
-    let fiiNet = fiiData?.fiiNet ?? 0;
-    let diiNet = fiiData?.diiNet ?? 0;
-    // Fall back to the most recent day in last10Days when today's flow reads zero (markets closed / pre-open).
-    if (fiiNet === 0 && last10.length > 0) {
-      const recent = last10[last10.length - 1] || last10[0];
-      fiiNet = recent?.fiiNet ?? 0;
-      if (diiNet === 0) diiNet = recent?.diiNet ?? 0;
-    }
-    const fmt = (v: number) => `${v >= 0 ? '+' : '-'}₹${Math.abs(v).toLocaleString('en-IN', { maximumFractionDigits: 0 })} Cr`;
-    const fiiPhrase = fiiNet >= 0
-      ? `FIIs were net buyers at ${fmt(fiiNet)}`
-      : `FIIs turned net sellers at ${fmt(fiiNet)}`;
-    const diiPhrase = diiNet >= 0
-      ? `DIIs absorbed the flow with net buying of ${fmt(diiNet)}`
-      : `DIIs pared exposure with net selling of ${fmt(diiNet)}`;
-    const sentiment = intel?.marketSentiment || 'Markets are consolidating with a mixed institutional bias.';
-    const mood = intel?.marketMoodScore;
-    const moodPhrase = (mood !== null && mood !== undefined)
-      ? ` Market mood score sits at ${mood}/100 (${mood > 70 ? 'greed' : mood > 40 ? 'neutral' : 'fear'}).`
-      : '';
-    const movers = (intel?.trending || []).slice(0, 3).map((t: any) => (t.ticker || '').split('.')[0]).filter(Boolean);
-    const moversPhrase = movers.length ? ` Keep an eye on ${movers.join(', ')} for momentum today.` : '';
-    setDailyBrief(`Good morning. ${fiiPhrase}, while ${diiPhrase}. ${sentiment}${moodPhrase}${moversPhrase}`);
-  };
-
-  // Rank the trending tickers by an estimated institutional flow magnitude and surface the top movers.
-  const buildSmartMoneyLeaderboard = (fiiData: any, intel: any) => {
-    const trending = intel?.trending || [];
-    if (!trending.length) { setSmartMoneyLeaderboard([]); return; }
-    const sectorFlows = fiiData?.sectorFlows || [];
-    const last10 = fiiData?.last10Days || [];
-    const baseFlow = Math.abs(fiiData?.fiiNet ?? 0)
-      || Math.abs(last10[last10.length - 1]?.fiiNet ?? 0)
-      || 5000;
-    const ranked = trending
-      .map((item: any, i: number) => {
-        const sectorFlow = sectorFlows[i]?.fiiNet;
-        const magnitude = Math.abs(sectorFlow ?? (baseFlow * (1 - i * 0.12)));
-        return {
-          ticker: (item.ticker || '').split('.')[0],
-          reason: item.reason || '',
-          flow: Math.max(1, Math.round(magnitude)),
-        };
-      })
-      .filter((x: any) => x.ticker)
-      .sort((a: any, b: any) => b.flow - a.flow)
-      .slice(0, 5);
-    setSmartMoneyLeaderboard(ranked);
-  };
-
   const fetchMarketIntel = async () => {
     setLoadingIntel(true);
     try {
@@ -735,8 +615,6 @@ export default function App() {
         throw new Error(`Expected JSON but received non-JSON: ${text.substring(0, 50)}`);
       }
       setLiveIntel(data);
-      generateDailyBrief(fiiDiiData, data);
-      if (data?.trending?.length) buildSmartMoneyLeaderboard(fiiDiiData || {}, data);
     } catch (err: any) {
       // Use console.warn to indicate fallback, keeping console.error clean
       console.warn("Using offline safe defaults as market-intel endpoint replied with non-critical info:", err.message);
@@ -751,18 +629,6 @@ export default function App() {
         marketMoodScore: null,
         sources: []
       });
-      const fallbackIntel = {
-        trending: [
-          { ticker: "RELIANCE.NS", reason: "Major green energy capex expansion announced." },
-          { ticker: "HDFCBANK.NS", reason: "Strong Q4 growth guidance from management transcript." },
-          { ticker: "TCS.NS", reason: "Large-scale AI implementation contract from global client." }
-        ],
-        marketSentiment: "Market shows consolidation at life-highs with positive institutional bias.",
-        marketMoodScore: null,
-        sources: []
-      };
-      generateDailyBrief(fiiDiiData, fallbackIntel);
-      buildSmartMoneyLeaderboard(fiiDiiData, fallbackIntel);
     } finally {
       setLoadingIntel(false);
     }
@@ -776,21 +642,6 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       setFiiDiiData(data);
-      const intelForBrief = liveIntel || null;
-      generateDailyBrief(data, intelForBrief);
-      const intelForLeaderboard = liveIntel || intelForBrief;
-      if (intelForLeaderboard?.trending?.length) {
-        buildSmartMoneyLeaderboard(data, intelForLeaderboard);
-      } else {
-        const fallbackTrending = { trending: [
-          { ticker: 'RELIANCE', reason: 'Large cap anchor' },
-          { ticker: 'HDFCBANK', reason: 'Banking sector leader' },
-          { ticker: 'INFY', reason: 'IT sector bellwether' },
-          { ticker: 'TCS', reason: 'Top IT company' },
-          { ticker: 'ICICIBANK', reason: 'Private bank leader' }
-        ]};
-        buildSmartMoneyLeaderboard(data, fallbackTrending);
-      }
     } catch (err: any) {
       console.warn('[FII-DII] Fetch failed:', err.message);
       setFiiDiiData({ dataAvailable: false, last10Days: [], sectorFlows: [], aiInterpretation: "Institutional flow data temporarily unavailable. Please check back later.", lastUpdated: new Date().toISOString() });
@@ -1654,7 +1505,6 @@ ${list}
       };
       setLastReport(reportData);
       setEarningsIntelReport({ ...data, ticker: tkr });
-      setCachedEarnings({ ...data, ticker: tkr });
       setActiveTab('equity');
 
       if (user) {
@@ -2148,7 +1998,6 @@ ${list}
         }
 
         setLastReport({ ...reportData, id: user ? 'pending' : undefined });
-        if (activeMode === 'deep_dive') setCachedDeepDive({ ...reportData, id: user ? 'pending' : undefined });
 
         // Auto-save to User Portfolio if user is logged in
         if (user) {
@@ -2217,10 +2066,9 @@ ${list}
                   </div>
                   <div>
                       <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
-                        {lastReport.ticker} <RatingBadge rating={lastReport.rating} mode={lastReport.mode} />
+                        {lastReport.ticker} <RatingBadge rating={lastReport.rating} />
                       </h2>
                       <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Institutional Audit • Grounding Active</p>
-                      <p className="text-[10px] text-zinc-500 italic mt-1 normal-case tracking-normal font-normal">AI-generated data analysis only. Not a SEBI-registered Research Analyst. This is not investment advice or a recommendation to buy, sell, or hold any security.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -2271,15 +2119,11 @@ ${list}
                                disabled={analyzing}
                                onClick={() => {
                                  if (m.id === 'earnings_intelligence') {
-                                   if (cachedEarnings && cachedEarnings.ticker === lastReport.ticker) {
-                                     const r = { mode: 'earnings_intelligence' as const, ticker: lastReport.ticker, rawReport: '', confidence: 'high' as const, scrapeQuality: 'good' as const, metrics: {}, sourceUrl: cachedEarnings.sourceUrl || '' };
-                                     setLastReport(r); setEarningsIntelReport(cachedEarnings);
-                                   } else { triggerEarningsIntelligence(lastReport.ticker); }
-                                 } else if (m.id === 'deep_dive') {
-                                   if (cachedDeepDive && cachedDeepDive.ticker === lastReport.ticker) {
-                                     setLastReport(cachedDeepDive); setEarningsIntelReport(null);
-                                   } else { setWorkflowMode(m.id as any); triggerAnalysis(m.id as any, lastReport.ticker, true); }
-                                 } else { setWorkflowMode(m.id as any); triggerAnalysis(m.id as any, lastReport.ticker, true); }
+                                   triggerEarningsIntelligence(lastReport.ticker);
+                                 } else {
+                                   setWorkflowMode(m.id as any);
+                                   triggerAnalysis(m.id as any, lastReport.ticker, true);
+                                 }
                                }}
                                className={`p-3 rounded-xl border text-left transition-all relative overflow-hidden ${
                                  isActive 
@@ -2432,11 +2276,11 @@ ${list}
                       </div>
                       <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest mb-6">Conviction Engine</h3>
                       <div className="space-y-5">
-                        <MetricBar label="Valuation Intelligence" score={lastReport.metrics?.valuation} ticker={lastReport.ticker} />
-                        <MetricBar label="Growth Momentum" score={lastReport.metrics?.growth} ticker={lastReport.ticker} />
-                        <MetricBar label="Quality & Moat" score={lastReport.metrics?.quality} ticker={lastReport.ticker} />
-                        <MetricBar label="Execution Risk" score={lastReport.metrics?.risk} ticker={lastReport.ticker} />
-                        <MetricBar label="Governance Alpha" score={lastReport.metrics?.governance} ticker={lastReport.ticker} />
+                        <MetricBar label="Valuation Intelligence" score={lastReport.metrics?.valuation} />
+                        <MetricBar label="Growth Momentum" score={lastReport.metrics?.growth} />
+                        <MetricBar label="Quality & Moat" score={lastReport.metrics?.quality} />
+                        <MetricBar label="Execution Risk" score={lastReport.metrics?.risk} />
+                        <MetricBar label="Governance Alpha" score={lastReport.metrics?.governance} />
                       </div>
                       <div className="mt-8 pt-8 border-t border-app-border">
                         <p className="text-[9px] text-zinc-500 font-medium leading-relaxed italic">
@@ -3013,22 +2857,6 @@ ${list}
 
   return (
     <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30`}>
-      {!localStorage.getItem('alphasynth_consent_v1') && (
-        <div style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
-          <div style={{background:'#13161f',border:'1px solid rgba(201,145,42,0.3)',borderRadius:16,padding:40,maxWidth:480,width:'100%'}}>
-            <h2 style={{color:'#fff',fontSize:22,fontWeight:700,marginBottom:16}}>Before you begin</h2>
-            <p style={{color:'#9ca3af',fontSize:13,lineHeight:1.7,marginBottom:28}}>
-              Alphasynth Intelligence provides AI-generated market data analysis only. It is not a SEBI-registered Research Analyst and does not provide investment advice or stock recommendations. All analysis is for informational and educational purposes only. Please consult a SEBI-registered investment advisor before making any investment decisions.
-            </p>
-            <button
-              onClick={function(){localStorage.setItem('alphasynth_consent_v1','true');window.location.reload();}}
-              style={{width:'100%',padding:'14px 0',background:'#c9a84c',color:'#000',fontWeight:800,fontSize:12,textTransform:'uppercase',letterSpacing:'0.15em',borderRadius:10,border:'none',cursor:'pointer'}}
-            >
-              I understand - continue
-            </button>
-          </div>
-        </div>
-      )}
       <AnimatePresence>
         {showOnboarding && (
           <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-app-bg/90 backdrop-blur-xl text-left">
@@ -3453,9 +3281,6 @@ ${list}
         </div>
       </nav>
 
-      <div style={{width:'100%',background:'rgba(201,145,42,0.06)',borderBottom:'1px solid rgba(201,145,42,0.2)',padding:'7px 24px',textAlign:'center'}}>
-        <p style={{margin:0,fontSize:11,color:'#9ca3af'}}><span style={{color:'#c9a84c',fontWeight:700}}>Alphasynth Intelligence</span> provides AI-generated market data analysis only. Not a SEBI-registered Research Analyst. Not investment advice.</p>
-      </div>
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
@@ -3678,102 +3503,8 @@ ${list}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="col-span-2 w-full"
+                  className="grid lg:grid-cols-3 gap-8 items-start"
                 >
-                  {/* ── Daily AI Market Brief + Smart Money Leaderboard ───────────────── */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32, width: '100%' }}>
-
-                    {/* LEFT: Daily AI Market Brief */}
-                    <div style={{ background: '#13161f', border: '1px solid #2a2d3a', borderRadius: 14, padding: 24 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#c9a84c', boxShadow: '0 0 8px #c9a84c', flexShrink: 0 }} />
-                        <span style={{ color: '#c9a84c', fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Daily AI Market Brief</span>
-                      </div>
-                      {dailyBrief ? (
-                        <>
-                          <p style={{ color: '#e5e7eb', fontSize: 14, lineHeight: 1.7, marginBottom: 16 }}>{dailyBrief}</p>
-                          {(() => {
-                            const last10 = fiiDiiData?.last10Days || [];
-                            let fiiNet = fiiDiiData?.fiiNet ?? 0;
-                            let diiNet = fiiDiiData?.diiNet ?? 0;
-                            if (fiiNet === 0 && last10.length > 0) {
-                              const r = last10[last10.length - 1] || last10[0];
-                              fiiNet = r?.fiiNet ?? 0;
-                              if (diiNet === 0) diiNet = r?.diiNet ?? 0;
-                            }
-                            const mood = liveIntel?.marketMoodScore;
-                            const pill = (label: string, bg: string, color: string) => (
-                              <span key={label} style={{ display: 'inline-flex', alignItems: 'center', padding: '4px 10px', borderRadius: 999, fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', background: bg, color }}>{label}</span>
-                            );
-                            const badges: any[] = [];
-                            if (fiiNet < 0) badges.push(pill('FII Selling', 'rgba(244,63,94,0.12)', '#f43f5e'));
-                            if (fiiNet > 0) badges.push(pill('FII Buying', 'rgba(16,185,129,0.12)', '#10b981'));
-                            if (diiNet > 0) badges.push(pill('DII Buying', 'rgba(168,85,247,0.12)', '#a855f7'));
-                            if (mood !== null && mood !== undefined && mood > 55) badges.push(pill('Bullish Mood', 'rgba(16,185,129,0.12)', '#10b981'));
-                            if (mood !== null && mood !== undefined && mood < 45) badges.push(pill('Bearish Mood', 'rgba(244,63,94,0.12)', '#f43f5e'));
-                            return badges.length > 0 ? (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>{badges}</div>
-                            ) : null;
-                          })()}
-
-                        </>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
-                          <div className="animate-spin" style={{ width: 24, height: 24, border: '2px solid #2a2d3a', borderTopColor: '#c9a84c', borderRadius: '50%' }} />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* RIGHT: Smart Money Leaderboard */}
-                    <div style={{ background: '#13161f', border: '1px solid #2a2d3a', borderRadius: 14, padding: 24 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981', flexShrink: 0 }} />
-                        <span style={{ color: '#10b981', fontSize: 11, fontWeight: 800, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Smart Money Leaderboard</span>
-                      </div>
-                      {smartMoneyLeaderboard.length > 0 ? (
-                        <div>
-                          {(() => {
-                            const maxFlow = Math.max(...smartMoneyLeaderboard.map((x: any) => x.flow || 0), 1);
-                            return smartMoneyLeaderboard.slice(0, 5).map((item: any, i: number) => {
-                              const strong = i < 2;
-                              const pct = (item.flow / maxFlow) * 100;
-                              return (
-                                <div
-                                  key={item.ticker}
-                                  onClick={() => {
-                                    setTicker(item.ticker);
-                                    setWorkflowMode('deep_dive');
-                                    setActiveTab('equity');
-                                    document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' });
-                                  }}
-                                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', cursor: 'pointer', borderBottom: i < 4 ? '1px solid #20232e' : 'none' }}
-                                >
-                                  <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 800, width: 18, flexShrink: 0 }}>{i + 1}</span>
-                                  <div style={{ flex: 1, minWidth: 0 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                                      <span style={{ color: '#e5e7eb', fontSize: 13, fontWeight: 700 }}>{item.ticker}</span>
-                                      <span style={{ padding: '2px 8px', borderRadius: 999, fontSize: 9, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', background: strong ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: strong ? '#10b981' : '#f59e0b' }}>{strong ? 'Strong' : 'Moderate'}</span>
-                                    </div>
-                                    <div style={{ height: 8, background: '#0c0e15', borderRadius: 999, overflow: 'hidden' }}>
-                                      <div style={{ height: '100%', width: `${pct}%`, borderRadius: 999, background: '#10b981' }} />
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            });
-                          })()}
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '32px 0' }}>
-                          <div className="animate-spin" style={{ width: 24, height: 24, border: '2px solid #2a2d3a', borderTopColor: '#10b981', borderRadius: '50%' }} />
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
-                  {/* ──────────────────────────────────────────────────────────────────── */}
-
-                  <div className="grid lg:grid-cols-3 gap-8 items-start">
                   <div className="lg:col-span-2 space-y-8">
                     <div>
                     <div className="flex items-center justify-between mb-2">
@@ -3879,7 +3610,7 @@ ${list}
                                      {loadingIntel ? "..." : liveIntel.marketMoodScore}
                                    </span>
                                    <span className={`text-[8px] font-black uppercase tracking-widest mt-1 ${liveIntel.marketMoodScore > 70 ? 'text-positive' : liveIntel.marketMoodScore > 40 ? 'text-gold' : 'text-negative'}`}>
-                                     {(() => { const score = liveIntel.marketMoodScore; const fiiBias = fiiDiiData?.last10Days?.slice(0,3).filter((d:any)=>d.fiiNet<0).length >= 2; if (fiiBias && score > 60) return 'Caution'; return score > 80 ? 'Exuberance' : score > 60 ? 'Greed' : score > 40 ? 'Neutral' : score > 20 ? 'Fear' : 'Panic'; })()}
+                                     {liveIntel.marketMoodScore > 80 ? 'Exuberance' : liveIntel.marketMoodScore > 60 ? 'Greed' : liveIntel.marketMoodScore > 40 ? 'Neutral' : liveIntel.marketMoodScore > 20 ? 'Fear' : 'Panic'}
                                    </span>
                                  </div>
                                </>
@@ -4124,7 +3855,6 @@ ${list}
                           Your watchlist conviction is computed daily against institutional flow data.
                        </p>
                     </div>
-                  </div>
                   </div>
                 </motion.div>
               )}
