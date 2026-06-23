@@ -1073,7 +1073,7 @@ export default function App() {
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('insight_onboarding_seen');
     if (!hasSeenOnboarding) {
-      const timer = setTimeout(() => setShowOnboarding(true), 1500);
+      const timer = setTimeout(() => { /* onboarding disabled */ }, 1500);
       return () => clearTimeout(timer);
     }
   }, []);
