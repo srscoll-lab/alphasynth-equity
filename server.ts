@@ -207,34 +207,37 @@ function lookupAlias(clean: string): { symbol: string; name: string } | null {
   return ALIAS_EXACT.get(aliasNormalize(clean)) || ALIAS_STRIPPED.get(aliasStrip(clean)) || null;
 }
 
-// ── Typeahead company list (Nifty 500) ───────────────────────────────────────────
-// A static, local list of NSE companies powering the search-box autocomplete. It is
-// loaded once at startup from nifty500.json ({ s: symbol, n: name }). Searching it is
-// pure string matching — NO AI, NO report generation — so suggestions are instant and
-// free. When a user picks a suggestion the frontend uses that EXACT symbol directly,
-// bypassing the resolver entirely (zero ambiguity).
+// ── Typeahead company list (full NSE equity market) ──────────────────────────────
+// A static, local list of EVERY actively-traded NSE-listed company (EQ + BE series,
+// ~2,300 symbols incl. all midcaps and smallcaps), powering the search-box
+// autocomplete. Sourced from NSE's public EQUITY_L.csv and loaded once at startup
+// from nse_equities.json ({ s: symbol, n: name }). Searching it is pure string
+// matching — NO AI, NO report generation — so suggestions are instant and free. When
+// a user picks a suggestion the frontend uses that EXACT symbol directly, bypassing
+// the resolver entirely (zero ambiguity).
 interface CompanyEntry { symbol: string; name: string }
-const NIFTY500: CompanyEntry[] = (() => {
+const NSE_EQUITIES: CompanyEntry[] = (() => {
   try {
-    const raw = fs.readFileSync(path.join(process.cwd(), "nifty500.json"), "utf-8");
+    const raw = fs.readFileSync(path.join(process.cwd(), "nse_equities.json"), "utf-8");
     const arr = JSON.parse(raw) as { s: string; n: string }[];
     return arr.map((e) => ({ symbol: String(e.s).toUpperCase(), name: String(e.n) }));
   } catch (e) {
-    console.warn("nifty500.json not loaded — typeahead will return empty:", (e as any)?.message);
+    console.warn("nse_equities.json not loaded — typeahead will return empty:", (e as any)?.message);
     return [];
   }
 })();
 
-// Rank matches so the most relevant company surfaces first. Lower score = better.
+// Rank matches so the most relevant company surfaces first. Lower score = better;
+// ties break to the shorter symbol (the primary listing) then alphabetically.
 //   0 exact symbol · 1 symbol prefix · 2 name prefix · 3 any name-word prefix
 //   4 symbol substring · 5 name substring · skip otherwise
-function searchCompanies(query: string, limit = 12): CompanyEntry[] {
+function searchCompanies(query: string, limit = 8): CompanyEntry[] {
   const q = (query || "").trim();
   if (q.length < 2) return [];
   const U = q.toUpperCase();
   const L = q.toLowerCase();
   const scored: { e: CompanyEntry; score: number }[] = [];
-  for (const e of NIFTY500) {
+  for (const e of NSE_EQUITIES) {
     const sym = e.symbol;
     const nameL = e.name.toLowerCase();
     let score = -1;
