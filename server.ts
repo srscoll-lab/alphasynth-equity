@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
@@ -62,12 +63,20 @@ function sanitizeJsonShell(jsonText: string): string {
   return cleaned;
 }
 
-// Fix markdown tables that Gemini collapsed onto a single line (|| between rows).
+// Fix markdown tables that Gemini collapsed onto a single line, or that arrived with
+// escape sequences left as literal text (the model sometimes double-escapes them inside
+// the JSON payload, so JSON.parse leaves "\n"/"\t" as visible characters rather than
+// real newlines). Both break markdown table parsing on the client.
 function repairMarkdownTables(text: string): string {
   if (!text) return text;
-  // Replace || (two consecutive pipe chars) with a newline between them.
-  // This restores proper table row boundaries when Gemini omits \n in the JSON string.
-  return text.replace(/\|\|/g, '|\n|');
+  return text
+    // Turn literal escape sequences back into real characters.
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    // Replace || (two consecutive pipe chars) with a newline between them, restoring
+    // proper table row boundaries when Gemini omits the newline in the JSON string.
+    .replace(/\|\|/g, '|\n|');
 }
 
 function sanitizeGroundingJson(jsonText: string): string {
@@ -95,6 +104,277 @@ function sanitizeGroundingJson(jsonText: string): string {
   return cleaned;
 }
 
+// ── Company / ticker disambiguation ────────────────────────────────────────────
+// A single source of truth that maps a free-text search term ("Apollo") to ONE
+// canonical NSE company, so the report and the price always refer to the SAME stock.
+// Gemini does the disambiguation (it knows the Apollo family and their relative market
+// caps; Yahoo search is useless for Indian names), and Yahoo verifies each symbol
+// actually trades. We default to the largest-cap match.
+
+// Fetch Yahoo chart metadata for a fully-suffixed symbol (e.g. "APOLLOHOSP.NS").
+async function yahooChartMeta(symbol: string): Promise<any | null> {
+  try {
+    const r = await fetch(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1d`,
+      { headers: { "User-Agent": "Mozilla/5.0 (compatible; EquityAI/1.0)" } }
+    );
+    if (!r.ok) return null;
+    const j: any = await r.json();
+    const meta = j?.chart?.result?.[0]?.meta;
+    return (meta && typeof meta.regularMarketPrice === "number" && meta.regularMarketPrice > 0) ? meta : null;
+  } catch { return null; }
+}
+
+// Verify a base symbol exists on NSE (preferred) then BSE. Returns the canonical record or null.
+async function verifyNseBse(base: string): Promise<{ symbol: string; name: string; exchange: string; price: number } | null> {
+  for (const suffix of [".NS", ".BO"]) {
+    const meta = await yahooChartMeta(base + suffix);
+    if (meta) {
+      return {
+        symbol: base,
+        name: meta.longName || meta.shortName || base,
+        exchange: meta.fullExchangeName || (suffix === ".NS" ? "NSE" : "BSE"),
+        price: meta.regularMarketPrice,
+      };
+    }
+  }
+  return null;
+}
+
+interface ResolvedCompany {
+  query: string;
+  resolvedSymbol: string;
+  companyName: string;
+  exchange: string;
+  ambiguous: boolean;
+  candidates: { symbol: string; name: string; exchange: string }[];
+}
+
+// ── Hardcoded alias overrides ───────────────────────────────────────────────────
+// The most commonly searched / most confusable NSE names map to their EXACT trading
+// symbol here, so popular searches resolve instantly and never depend on the AI step.
+// The AI resolver remains the fallback for anything not listed.
+// NOTE: HDFC Ltd merged into HDFC Bank (Jul 2023) and its ticker is delisted, so every
+// "HDFC"/"HDFC Bank" search maps to the live symbol HDFCBANK.
+const ALIAS_TABLE: { symbol: string; name: string; aliases: string[] }[] = [
+  { symbol: "BAJAJ-AUTO", name: "Bajaj Auto Limited", aliases: ["bajaj auto", "bajajauto"] },
+  { symbol: "BAJFINANCE", name: "Bajaj Finance Limited", aliases: ["bajaj finance", "bajaj fin", "bajfinance"] },
+  { symbol: "BAJAJFINSV", name: "Bajaj Finserv Limited", aliases: ["bajaj finserv", "bajaj fin serv", "bajajfinsv"] },
+  { symbol: "APOLLOHOSP", name: "Apollo Hospitals Enterprise Limited", aliases: ["apollo hospitals", "apollo hospital", "apollohosp"] },
+  { symbol: "APOLLOTYRE", name: "Apollo Tyres Limited", aliases: ["apollo tyres", "apollo tyre", "apollotyre"] },
+  { symbol: "TATAMOTORS", name: "Tata Motors Limited", aliases: ["tata motors", "tata motor", "tatamotors"] },
+  { symbol: "TCS", name: "Tata Consultancy Services Limited", aliases: ["tcs", "tata consultancy", "tata consultancy services"] },
+  { symbol: "TATASTEEL", name: "Tata Steel Limited", aliases: ["tata steel", "tatasteel"] },
+  { symbol: "HDFCBANK", name: "HDFC Bank Limited", aliases: ["hdfc bank", "hdfcbank", "hdfc", "hdfc ltd", "housing development finance"] },
+  { symbol: "ICICIBANK", name: "ICICI Bank Limited", aliases: ["icici bank", "icicibank", "icici"] },
+  { symbol: "SBIN", name: "State Bank of India", aliases: ["sbi", "state bank", "state bank of india", "sbin"] },
+  { symbol: "RELIANCE", name: "Reliance Industries Limited", aliases: ["reliance", "reliance industries", "ril"] },
+  { symbol: "WIPRO", name: "Wipro Limited", aliases: ["wipro"] },
+  { symbol: "INFY", name: "Infosys Limited", aliases: ["infosys", "infy"] },
+  { symbol: "HINDUNILVR", name: "Hindustan Unilever Limited", aliases: ["hul", "hindustan unilever", "hindustan lever", "hindunilvr"] },
+  { symbol: "MARUTI", name: "Maruti Suzuki India Limited", aliases: ["maruti", "maruti suzuki"] },
+  { symbol: "AXISBANK", name: "Axis Bank Limited", aliases: ["axis bank", "axisbank", "axis"] },
+  { symbol: "KOTAKBANK", name: "Kotak Mahindra Bank Limited", aliases: ["kotak bank", "kotak mahindra bank", "kotak mahindra", "kotakbank", "kotak"] },
+  { symbol: "LT", name: "Larsen & Toubro Limited", aliases: ["l&t", "lt", "larsen", "larsen & toubro", "larsen and toubro", "l and t", "l & t"] },
+  { symbol: "ADANIENT", name: "Adani Enterprises Limited", aliases: ["adani enterprises", "adani ent", "adanient"] },
+  { symbol: "ADANIPORTS", name: "Adani Ports and Special Economic Zone Limited", aliases: ["adani ports", "adani port", "adaniports"] },
+  { symbol: "ULTRACEMCO", name: "UltraTech Cement Limited", aliases: ["ultratech", "ultratech cement", "ultra tech", "ultracemco"] },
+  { symbol: "ASIANPAINT", name: "Asian Paints Limited", aliases: ["asian paints", "asian paint", "asianpaint"] },
+  { symbol: "NESTLEIND", name: "Nestle India Limited", aliases: ["nestle", "nestle india", "nestleind"] },
+  { symbol: "TITAN", name: "Titan Company Limited", aliases: ["titan", "titan company"] },
+  { symbol: "SUNPHARMA", name: "Sun Pharmaceutical Industries Limited", aliases: ["sun pharma", "sun pharmaceutical", "sunpharma"] },
+  { symbol: "DRREDDY", name: "Dr. Reddy's Laboratories Limited", aliases: ["dr reddy", "dr reddys", "dr. reddy", "dr reddys labs", "reddys laboratories", "drreddy"] },
+  { symbol: "CIPLA", name: "Cipla Limited", aliases: ["cipla"] },
+];
+
+const aliasNormalize = (s: string): string => s.toLowerCase().trim().replace(/\s+/g, " ");
+const aliasStrip = (s: string): string => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+// Two lookups: exact (normalised) and punctuation-stripped (so "L&T", "l & t", "l and t"
+// and "lt" all collapse to the same key). First registration wins on any collision.
+const ALIAS_EXACT = new Map<string, { symbol: string; name: string }>();
+const ALIAS_STRIPPED = new Map<string, { symbol: string; name: string }>();
+for (const e of ALIAS_TABLE) {
+  const v = { symbol: e.symbol, name: e.name };
+  for (const key of [e.symbol, ...e.aliases]) {
+    const n = aliasNormalize(key);
+    if (n && !ALIAS_EXACT.has(n)) ALIAS_EXACT.set(n, v);
+    const s = aliasStrip(key);
+    if (s && !ALIAS_STRIPPED.has(s)) ALIAS_STRIPPED.set(s, v);
+  }
+}
+
+function lookupAlias(clean: string): { symbol: string; name: string } | null {
+  return ALIAS_EXACT.get(aliasNormalize(clean)) || ALIAS_STRIPPED.get(aliasStrip(clean)) || null;
+}
+
+// ── Typeahead company list (Nifty 500) ───────────────────────────────────────────
+// A static, local list of NSE companies powering the search-box autocomplete. It is
+// loaded once at startup from nifty500.json ({ s: symbol, n: name }). Searching it is
+// pure string matching — NO AI, NO report generation — so suggestions are instant and
+// free. When a user picks a suggestion the frontend uses that EXACT symbol directly,
+// bypassing the resolver entirely (zero ambiguity).
+interface CompanyEntry { symbol: string; name: string }
+const NIFTY500: CompanyEntry[] = (() => {
+  try {
+    const raw = fs.readFileSync(path.join(process.cwd(), "nifty500.json"), "utf-8");
+    const arr = JSON.parse(raw) as { s: string; n: string }[];
+    return arr.map((e) => ({ symbol: String(e.s).toUpperCase(), name: String(e.n) }));
+  } catch (e) {
+    console.warn("nifty500.json not loaded — typeahead will return empty:", (e as any)?.message);
+    return [];
+  }
+})();
+
+// Rank matches so the most relevant company surfaces first. Lower score = better.
+//   0 exact symbol · 1 symbol prefix · 2 name prefix · 3 any name-word prefix
+//   4 symbol substring · 5 name substring · skip otherwise
+function searchCompanies(query: string, limit = 12): CompanyEntry[] {
+  const q = (query || "").trim();
+  if (q.length < 2) return [];
+  const U = q.toUpperCase();
+  const L = q.toLowerCase();
+  const scored: { e: CompanyEntry; score: number }[] = [];
+  for (const e of NIFTY500) {
+    const sym = e.symbol;
+    const nameL = e.name.toLowerCase();
+    let score = -1;
+    if (sym === U) score = 0;
+    else if (sym.startsWith(U)) score = 1;
+    else if (nameL.startsWith(L)) score = 2;
+    else if (nameL.split(/[^a-z0-9]+/).some((w) => w.startsWith(L))) score = 3;
+    else if (sym.includes(U)) score = 4;
+    else if (nameL.includes(L)) score = 5;
+    if (score >= 0) scored.push({ e, score });
+  }
+  scored.sort((a, b) =>
+    a.score !== b.score ? a.score - b.score :
+    a.e.symbol.length !== b.e.symbol.length ? a.e.symbol.length - b.e.symbol.length :
+    a.e.symbol.localeCompare(b.e.symbol)
+  );
+  return scored.slice(0, limit).map((x) => x.e);
+}
+
+async function resolveCompany(query: string): Promise<ResolvedCompany> {
+  const raw = (query || "").trim();
+  const clean = raw.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+
+  // ── STEP 1: DIRECT TICKER VERIFICATION — HIGHEST PRIORITY ─────────────────────
+  // If the user typed something that looks like an exact ticker symbol, check it
+  // straight against Yahoo as <SYMBOL>.NS (then .BO). If it returns a real, priced
+  // listing we trust it immediately — no alias table, no AI resolver. This makes
+  // EVERY valid NSE ticker resolve correctly (all midcaps/smallcaps included, not
+  // just the handful in the alias table) and stops the AI from "correcting" a real
+  // ticker to the wrong company (the VISL → Visaka Industries bug).
+  //
+  // We gate this on a symbol-like shape: a single token (no spaces) that is either
+  // all-uppercase or contains a digit/hyphen. That keeps a Title-case company NAME
+  // like "Apollo" out of this fast path so it still flows to the name-aware alias/AI
+  // steps below — important because "APOLLO" is itself a real ticker (Apollo Micro
+  // Systems), but someone typing "Apollo" almost always means the largest Apollo.
+  const symbolLike =
+    !!clean &&
+    !/\s/.test(raw) &&
+    /^[A-Z0-9&.\-]{1,20}$/.test(clean) &&
+    (raw === raw.toUpperCase() || /[0-9-]/.test(raw));
+  if (symbolLike) {
+    const direct = await verifyNseBse(clean);
+    if (direct) {
+      return {
+        query: clean,
+        resolvedSymbol: direct.symbol,
+        companyName: direct.name,
+        exchange: direct.exchange,
+        ambiguous: false,
+        candidates: [{ symbol: direct.symbol, name: direct.name, exchange: direct.exchange }],
+      };
+    }
+  }
+
+  // ── STEP 2: HARDCODED ALIAS TABLE — SECOND PRIORITY ───────────────────────────
+  // Reached only when the input is NOT a valid ticker on its own. Handles common
+  // name abbreviations that don't trade under that string: SBI→SBIN, L&T→LT,
+  // HUL→HINDUNILVR, "Bajaj Auto"→BAJAJ-AUTO, etc. Instant, no AI.
+  const aliasHit = lookupAlias(clean);
+  if (aliasHit) {
+    return {
+      query: clean,
+      resolvedSymbol: aliasHit.symbol,
+      companyName: aliasHit.name,
+      exchange: "NSE",
+      ambiguous: false,
+      candidates: [{ symbol: aliasHit.symbol, name: aliasHit.name, exchange: "NSE" }],
+    };
+  }
+
+  // ── STEP 3: AI RESOLVER — LAST RESORT ─────────────────────────────────────────
+  // Reached only when the input is neither a valid ticker nor a known alias — i.e. a
+  // natural-language company or family name ("Apollo", "Reliance"). Gemini picks the
+  // single most likely NSE company and Yahoo verifies it actually trades.
+
+  const norm = (c: any) => ({ name: String(c?.name || "").trim(), symbol: String(c?.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, "") });
+
+  let bestMatch: { name: string; symbol: string } | null = null;
+  let alternatives: { name: string; symbol: string }[] = [];
+  try {
+    const ai = getGenAI();
+    const res = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [{ role: "user", parts: [{ text:
+`Identify the single NSE-listed (India) company a user most likely means when they search "${clean}".
+
+Rules:
+- If the search SPECIFICALLY names a company, return THAT exact company — do NOT substitute a larger sibling. Examples: "BAJAJ AUTO" -> Bajaj Auto (symbol BAJAJ-AUTO), NOT Bajaj Finance; "BAJAJ FINANCE" -> Bajaj Finance (BAJFINANCE); "BAJAJ FINSERV" -> Bajaj Finserv (BAJAJFINSV); "APOLLO HOSPITALS" -> Apollo Hospitals (APOLLOHOSP); "APOLLO MICRO" -> Apollo Micro Systems (APOLLO); "TATA MOTORS" -> Tata Motors (TATAMOTORS).
+- ONLY if the search is a GENERIC family term that matches several companies with no further qualifier (e.g. just "BAJAJ", "APOLLO", "TATA", "MAHINDRA") should bestMatch be the LARGEST by market capitalisation (e.g. "BAJAJ" -> BAJFINANCE, "TATA" -> TCS, "MAHINDRA" -> M&M, "APOLLO" -> APOLLOHOSP).
+- If the search is already an exact NSE symbol, return that company.
+
+Return JSON with: bestMatch (the single chosen company) and alternatives (other NSE companies matching the search, largest first). Use exact NSE trading symbols in uppercase with NO exchange suffix; preserve hyphens (e.g. BAJAJ-AUTO) and ampersands (e.g. M&M).` }] }],
+      config: {
+        responseMimeType: "application/json",
+        maxOutputTokens: 2048,
+        responseSchema: {
+          type: "OBJECT",
+          properties: {
+            bestMatch: { type: "OBJECT", properties: { name: { type: "STRING" }, symbol: { type: "STRING" } }, required: ["name", "symbol"] },
+            alternatives: { type: "ARRAY", items: { type: "OBJECT", properties: { name: { type: "STRING" }, symbol: { type: "STRING" } }, required: ["name", "symbol"] } },
+          },
+          required: ["bestMatch"],
+        },
+      },
+    });
+    const parsed = JSON.parse(sanitizeJsonShell(res.text || "{}"));
+    if (parsed.bestMatch?.symbol) bestMatch = norm(parsed.bestMatch);
+    alternatives = (parsed.alternatives || []).map(norm).filter((c: any) => c.symbol);
+  } catch { /* Gemini unavailable — fall back to the raw term below */ }
+
+  // Build an ordered, de-duped candidate list: bestMatch FIRST (so a specific search wins),
+  // then alternatives, then the raw term as a last resort.
+  const ordered: { name: string; symbol: string }[] = [];
+  const pushUnique = (c: { name: string; symbol: string }) => { if (c.symbol && !ordered.some((o) => o.symbol === c.symbol)) ordered.push(c); };
+  if (bestMatch) pushUnique(bestMatch);
+  alternatives.forEach(pushUnique);
+  pushUnique({ name: clean, symbol: clean });
+
+  // Verify each candidate actually trades on Yahoo (parallel); preserve priority order.
+  const checked = await Promise.all(
+    ordered.map(async (c) => {
+      const v = await verifyNseBse(c.symbol);
+      return v ? { name: c.name || v.name, symbol: v.symbol, exchange: v.exchange } : null;
+    })
+  );
+  const verified = checked.filter(Boolean) as { name: string; symbol: string; exchange: string }[];
+
+  // The resolved company is the FIRST verified candidate in priority order — i.e. the
+  // specific bestMatch when it exists and trades, NOT merely the largest sibling.
+  const resolved = verified[0] || null;
+  return {
+    query: clean,
+    resolvedSymbol: resolved?.symbol || clean,
+    companyName: resolved?.name || clean,
+    exchange: resolved?.exchange || "NSE",
+    ambiguous: verified.length > 1,
+    candidates: verified,
+  };
+}
 
 // Problem 1: Financial keywords for scraped content validation
 const FINANCIAL_KW = ['revenue','profit','earnings','crore','quarterly','eps','pe','roce','management','results','annual','balance sheet','cash flow','dividend','market cap','turnover','ebitda','net income','shares','stock'];
@@ -197,6 +477,16 @@ STRICT RULES:
 5. If the context contains website navigation or non-financial content, ignore it completely and rely on your own knowledge and search grounding
 6. Your report must contain original analysis, investment thesis, risks and opportunities
 7. When referring to this company, always use either its full proper name (e.g. "HDFC Bank Limited") or its exact NSE ticker symbol as provided: ${ticker}. Do NOT invent, shorten, or abbreviate the ticker into any other code — for example, never write "HDBK" for HDFCBANK, or any other variant. Use only "${ticker}" or the full company name.
+
+BALANCED & RIGOROUS ANALYSIS (MANDATORY — these enforce objectivity, not a positive slant):
+8. EQUAL-WEIGHT BEAR CASE: Wherever the report presents a bull case or investment thesis, the bear case / downside analysis must be given EQUAL weight, depth and word count. It must be a genuine, rigorous stress-test of the thesis — not a token list of risks. If the bull case runs three paragraphs, the bear case must run three paragraphs of comparable specificity and conviction.
+9. HUNT FOR RED FLAGS: Actively investigate and PROMINENTLY report any of the following that exist — never omit or soft-pedal them: corporate governance red flags, promoter share-pledging levels, auditor qualifications or resignations, related-party transactions, the multi-year debt trajectory, and any SEBI / stock-exchange regulatory actions, fines, or investigations. These are the issues retail investors most often miss and most need to know.
+10. LEAD WITH BAD NEWS: If the most recent quarterly results show a decline in revenue or net profit (YoY or QoQ), OR if FII (foreign institutional) ownership has fallen materially, you MUST state this explicitly in the opening Executive Summary. Do not bury it deeper in the report.
+11. KEY RISKS — MINIMUM THREE: Within the risk/bear discussion include a clearly labelled "Key Risks" list of at least 3 specific, concrete, company-specific risks grounded in actual data (e.g. "promoter pledge at 45% of holding", "receivable days up from 60 to 95", "AGR dues of ₹X cr due by FY26"). Generic risks such as "market risk", "global headwinds", "competition" or "regulatory risk" do NOT count toward the minimum.
+12. JUSTIFIED SIGNAL: State a clear signal and justify it with SPECIFIC data points, not general sentiment. Use NEGATIVE or CAUTIOUS without hesitation when the data warrants it — do not default to a positive or hopeful tone. In your recommendation / verdict section, include a single line in EXACTLY this format (on its own line):
+SIGNAL: <POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS> — <one sentence citing the specific data that drove this call>
+POSITIVE = constructive/buy, NEGATIVE = avoid/sell, NEUTRAL = balanced/hold, CAUTIOUS = real unresolved concerns warranting caution.
+13. PRESERVE STRUCTURE: Keep the report's existing section structure and layout. These rules strengthen the rigour, balance and honesty of the content WITHIN those sections; they do not add or remove top-level sections.
 
 `;
 }
@@ -516,50 +806,97 @@ Company: ${companyName || ticker}`;
     }
   });
 
+  // Resolve a free-text search term to ONE canonical NSE company (largest-cap match)
+  // plus any other matches. The client calls this BEFORE generating a report so the
+  // report and the price both use the same resolved symbol.
+  // Lightweight typeahead for the search box. Pure local string search over the Nifty 500
+  // list — no AI, no report generation, sub-millisecond. Returns up to 12 { symbol, name }.
+  app.get("/api/companies/search", (req, res) => {
+    const q = String(req.query.q || "");
+    res.json({ results: searchCompanies(q) });
+  });
+
+  app.post("/api/pipeline/resolve", async (req, res) => {
+    const { ticker } = req.body;
+    if (!ticker) return res.status(400).json({ error: "Missing ticker" });
+    try {
+      res.json(await resolveCompany(ticker));
+    } catch (e: any) {
+      const clean = String(ticker).toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+      res.json({ query: clean, resolvedSymbol: clean, companyName: clean, exchange: "NSE", ambiguous: false, candidates: [] });
+    }
+  });
+
   app.post("/api/pipeline/price", async (req, res) => {
     const { ticker } = req.body;
     if (!ticker) return res.status(400).json({ error: "Invalid context setup" });
-    const ai = getGenAI();
-    // Use cleaned ticker in search so special chars (& - .) don't break the query
+    // Use cleaned ticker so special chars (& - .) don't break the lookup
     const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
-    const sqTicker = searchQueryTicker(cleanTicker);
-    try {
-      // Stage 1: Search grounding — use both original and cleaned ticker for best match
-      const searchResult = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Find the current live NSE/BSE stock price, today's change in rupees, and percentage change for ${cleanTicker} (search as "${sqTicker}" India stock NSE). Provide only the numeric price values, do not describe the website.` }] }],
-        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
-      });
-      const rawText = searchResult.text || "";
 
-      // Stage 2: JSON structuring
-      const structResult = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: `Extract stock price data for ${cleanTicker} from this text and return as JSON. If price is not found or is zero, set price to null:\n\n${rawText}` }] }],
-        config: {
-          responseMimeType: "application/json",
-          maxOutputTokens: 8192,
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              ticker: { type: "STRING" },
-              price: { type: "NUMBER" },
-              change: { type: "NUMBER" },
-              percentChange: { type: "NUMBER" }
-            },
-            required: ["ticker", "price", "change", "percentChange"]
+    // Fetch a VERIFIED quote from Yahoo Finance for a base symbol. Tries NSE (.NS)
+    // first, then BSE (.BO). Returns null when Yahoo has no data for that symbol so
+    // the caller can decide what to do — we never invent a number.
+    // Yahoo returns the actual last traded price plus the timestamp it was recorded
+    // (regularMarketTime); the NSE/BSE feed is delayed (typically up to ~15 min).
+    const yahooQuote = async (baseSymbol: string) => {
+      for (const suffix of [".NS", ".BO"]) {
+        try {
+          const sym = baseSymbol + suffix;
+          const r = await fetch(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1d`,
+            { headers: { "User-Agent": "Mozilla/5.0 (compatible; EquityAI/1.0)" } }
+          );
+          if (!r.ok) continue;
+          const j: any = await r.json();
+          const meta = j?.chart?.result?.[0]?.meta;
+          const price = meta?.regularMarketPrice;
+          if (typeof price === "number" && price > 0) {
+            const prevClose = typeof meta.chartPreviousClose === "number" ? meta.chartPreviousClose : null;
+            const change = prevClose !== null ? Math.round((price - prevClose) * 100) / 100 : null;
+            const percentChange = (prevClose && change !== null) ? Math.round((change / prevClose) * 10000) / 100 : null;
+            const asOf = meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null;
+            return {
+              ticker: cleanTicker,
+              resolvedSymbol: meta.symbol || sym,
+              price, change, percentChange, asOf,
+              exchange: meta.fullExchangeName || (suffix === ".NS" ? "NSE" : "BSE"),
+              source: "yahoo",
+              delayed: true
+            };
           }
-        }
-      });
-      const priceData = JSON.parse(sanitizeGroundingJson(structResult.text || ""));
-      // If price came back as 0 treat it as unavailable
-      if (!priceData.price || priceData.price === 0) {
-        return res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, unavailable: true });
+        } catch { /* try next suffix */ }
       }
-      res.json(priceData);
-    } catch (error: any) {
-      res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, unavailable: true });
+      return null;
+    };
+
+    // 1. Direct attempt with the symbol as typed (works for RBLBANK, TCS, INFY, …).
+    let quote = await yahooQuote(cleanTicker);
+
+    // 2. The typed name often differs from the NSE *trading symbol*
+    //    (e.g. "NALCO" → "NATIONALUM", "INFOSYS" → "INFY"). When the direct lookup
+    //    fails, use Gemini ONLY to map name → exact symbol, then verify that symbol
+    //    on Yahoo. We use AI for what it is reliable at (the mapping) and never for
+    //    the price itself.
+    if (!quote) {
+      try {
+        const ai = getGenAI();
+        const resolveRes = await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: [{ role: 'user', parts: [{ text: `What is the exact NSE (India) trading symbol for the company commonly known as "${cleanTicker}"? Reply with ONLY the ticker symbol in uppercase — no exchange suffix, no punctuation, no extra words. For example, for "Nalco" reply NATIONALUM; for "Infosys" reply INFY.` }] }],
+          config: { maxOutputTokens: 512 }
+        });
+        const resolved = (resolveRes.text || "").trim().toUpperCase().replace(/[^A-Z0-9&-]/g, "");
+        if (resolved && resolved !== cleanTicker) {
+          quote = await yahooQuote(resolved);
+        }
+      } catch { /* resolution unavailable — fall through to unavailable */ }
     }
+
+    // 3. Return the verified quote, or an explicit "unavailable" so the UI hides the
+    //    price entirely. We deliberately do NOT fall back to an AI-guessed number —
+    //    a missing price is far less harmful than a wrong one labelled as current.
+    if (quote) return res.json(quote);
+    return res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, asOf: null, source: null, unavailable: true });
   });
   app.post("/api/pipeline/analyze", async (req, res) => {
     const { ticker, context, mode } = req.body;
@@ -658,7 +995,7 @@ Company: ${companyName || ticker}`;
           Detailed bull thesis: revenue growth drivers, competitive moat, management quality, valuation upside, and catalyst timeline.
 
           ## THE CONTRARIAN BEAR CASE
-          Honest risk factors: sector headwinds, valuation risks, execution risks, and scenarios where the thesis fails.
+          A rigorous, equal-weight stress-test of the thesis — match the Bull Case in depth and word count. Cover governance red flags, promoter pledging, auditor qualifications, related-party transactions, debt trajectory and any SEBI/exchange actions where they exist, plus valuation and execution risk and the scenarios where the thesis fails. Include a "Key Risks" list of at least 3 specific, data-grounded, company-specific risks (not generic ones).
 
           ## INSTITUTIONAL CONVICTION METRICS
           Score-driven summary of valuation, growth, moat, and governance factors.
@@ -879,7 +1216,7 @@ Governance Cleanliness: X`;
 
       console.log(`[ANALYZE] Analysis complete! report=${reportText.length} chars, confidence=${confidence}`);
       return res.json({
-        report: reportText,
+        report: repairMarkdownTables(reportText),
         benchmarking: parsedPayload.benchmarking || [],
         confidence,
         modelUsed: "gemini-2.5-flash",
@@ -1006,6 +1343,7 @@ Governance Cleanliness: X`;
 
           ## THE BULL CASE
           ## THE CONTRARIAN BEAR CASE
+          (Equal weight and depth to the Bull Case — a rigorous stress-test covering governance red flags, promoter pledging, auditor qualifications, related-party transactions, debt trajectory and any SEBI/exchange actions where they exist. Include a "Key Risks" list of at least 3 specific, data-grounded, company-specific risks.)
           ## INSTITUTIONAL CONVICTION METRICS
           ## EARNINGS & CATALYSTS
           ## ANALYST TARGETS

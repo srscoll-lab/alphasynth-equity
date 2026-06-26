@@ -63,7 +63,7 @@ import {
   Copy,
   Download
 } from "lucide-react";
-import { useState, useEffect, FormEvent, useRef } from "react";
+import { useState, useEffect, FormEvent, useRef, KeyboardEvent } from "react";
 import React from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -191,6 +191,28 @@ const MarkdownComponents = {
   )
 };
 
+// Some AI responses arrive with escape sequences left as literal text (e.g. "\n", "\t")
+// because the model double-escaped them inside the JSON payload. When that happens,
+// react-markdown sees a whole pipe table as a single line and renders the raw "|" and
+// ":------" syntax as plain text. Normalising these back into real characters — plus
+// splitting any "||" the model collapsed between rows — restores proper table parsing.
+const normalizeMarkdown = (text: string): string => {
+  if (!text) return '';
+  return text
+    .replace(/\\r\\n/g, '\n')
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\|\|/g, '|\n|');
+};
+
+// Single entry point for rendering report markdown. Every report section uses this so the
+// normalisation above is applied consistently (and fixes already-cached reports too).
+const MD = ({ children }: { children?: any }) => (
+  <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>
+    {normalizeMarkdown(typeof children === 'string' ? children : String(children ?? ''))}
+  </Markdown>
+);
+
 interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
@@ -277,6 +299,22 @@ const isMarketOpen = (): boolean => {
   return currentMinutesSinceMidnight >= marketOpenMinutes && currentMinutesSinceMidnight < marketCloseMinutes;
 };
 
+// Age of a price timestamp in minutes (Infinity if missing/invalid).
+const priceAgeMinutes = (iso: string | null): number => {
+  if (!iso) return Infinity;
+  const t = new Date(iso).getTime();
+  if (isNaN(t)) return Infinity;
+  return (Date.now() - t) / 60000;
+};
+
+// The market counts as "live" only when the clock says it is open (Mon–Fri 9:15–15:30 IST)
+// AND the price data is actually fresh. The freshness check is what catches trading
+// HOLIDAYS — the weekday clock alone cannot. On a holiday Yahoo returns the previous
+// session's close, so its timestamp is hours/days old and we correctly show "Market Closed".
+const isMarketLive = (asOf: string | null): boolean => {
+  return isMarketOpen() && priceAgeMinutes(asOf) <= 30;
+};
+
 const getPriceVsLtpLabel = (priceStr: string, ltp: number) => {
   const val = parseFloat(priceStr);
   if (isNaN(val) || val <= 0 || ltp <= 0) return null;
@@ -317,6 +355,22 @@ const getStopLossVsLtpLabel = (slStr: string, priceStr: string, ltp: number) => 
       {ltpDiffPct >= 0 ? '▲ +' : '▼ '}{ltpDiffPct.toFixed(2)}% vs LTP
     </span>
   );
+};
+
+// Derive the Signal/rating from a report. Prefers the explicit, AI-justified
+// "SIGNAL: <POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS> — …" line the prompt now requires.
+// Falls back to the legacy keyword heuristic only for older reports without it.
+// (The old heuristic checked includes('buy') FIRST, so any report with a bull case
+//  — i.e. almost all of them — was forced to "Positive". That bias is fixed here.)
+const deriveRating = (report: string): string => {
+  if (!report) return 'hold';
+  const m = report.match(/SIGNAL\s*[:\-—]*\s*(POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS)/i);
+  if (m) {
+    const s = m[1].toUpperCase();
+    return s === 'POSITIVE' ? 'buy' : s === 'NEGATIVE' ? 'sell' : s === 'CAUTIOUS' ? 'cautious' : 'hold';
+  }
+  const lower = report.toLowerCase();
+  return lower.includes('buy') ? 'buy' : lower.includes('sell') ? 'sell' : 'hold';
 };
 
 const RatingBadge = ({ rating, mode }: { rating: string, mode?: string }) => {
@@ -427,7 +481,60 @@ export default function App() {
   const [reportFromCache, setReportFromCache] = useState<boolean>(false);
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
+  // Canonical company resolved from the user's search term — shared by the report AND the
+  // price fetch so they never refer to different companies (e.g. Apollo Hospitals vs Apollo
+  // Microsystems). The ref mirrors it for access inside async closures.
+  const [resolvedCompany, setResolvedCompany] = useState<{ name: string; symbol: string; candidates: { symbol: string; name: string }[] } | null>(null);
+  const resolvedCompanyRef = useRef<{ name: string; symbol: string; candidates: { symbol: string; name: string }[] } | null>(null);
   const [searchUrl, setSearchUrl] = useState('');
+
+  // ── Search-box typeahead (Nifty 500 autocomplete) ──────────────────────────────
+  // Suggestions come from the lightweight /api/companies/search endpoint (local list,
+  // no AI). Picking one uses its EXACT ticker and bypasses the resolver entirely.
+  const [suggestions, setSuggestions] = useState<{ symbol: string; name: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeSuggestion, setActiveSuggestion] = useState(-1);
+  const suggestTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestSeq = useRef(0);
+
+  const fetchSuggestions = (raw: string) => {
+    const query = (raw || '').trim();
+    if (suggestTimer.current) clearTimeout(suggestTimer.current);
+    if (query.length < 2) { setSuggestions([]); setShowSuggestions(false); setActiveSuggestion(-1); return; }
+    suggestTimer.current = setTimeout(async () => {
+      const seq = ++suggestSeq.current;
+      try {
+        const r = await fetch(`/api/companies/search?q=${encodeURIComponent(query)}`);
+        if (!r.ok) return;
+        const d = await r.json();
+        if (seq !== suggestSeq.current) return; // a newer keystroke superseded this one
+        const results = (d.results || []) as { symbol: string; name: string }[];
+        setSuggestions(results);
+        setShowSuggestions(results.length > 0);
+        setActiveSuggestion(-1);
+      } catch { /* ignore — typeahead is best-effort */ }
+    }, 120);
+  };
+
+  const closeSuggestions = () => { setShowSuggestions(false); setActiveSuggestion(-1); };
+
+  // User picked a suggestion → use the EXACT ticker, skip the resolver completely.
+  const selectSuggestion = (item: { symbol: string; name: string }) => {
+    closeSuggestions();
+    setSuggestions([]);
+    setTicker(item.symbol);
+    triggerAnalysis(undefined, item.symbol, false, item);
+  };
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (showSuggestions && suggestions.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setActiveSuggestion((i) => (i + 1) % suggestions.length); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); setActiveSuggestion((i) => (i <= 0 ? suggestions.length - 1 : i - 1)); return; }
+      if (e.key === 'Enter' && activeSuggestion >= 0) { e.preventDefault(); selectSuggestion(suggestions[activeSuggestion]); return; }
+      if (e.key === 'Escape') { closeSuggestions(); return; }
+    }
+    if (e.key === 'Enter') { e.preventDefault(); closeSuggestions(); triggerAnalysis(); } // fallback → 3-step resolver
+  };
   
   // Firebase State
   const [user, setUser] = useState<User | null>(null);
@@ -490,6 +597,28 @@ export default function App() {
   const [ltpPercentChange, setLtpPercentChange] = useState<number>(0);
   const [isLtpFetching, setIsLtpFetching] = useState<boolean>(false);
   const [ltpTrend, setLtpTrend] = useState<'up' | 'down' | 'flat'>('flat');
+  const [ltpAsOf, setLtpAsOf] = useState<string | null>(null);
+  // True once a price lookup has completed but no verified price could be obtained.
+  // When set, the UI hides the price entirely rather than showing a wrong/stale number.
+  const [ltpUnavailable, setLtpUnavailable] = useState<boolean>(false);
+
+  // Format the price timestamp into IST wall-clock time. If the quote is from a previous
+  // day (weekend / holiday / after-hours rollover) we also show the date, so a stale
+  // closing price can never be mistaken for today's.
+  const formatLtpAsOf = (iso: string | null): string => {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      const time = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' });
+      const dDay = d.toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const today = new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata' });
+      if (dDay !== today) {
+        const dd = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' });
+        return `${dd}, ${time}`;
+      }
+      return time;
+    } catch { return ''; }
+  };
 
   useEffect(() => {
     const activeTarget = lastReport?.ticker || ticker;
@@ -497,16 +626,17 @@ export default function App() {
       let ignore = false;
       const targetUpper = activeTarget.toUpperCase();
 
-      // Initialize with parsed LTP if available to avoid flash of stale/empty price
-      if (lastReport && lastReport.ticker.toUpperCase() === targetUpper && lastReport.parsedLtp) {
-        setScripLtp(lastReport.parsedLtp);
-        setScripLtpTicker(targetUpper);
-      } else {
-        setScripLtp(0);
-        setScripLtpTicker('');
-      }
+      // Reset to an empty state. We intentionally do NOT seed from lastReport.parsedLtp
+      // (the price the AI parsed out of the report text) — that number is unverified and
+      // was a source of wrong "live" prices. Only a verified source price is ever shown.
+      setScripLtp(0);
+      setScripLtpTicker('');
       setLtpChange(0);
       setLtpPercentChange(0);
+      setLtpAsOf(null);
+      setLtpUnavailable(false);
+
+      let timer: ReturnType<typeof setTimeout> | null = null;
 
       const loadPrice = async () => {
         setIsLtpFetching(true);
@@ -519,16 +649,32 @@ export default function App() {
           if (response.ok && !ignore) {
             const data = await response.json();
             const price = parseFloat(data.price);
-            if (price && !isNaN(price)) {
+            if (price && !isNaN(price) && !data.unavailable) {
               setScripLtp(price);
               setScripLtpTicker(targetUpper);
               setLtpChange(parseFloat(data.change) || 0);
               setLtpPercentChange(parseFloat(data.percentChange) || 0);
               setLtpTrend((data.change || 0) > 0 ? 'up' : (data.change || 0) < 0 ? 'down' : 'flat');
+              setLtpAsOf(data.asOf || null);
+              setLtpUnavailable(false);
+              // Keep polling ONLY while the market is genuinely live (open hours AND fresh
+              // data). When the market is closed — weekend, after-hours, or a holiday (where
+              // the clock says "open" but the price timestamp is stale) — we fetch ONCE and
+              // cache it. The number must not move when the market is closed.
+              if (!ignore && isMarketOpen() && priceAgeMinutes(data.asOf) <= 30) {
+                timer = setTimeout(loadPrice, 60000);
+              }
+            } else {
+              // No verified price available — clear it and flag unavailable.
+              setScripLtp(0);
+              setScripLtpTicker('');
+              setLtpAsOf(null);
+              setLtpUnavailable(true);
             }
           }
         } catch (e) {
-          console.error("Failed to fetch live stock price:", e);
+          console.error("Failed to fetch stock price:", e);
+          if (!ignore) setLtpUnavailable(true);
         } finally {
           if (!ignore) {
             setIsLtpFetching(false);
@@ -538,30 +684,9 @@ export default function App() {
 
       loadPrice();
 
-      const marketOpen = isMarketOpen();
-      let interval: NodeJS.Timeout | null = null;
-      if (marketOpen) {
-        // Periodically fluctuate the price slightly to simulate live market ticks
-        interval = setInterval(() => {
-          if (ignore) return;
-          setScripLtp(prev => {
-            if (prev <= 0) return prev;
-            const changePercent = (Math.random() * 0.08 - 0.04); // -0.04% to +0.04% micro fluctuations
-            const delta = Math.round((prev * (changePercent / 100)) * 100) / 100;
-            if (delta === 0) return prev;
-            
-            const nextPrice = Math.round((prev + delta) * 100) / 100;
-            setLtpTrend(delta > 0 ? 'up' : 'down');
-            return nextPrice;
-          });
-        }, 3000);
-      }
-
       return () => {
         ignore = true;
-        if (interval) {
-          clearInterval(interval);
-        }
+        if (timer) clearTimeout(timer);
       };
     }
   }, [lastReport?.ticker, ticker]);
@@ -1845,12 +1970,47 @@ ${list}
   // Peers are fetched in parallel from triggerAnalysis — no auto-fetch on lastReport change
   // (manual refresh still available via the Refresh Peers button)
 
-  const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false) => {
-    const tkr = tickerOverride || ticker;
+  // Resolve a free-text search term to a single canonical NSE company (largest-cap match),
+  // updating state/ref so the report and the price both use the same resolved symbol.
+  const resolveCompanyClient = async (raw: string): Promise<string> => {
+    try {
+      const r = await fetch('/api/pipeline/resolve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: raw })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d.resolvedSymbol) {
+          const info = { name: d.companyName || d.resolvedSymbol, symbol: d.resolvedSymbol, candidates: d.candidates || [] };
+          resolvedCompanyRef.current = info;
+          setResolvedCompany(info);
+          return d.resolvedSymbol;
+        }
+      }
+    } catch { /* fall through to raw term */ }
+    const fallback = { name: raw.toUpperCase(), symbol: raw.toUpperCase(), candidates: [] };
+    resolvedCompanyRef.current = fallback;
+    setResolvedCompany(fallback);
+    return raw.toUpperCase();
+  };
+
+  const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false, exactCompany?: { symbol: string; name: string }) => {
+    let tkr = tickerOverride || ticker;
     if (!tkr) return;
+    // A company picked from the typeahead dropdown carries its EXACT ticker — record it
+    // directly so every step below skips the resolver (no AI, zero ambiguity).
+    const applyExact = () => {
+      if (!exactCompany) return;
+      const info = { name: exactCompany.name, symbol: exactCompany.symbol, candidates: [] as { symbol: string; name: string }[] };
+      resolvedCompanyRef.current = info;
+      setResolvedCompany(info);
+    };
     // Redirect to the dedicated earnings intelligence pipeline when that mode is active
     if (!modeOverride && workflowMode === 'earnings_intelligence') {
-      return triggerEarningsIntelligence(tkr);
+      const resolvedEi = exactCompany ? (applyExact(), exactCompany.symbol) : await resolveCompanyClient(tkr);
+      setTicker(resolvedEi);
+      return triggerEarningsIntelligence(resolvedEi);
     }
     const targetMode = (typeof modeOverride === 'string' ? modeOverride : workflowMode) as 'deep_dive' | 'earnings' | 'move';
 
@@ -1890,6 +2050,13 @@ ${list}
     }
     setError(null);
     setAnalysisStatus('Initializing Analysis Pipeline...');
+    // Resolve to ONE canonical company up-front (largest-cap match) so the report and the
+    // live price both target the same stock — fixes "report = Apollo Hospitals, price =
+    // Apollo Microsystems". Everything downstream uses this resolved symbol.
+    setAnalysisStatus('Identifying company...');
+    if (exactCompany) { tkr = exactCompany.symbol; applyExact(); } else { tkr = await resolveCompanyClient(tkr); }
+    setTicker(tkr);
+    if (analysisGenRef.current !== myGen) return; // a newer analysis started during resolve
     // Kick off peers fetch in parallel — resolves independently while analysis runs
     fetchPeers(tkr);
 
@@ -2135,8 +2302,10 @@ ${list}
           bearCase: getSection(patterns.bear, patterns.metrics),
           earnings: getSection(patterns.earnings, patterns.targets),
           metrics,
-          ticker: ticker.toUpperCase(), 
-          rating: report.toLowerCase().includes('buy') ? 'buy' : report.toLowerCase().includes('sell') ? 'sell' : 'hold',
+          ticker: ticker.toUpperCase(),
+          companyName: (resolvedCompanyRef.current && resolvedCompanyRef.current.symbol === ticker.toUpperCase()) ? resolvedCompanyRef.current.name : ticker.toUpperCase(),
+          candidates: (resolvedCompanyRef.current && resolvedCompanyRef.current.symbol === ticker.toUpperCase()) ? resolvedCompanyRef.current.candidates : [],
+          rating: deriveRating(report),
           sourceUrl: usedUrl,
           mode: activeMode,
           entryPrice: parsePrice('Tactical Entry Zone'),
@@ -2227,7 +2396,15 @@ ${list}
                       <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
                         {lastReport.ticker} <RatingBadge rating={lastReport.rating} mode={lastReport.mode} />
                       </h2>
-                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1">Institutional Audit • Grounding Active</p>
+                      <p className="text-[11px] text-gold font-bold mt-1.5 normal-case tracking-normal">
+                        Showing results for: {lastReport.companyName || lastReport.ticker} ({lastReport.ticker})
+                      </p>
+                      {Array.isArray(lastReport.candidates) && lastReport.candidates.filter((c: any) => c.symbol !== lastReport.ticker).length > 0 && (
+                        <p className="text-[10px] text-zinc-500 mt-1 normal-case tracking-normal font-normal">
+                          Not what you meant? Other matches: {lastReport.candidates.filter((c: any) => c.symbol !== lastReport.ticker).map((c: any) => `${c.name} (${c.symbol})`).join(' · ')}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1.5">Institutional Audit • Grounding Active</p>
                       <p className="text-[10px] text-zinc-500 italic mt-1 normal-case tracking-normal font-normal">AI-generated data analysis only. Not a SEBI-registered Research Analyst. This is not investment advice or a recommendation to buy, sell, or hold any security.</p>
                   </div>
                 </div>
@@ -2313,27 +2490,40 @@ ${list}
                      </div>
                      <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-6">Trade Parameters</h3>
                      <div className="grid grid-cols-1 gap-4">
+                        {(() => {
+                          const ltpVerified = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase();
+                          return (
                         <div className="p-4 bg-app-surface border border-gold/30 rounded-xl relative overflow-hidden">
                            <p className="text-[9px] font-black text-gold uppercase tracking-widest mb-1 flex justify-between items-center">
                              <span>Last Traded Price (LTP)</span>
-                             {isMarketOpen() ? (
-                               <span className="flex items-center gap-1.5">
-                                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                 <span className="text-[8px] text-emerald-400 font-bold">LIVE</span>
+                             {!ltpVerified ? (
+                               <span className="text-[8px] text-zinc-500 font-bold">UNAVAILABLE</span>
+                             ) : isMarketLive(ltpAsOf) ? (
+                               <span className="flex items-center gap-1.5" title="Delayed market data (typically up to ~15 min). Not a live tick.">
+                                 <span className="h-1.5 w-1.5 rounded-full bg-amber" />
+                                 <span className="text-[8px] text-amber-400 font-bold">DELAYED{ltpAsOf ? ` · ${formatLtpAsOf(ltpAsOf)} IST` : ''}</span>
                                </span>
                              ) : (
-                               <span className="text-[8px] text-zinc-500 font-bold">CLOSED</span>
+                               <span className="text-[8px] text-zinc-500 font-bold">MARKET CLOSED · LAST CLOSE{ltpAsOf ? ` · ${formatLtpAsOf(ltpAsOf)} IST` : ''}</span>
                              )}
                            </p>
-                           <p className="text-xl font-display font-black text-white flex items-baseline gap-2">
-                             ₹{scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : lastReport?.parsedLtp ? lastReport.parsedLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '---'}
-                             {scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() && ltpPercentChange !== 0 && (
-                               <span className={`text-[10px] font-mono font-bold ${ltpChange >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
-                                 {ltpChange >= 0 ? '+' : ''}{ltpPercentChange.toFixed(2)}%
-                               </span>
-                             )}
-                           </p>
+                           {ltpVerified ? (
+                             <p className="text-xl font-display font-black text-white flex items-baseline gap-2">
+                               ₹{scripLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                               {ltpPercentChange !== 0 && (
+                                 <span className={`text-[10px] font-mono font-bold ${ltpChange >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                                   {ltpChange >= 0 ? '+' : ''}{ltpPercentChange.toFixed(2)}%
+                                 </span>
+                               )}
+                             </p>
+                           ) : (
+                             <p className="text-sm font-medium text-zinc-500 italic">
+                               {isLtpFetching ? 'Fetching price…' : 'Live price unavailable — please confirm on your broker before trading.'}
+                             </p>
+                           )}
                         </div>
+                          );
+                        })()}
                         {(() => {
                            // For move and earnings_intelligence, derive from live LTP only.
                            // For deep_dive, use parser-extracted prices with LTP-range sanity check.
@@ -2457,7 +2647,7 @@ ${list}
                   <div className="p-6 bg-gold/5 border border-gold/20 rounded-2xl">
                       <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4">Earnings Diagnostic</h3>
                       <div className="text-xs text-zinc-300 leading-relaxed max-h-[150px] overflow-y-auto no-scrollbar prose prose-invert prose-xs">
-                        <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.earnings || 'Parsing latest transcript data...'}</Markdown>
+                        <MD>{lastReport.earnings || 'Parsing latest transcript data...'}</MD>
                       </div>
                   </div>
                 </div>
@@ -2473,7 +2663,7 @@ ${list}
                           <span className="text-[9px] font-black text-gold uppercase tracking-widest">{analysisStatus || 'Streaming report...'}</span>
                         </div>
                         <div className="prose prose-invert prose-sm max-w-none leading-relaxed text-zinc-300 selection:bg-gold/30">
-                          <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{streamingReport}</Markdown>
+                          <MD>{streamingReport}</MD>
                         </div>
                         <span className="inline-block w-2 h-4 bg-gold/70 animate-pulse ml-1 align-middle rounded-sm" />
                       </div>
@@ -2658,7 +2848,7 @@ ${list}
                               </div>
                             </div>
                             <div className="p-6 prose prose-invert max-w-none">
-                              <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{earningsIntelReport.earningsSnapshot || ''}</Markdown>
+                              <MD>{earningsIntelReport.earningsSnapshot || ''}</MD>
                             </div>
                           </div>
 
@@ -2720,7 +2910,7 @@ ${list}
                                 </div>
                               </div>
                               <div className="p-6 prose prose-invert max-w-none">
-                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{earningsIntelReport.guidanceOutlook}</Markdown>
+                                <MD>{earningsIntelReport.guidanceOutlook}</MD>
                               </div>
                             </div>
                           )}
@@ -2738,7 +2928,7 @@ ${list}
                                 </div>
                               </div>
                               <div className="p-6 prose prose-invert max-w-none">
-                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{earningsIntelReport.redFlagsAndSentiment}</Markdown>
+                                <MD>{earningsIntelReport.redFlagsAndSentiment}</MD>
                               </div>
                             </div>
                           )}
@@ -2761,7 +2951,7 @@ ${list}
                         </div>
                       ) : lastReport.mode !== 'deep_dive' || !lastReport.bullCase ? (
                           <div className="max-w-none prose prose-invert prose-orange leading-relaxed text-zinc-300 selection:bg-gold/30">
-                             <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.rawReport}</Markdown>
+                             <MD>{lastReport.rawReport}</MD>
                           </div>
                       ) : (
                         <>
@@ -2770,7 +2960,7 @@ ${list}
                                 <div className="w-2 h-2 rounded-full bg-positive shadow-[0_0_8px_rgba(20,184,166,0.4)]" /> The Bull Thesis
                               </h3>
                               <div className="prose prose-invert prose-orange max-w-none prose-sm leading-relaxed text-zinc-300">
-                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.bullCase}</Markdown>
+                                <MD>{lastReport.bullCase}</MD>
                               </div>
                           </section>
 
@@ -2779,7 +2969,7 @@ ${list}
                                 <div className="w-2 h-2 rounded-full bg-negative shadow-[0_0_8px_rgba(244,63,94,0.4)]" /> Contrarian Risks (The Bear Case)
                               </h3>
                               <div className="prose prose-invert prose-orange max-w-none prose-sm leading-relaxed text-zinc-300 italic p-6 bg-app-surface/30 border-l border-app-border rounded-r-xl">
-                                <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{lastReport.bearCase}</Markdown>
+                                <MD>{lastReport.bearCase}</MD>
                               </div>
                           </section>
                         </>
@@ -3208,7 +3398,7 @@ ${list}
                       <div className="absolute bottom-0 left-0 w-80 h-80 bg-blue-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2" />
                       
                       <div className="relative z-10">
-                        <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{portfolioAudit}</Markdown>
+                        <MD>{portfolioAudit}</MD>
                       </div>
                     </div>
                     
@@ -3589,13 +3779,49 @@ ${list}
             {/* Input Controls */}
             <div className="max-w-2xl mx-auto mb-10 flex flex-col md:flex-row gap-2">
               <div className="flex-1 relative">
-                <input 
-                  type="text" 
-                  placeholder="Ticker (e.g. RELIANCE)"
+                <input
+                  type="text"
+                  placeholder="Search company or ticker (e.g. Tata Steel, RELIANCE)"
                   value={ticker}
-                  onChange={(e) => setTicker(e.target.value.toUpperCase())}
+                  onChange={(e) => { const v = e.target.value.toUpperCase(); setTicker(v); fetchSuggestions(v); }}
+                  onKeyDown={handleSearchKeyDown}
+                  onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
+                  onBlur={() => { setTimeout(closeSuggestions, 150); }}
+                  autoComplete="off"
+                  role="combobox"
+                  aria-expanded={showSuggestions}
+                  aria-autocomplete="list"
                   className="w-full px-4 py-4 bg-app-surface border border-app-border rounded-xl text-sm text-white focus:outline-none focus:border-gold transition-colors placeholder:text-zinc-600 font-semibold"
                 />
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul
+                    role="listbox"
+                    className="absolute z-50 left-0 right-0 mt-2 max-h-80 overflow-y-auto rounded-xl border border-app-border bg-app-surface shadow-[0_20px_50px_rgba(0,0,0,0.6)] py-1 text-left"
+                  >
+                    {suggestions.map((item, idx) => (
+                      <li
+                        key={item.symbol}
+                        role="option"
+                        aria-selected={idx === activeSuggestion}
+                        onMouseDown={(e) => { e.preventDefault(); selectSuggestion(item); }}
+                        onMouseEnter={() => setActiveSuggestion(idx)}
+                        className={`relative flex items-center justify-between gap-4 px-4 py-2.5 cursor-pointer transition-colors ${
+                          idx === activeSuggestion ? 'bg-app-surface-accent' : 'hover:bg-app-surface-accent/60'
+                        }`}
+                      >
+                        {idx === activeSuggestion && (
+                          <span className="absolute left-0 top-0 bottom-0 w-[3px] bg-gold rounded-r" />
+                        )}
+                        <span className={`truncate text-sm font-medium ${idx === activeSuggestion ? 'text-white' : 'text-zinc-200'}`}>
+                          {item.name}
+                        </span>
+                        <span className={`shrink-0 font-mono text-xs tracking-wide ${idx === activeSuggestion ? 'text-gold' : 'text-zinc-500'}`}>
+                          {item.symbol}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
               <button 
                 onClick={() => triggerAnalysis()}
@@ -4702,7 +4928,7 @@ ${list}
                                    </div>
                                  )}
                                  <div className="prose prose-invert prose-orange max-w-none text-zinc-300">
-                                    <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{filingsReport.rawReport}</Markdown>
+                                    <MD>{filingsReport.rawReport}</MD>
                                  </div>
                                  {/* Permanent disclaimer */}
                                  <div className="mt-8 pt-4 border-t border-app-border">
@@ -5048,7 +5274,7 @@ ${list}
                             
                             <div className="space-y-4 mb-6">
                                <div className="text-sm text-zinc-400 line-clamp-3 leading-relaxed prose prose-invert prose-xs">
-                                  <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{item.bullCase?.substring(0, 200) + '...'}</Markdown>
+                                  <MD>{item.bullCase?.substring(0, 200) + '...'}</MD>
                                </div>
                             </div>
 
@@ -5262,7 +5488,7 @@ ${list}
                                             <span className="text-[9px] font-black uppercase tracking-wider">The Contrarian Bear Case</span>
                                         </div>
                                         <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-xs">
-                                          <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{item.bearCase || item.summary}</Markdown>
+                                          <MD>{item.bearCase || item.summary}</MD>
                                         </div>
                                     </motion.div>
                                 ) : (
@@ -5278,7 +5504,7 @@ ${list}
                                             <span className="text-[9px] font-black uppercase tracking-wider">The Bull Case</span>
                                         </div>
                                         <div className="text-zinc-400 text-sm leading-relaxed prose prose-invert prose-xs">
-                                          <Markdown components={MarkdownComponents} remarkPlugins={[remarkGfm]}>{item.bullCase || item.summary}</Markdown>
+                                          <MD>{item.bullCase || item.summary}</MD>
                                         </div>
                                     </motion.div>
                                 )}
@@ -5565,30 +5791,47 @@ ${list}
                       <div>
                          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Asset Node</p>
                          <p id="asset-node-title" className="text-3xl font-display font-black text-white">{lastReport.ticker}</p>
-                         
-                         {/* Dynamic Live LTP Feeder */}
+                         {lastReport.companyName && lastReport.companyName !== lastReport.ticker && (
+                           <p className="text-[11px] text-zinc-400 font-medium mt-0.5">{lastReport.companyName}</p>
+                         )}
+
+                         {/* Last Traded Price feeder (delayed market data — see /api/pipeline/price) */}
+                         {(() => {
+                            const ltpVerified = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase();
+                            return (
                          <div className="mt-4 pt-3.5 border-t border-zinc-800/80 flex items-center justify-between w-full">
                             <div className="flex items-center gap-1.5">
-                               <span className={`h-1.5 w-1.5 rounded-full ${!isMarketOpen() ? 'sm:bg-zinc-600 bg-zinc-600' : isLtpFetching ? 'bg-amber animate-ping' : 'bg-emerald-500 animate-pulse'}`} />
-                               <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">{isMarketOpen() ? 'Live LTP' : 'LTP (Market Closed)'}</span>
+                               <span className={`h-1.5 w-1.5 rounded-full ${isLtpFetching ? 'bg-amber animate-ping' : ltpVerified ? 'bg-zinc-500' : 'bg-zinc-700'}`} />
+                               <span className="text-[9px] text-zinc-400 font-bold uppercase tracking-widest">
+                                 {!ltpVerified ? 'Price Unavailable' : isMarketLive(ltpAsOf) ? 'Delayed' : 'Market Closed · Last Close'}
+                                 {ltpVerified && ltpAsOf ? <span className="text-zinc-600 normal-case font-medium tracking-normal ml-1">as of {formatLtpAsOf(ltpAsOf)} IST</span> : null}
+                               </span>
                             </div>
                             <div className="flex items-baseline gap-2">
-                               <motion.span 
-                                 key={isMarketOpen() ? scripLtp : 'closed'}
-                                 initial={isMarketOpen() ? { scale: 1.12, color: ltpTrend === 'up' ? '#10b981' : ltpTrend === 'down' ? '#f43f5e' : '#ffffff' } : { scale: 1, color: '#ffffff' }}
-                                 animate={{ scale: 1, color: '#ffffff' }}
-                                 transition={{ duration: 0.25 }}
-                                 className="text-2xl font-display font-black text-white"
-                               >
-                                  ₹{(scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() ? scripLtp : (lastReport?.parsedLtp || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                               </motion.span>
-                               {scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase() && ltpPercentChange !== 0 ? (
-                                 <span className={`text-[10px] font-mono font-bold ${ltpChange >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
-                                    {ltpChange >= 0 ? '▲' : '▼'}{ltpChange >= 0 ? '+' : ''}{ltpChange.toFixed(2)} ({ltpPercentChange >= 0 ? '+' : ''}{ltpPercentChange.toFixed(2)}%)
-                                 </span>
-                               ) : null}
+                               {ltpVerified ? (
+                                 <>
+                                   <motion.span
+                                     key={isMarketLive(ltpAsOf) ? scripLtp : 'closed'}
+                                     initial={isMarketLive(ltpAsOf) ? { scale: 1.12, color: ltpTrend === 'up' ? '#10b981' : ltpTrend === 'down' ? '#f43f5e' : '#ffffff' } : { scale: 1, color: '#ffffff' }}
+                                     animate={{ scale: 1, color: '#ffffff' }}
+                                     transition={{ duration: 0.25 }}
+                                     className="text-2xl font-display font-black text-white"
+                                   >
+                                      ₹{scripLtp.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                   </motion.span>
+                                   {ltpPercentChange !== 0 ? (
+                                     <span className={`text-[10px] font-mono font-bold ${ltpChange >= 0 ? 'text-emerald-400' : 'text-rose-500'}`}>
+                                        {ltpChange >= 0 ? '▲' : '▼'}{ltpChange >= 0 ? '+' : ''}{ltpChange.toFixed(2)} ({ltpPercentChange >= 0 ? '+' : ''}{ltpPercentChange.toFixed(2)}%)
+                                     </span>
+                                   ) : null}
+                                 </>
+                               ) : (
+                                 <span className="text-xs font-medium text-zinc-500 italic">{isLtpFetching ? 'Fetching…' : 'Check broker'}</span>
+                               )}
                             </div>
                          </div>
+                            );
+                         })()}
                       </div>
                       <div className="text-right">
                          <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-1">Signal Status</p>
@@ -5632,12 +5875,13 @@ ${list}
                                 <label className="text-[9px] font-black text-zinc-500 uppercase tracking-widest block font-bold">Entry Price (₹)</label>
                                 {getPriceVsLtpLabel(tradePrice, scripLtp)}
                              </div>
-                             <button 
+                             <button
                                type="button"
-                               onClick={() => setTradePrice(scripLtp.toFixed(2))}
-                               className="text-[8px] font-black uppercase text-gold hover:text-white transition-colors tracking-widest bg-gold/10 px-1.5 py-0.5 rounded border border-gold/10"
+                               disabled={!(scripLtp > 0)}
+                               onClick={() => { if (scripLtp > 0) setTradePrice(scripLtp.toFixed(2)); }}
+                               className="text-[8px] font-black uppercase text-gold hover:text-white transition-colors tracking-widest bg-gold/10 px-1.5 py-0.5 rounded border border-gold/10 disabled:opacity-40 disabled:cursor-not-allowed"
                              >
-                               Match Live LTP
+                               Match Last Price
                              </button>
                           </div>
                           <input 
