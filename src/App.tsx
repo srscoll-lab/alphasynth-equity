@@ -4652,7 +4652,7 @@ ${list}
                              <span className="text-zinc-500"><span className="text-emerald-400 font-bold">Green</span> = better than subject stock on this metric</span>
                              <span className="text-zinc-500"><span className="text-rose-400 font-bold">Red</span> = worse than subject stock</span>
                            </div>
-                           <p className="mt-2 text-[10px] text-zinc-600 italic">Peer data sourced from Yahoo Finance. For informational purposes only — not investment advice.</p>
+                           <p className="mt-2 text-[10px] text-zinc-600 italic">Price and 52-week data sourced from Yahoo Finance. Fundamental ratios (PE, ROE, Debt/Equity, Revenue Growth) sourced from Gemini AI grounded search. For informational purposes only — not investment advice.</p>
                          </>
                        );
                      })()}
