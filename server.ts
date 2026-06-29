@@ -141,6 +141,7 @@ async function verifyNseBse(base: string): Promise<{ symbol: string; name: strin
   return null;
 }
 
+
 interface ResolvedCompany {
   query: string;
   resolvedSymbol: string;
@@ -563,7 +564,6 @@ const SERVER_INTEL_FALLBACK = {
 // ── In-memory report cache — keyed by "TICKER_mode", 30-minute TTL ────────
 const reportCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS       = 30 * 60 * 1000;  // 30 min for reports
-const PEERS_CACHE_TTL_MS =  2 * 60 * 60 * 1000;  // 2 hr for peers
 const PEER_CMP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;  // 24 hr for the peer-comparison table
 
 function getCached(key: string): any | null {
@@ -1523,138 +1523,6 @@ Governance Cleanliness: X`;
     }
   });
 
-  app.post("/api/pipeline/peers", async (req, res) => {
-    const { ticker } = req.body;
-    if (!ticker) return res.status(500).json({ error: "Setup missing" });
-    const ai = getGenAI();
-    const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
-
-    // Peers cache — 2-hour TTL
-    const peersCacheKey = `PEERS_${cleanTicker}`;
-    const peersEntry = reportCache.get(peersCacheKey);
-    if (peersEntry && (Date.now() - peersEntry.timestamp) < PEERS_CACHE_TTL_MS) {
-      console.log(`[CACHE] PEERS HIT — ${cleanTicker}`);
-      return res.json(peersEntry.data);
-    }
-    console.log(`[CACHE] PEERS MISS — ${cleanTicker}`);
-
-    try {
-      const todayStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-
-      // Stage 1: Search grounding — explicitly demand all 4 metrics per company
-      const strictPrompt = `
-        You are a financial data analyst. Your task is to find peer benchmarking data for the Indian stock "${cleanTicker}".
-
-        STEP 1: Identify the EXACT Sector and Industry classification for "${cleanTicker}" from Screener.in or Moneycontrol.
-        STEP 2: List "${cleanTicker}" as the TARGET company and find 3 other prominent NSE/BSE listed companies in the EXACT SAME industry. Do NOT include RELIANCE, TCS, or HDFCBANK unless the target belongs to their sector.
-        STEP 3: For ALL 4 companies (target + 3 peers), provide the following metrics as of ${todayStr}:
-          - NSE/BSE ticker symbol
-          - Full company name
-          - P/E Ratio (trailing twelve months) — a plain number, e.g. 24.5
-          - ROCE % (Return on Capital Employed) — a plain number, e.g. 18.2
-          - Debt-to-Equity ratio — a plain number, e.g. 0.45
-          - Market Capitalisation in INR Crores — a plain number, e.g. 95000
-
-        Use Screener.in, Moneycontrol, or NSE website as sources. If a metric is genuinely unavailable, state "N/A" for that field.
-        Return a clearly labelled table or list with all 4 companies and all 4 metrics each.
-      `;
-      const searchResult = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: strictPrompt }] }],
-        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 }
-      });
-      const rawText = searchResult.text || "";
-      console.log(`[peers/${cleanTicker}] Stage-1 grounding response (${rawText.length} chars):\n${rawText}\n`);
-
-      // Stage 2: JSON structuring — do not invent values; use null for missing data
-      const structPrompt = `
-        Convert the peer benchmarking data below into structured JSON for ${cleanTicker}.
-
-        Rules:
-        - Extract ONLY values explicitly stated in the text. Do NOT invent or estimate missing values.
-        - If a metric is missing or marked "N/A", set it to null (JSON null), NOT zero.
-        - isTarget must be true for ${cleanTicker} and false for all other companies.
-        - ticker should be the NSE/BSE symbol only (no exchange suffix needed).
-        - marketCap must be a plain number in INR Crores (e.g. 95000, not "95,000 Cr").
-        - pe, roce, debtEquity must be plain numbers (no % or ₹ symbols).
-
-        Source data:
-        ${rawText}
-      `;
-      const structResult = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: 'user', parts: [{ text: structPrompt }] }],
-        config: {
-          responseMimeType: "application/json",
-          maxOutputTokens: 8192,
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              peers: {
-                type: "ARRAY",
-                items: {
-                  type: "OBJECT",
-                  properties: {
-                    ticker: { type: "STRING" },
-                    name: { type: "STRING" },
-                    pe: { type: "NUMBER" },
-                    roce: { type: "NUMBER" },
-                    debtEquity: { type: "NUMBER" },
-                    marketCap: { type: "NUMBER" },
-                    isTarget: { type: "BOOLEAN" }
-                  },
-                  required: ["ticker", "name", "isTarget"]
-                }
-              }
-            },
-            required: ["peers"]
-          }
-        }
-      });
-      const rawJsonText = structResult.text || "";
-      console.log(`[peers/${cleanTicker}] Stage-2 raw JSON response:\n${rawJsonText}\n`);
-
-      const cleanedJson = sanitizeGroundingJson(rawJsonText);
-      const parsedData = JSON.parse(cleanedJson);
-      console.log(`[peers/${cleanTicker}] Parsed data:`, JSON.stringify(parsedData, null, 2));
-
-      if (parsedData && Array.isArray(parsedData.peers)) {
-        parsedData.peers = parsedData.peers.map((p: any) => {
-          const matchedTicker = (p.ticker || p.symbol || "").toUpperCase();
-          // Use null-coalescing only for alternate field names — never substitute fake defaults
-          const pe = p.pe ?? p.peRatio ?? p.pe_ratio ?? null;
-          const roce = p.roce ?? p.returnOnCapital ?? p.roce_percent ?? null;
-          const debtEquity = p.debtEquity ?? p.debtToEquity ?? p.debt_equity ?? null;
-          const marketCap = p.marketCap ?? p.market_cap ?? p.marketcap ?? null;
-
-          const normalized = {
-            ticker: matchedTicker,
-            name: p.name || matchedTicker,
-            pe: pe !== null ? Number(pe) : null,
-            roce: roce !== null ? Number(roce) : null,
-            debtEquity: debtEquity !== null ? Number(debtEquity) : null,
-            marketCap: marketCap !== null ? Number(marketCap) : null,
-            isTarget: typeof p.isTarget === 'boolean' ? p.isTarget : (matchedTicker === cleanTicker || matchedTicker.includes(cleanTicker))
-          };
-
-          const missing = Object.entries(normalized).filter(([k, v]) => v === null && k !== 'isTarget').map(([k]) => k);
-          if (missing.length > 0) {
-            console.warn(`[peers/${cleanTicker}] ${matchedTicker} missing fields: ${missing.join(', ')}`);
-          }
-          return normalized;
-        });
-      }
-
-      console.log(`[peers/${cleanTicker}] Final peers payload (${parsedData?.peers?.length ?? 0} companies):`, JSON.stringify(parsedData?.peers, null, 2));
-      reportCache.set(peersCacheKey, { data: parsedData, timestamp: Date.now() });
-      console.log(`[CACHE] PEERS WRITTEN — ${cleanTicker}`);
-      res.json(parsedData);
-    } catch (error: any) {
-      console.error(`[peers/${cleanTicker}] Error:`, error?.message || error);
-      res.json({ peers: [], isFallback: true });
-    }
-  });
-
   // ── Peer comparison table ─────────────────────────────────────────────────────
   // Subject stock + 4 direct sector competitors on PE / ROE / D-E / Rev-growth (from
   // Gemini grounded search — Yahoo's ratio endpoint needs an auth crumb and is
@@ -1743,7 +1611,8 @@ Governance Cleanliness: X`;
           - ROE % (return on equity), plain number
           - Debt-to-Equity ratio, plain number
           - Revenue growth YoY %, plain number
-        If a metric is genuinely unavailable for a company, write "N/A" (do NOT guess or output 0). Return a labelled list of all 5 companies with all metrics.`;
+          - Market capitalisation in INR crores, plain number (e.g. 1769000)
+        Use the trailing-twelve-month P/E as shown on Yahoo Finance / Screener.in. If a metric is genuinely unavailable for a company, write "N/A" (do NOT guess or output 0). Return a labelled list of all 5 companies with all metrics.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: groundPrompt }] }],
@@ -1756,7 +1625,7 @@ Governance Cleanliness: X`;
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text:
 `Convert the peer data below into JSON for subject "${cleanTicker}" (${subjectName}).
-Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; pe/roe/debtEquity/revenueGrowthYoY are plain numbers (no %, ₹).
+Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; pe/roe/debtEquity/revenueGrowthYoY/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
 
 Source data:
 ${rawText}` }] }],
@@ -1777,6 +1646,7 @@ ${rawText}` }] }],
                     roe: { type: "NUMBER" },
                     debtEquity: { type: "NUMBER" },
                     revenueGrowthYoY: { type: "NUMBER" },
+                    marketCap: { type: "NUMBER" },
                     isTarget: { type: "BOOLEAN" },
                   },
                   required: ["ticker", "name", "isTarget"],
@@ -1798,23 +1668,29 @@ ${rawText}` }] }],
           roe: pctNorm(c.roe ?? c.returnOnEquity),
           debtEquity: num(c.debtEquity ?? c.debtToEquity),
           revenueGrowthYoY: pctNorm(c.revenueGrowthYoY ?? c.revenueGrowth),
+          marketCapCr: num(c.marketCap ?? c.marketCapCr ?? c.market_cap),
           isTarget: false,
         }))
         .filter((c: any) => c.ticker && !seen.has(c.ticker) && seen.add(c.ticker));
 
       // Force the subject to be present and first, flagged as the target.
       let target = companies.find((c: any) => c.ticker === cleanTicker);
-      if (!target) { target = { ticker: cleanTicker, name: subjectName, pe: null, roe: null, debtEquity: null, revenueGrowthYoY: null, isTarget: true }; }
+      if (!target) { target = { ticker: cleanTicker, name: subjectName, pe: null, roe: null, debtEquity: null, revenueGrowthYoY: null, marketCapCr: null, isTarget: true }; }
       target.isTarget = true;
       if (target.name === cleanTicker) target.name = subjectName;
       const ordered = [target, ...companies.filter((c: any) => c.ticker !== cleanTicker)].slice(0, 5);
 
-      // Overlay live Yahoo price + 52W return for every row, fetched in parallel.
+      // Overlay live Yahoo PRICE + 52W return from the open v8/chart endpoint (per symbol,
+      // in parallel). All fundamentals — P/E, market cap, ROE, D-E, revenue growth — come
+      // from the SINGLE Gemini grounded call above. Yahoo's fundamental endpoints
+      // (v7/quote, quoteSummary) require a crumb that Yahoo 429-blocks from datacenter IPs
+      // like Cloud Run, so they are unreachable server-side; the open chart endpoint
+      // (price, 52W) is the only Yahoo data we can rely on.
       const live = await Promise.all(ordered.map((c: any) => yahooLive(c.ticker)));
       const rows = ordered.map((c: any, i: number) => ({
-        ...c,
-        price: live[i]?.price ?? null,
-        week52Return: live[i]?.week52Return ?? null,
+        ...c,                                          // pe, marketCapCr, roe, debtEquity, revenueGrowthYoY (Gemini)
+        price: live[i]?.price ?? null,                 // Yahoo
+        week52Return: live[i]?.week52Return ?? null,   // Yahoo
         fiftyTwoWeekHigh: live[i]?.fiftyTwoWeekHigh ?? null,
         fiftyTwoWeekLow: live[i]?.fiftyTwoWeekLow ?? null,
       }));

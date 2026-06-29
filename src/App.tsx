@@ -562,10 +562,6 @@ export default function App() {
   const [dailyBrief, setDailyBrief] = useState<string>('');
   const [smartMoneyLeaderboard, setSmartMoneyLeaderboard] = useState<any[]>([]);
 
-  // Dynamic Peer Benchmarking states
-  const [peersData, setPeersData] = useState<any[]>([]);
-  const [loadingPeers, setLoadingPeers] = useState<boolean>(false);
-  const [peersError, setPeersError] = useState<string | null>(null);
   const [tickerValidationFailed, setTickerValidationFailed] = useState<boolean>(false);
 
   // Feature 1 — 52-week position indicator (high/low from the live price fetch).
@@ -1752,8 +1748,10 @@ ${list}
     setEarningsIntelReport(null);
     setLastReport(null);
     setError(null);
-    setPeersData([]);
+    setPeerComparison([]);
     setAnalysisStatus('Initializing Earnings Intelligence...');
+    // Show the (single) peer comparison table for Earnings Intelligence reports too.
+    fetchPeerComparison(tkr);
 
     const eiStages = [
       'Scraping concall transcript sources...',
@@ -1974,44 +1972,6 @@ ${list}
     }
   };
 
-  const fetchPeers = async (scripTicker?: string) => {
-    const targetTicker = scripTicker || lastReport?.ticker || ticker;
-    if (!targetTicker || tickerValidationFailed) return;
-    setLoadingPeers(true);
-    setPeersError(null);
-    try {
-      const response = await fetch("/api/pipeline/peers", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker: targetTicker })
-      });
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(text || `Failed to load peer benchmarking data: ${response.statusText}`);
-      }
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        const text = await response.text();
-        throw new Error(`Expected JSON but got: ${text.substring(0, 50)}`);
-      }
-      const data = await response.json();
-      if (data && data.peers) {
-        setPeersData(data.peers);
-      } else {
-        throw new Error("Invalid response format received from AI peer engine.");
-      }
-    } catch (err: any) {
-      console.warn("Peers fetch error:", err.message);
-      setPeersData([]);
-      setPeersError("Peer data unavailable — please retry.");
-    } finally {
-      setLoadingPeers(false);
-    }
-  };
-
-  // Peers are fetched in parallel from triggerAnalysis — no auto-fetch on lastReport change
-  // (manual refresh still available via the Refresh Peers button)
-
   // Resolve a free-text search term to a single canonical NSE company (largest-cap match),
   // updating state/ref so the report and the price both use the same resolved symbol.
   const resolveCompanyClient = async (raw: string): Promise<string> => {
@@ -2061,10 +2021,7 @@ ${list}
       setTickerValidationFailed(true);
       setError(`'${tkr}' does not appear to be a valid stock ticker format. Please enter a valid NSE or BSE stock symbol such as RELIANCE, TCS, M&M or L&T.`);
       setLastReport(null);
-      setPeersData([]);
-      setLoadingPeers(false);
-      // Problem 8: clear peers with specific message for invalid ticker
-      setPeersError("Peer data unavailable — please enter a valid stock ticker to view peer benchmarking.");
+      setPeerComparison([]);
       setScripLtp(0);
       setScripLtpTicker('');
       return;
@@ -2085,8 +2042,7 @@ ${list}
     setAnalyzing(true);
     setTickerValidationFailed(false);
     if (!keepReportOpen) {
-      setPeersData([]);
-      setPeersError(null);
+      setPeerComparison([]);
       setScripLtp(0);
       setScripLtpTicker('');
     }
@@ -2099,8 +2055,7 @@ ${list}
     if (exactCompany) { tkr = exactCompany.symbol; applyExact(); } else { tkr = await resolveCompanyClient(tkr); }
     setTicker(tkr);
     if (analysisGenRef.current !== myGen) return; // a newer analysis started during resolve
-    // Kick off peers fetch in parallel — resolves independently while analysis runs
-    fetchPeers(tkr);
+    // Kick off the peer comparison fetch in parallel — resolves independently.
     fetchPeerComparison(tkr);
 
     // Cycle through status messages while the multi-stage server pipeline runs
@@ -2174,10 +2129,7 @@ ${list}
         setTickerValidationFailed(true);
         setError(rawMsg.slice('TICKER_INVALID:'.length));
         setLastReport(null);
-        setPeersData([]);
-        setLoadingPeers(false);
-        // Problem 8: clear peers message for invalid tickers
-        setPeersError("Peer data unavailable — please enter a valid stock ticker to view peer benchmarking.");
+        setPeerComparison([]);
         setScripLtp(0);
         setScripLtpTicker('');
       } else {
@@ -4613,6 +4565,7 @@ ${list}
                        const subject = peerComparison.find((r: any) => r.isTarget) || peerComparison[0];
                        const metrics: { key: string; label: string; fmt: (v: any) => string; dir: number }[] = [
                          { key: 'price', label: 'Price', dir: 0, fmt: (v) => v != null ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A' },
+                         { key: 'marketCapCr', label: 'Mkt Cap (₹ Cr)', dir: 0, fmt: (v) => v != null ? `₹${Number(v).toLocaleString('en-IN')} Cr` : 'N/A' },
                          { key: 'pe', label: 'P/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(1) : 'N/A' },
                          { key: 'roe', label: 'ROE %', dir: 1, fmt: (v) => v != null ? `${Number(v).toFixed(1)}%` : 'N/A' },
                          { key: 'debtEquity', label: 'D/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(2) : 'N/A' },
@@ -4629,7 +4582,7 @@ ${list}
                        return (
                          <>
                            <div className="overflow-x-auto -mx-2 px-2">
-                             <table className="w-full min-w-[660px] border-collapse text-sm">
+                             <table className="w-full min-w-[780px] border-collapse text-sm">
                                <thead>
                                  <tr className="border-b border-app-border">
                                    <th className="text-left py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">Company</th>
@@ -4652,200 +4605,12 @@ ${list}
                              <span className="text-zinc-500"><span className="text-emerald-400 font-bold">Green</span> = better than subject stock on this metric</span>
                              <span className="text-zinc-500"><span className="text-rose-400 font-bold">Red</span> = worse than subject stock</span>
                            </div>
-                           <p className="mt-2 text-[10px] text-zinc-600 italic">Price and 52-week data sourced from Yahoo Finance. Fundamental ratios (PE, ROE, Debt/Equity, Revenue Growth) sourced from Gemini AI grounded search. For informational purposes only — not investment advice.</p>
+                           <p className="mt-2 text-[10px] text-zinc-600 italic">Price and 52-week return sourced from Yahoo Finance. P/E (trailing), market cap, ROE, Debt/Equity and Revenue Growth sourced from Gemini AI grounded search. For informational purposes only — not investment advice.</p>
                          </>
                        );
                      })()}
                   </div>
                   )}
-
-                  {/* Dynamic Peer Comparison Benchmarking Component */}
-                  <div className="bg-app-surface border border-app-border rounded-3xl p-8 relative overflow-hidden mt-6 shadow-2xl">
-                     <div className="absolute top-0 right-0 w-48 h-48 bg-gold/[0.03] blur-[60px] -z-10 rounded-full" />
-                     
-                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-app-border">
-                        <div>
-                           <div className="flex items-center gap-2 mb-2">
-                              <span className="text-[9px] font-black px-2 py-0.5 bg-gold/10 text-gold tracking-widest rounded-full uppercase border border-gold/20">
-                                 ALPHASYNTH INTEL COCKPIT
-                              </span>
-                              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                           </div>
-                           <h3 className="text-xl md:text-2xl font-display font-black text-white italic tracking-tight">
-                              SECTOR PEER BENCHMARKING
-                           </h3>
-                           <p className="text-xs text-zinc-400 mt-1 font-medium leading-relaxed">
-                              Real-time side-by-side comparative diagnostics of key valuation and capital efficiency metrics for <strong className="text-white">{(lastReport?.ticker || ticker).toUpperCase()}</strong> and its closest sector competitors.
-                           </p>
-                           <p className="text-xs text-zinc-600 italic mt-1.5 leading-relaxed">
-                              Peers are AI-selected based on sector classification and may vary between sessions. Data sourced via live market grounding.
-                           </p>
-                        </div>
-                        
-                        <div className="flex items-center gap-2">
-                           <button
-                             onClick={() => fetchPeers()}
-                             disabled={loadingPeers}
-                             className="px-4 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-xs font-black uppercase tracking-wider text-zinc-300 hover:text-white hover:bg-zinc-800 hover:border-zinc-700 active:scale-95 transition-all flex items-center gap-2"
-                           >
-                             <RefreshCw className={`w-3.5 h-3.5 ${loadingPeers ? "animate-spin text-gold" : ""}`} />
-                             <span>{loadingPeers ? "Benchmarking..." : "Refresh Peers"}</span>
-                           </button>
-                        </div>
-                     </div>
-
-                     {loadingPeers ? (
-                        <div className="py-16 flex flex-col items-center justify-center gap-3">
-                           <motion.div 
-                             animate={{ rotate: 360 }}
-                             transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                             className="w-10 h-10 border-4 border-gold/10 border-t-orange-500 rounded-full"
-                           />
-                           <p className="text-xs text-zinc-400 font-mono italic animate-pulse text-center">
-                              Scraping screener nodes & compiling peer multipliers from Google Research Grounding...
-                           </p>
-                        </div>
-                     ) : peersError ? (
-                        <div className="py-12 text-center border border-dashed border-red-500/20 rounded-2xl bg-red-500/[0.02]">
-                           <p className="text-sm font-semibold text-red-400 mb-2">
-                             {peersError.includes('could not be verified') ? 'Peer Benchmarking Unavailable' : 'Failed to load peer benchmarking data'}
-                           </p>
-                           <p className="text-xs text-zinc-500 mb-4 max-w-md mx-auto">{peersError}</p>
-                           {!peersError.includes('could not be verified') && (
-                             <button
-                               onClick={() => fetchPeers()}
-                               className="px-4 py-2 bg-zinc-900 border border-app-border rounded-lg text-xs font-bold text-white hover:bg-zinc-800"
-                             >
-                               Try Again
-                             </button>
-                           )}
-                        </div>
-                     ) : peersData.length === 0 ? (
-                        <div className="py-16 text-center border border-dashed border-app-border rounded-3xl">
-                           <p className="text-xs text-zinc-500 italic mb-4">No active peer groups currently benchmarked for {(lastReport?.ticker || ticker).toUpperCase()}.</p>
-                           <button 
-                             onClick={() => fetchPeers()}
-                             className="px-4 py-2 bg-amber hover:bg-amber text-black font-black uppercase text-[10px] tracking-widest rounded-xl transition-all"
-                           >
-                             Trigger Competitor Fetch
-                           </button>
-                        </div>
-                     ) : (
-                        <div className="overflow-x-auto -mx-6 md:mx-0">
-                           <table className="w-full text-left border-collapse min-w-[700px]">
-                              <thead>
-                                 <tr className="border-b border-app-border/85 text-[10px] font-black uppercase tracking-wider text-zinc-500">
-                                    <th className="pb-4 px-4">Company Scrip</th>
-                                    <th className="pb-4 px-4 text-right">Market Cap (₹ Cr)</th>
-                                    <th className="pb-4 px-4 text-right">PE Ratio</th>
-                                    <th className="pb-4 px-4 text-right">ROCE %</th>
-                                    <th className="pb-4 px-4 text-right">Debt to Equity</th>
-                                    <th className="pb-4 px-4 text-right">Liquidity Weight</th>
-                                    <th className="pb-4 px-4 text-center">Cognitive Actions</th>
-                                 </tr>
-                              </thead>
-                              <tbody className="divide-y divide-app-border/40 text-xs text-zinc-300 font-semibold">
-                                 {peersData.map((peer) => {
-                                    const marketCapVal = peer.marketCap;
-                                    const formattedCap = marketCapVal ? new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 }).format(marketCapVal) : '--';
-                                    
-                                    // Style Debt/Equity safely depending on risk limits
-                                    let deColor = "text-emerald-400";
-                                    let deBadge = "bg-emerald-500/10 border-emerald-500/20";
-                                    if (peer.debtEquity > 1.5) {
-                                       deColor = "text-rose-400";
-                                       deBadge = "bg-rose-500/10 border-rose-500/20";
-                                    } else if (peer.debtEquity > 0.5) {
-                                       deColor = "text-amber-400";
-                                       deBadge = "bg-amber-500/10 border-amber-500/20";
-                                    }
-
-                                    // Scale progress bar based on peak peer ROCE
-                                    const maxRoce = Math.max(...peersData.map((p) => Math.max(p.roce || 0, 1)));
-                                    const relativeRocePct = Math.min(100, Math.max(5, ((peer.roce || 0) / maxRoce) * 100));
-
-                                    return (
-                                       <tr 
-                                         key={peer.ticker} 
-                                         className={`transition-colors hover:bg-zinc-800/25 group/row ${peer.isTarget ? 'bg-gold/[0.04] border-y border-gold/35' : ''}`}
-                                       >
-                                          <td className="py-4 px-4">
-                                             <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-8 rounded-lg flex items-center justify-center font-bold text-[10px] tracking-tight ${peer.isTarget ? "bg-amber text-black font-black" : "bg-zinc-900 border border-app-border text-zinc-400"}`}>
-                                                   {peer.ticker.replace(".NS", "").substring(0,4)}
-                                                </div>
-                                                <div>
-                                                   <div className="flex items-center gap-2">
-                                                      <span className="font-bold text-white group-hover/row:text-gold transition-colors uppercase">{peer.ticker}</span>
-                                                      {peer.isTarget && (
-                                                         <span className="text-[8px] font-black uppercase text-gold bg-gold/10 border border-gold/25 px-1.5 py-0.2 rounded">
-                                                            Target Scrip
-                                                         </span>
-                                                      )}
-                                                   </div>
-                                                   <span className="text-[10px] text-zinc-500 block max-w-[200px] truncate">{peer.name}</span>
-                                                </div>
-                                             </div>
-                                          </td>
-                                          <td className="py-4 px-4 text-right font-mono text-zinc-100">
-                                             ₹{formattedCap} Cr
-                                          </td>
-                                          <td className="py-4 px-4 text-right font-mono text-zinc-100">
-                                             {peer.pe ? peer.pe.toFixed(1) : 'Market Negative' }
-                                          </td>
-                                          <td className="py-4 px-4 text-right">
-                                             <div className="flex items-center justify-end gap-2.5">
-                                                <span className="font-mono text-zinc-100">{peer.roce ? `${peer.roce.toFixed(1)}%` : '--'}</span>
-                                                <div className="w-12 h-1.5 bg-zinc-800 rounded-full overflow-hidden hidden sm:block">
-                                                   <div 
-                                                     className="h-full bg-emerald-500 rounded-full" 
-                                                     style={{ width: `${relativeRocePct}%` }}
-                                                   />
-                                                </div>
-                                             </div>
-                                          </td>
-                                          <td className="py-4 px-4 text-right">
-                                             <span className={`px-2 py-0.5 border text-[11px] font-mono rounded ${deColor} ${deBadge}`}>
-                                                {peer.debtEquity !== undefined ? peer.debtEquity.toFixed(2) : '--'}
-                                             </span>
-                                          </td>
-                                          <td className="py-4 px-4 text-right">
-                                             <div className="flex items-center justify-end gap-1.5">
-                                                <span className="text-[10px] text-zinc-500 font-bold">
-                                                   {peer.marketCap > 500000 ? 'Mega Cap' : peer.marketCap > 100000 ? 'Large Cap' : 'Mid Cap'}
-                                                </span>
-                                             </div>
-                                          </td>
-                                          <td className="py-4 px-4 text-center">
-                                             <div className="flex items-center justify-center gap-2">
-                                                {!peer.isTarget ? (
-                                                   <button
-                                                     onClick={() => {
-                                                        setTicker(peer.ticker.toUpperCase());
-                                                        document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth' });
-                                                     }}
-                                                     className="px-2.5 py-1.5 bg-zinc-900 border border-app-border rounded-lg text-[10px] uppercase font-bold tracking-wider text-zinc-400 hover:text-gold hover:bg-gold/10 hover:border-gold/40 transition-all active:scale-95"
-                                                   >
-                                                      Analyze Row
-                                                   </button>
-                                                ) : (
-                                                   <span className="text-[10px] font-bold text-zinc-500 italic">Working Scrip</span>
-                                                )}
-                                             </div>
-                                          </td>
-                                       </tr>
-                                    );
-                                 })}
-                              </tbody>
-                           </table>
-                        </div>
-                     )}
-                     
-                     <div className="mt-6 pt-4 border-t border-app-border/40 flex flex-col sm:flex-row items-center justify-between gap-4 text-[10px] text-zinc-500 font-mono">
-                        <span>Database Reference Index Mode: India General Screener v4.0.2</span>
-                        <span className="uppercase font-bold tracking-wider text-zinc-600">Cognitive Neural Benchmarking Activated</span>
-                     </div>
-                  </div>
                 </div>
               )}
 
