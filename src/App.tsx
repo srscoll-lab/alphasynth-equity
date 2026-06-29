@@ -1051,8 +1051,9 @@ export default function App() {
     </div>`;
 
     // Trade parameters table
+    const ltpTs = ltpAsOf ? new Date(ltpAsOf).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
     const ltpCell = ltpMatch
-      ? `${inr(scripLtp)} <span class="chg ${ltpPercentChange >= 0 ? 'up' : 'dn'}">(${ltpPercentChange >= 0 ? '+' : ''}${ltpPercentChange.toFixed(2)}%)</span>`
+      ? `${inr(scripLtp)} <span class="chg ${ltpPercentChange >= 0 ? 'up' : 'dn'}">(${ltpPercentChange >= 0 ? '+' : ''}${ltpPercentChange.toFixed(2)}%)</span>${ltpTs ? ` <span class="muted">· as of ${ltpTs} IST</span>` : ''}`
       : (ltpForCalc > 0 ? `${inr(ltpForCalc)} <span class="muted">(from report)</span>` : 'Unavailable');
     let params = `<tr><td>Last Traded Price (LTP)</td><td>${ltpCell}</td></tr>`;
     params += `<tr><td>Entry Zone${entryIsEst ? ' (est.)' : ''}</td><td>${displayEntry > 0 ? inr(displayEntry) : 'N/A'}</td></tr>`;
@@ -1078,8 +1079,26 @@ export default function App() {
       h += `</tbody></table>`;
     }
 
-    if (lr.bullCase) h += `<h2>Bull Case</h2><div class="prose">${mdToHtml(lr.bullCase)}</div>`;
-    if (lr.bearCase) h += `<h2>Bear Case &amp; Key Risks</h2><div class="prose">${mdToHtml(lr.bearCase)}</div>`;
+    if (lr.bullCase) h += `<h2>Bull Thesis</h2><div class="prose">${mdToHtml(lr.bullCase)}</div>`;
+    if (lr.bearCase) h += `<h2>Bear Thesis</h2><div class="prose">${mdToHtml(lr.bearCase)}</div>`;
+
+    // Key Risks — a numbered list extracted from the bear case (bullets if present,
+    // otherwise the most substantive sentences). Falls back to the bull case only if needed.
+    const extractRisks = (src: string): string[] => {
+      if (!src) return [];
+      // Prefer explicit markdown bullets; fall back to substantive sentences.
+      let items = src.split('\n').map((l) => l.trim()).filter((l) => /^[-*•]\s+/.test(l)).map((l) => l.replace(/^[-*•]\s+/, '').replace(/\*\*/g, '').trim());
+      if (items.length < 3) {
+        items = src.replace(/\*\*/g, '').replace(/\n+/g, ' ').split(/(?<=[.!?])\s+/).map((s) => s.trim()).filter((s) => s.length > 45);
+      }
+      return items.slice(0, 5);
+    };
+    const risks = extractRisks(lr.bearCase || lr.bullCase || '');
+    if (risks.length) {
+      const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      h += `<h2>Key Risks</h2><ol class="risks">${risks.map((r) => `<li>${esc(r)}</li>`).join('')}</ol>`;
+    }
+
     if (lr.earnings) h += `<h2>Earnings &amp; Catalysts</h2><div class="prose">${mdToHtml(lr.earnings)}</div>`;
 
     // Peer comparison table
@@ -1105,8 +1124,11 @@ export default function App() {
       </tr></thead><tbody>${body}</tbody></table>`;
     }
 
-    // Management accountability (earnings intelligence)
-    const promises = earningsIntelReport?.managementPromises;
+    // Management accountability — appears in ANY report's PDF (Deep Dive included) whenever
+    // Earnings Intelligence data for THIS SAME ticker is available in the session. The ticker
+    // guard prevents a stale earnings report for a different company from leaking in.
+    const eiMatch = earningsIntelReport && String(earningsIntelReport.ticker || '').toUpperCase() === tkrU;
+    const promises = eiMatch ? earningsIntelReport.managementPromises : null;
     if (promises && promises.length) {
       let body = '';
       for (const p of promises) body += `<tr><td>${(p.promise || '')}</td><td>${(p.status || '')}</td><td>${(p.actualResult || '')}</td></tr>`;
@@ -1284,6 +1306,9 @@ export default function App() {
             .prose li { font-size: 1rem; margin-bottom: 0.5rem; }
             .prose h3, .prose h4 { background: none; border: none; padding: 0; color: #0f172a; text-transform: none; letter-spacing: 0; font-size: 1.05rem; margin: 1rem 0 0.5rem; }
             .disclaimer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #64748b; font-style: italic; }
+            ol.risks { list-style: decimal; padding-left: 1.6rem; margin: 1rem 0 2rem; }
+            ol.risks li { padding-left: 0.4rem; margin-bottom: 0.7rem; font-size: 1rem; color: #1e293b; }
+            ol.risks li::before { content: none; }
 
             @media print {
               body { padding: 0; margin: 0; }
