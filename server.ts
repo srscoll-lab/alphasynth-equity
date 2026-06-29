@@ -564,6 +564,7 @@ const SERVER_INTEL_FALLBACK = {
 const reportCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS       = 30 * 60 * 1000;  // 30 min for reports
 const PEERS_CACHE_TTL_MS =  2 * 60 * 60 * 1000;  // 2 hr for peers
+const PEER_CMP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;  // 24 hr for the peer-comparison table
 
 function getCached(key: string): any | null {
   const entry = reportCache.get(key);
@@ -858,10 +859,16 @@ Company: ${companyName || ticker}`;
             const change = prevClose !== null ? Math.round((price - prevClose) * 100) / 100 : null;
             const percentChange = (prevClose && change !== null) ? Math.round((change / prevClose) * 10000) / 100 : null;
             const asOf = meta.regularMarketTime ? new Date(meta.regularMarketTime * 1000).toISOString() : null;
+            // 52-week range comes free in the same Yahoo chart meta — surface it so the
+            // frontend can render the 52-week position indicator without a second call.
+            const w52High = typeof meta.fiftyTwoWeekHigh === "number" ? meta.fiftyTwoWeekHigh : null;
+            const w52Low = typeof meta.fiftyTwoWeekLow === "number" ? meta.fiftyTwoWeekLow : null;
             return {
               ticker: cleanTicker,
               resolvedSymbol: meta.symbol || sym,
               price, change, percentChange, asOf,
+              fiftyTwoWeekHigh: w52High,
+              fiftyTwoWeekLow: w52Low,
               exchange: meta.fullExchangeName || (suffix === ".NS" ? "NSE" : "BSE"),
               source: "yahoo",
               delayed: true
@@ -1645,6 +1652,180 @@ Governance Cleanliness: X`;
     } catch (error: any) {
       console.error(`[peers/${cleanTicker}] Error:`, error?.message || error);
       res.json({ peers: [], isFallback: true });
+    }
+  });
+
+  // ── Peer comparison table ─────────────────────────────────────────────────────
+  // Subject stock + 4 direct sector competitors on PE / ROE / D-E / Rev-growth (from
+  // Gemini grounded search — Yahoo's ratio endpoint needs an auth crumb and is
+  // unreliable from server IPs) plus Price and 52W-return (live from Yahoo's v8 chart,
+  // fetched for all symbols in parallel). 24-hour cache per subject ticker.
+  app.post("/api/pipeline/peer-comparison", async (req, res) => {
+    const { ticker } = req.body;
+    if (!ticker) return res.status(400).json({ error: "Missing ticker" });
+    const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+
+    const cacheKey = `PEERCMP_${cleanTicker}`;
+    const cached = reportCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < PEER_CMP_CACHE_TTL_MS) {
+      console.log(`[CACHE] PEERCMP HIT — ${cleanTicker}`);
+      return res.json({ ...cached.data, cached: true });
+    }
+    console.log(`[CACHE] PEERCMP MISS — ${cleanTicker}`);
+
+    const num = (v: any): number | null => {
+      if (v === null || v === undefined) return null;
+      const n = typeof v === "string" ? parseFloat(v.replace(/[^0-9.\-]/g, "")) : Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    // Gemini is inconsistent about percentages — it returns ROE / revenue-growth either as
+    // a percent (37.1) or as a fraction (0.371). Normalise the two PERCENT metrics to a
+    // percent number: anything with |value| < 1 is treated as a fraction and ×100. (Not
+    // applied to P/E or Debt-to-Equity, which are legitimately sub-1 ratios.)
+    const pctNorm = (v: any): number | null => {
+      const n = num(v);
+      if (n === null) return null;
+      const out = Math.abs(n) < 1 ? n * 100 : n;
+      return Math.round(out * 10) / 10;
+    };
+
+    // Live Yahoo metrics for one base symbol: price + 52W high/low + trailing 52W return.
+    // Same unauthenticated v8 chart endpoint the price route uses; range=1y gives the
+    // first close needed for the return calc. Tries NSE then BSE.
+    const yahooLive = async (base: string) => {
+      for (const suffix of [".NS", ".BO"]) {
+        try {
+          const r = await fetch(
+            `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(base + suffix)}?interval=1d&range=1y`,
+            { headers: { "User-Agent": "Mozilla/5.0 (compatible; EquityAI/1.0)" } }
+          );
+          if (!r.ok) continue;
+          const j: any = await r.json();
+          const result = j?.chart?.result?.[0];
+          const meta = result?.meta;
+          const price = meta?.regularMarketPrice;
+          if (typeof price !== "number" || price <= 0) continue;
+          const closes: number[] = (result?.indicators?.quote?.[0]?.close || []).filter(
+            (v: any) => typeof v === "number" && v > 0
+          );
+          const firstClose = closes.length ? closes[0] : null;
+          const week52Return = firstClose ? Math.round(((price - firstClose) / firstClose) * 1000) / 10 : null;
+          return {
+            price: Math.round(price * 100) / 100,
+            fiftyTwoWeekHigh: typeof meta.fiftyTwoWeekHigh === "number" ? meta.fiftyTwoWeekHigh : null,
+            fiftyTwoWeekLow: typeof meta.fiftyTwoWeekLow === "number" ? meta.fiftyTwoWeekLow : null,
+            week52Return,
+          };
+        } catch { /* try next suffix */ }
+      }
+      return null;
+    };
+
+    try {
+      const ai = getGenAI();
+      const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
+      // Ground Gemini with the EXACT company behind the ticker (from Yahoo). Obscure
+      // smallcap symbols like "VISL" are otherwise misidentified, leading to wrong-sector
+      // peers. Yahoo reliably maps the symbol to the real company name.
+      const subjectInfo = await verifyNseBse(cleanTicker);
+      const subjectName = subjectInfo?.name || cleanTicker;
+
+      // Stage 1 — grounded search: subject's sector + 4 direct competitors and fundamentals.
+      const groundPrompt = `
+        You are an equity research analyst. The subject is the Indian NSE-listed stock "${cleanTicker}" — this is the company "${subjectName}". Treat THIS exact company as the subject (do not confuse it with similarly-named companies).
+        STEP 1: Determine "${subjectName}"'s exact sector/industry (use Screener.in or Moneycontrol).
+        STEP 2: Pick the 4 MOST DIRECT NSE-listed competitors in that same industry (similar business, comparable size where possible). They MUST be in the same sector as "${subjectName}". Do NOT default to RELIANCE/TCS/HDFCBANK unless they are genuine direct peers.
+        STEP 3: For the subject AND each of the 4 peers, give as of ${todayStr}:
+          - exact NSE ticker symbol (no exchange suffix)
+          - short company name
+          - P/E ratio (trailing twelve months), plain number
+          - ROE % (return on equity), plain number
+          - Debt-to-Equity ratio, plain number
+          - Revenue growth YoY %, plain number
+        If a metric is genuinely unavailable for a company, write "N/A" (do NOT guess or output 0). Return a labelled list of all 5 companies with all metrics.`;
+      const searchResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: groundPrompt }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+      });
+      const rawText = searchResult.text || "";
+
+      // Stage 2 — structure to JSON. Subject FIRST with isTarget=true; null for missing.
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text:
+`Convert the peer data below into JSON for subject "${cleanTicker}" (${subjectName}).
+Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; pe/roe/debtEquity/revenueGrowthYoY are plain numbers (no %, ₹).
+
+Source data:
+${rawText}` }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              companies: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    ticker: { type: "STRING" },
+                    name: { type: "STRING" },
+                    pe: { type: "NUMBER" },
+                    roe: { type: "NUMBER" },
+                    debtEquity: { type: "NUMBER" },
+                    revenueGrowthYoY: { type: "NUMBER" },
+                    isTarget: { type: "BOOLEAN" },
+                  },
+                  required: ["ticker", "name", "isTarget"],
+                },
+              },
+            },
+            required: ["companies"],
+          },
+        },
+      });
+      const parsed = JSON.parse(sanitizeGroundingJson(structResult.text || "{}"));
+
+      const seen = new Set<string>();
+      let companies = (Array.isArray(parsed.companies) ? parsed.companies : [])
+        .map((c: any) => ({
+          ticker: String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, ""),
+          name: c.name || String(c.ticker || "").toUpperCase(),
+          pe: num(c.pe ?? c.peRatio),
+          roe: pctNorm(c.roe ?? c.returnOnEquity),
+          debtEquity: num(c.debtEquity ?? c.debtToEquity),
+          revenueGrowthYoY: pctNorm(c.revenueGrowthYoY ?? c.revenueGrowth),
+          isTarget: false,
+        }))
+        .filter((c: any) => c.ticker && !seen.has(c.ticker) && seen.add(c.ticker));
+
+      // Force the subject to be present and first, flagged as the target.
+      let target = companies.find((c: any) => c.ticker === cleanTicker);
+      if (!target) { target = { ticker: cleanTicker, name: subjectName, pe: null, roe: null, debtEquity: null, revenueGrowthYoY: null, isTarget: true }; }
+      target.isTarget = true;
+      if (target.name === cleanTicker) target.name = subjectName;
+      const ordered = [target, ...companies.filter((c: any) => c.ticker !== cleanTicker)].slice(0, 5);
+
+      // Overlay live Yahoo price + 52W return for every row, fetched in parallel.
+      const live = await Promise.all(ordered.map((c: any) => yahooLive(c.ticker)));
+      const rows = ordered.map((c: any, i: number) => ({
+        ...c,
+        price: live[i]?.price ?? null,
+        week52Return: live[i]?.week52Return ?? null,
+        fiftyTwoWeekHigh: live[i]?.fiftyTwoWeekHigh ?? null,
+        fiftyTwoWeekLow: live[i]?.fiftyTwoWeekLow ?? null,
+      }));
+
+      const payload = { ticker: cleanTicker, rows };
+      reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+      console.log(`[CACHE] PEERCMP WRITTEN — ${cleanTicker} (${rows.length} rows)`);
+      res.json(payload);
+    } catch (error: any) {
+      console.error(`[peer-comparison/${cleanTicker}] Error:`, error?.message || error);
+      res.json({ ticker: cleanTicker, rows: [], isFallback: true });
     }
   });
 

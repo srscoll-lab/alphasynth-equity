@@ -568,6 +568,13 @@ export default function App() {
   const [peersError, setPeersError] = useState<string | null>(null);
   const [tickerValidationFailed, setTickerValidationFailed] = useState<boolean>(false);
 
+  // Feature 1 — 52-week position indicator (high/low from the live price fetch).
+  const [week52, setWeek52] = useState<{ high: number; low: number } | null>(null);
+  // Feature 2 — peer comparison table.
+  const [peerComparison, setPeerComparison] = useState<any[]>([]);
+  const [loadingPeerComparison, setLoadingPeerComparison] = useState<boolean>(false);
+  const [peerComparisonTicker, setPeerComparisonTicker] = useState<string>('');
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState<string>('');
@@ -635,6 +642,7 @@ export default function App() {
       setLtpPercentChange(0);
       setLtpAsOf(null);
       setLtpUnavailable(false);
+      setWeek52(null);
 
       let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -657,6 +665,13 @@ export default function App() {
               setLtpTrend((data.change || 0) > 0 ? 'up' : (data.change || 0) < 0 ? 'down' : 'flat');
               setLtpAsOf(data.asOf || null);
               setLtpUnavailable(false);
+              // 52-week range arrives in the same payload — drives the position indicator.
+              if (typeof data.fiftyTwoWeekHigh === 'number' && typeof data.fiftyTwoWeekLow === 'number'
+                  && data.fiftyTwoWeekHigh > data.fiftyTwoWeekLow) {
+                setWeek52({ high: data.fiftyTwoWeekHigh, low: data.fiftyTwoWeekLow });
+              } else {
+                setWeek52(null);
+              }
               // Keep polling ONLY while the market is genuinely live (open hours AND fresh
               // data). When the market is closed — weekend, after-hours, or a holiday (where
               // the clock says "open" but the price timestamp is stale) — we fetch ONCE and
@@ -1932,6 +1947,33 @@ ${list}
     return mapped;
   };
 
+  // Feature 2 — fetch the peer comparison table (subject + 4 peers, Yahoo + Gemini).
+  const fetchPeerComparison = async (scripTicker?: string) => {
+    const targetTicker = (scripTicker || lastReport?.ticker || ticker || '').toUpperCase();
+    if (!targetTicker || tickerValidationFailed) return;
+    setLoadingPeerComparison(true);
+    setPeerComparison([]);
+    setPeerComparisonTicker(targetTicker);
+    try {
+      const response = await fetch("/api/pipeline/peer-comparison", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ticker: targetTicker })
+      });
+      if (response.ok) {
+        const data = await response.json();
+        // Ignore a stale response if the user has since switched tickers.
+        if ((data.ticker || targetTicker).toUpperCase() === targetTicker && Array.isArray(data.rows)) {
+          setPeerComparison(data.rows);
+        }
+      }
+    } catch (e) {
+      console.warn("Peer comparison fetch failed:", e);
+    } finally {
+      setLoadingPeerComparison(false);
+    }
+  };
+
   const fetchPeers = async (scripTicker?: string) => {
     const targetTicker = scripTicker || lastReport?.ticker || ticker;
     if (!targetTicker || tickerValidationFailed) return;
@@ -2059,6 +2101,7 @@ ${list}
     if (analysisGenRef.current !== myGen) return; // a newer analysis started during resolve
     // Kick off peers fetch in parallel — resolves independently while analysis runs
     fetchPeers(tkr);
+    fetchPeerComparison(tkr);
 
     // Cycle through status messages while the multi-stage server pipeline runs
     const analysisStages = [
@@ -2522,6 +2565,41 @@ ${list}
                              </p>
                            )}
                         </div>
+                          );
+                        })()}
+                        {/* Feature 1 — 52-Week Position Indicator */}
+                        {(() => {
+                          const ltpOk = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase();
+                          if (!ltpOk || !week52) return null;
+                          const { high, low } = week52;
+                          const span = high - low;
+                          const pct = Math.max(0, Math.min(100, span > 0 ? ((scripLtp - low) / span) * 100 : 0));
+                          const band = pct <= 25 ? 'low' : pct >= 75 ? 'high' : 'mid';
+                          const pctColor = band === 'low' ? 'text-emerald-400' : band === 'high' ? 'text-rose-400' : 'text-gold';
+                          const interp = band === 'low'
+                            ? 'Trading near 52-week lows — stock has significant room to recover to previous highs'
+                            : band === 'high'
+                            ? 'Trading near 52-week highs — limited upside to historical peak, assess carefully'
+                            : 'Trading in mid-range — balanced risk/reward based on historical price action';
+                          const fmt = (v: number) => `₹${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+                          return (
+                            <div className="p-4 bg-black/40 rounded-xl border border-app-border">
+                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-3">52-Week Position</p>
+                              <div className="relative h-2 rounded-full bg-gradient-to-r from-emerald-500/40 via-gold/40 to-rose-500/40 mb-3">
+                                <div
+                                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-gold ring-2 ring-app-bg shadow-[0_0_10px_rgba(212,168,67,0.8)]"
+                                  style={{ left: `${pct}%` }}
+                                  title={`${Math.round(pct)}% of 52-week range`}
+                                />
+                              </div>
+                              <div className="flex justify-between items-baseline text-[10px] font-mono mb-2 gap-1">
+                                <span className="text-zinc-500">52W Low <span className="text-zinc-300 font-bold">{fmt(low)}</span></span>
+                                <span className="text-zinc-500">Current <span className="text-white font-bold">{fmt(scripLtp)}</span></span>
+                                <span className="text-zinc-500">52W High <span className="text-zinc-300 font-bold">{fmt(high)}</span></span>
+                              </div>
+                              <p className={`text-[10px] font-black ${pctColor} mb-1`}>Currently at {Math.round(pct)}% of 52-week range</p>
+                              <p className="text-[10px] text-zinc-500 leading-snug italic">{interp}</p>
+                            </div>
                           );
                         })()}
                         {(() => {
@@ -4518,6 +4596,68 @@ ${list}
                       </ul>
                     </div>
                   </motion.div>
+
+                  {/* Feature 2 — Peer Comparison Table */}
+                  {(loadingPeerComparison || peerComparison.length > 0) && (
+                  <div className="bg-app-surface border border-app-border rounded-3xl p-6 md:p-8 relative overflow-hidden mt-6 shadow-2xl">
+                     <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[9px] font-black px-2 py-0.5 bg-gold/10 text-gold tracking-widest rounded-full uppercase border border-gold/20">Alphasynth Intel</span>
+                     </div>
+                     <h3 className="text-xl md:text-2xl font-display font-black text-white italic tracking-tight mb-1">PEER COMPARISON</h3>
+                     <p className="text-xs text-zinc-400 mb-6 font-medium">{(lastReport?.ticker || ticker).toUpperCase()} vs its closest sector competitors on key valuation, profitability and growth metrics.</p>
+                     {loadingPeerComparison && peerComparison.length === 0 ? (
+                       <div className="flex items-center gap-3 text-zinc-500 text-xs py-8">
+                         <div className="w-4 h-4 border-2 border-gold/30 border-t-gold rounded-full animate-spin" /> Identifying peers and fetching metrics…
+                       </div>
+                     ) : (() => {
+                       const subject = peerComparison.find((r: any) => r.isTarget) || peerComparison[0];
+                       const metrics: { key: string; label: string; fmt: (v: any) => string; dir: number }[] = [
+                         { key: 'price', label: 'Price', dir: 0, fmt: (v) => v != null ? `₹${Number(v).toLocaleString('en-IN', { maximumFractionDigits: 2 })}` : 'N/A' },
+                         { key: 'pe', label: 'P/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(1) : 'N/A' },
+                         { key: 'roe', label: 'ROE %', dir: 1, fmt: (v) => v != null ? `${Number(v).toFixed(1)}%` : 'N/A' },
+                         { key: 'debtEquity', label: 'D/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(2) : 'N/A' },
+                         { key: 'revenueGrowthYoY', label: 'Rev Growth YoY', dir: 1, fmt: (v) => v != null ? `${Number(v).toFixed(1)}%` : 'N/A' },
+                         { key: 'week52Return', label: '52W Return', dir: 1, fmt: (v) => v != null ? `${Number(v) >= 0 ? '+' : ''}${Number(v).toFixed(1)}%` : 'N/A' },
+                       ];
+                       const colorFor = (m: any, row: any) => {
+                         if (row.isTarget || m.dir === 0) return '';
+                         const a = row[m.key]; const b = subject ? subject[m.key] : null;
+                         if (a == null || b == null || a === b) return '';
+                         const better = m.dir > 0 ? a > b : a < b;
+                         return better ? 'text-emerald-400' : 'text-rose-400';
+                       };
+                       return (
+                         <>
+                           <div className="overflow-x-auto -mx-2 px-2">
+                             <table className="w-full min-w-[660px] border-collapse text-sm">
+                               <thead>
+                                 <tr className="border-b border-app-border">
+                                   <th className="text-left py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">Company</th>
+                                   <th className="text-left py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">Ticker</th>
+                                   {metrics.map((m) => (<th key={m.key} className="text-right py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest whitespace-nowrap">{m.label}</th>))}
+                                 </tr>
+                               </thead>
+                               <tbody>
+                                 {peerComparison.map((row: any, idx: number) => (
+                                   <tr key={row.ticker + idx} className={`border-b border-app-border/40 ${row.isTarget ? 'bg-gold/[0.08] border-l-2 border-l-gold' : idx % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
+                                     <td className={`py-3 px-3 ${row.isTarget ? 'text-white font-bold' : 'text-zinc-300'}`}>{row.name}{row.isTarget && <span className="ml-2 text-[8px] font-black text-gold uppercase">(subject)</span>}</td>
+                                     <td className="py-3 px-3 font-mono text-xs text-zinc-500">{row.ticker}</td>
+                                     {metrics.map((m) => (<td key={m.key} className={`py-3 px-3 text-right font-mono whitespace-nowrap ${row.isTarget ? 'text-white' : (colorFor(m, row) || 'text-zinc-300')}`}>{m.fmt(row[m.key])}</td>))}
+                                   </tr>
+                                 ))}
+                               </tbody>
+                             </table>
+                           </div>
+                           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-[10px]">
+                             <span className="text-zinc-500"><span className="text-emerald-400 font-bold">Green</span> = better than subject stock on this metric</span>
+                             <span className="text-zinc-500"><span className="text-rose-400 font-bold">Red</span> = worse than subject stock</span>
+                           </div>
+                           <p className="mt-2 text-[10px] text-zinc-600 italic">Peer data sourced from Yahoo Finance. For informational purposes only — not investment advice.</p>
+                         </>
+                       );
+                     })()}
+                  </div>
+                  )}
 
                   {/* Dynamic Peer Comparison Benchmarking Component */}
                   <div className="bg-app-surface border border-app-border rounded-3xl p-8 relative overflow-hidden mt-6 shadow-2xl">
