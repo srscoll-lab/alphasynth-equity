@@ -971,14 +971,160 @@ export default function App() {
 
 
 
+  // Minimal, dependency-free Markdown -> HTML for the prose sections in the PDF.
+  // Handles headers, **bold**, *italic*, `code`, bullet/numbered lists and pipe tables.
+  const mdToHtml = (md: string): string => {
+    if (!md) return '';
+    const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const inline = (s: string) => esc(s)
+      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+      .replace(/`([^`]+)`/g, '<code>$1</code>');
+    const lines = md.replace(/\r/g, '').split('\n');
+    let html = '';
+    let listType: 'ul' | 'ol' | null = null;
+    let tableBuf: string[] = [];
+    const closeList = () => { if (listType) { html += `</${listType}>`; listType = null; } };
+    const isSep = (r: string) => /^\s*\|?[\s:|-]+\|?\s*$/.test(r) && r.includes('-');
+    const parseRow = (r: string) => r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim());
+    const flushTable = () => {
+      if (!tableBuf.length) return;
+      const data = tableBuf.filter((r) => !isSep(r));
+      tableBuf = [];
+      if (!data.length) return;
+      const header = parseRow(data[0]);
+      let t = '<table class="md-table"><thead><tr>' + header.map((h) => `<th>${inline(h)}</th>`).join('') + '</tr></thead><tbody>';
+      for (const row of data.slice(1)) t += '<tr>' + parseRow(row).map((c) => `<td>${inline(c)}</td>`).join('') + '</tr>';
+      html += t + '</tbody></table>';
+    };
+    for (const raw of lines) {
+      const line = raw.replace(/\s+$/, '');
+      if (/^\s*\|.*\|\s*$/.test(line)) { tableBuf.push(line); continue; }
+      flushTable();
+      if (!line.trim()) { closeList(); continue; }
+      const h = line.match(/^(#{1,6})\s+(.*)$/);
+      if (h) { closeList(); const lvl = Math.min(h[1].length + 2, 4); html += `<h${lvl}>${inline(h[2].replace(/[*#]/g, ''))}</h${lvl}>`; continue; }
+      const ul = line.match(/^\s*[-*•]\s+(.*)$/);
+      if (ul) { if (listType !== 'ul') { closeList(); html += '<ul>'; listType = 'ul'; } html += `<li>${inline(ul[1])}</li>`; continue; }
+      const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+      if (ol) { if (listType !== 'ol') { closeList(); html += '<ol>'; listType = 'ol'; } html += `<li>${inline(ol[1])}</li>`; continue; }
+      closeList();
+      html += `<p>${inline(line.trim())}</p>`;
+    }
+    closeList(); flushTable();
+    return html;
+  };
+
+  // Build a fully self-contained, structured HTML document FROM THE DATA (not the DOM),
+  // so every financial figure and section is present and properly laid out in the PDF.
+  const buildReportHtml = (): string => {
+    const lr = lastReport;
+    if (!lr) return '';
+    const tkrU = (lr.ticker || ticker).toUpperCase();
+    const inr = (v: number) => `₹${Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const num = (v: any) => (v === null || v === undefined || isNaN(Number(v))) ? 'N/A' : v;
+
+    // --- Trade parameters (mirror the in-app Trade Parameters logic exactly) ---
+    const ltpMatch = scripLtp > 0 && scripLtpTicker === tkrU;
+    const ltpForCalc = ltpMatch ? scripLtp : (lr.parsedLtp || 0);
+    const useLtpDerived = lr.mode === 'move' || lr.mode === 'earnings_intelligence';
+    const isValidVsLtp = (p: number) => ltpForCalc > 0 && p >= ltpForCalc * 0.5 && p <= ltpForCalc * 2.0;
+    const adj = (v: number) => v ? (v > 10 ? v : v * 100) : 0;
+    const rawTarget = adj(lr.targetPrice), rawEntry = adj(lr.entryPrice), rawStop = adj(lr.stopLoss);
+    const targetIsEst = !useLtpDerived && (!rawTarget || !isValidVsLtp(rawTarget));
+    const entryIsEst = !useLtpDerived && (!rawEntry || !isValidVsLtp(rawEntry));
+    const stopIsEst = !useLtpDerived && (!rawStop || !isValidVsLtp(rawStop));
+    const displayTarget = useLtpDerived ? ltpForCalc * 1.03 : (targetIsEst ? ltpForCalc * 1.05 : rawTarget);
+    const displayEntry = useLtpDerived ? ltpForCalc : (entryIsEst ? ltpForCalc : rawEntry);
+    const displayStop = useLtpDerived ? ltpForCalc * 0.98 : (stopIsEst ? ltpForCalc * 0.95 : rawStop);
+
+    const sigMap: any = { buy: ['Positive', 'buy'], sell: ['Negative', 'sell'], hold: ['Neutral', 'hold'], cautious: ['Cautious', 'cautious'] };
+    const sig = sigMap[(lr.rating || 'hold').toLowerCase()] || sigMap.hold;
+    const modeLabel = lr.mode === 'move' ? 'Price Move Analysis' : lr.mode === 'earnings_intelligence' ? 'Earnings Intelligence' : 'Equity Deep Dive';
+    const dateStr = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    let h = '';
+    h += `<div class="rpt-header">
+      <span class="signal ${sig[1]}">Signal: ${sig[0]}</span>
+      <h1>${(lr.companyName || tkrU)} <span class="tk">${tkrU}</span></h1>
+      <div class="sub">${modeLabel} &middot; Confidence: ${(lr.confidence || 'medium').toUpperCase()} &middot; Generated ${dateStr}</div>
+    </div>`;
+
+    // Trade parameters table
+    const ltpCell = ltpMatch
+      ? `${inr(scripLtp)} <span class="chg ${ltpPercentChange >= 0 ? 'up' : 'dn'}">(${ltpPercentChange >= 0 ? '+' : ''}${ltpPercentChange.toFixed(2)}%)</span>`
+      : (ltpForCalc > 0 ? `${inr(ltpForCalc)} <span class="muted">(from report)</span>` : 'Unavailable');
+    let params = `<tr><td>Last Traded Price (LTP)</td><td>${ltpCell}</td></tr>`;
+    params += `<tr><td>Entry Zone${entryIsEst ? ' (est.)' : ''}</td><td>${displayEntry > 0 ? inr(displayEntry) : 'N/A'}</td></tr>`;
+    params += `<tr><td>Target Price${useLtpDerived ? ' (+3%)' : targetIsEst ? ' (est.)' : ''}</td><td>${displayTarget > 0 ? inr(displayTarget) : 'N/A'}</td></tr>`;
+    params += `<tr><td>Stop Loss${useLtpDerived ? ' (-2%)' : stopIsEst ? ' (est.)' : ''}</td><td>${displayStop > 0 ? inr(displayStop) : 'N/A'}</td></tr>`;
+    if (week52 && week52.high > week52.low) {
+      const pct = Math.max(0, Math.min(100, ((ltpForCalc - week52.low) / (week52.high - week52.low)) * 100));
+      params += `<tr><td>52-Week Low</td><td>${inr(week52.low)}</td></tr>`;
+      params += `<tr><td>52-Week High</td><td>${inr(week52.high)}</td></tr>`;
+      if (ltpForCalc > 0) params += `<tr><td>52-Week Position</td><td>${Math.round(pct)}% of range</td></tr>`;
+    }
+    h += `<h2>Trade Parameters</h2><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${params}</tbody></table>`;
+
+    // Conviction engine scores (X/10)
+    const m = lr.metrics || {};
+    const scoreRows = [
+      ['Valuation Intelligence', m.valuation], ['Growth Momentum', m.growth],
+      ['Quality & Moat', m.quality], ['Execution Risk', m.risk], ['Governance Alpha', m.governance],
+    ].filter(([, v]) => v !== null && v !== undefined);
+    if (scoreRows.length) {
+      h += `<h2>Conviction Engine</h2><table class="data-table"><thead><tr><th>Dimension</th><th>Score</th></tr></thead><tbody>`;
+      h += scoreRows.map(([k, v]) => `<tr><td>${k}</td><td><strong>${v}/10</strong></td></tr>`).join('');
+      h += `</tbody></table>`;
+    }
+
+    if (lr.bullCase) h += `<h2>Bull Case</h2><div class="prose">${mdToHtml(lr.bullCase)}</div>`;
+    if (lr.bearCase) h += `<h2>Bear Case &amp; Key Risks</h2><div class="prose">${mdToHtml(lr.bearCase)}</div>`;
+    if (lr.earnings) h += `<h2>Earnings &amp; Catalysts</h2><div class="prose">${mdToHtml(lr.earnings)}</div>`;
+
+    // Peer comparison table
+    if (peerComparison && peerComparison.length) {
+      const pctf = (v: any) => v == null ? 'N/A' : `${Number(v) >= 0 ? '' : ''}${Number(v).toFixed(1)}%`;
+      const retf = (v: any) => v == null ? 'N/A' : `${Number(v) >= 0 ? '+' : ''}${Number(v).toFixed(1)}%`;
+      let body = '';
+      for (const r of peerComparison) {
+        body += `<tr class="${r.isTarget ? 'subject' : ''}">
+          <td>${r.name || ''}${r.isTarget ? ' <em>(subject)</em>' : ''}</td>
+          <td>${r.ticker || ''}</td>
+          <td>${r.price != null ? inr(r.price) : 'N/A'}</td>
+          <td>${r.marketCapCr != null ? '₹' + Number(r.marketCapCr).toLocaleString('en-IN') : 'N/A'}</td>
+          <td>${r.pe != null ? Number(r.pe).toFixed(1) : 'N/A'}</td>
+          <td>${pctf(r.roe)}</td>
+          <td>${r.debtEquity != null ? Number(r.debtEquity).toFixed(2) : 'N/A'}</td>
+          <td>${pctf(r.revenueGrowthYoY)}</td>
+          <td>${retf(r.week52Return)}</td>
+        </tr>`;
+      }
+      h += `<h2>Peer Comparison</h2><table class="peer-table"><thead><tr>
+        <th>Company</th><th>Ticker</th><th>Price</th><th>Mkt Cap (₹ Cr)</th><th>P/E</th><th>ROE %</th><th>D/E</th><th>Rev Growth YoY</th><th>52W Return</th>
+      </tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    // Management accountability (earnings intelligence)
+    const promises = earningsIntelReport?.managementPromises;
+    if (promises && promises.length) {
+      let body = '';
+      for (const p of promises) body += `<tr><td>${(p.promise || '')}</td><td>${(p.status || '')}</td><td>${(p.actualResult || '')}</td></tr>`;
+      h += `<h2>Management Accountability</h2><table class="data-table"><thead><tr><th>Promise Made</th><th>Status</th><th>Actual Result</th></tr></thead><tbody>${body}</tbody></table>`;
+    }
+
+    h += `<p class="disclaimer">Price and 52-week return sourced from Yahoo Finance. P/E (trailing), market cap, ROE, Debt/Equity and Revenue Growth sourced from Gemini AI grounded search. This document is for informational purposes only and is not investment advice.</p>`;
+    return h;
+  };
+
   const handleExportPDF = () => {
     if (!portfolioAudit) {
-        if (lastReport?.rawReport) {
-            exportToPDF(reportContentRef.current?.innerHTML || lastReport.rawReport, `${lastReport.ticker}-Institutional-Report`);
-        }
-        return;
+      if (lastReport?.rawReport) {
+        exportToPDF(buildReportHtml(), `${lastReport.ticker}-Institutional-Report`);
+      }
+      return;
     }
-    exportToPDF(auditContentRef.current?.innerHTML || portfolioAudit, `Institutional-Portfolio-Audit-${new Date().toISOString().slice(0, 10)}`);
+    exportToPDF(mdToHtml(portfolioAudit), `Institutional-Portfolio-Audit-${new Date().toISOString().slice(0, 10)}`);
   };
 
 
@@ -1114,10 +1260,37 @@ export default function App() {
               text-transform: uppercase;
             }
 
+            /* ── Structured report styles ───────────────────────────────── */
+            .rpt-header { margin-bottom: 2.5rem; }
+            .rpt-header h1 { margin: 0.5rem 0 0.25rem; }
+            .rpt-header h1::before { display: none; }
+            .rpt-header h1 .tk { font-family: 'Inter', sans-serif; font-style: normal; font-size: 1.3rem; color: #f97316; font-weight: 700; letter-spacing: 0.05em; }
+            .rpt-header .sub { font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+            .signal { display: inline-block; padding: 5px 14px; border-radius: 999px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border: 1.5px solid; }
+            .signal.buy { color: #047857; border-color: #10b981; background: #ecfdf5; }
+            .signal.sell { color: #b91c1c; border-color: #ef4444; background: #fef2f2; }
+            .signal.hold { color: #475569; border-color: #94a3b8; background: #f1f5f9; }
+            .signal.cautious { color: #b45309; border-color: #f59e0b; background: #fffbeb; }
+
+            table.data-table, table.peer-table, table.md-table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; border: 1px solid #cbd5e0; font-size: 0.95rem; }
+            table.data-table th, table.peer-table th, table.md-table th { background: #0f172a; color: #fff; text-align: left; padding: 0.7rem 0.9rem; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; }
+            table.data-table td, table.peer-table td, table.md-table td { padding: 0.6rem 0.9rem; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 0.92rem; }
+            table.data-table tr:nth-child(even) td, table.md-table tr:nth-child(even) td, table.peer-table tbody tr:nth-child(even) td { background: #f8fafc; }
+            .peer-table tr.subject td { background: #fff7ed !important; font-weight: 700; box-shadow: inset 3px 0 0 #f97316; }
+            .data-table td:last-child { font-variant-numeric: tabular-nums; }
+            .chg.up { color: #047857; font-weight: 700; } .chg.dn { color: #b91c1c; font-weight: 700; }
+            .muted { color: #94a3b8; font-size: 0.85em; }
+            .prose p { font-size: 1rem; margin: 0.5rem 0 1rem; }
+            .prose li { font-size: 1rem; margin-bottom: 0.5rem; }
+            .prose h3, .prose h4 { background: none; border: none; padding: 0; color: #0f172a; text-transform: none; letter-spacing: 0; font-size: 1.05rem; margin: 1rem 0 0.5rem; }
+            .disclaimer { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid #e2e8f0; font-size: 0.75rem; color: #64748b; font-style: italic; }
+
             @media print {
               body { padding: 0; margin: 0; }
               @page { margin: 2cm; }
               body { -webkit-print-color-adjust: exact; }
+              table { page-break-inside: avoid; }
+              h2 { page-break-after: avoid; }
             }
           </style>
         </head>
