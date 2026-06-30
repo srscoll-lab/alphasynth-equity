@@ -362,6 +362,12 @@ const getStopLossVsLtpLabel = (slStr: string, priceStr: string, ltp: number) => 
 // Falls back to the legacy keyword heuristic only for older reports without it.
 // (The old heuristic checked includes('buy') FIRST, so any report with a bull case
 //  — i.e. almost all of them — was forced to "Positive". That bias is fixed here.)
+// Google Analytics 4 custom-event helper. No-ops safely if gtag hasn't loaded
+// (e.g. ad-blocker, dev, or before the GA4 Measurement ID is configured).
+const trackEvent = (name: string, params?: Record<string, any>): void => {
+  try { (window as any).gtag?.('event', name, params || {}); } catch { /* analytics must never break the app */ }
+};
+
 const deriveRating = (report: string): string => {
   if (!report) return 'hold';
   const m = report.match(/SIGNAL\s*[:\-—]*\s*(POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS)/i);
@@ -1142,10 +1148,14 @@ export default function App() {
   const handleExportPDF = () => {
     if (!portfolioAudit) {
       if (lastReport?.rawReport) {
+        // GA4: a report PDF was downloaded.
+        trackEvent('pdf_downloaded', { ticker: lastReport.ticker, type: 'report' });
         exportToPDF(buildReportHtml(), `${lastReport.ticker}-Institutional-Report`);
       }
       return;
     }
+    // GA4: a portfolio-audit PDF was downloaded.
+    trackEvent('pdf_downloaded', { ticker: 'portfolio', type: 'portfolio_audit' });
     exportToPDF(mdToHtml(portfolioAudit), `Institutional-Portfolio-Audit-${new Date().toISOString().slice(0, 10)}`);
   };
 
@@ -1998,6 +2008,8 @@ ${list}
       };
       setLastReport(reportData);
       setEarningsIntelReport({ ...data, ticker: tkr });
+      // GA4: an earnings-intelligence report was successfully generated.
+      trackEvent('report_generated', { ticker: tkr, mode: 'earnings_intelligence' });
       setCachedEarnings({ ...data, ticker: tkr });
       setActiveTab('equity');
 
@@ -2198,6 +2210,8 @@ ${list}
   const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false, exactCompany?: { symbol: string; name: string }) => {
     let tkr = tickerOverride || ticker;
     if (!tkr) return;
+    // GA4: a stock search was initiated (covers typed Enter and dropdown selection).
+    trackEvent('ticker_searched', { ticker: String(tkr).toUpperCase() });
     // A company picked from the typeahead dropdown carries its EXACT ticker — record it
     // directly so every step below skips the resolver (no AI, zero ambiguity).
     const applyExact = () => {
@@ -2518,6 +2532,8 @@ ${list}
         }
 
         setLastReport({ ...reportData, id: user ? 'pending' : undefined });
+        // GA4: a stock report was successfully generated.
+        trackEvent('report_generated', { ticker: reportData.ticker, mode: activeMode });
         if (activeMode === 'deep_dive') setCachedDeepDive({ ...reportData, id: user ? 'pending' : undefined });
 
         // Auto-save to User Portfolio if user is logged in
