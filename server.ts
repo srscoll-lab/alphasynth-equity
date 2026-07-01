@@ -565,6 +565,7 @@ const SERVER_INTEL_FALLBACK = {
 const reportCache = new Map<string, { data: any; timestamp: number }>();
 const CACHE_TTL_MS       = 30 * 60 * 1000;  // 30 min for reports
 const PEER_CMP_CACHE_TTL_MS = 24 * 60 * 60 * 1000;  // 24 hr for the peer-comparison table
+const EXTRAS_CACHE_TTL_MS = 24 * 60 * 60 * 1000;  // 24 hr for report extras (exec summary, signal, shareholding)
 
 function getCached(key: string): any | null {
   const entry = reportCache.get(key);
@@ -1702,6 +1703,128 @@ ${rawText}` }] }],
     } catch (error: any) {
       console.error(`[peer-comparison/${cleanTicker}] Error:`, error?.message || error);
       res.json({ ticker: cleanTicker, rows: [], isFallback: true });
+    }
+  });
+
+  // ── Report extras ─────────────────────────────────────────────────────────────
+  // One grounded Gemini call that returns the data behind three UI features:
+  //  • Executive Summary card (company one-liner + key defining number)
+  //  • Signal justification popup (2-3 supporting data points + plain explanation)
+  //  • Shareholding Pattern section (promoter/FII/DII/MF/retail % + QoQ trend)
+  // 24-hour cache per subject ticker. The signal VERDICT itself comes from the report
+  // (passed in) so the popup stays consistent with the badge; here we only justify it.
+  app.post("/api/pipeline/report-extras", async (req, res) => {
+    const { ticker, signal, context } = req.body;
+    if (!ticker) return res.status(400).json({ error: "Missing ticker" });
+    const cleanTicker = ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+
+    const cacheKey = `EXTRAS_${cleanTicker}`;
+    const cached = reportCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < EXTRAS_CACHE_TTL_MS) {
+      console.log(`[CACHE] EXTRAS HIT — ${cleanTicker}`);
+      return res.json({ ...cached.data, cached: true });
+    }
+    console.log(`[CACHE] EXTRAS MISS — ${cleanTicker}`);
+
+    const num = (v: any): number | null => {
+      if (v === null || v === undefined) return null;
+      const n = typeof v === "string" ? parseFloat(v.replace(/[^0-9.\-]/g, "")) : Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    const trend = (t: any): 'up' | 'down' | 'stable' | null => {
+      const s = String(t || '').toLowerCase();
+      if (/(up|increas|rising|higher|▲)/.test(s)) return 'up';
+      if (/(down|decreas|falling|lower|▼)/.test(s)) return 'down';
+      if (/(stable|unchang|flat|same|→)/.test(s)) return 'stable';
+      return null;
+    };
+
+    try {
+      const ai = getGenAI();
+      const subjectInfo = await verifyNseBse(cleanTicker);
+      const subjectName = subjectInfo?.name || cleanTicker;
+      const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      const sig = String(signal || 'NEUTRAL').toUpperCase();
+
+      const groundPrompt = `
+        You are an equity analyst. Subject: the NSE-listed company "${cleanTicker}" (${subjectName}).
+        Using grounded search (Screener.in, Moneycontrol, NSE filings, trendlyne), provide, as of ${todayStr}:
+        1. companyLine: one sentence (max 20 words) on what the company does.
+        2. keyNumber: the single most defining current number for this stock right now, as a short phrase (e.g. "P/E 28x", "ARPU ₹245 (+15% YoY)", "Net debt ₹1.2L cr").
+        3. biggestRisk: the single biggest risk in one short line.
+        4. signalSupport: 2-3 specific data points that justify a "${sig}" signal for this stock, plus a one-line plain-English explanation of what "${sig}" means for a retail investor here.
+        5. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
+        Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
+      const searchResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: groundPrompt }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+      });
+      const rawText = searchResult.text || "";
+
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text:
+`Convert the research below into JSON for ${cleanTicker} (${subjectName}). Extract ONLY stated values; use null for anything missing. Percentages are plain numbers (no % sign). trend is one of "up","down","stable".
+
+Research:
+${rawText}` }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 4096,
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              companyLine: { type: "STRING" },
+              keyNumber: { type: "STRING" },
+              biggestRisk: { type: "STRING" },
+              signalDataPoints: { type: "ARRAY", items: { type: "STRING" } },
+              signalPlainExplanation: { type: "STRING" },
+              shareholding: {
+                type: "OBJECT",
+                properties: {
+                  promoter: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
+                  fii: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
+                  dii: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
+                  mutualFund: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
+                  retail: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
+                },
+              },
+            },
+          },
+        },
+      });
+      const parsed = JSON.parse(sanitizeGroundingJson(structResult.text || "{}"));
+      const sh = parsed.shareholding || {};
+      const shCat = (c: any) => (c && (c.value !== undefined || c.trend !== undefined)) ? { value: num(c.value), trend: trend(c.trend) } : { value: null, trend: null };
+
+      const payload = {
+        ticker: cleanTicker,
+        companyName: subjectName,
+        executiveSummary: {
+          companyLine: parsed.companyLine || null,
+          keyNumber: parsed.keyNumber || null,
+          biggestRisk: parsed.biggestRisk || null,
+        },
+        signal: {
+          verdict: sig,
+          dataPoints: Array.isArray(parsed.signalDataPoints) ? parsed.signalDataPoints.filter((x: any) => typeof x === 'string' && x.trim()).slice(0, 3) : [],
+          plainExplanation: parsed.signalPlainExplanation || null,
+        },
+        shareholding: {
+          promoter: shCat(sh.promoter),
+          fii: shCat(sh.fii),
+          dii: shCat(sh.dii),
+          mutualFund: shCat(sh.mutualFund || sh.mf),
+          retail: shCat(sh.retail || sh.public),
+        },
+      };
+      reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+      console.log(`[CACHE] EXTRAS WRITTEN — ${cleanTicker}`);
+      res.json(payload);
+    } catch (error: any) {
+      console.error(`[report-extras/${cleanTicker}] Error:`, error?.message || error);
+      res.json({ ticker: cleanTicker, executiveSummary: {}, signal: { dataPoints: [] }, shareholding: {}, isFallback: true });
     }
   });
 

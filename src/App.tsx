@@ -379,7 +379,15 @@ const deriveRating = (report: string): string => {
   return lower.includes('buy') ? 'buy' : lower.includes('sell') ? 'sell' : 'hold';
 };
 
-const RatingBadge = ({ rating, mode }: { rating: string, mode?: string }) => {
+// Pull the one-sentence justification after the report's "SIGNAL: <verdict> — <reason>" line.
+const parseSignalReason = (report?: string): string => {
+  if (!report) return '';
+  const m = report.match(/SIGNAL\s*[:\-—]*\s*(?:POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS)\s*[—\-–:]+\s*(.+)/i);
+  return m ? m[1].split('\n')[0].trim() : '';
+};
+
+const RatingBadge = ({ rating, mode, reason, dataPoints, plainExplanation }: { rating: string, mode?: string, reason?: string, dataPoints?: string[], plainExplanation?: string }) => {
+  const [open, setOpen] = useState(false);
   const r = rating?.toLowerCase();
   const config: any = {
     buy:  { label: 'Signal: Positive', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/40' },
@@ -388,12 +396,38 @@ const RatingBadge = ({ rating, mode }: { rating: string, mode?: string }) => {
   };
   const { label, cls } = config[r] || { label: 'Signal: Cautious', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/40' };
   const context = mode === 'earnings_intelligence' ? 'Recent earnings' : mode === 'move' ? 'Price action' : mode === 'filings' ? 'Filings audit' : 'Long-term fundamentals';
+  const points = (dataPoints || []).filter(Boolean);
+  const hasDetail = !!(reason || points.length || plainExplanation);
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${cls}`}>
-        {label}
-      </span>
+    <div className="flex flex-col gap-0.5 relative">
+      <button
+        type="button"
+        onClick={() => hasDetail && setOpen((o) => !o)}
+        aria-expanded={open}
+        title={hasDetail ? 'Why this signal?' : undefined}
+        className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${cls} flex items-center gap-1.5 ${hasDetail ? 'cursor-pointer hover:brightness-125 transition' : 'cursor-default'}`}
+      >
+        {label}{hasDetail && <span className="opacity-70 font-bold">ⓘ</span>}
+      </button>
       <span style={{fontSize:9,color:'#6b7280',letterSpacing:'0.05em',paddingLeft:4}}>{context}</span>
+      {open && hasDetail && (
+        <>
+          {/* click-anywhere-else to close */}
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute z-50 top-full mt-2 left-0 w-80 max-w-[88vw] p-4 rounded-xl bg-app-surface border border-gold/30 shadow-[0_20px_50px_rgba(0,0,0,0.6)] text-left normal-case tracking-normal">
+            <p className="text-[9px] font-black text-gold uppercase tracking-widest mb-2">Why this signal?</p>
+            {reason && <p className="text-xs text-zinc-200 leading-relaxed mb-3 font-medium">{reason}</p>}
+            {points.length > 0 && (
+              <ul className="space-y-1.5 mb-3">
+                {points.map((d, i) => (
+                  <li key={i} className="text-[11px] text-zinc-400 leading-snug flex gap-2"><span className="text-gold shrink-0">•</span><span>{d}</span></li>
+                ))}
+              </ul>
+            )}
+            {plainExplanation && <p className="text-[11px] text-zinc-500 italic leading-snug border-t border-app-border pt-2">{plainExplanation}</p>}
+          </div>
+        </>
+      )}
     </div>
   );
 };
@@ -576,6 +610,11 @@ export default function App() {
   const [peerComparison, setPeerComparison] = useState<any[]>([]);
   const [loadingPeerComparison, setLoadingPeerComparison] = useState<boolean>(false);
   const [peerComparisonTicker, setPeerComparisonTicker] = useState<string>('');
+
+  // Report extras — executive summary, signal justification, shareholding pattern
+  // (one grounded backend call, cached 24h). Powers Improvements 1, 2 and 3.
+  const [reportExtras, setReportExtras] = useState<any>(null);
+  const [reportExtrasTicker, setReportExtrasTicker] = useState<string>('');
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -2031,6 +2070,7 @@ ${list}
       setEarningsIntelReport({ ...data, ticker: tkr });
       // GA4: an earnings-intelligence report was successfully generated.
       trackEvent('report_generated', { ticker: tkr, mode: 'earnings_intelligence' });
+      fetchReportExtras(tkr, 'NEUTRAL'); // exec summary + shareholding for earnings reports too
       setCachedEarnings({ ...data, ticker: tkr });
       setActiveTab('equity');
 
@@ -2177,6 +2217,25 @@ ${list}
   };
 
   // Feature 2 — fetch the peer comparison table (subject + 4 peers, Yahoo + Gemini).
+  // Improvements 1/2/3 — fetch executive summary + signal justification + shareholding.
+  const fetchReportExtras = async (tkr: string, signal: string) => {
+    const target = (tkr || '').toUpperCase();
+    if (!target) return;
+    setReportExtrasTicker(target);
+    setReportExtras(null);
+    try {
+      const r = await fetch('/api/pipeline/report-extras', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: target, signal }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if ((d.ticker || target).toUpperCase() === target) setReportExtras(d);
+      }
+    } catch (e) { console.warn('Report extras fetch failed:', e); }
+  };
+
   const fetchPeerComparison = async (scripTicker?: string) => {
     const targetTicker = (scripTicker || lastReport?.ticker || ticker || '').toUpperCase();
     if (!targetTicker || tickerValidationFailed) return;
@@ -2555,6 +2614,7 @@ ${list}
         setLastReport({ ...reportData, id: user ? 'pending' : undefined });
         // GA4: a stock report was successfully generated.
         trackEvent('report_generated', { ticker: reportData.ticker, mode: activeMode });
+        fetchReportExtras(reportData.ticker, reportData.rating); // exec summary + signal + shareholding
         if (activeMode === 'deep_dive') setCachedDeepDive({ ...reportData, id: user ? 'pending' : undefined });
 
         // Auto-save to User Portfolio if user is logged in
@@ -2624,7 +2684,7 @@ ${list}
                   </div>
                   <div>
                       <h2 className="text-2xl font-display font-bold text-white flex items-center gap-2">
-                        {lastReport.ticker} <RatingBadge rating={lastReport.rating} mode={lastReport.mode} />
+                        {lastReport.ticker} <RatingBadge rating={lastReport.rating} mode={lastReport.mode} reason={parseSignalReason(lastReport.rawReport)} dataPoints={reportExtras?.ticker === lastReport.ticker ? reportExtras?.signal?.dataPoints : undefined} plainExplanation={reportExtras?.ticker === lastReport.ticker ? reportExtras?.signal?.plainExplanation : undefined} />
                       </h2>
                       <p className="text-[11px] text-gold font-bold mt-1.5 normal-case tracking-normal">
                         Showing results for: {lastReport.companyName || lastReport.ticker} ({lastReport.ticker})
@@ -2970,6 +3030,38 @@ ${list}
                     )
                   ) : (
                     <div ref={reportContentRef} className="no-scrollbar">
+                      {/* Improvement 1 — Executive Summary (first thing the reader sees) */}
+                      {(() => {
+                        const ex = reportExtras?.ticker === lastReport.ticker ? reportExtras : null;
+                        const sig = parseSignalReason(lastReport.rawReport);
+                        const risk = ex?.executiveSummary?.biggestRisk
+                          || (lastReport.bearCase ? String(lastReport.bearCase).replace(/[#*>`]/g, '').split(/(?<=[.!?])\s+/).map((s: string) => s.trim()).filter((s: string) => s.length > 30)[0] : '');
+                        const sigWord = ({ buy: 'POSITIVE', sell: 'NEGATIVE', hold: 'NEUTRAL' } as any)[(lastReport.rating || '').toLowerCase()] || 'CAUTIOUS';
+                        const sigColor = sigWord === 'POSITIVE' ? 'text-emerald-400' : sigWord === 'NEGATIVE' ? 'text-rose-400' : sigWord === 'NEUTRAL' ? 'text-zinc-300' : 'text-amber-400';
+                        return (
+                          <div className="mb-10 p-6 rounded-2xl bg-gradient-to-br from-gold/[0.08] to-app-surface border border-gold/30 shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+                            <div className="flex items-center gap-2 mb-4">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gold" />
+                              <h3 className="text-[10px] font-black text-gold uppercase tracking-[0.25em]">Executive Summary</h3>
+                            </div>
+                            <div className="space-y-2.5 text-sm text-zinc-200 leading-relaxed">
+                              {ex?.executiveSummary?.companyLine && (
+                                <p><span className="text-zinc-500 font-bold">What it is: </span>{ex.executiveSummary.companyLine}</p>
+                              )}
+                              <p>
+                                <span className="text-zinc-500 font-bold">Signal: </span>
+                                <span className={`font-black ${sigColor}`}>{sigWord}</span>
+                                {sig ? ` — ${sig}` : ''}
+                              </p>
+                              {risk && <p><span className="text-zinc-500 font-bold">Biggest risk: </span>{risk}</p>}
+                              {ex?.executiveSummary?.keyNumber && (
+                                <p><span className="text-zinc-500 font-bold">Key number: </span><span className="font-mono text-gold">{ex.executiveSummary.keyNumber}</span></p>
+                              )}
+                              {!ex && <p className="text-[11px] text-zinc-600 italic">Loading company snapshot…</p>}
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* Interactive Visual Differential Widgets based on Mode */}
                       {(lastReport.mode === 'earnings' || lastReport.mode === 'earnings_intelligence') && lastReport.mode !== 'earnings_intelligence' && (
                         <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
@@ -3237,6 +3329,78 @@ ${list}
                                 <MD>{lastReport.bearCase}</MD>
                               </div>
                           </section>
+
+                          {/* Improvement 4 — At a Glance: Strengths vs Risks (distilled from bull/bear) */}
+                          {(() => {
+                            const distill = (src: string, n: number): string[] => {
+                              if (!src) return [];
+                              const clean = String(src).replace(/[#>`]/g, '');
+                              let items = clean.split('\n').map((l: string) => l.trim()).filter((l: string) => /^[-*•]\s+/.test(l)).map((l: string) => l.replace(/^[-*•]\s+/, '').replace(/\*\*/g, '').trim());
+                              if (items.length < n) items = clean.replace(/\*\*/g, '').replace(/\n+/g, ' ').split(/(?<=[.!?])\s+/).map((s: string) => s.trim()).filter((s: string) => s.length > 30);
+                              return items.slice(0, n).map((s: string) => (s.length > 120 ? s.slice(0, 120).trim() + '…' : s));
+                            };
+                            const strengths = distill(lastReport.bullCase, 3);
+                            const weaknesses = distill(lastReport.bearCase, 3);
+                            if (!strengths.length && !weaknesses.length) return null;
+                            return (
+                              <section className="mt-12">
+                                <h3 className="text-xs font-black text-gold uppercase tracking-[0.2em] mb-6">At a Glance — Strengths vs Risks</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
+                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">Top 3 Strengths</p>
+                                    <ol className="space-y-2.5">
+                                      {strengths.map((s, i) => (<li key={i} className="text-xs text-zinc-300 leading-snug flex gap-2"><span className="text-emerald-400 font-black">{i + 1}.</span><span>{s}</span></li>))}
+                                    </ol>
+                                  </div>
+                                  <div className="p-5 rounded-2xl bg-rose-500/5 border border-rose-500/20">
+                                    <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-3">Top 3 Risks</p>
+                                    <ol className="space-y-2.5">
+                                      {weaknesses.map((s, i) => (<li key={i} className="text-xs text-zinc-300 leading-snug flex gap-2"><span className="text-rose-400 font-black">{i + 1}.</span><span>{s}</span></li>))}
+                                    </ol>
+                                  </div>
+                                </div>
+                              </section>
+                            );
+                          })()}
+
+                          {/* Improvement 5 — Valuation Context by time horizon (factual, not advice) */}
+                          {(() => {
+                            const subj = peerComparison.find((r: any) => r.isTarget);
+                            const pe = subj?.pe ?? null;
+                            const peerPes = peerComparison.filter((r: any) => !r.isTarget && r.pe != null).map((r: any) => Number(r.pe)).sort((a: number, b: number) => a - b);
+                            const peerMed = peerPes.length ? peerPes[Math.floor(peerPes.length / 2)] : null;
+                            const cur = (scripLtp > 0 && scripLtpTicker === (lastReport.ticker || '').toUpperCase()) ? scripLtp : (lastReport.parsedLtp || 0);
+                            const pos = (week52 && week52.high > week52.low && cur > 0) ? Math.round(((cur - week52.low) / (week52.high - week52.low)) * 100) : null;
+                            const q = lastReport.metrics?.quality, g = lastReport.metrics?.growth;
+                            const near = pos != null
+                              ? `Trading at ${pos}% of its 52-week range — ${pos <= 25 ? 'near the lower end' : pos >= 75 ? 'near the upper end' : 'around the middle'} of the past year's price band.`
+                              : 'Live 52-week range data is not available for this stock right now.';
+                            const medium = pe != null
+                              ? `Current P/E is ${Number(pe).toFixed(1)}${peerMed != null ? `, versus a peer median of ${Number(peerMed).toFixed(1)} — ${pe < peerMed ? 'a discount to sector peers' : pe > peerMed ? 'a premium to sector peers' : 'in line with sector peers'}` : ''}.`
+                              : 'A trailing P/E is not available for this stock right now.';
+                            const long = (q != null || g != null)
+                              ? `This analysis scored Quality & Moat ${q ?? '–'}/10 and Growth Momentum ${g ?? '–'}/10 — a ${(q ?? 5) >= 7 ? 'strong' : (q ?? 5) >= 4 ? 'moderate' : 'weaker'} competitive position with a ${(g ?? 5) >= 7 ? 'long' : (g ?? 5) >= 4 ? 'measured' : 'limited'} growth runway.`
+                              : 'Quality and growth scores are not available for this report.';
+                            const rows = [
+                              ['Near term (3–6 months)', near],
+                              ['Medium term (1–2 years)', medium],
+                              ['Long term (3+ years)', long],
+                            ];
+                            return (
+                              <section className="mt-12">
+                                <h3 className="text-xs font-black text-gold uppercase tracking-[0.2em] mb-6">Valuation Context</h3>
+                                <div className="space-y-3">
+                                  {rows.map(([h, body]) => (
+                                    <div key={h} className="p-4 rounded-xl bg-app-surface/40 border border-app-border">
+                                      <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">{h}</p>
+                                      <p className="text-xs text-zinc-300 leading-relaxed">{body}</p>
+                                    </div>
+                                  ))}
+                                </div>
+                                <p className="mt-3 text-[10px] text-zinc-600 italic leading-snug">Valuation context is historical and factual. Not a recommendation. Consult a SEBI-registered advisor.</p>
+                              </section>
+                            );
+                          })()}
                         </>
                       )}
 
@@ -4783,6 +4947,49 @@ ${list}
                       </ul>
                     </div>
                   </motion.div>
+
+                  {/* Improvement 3 — Shareholding Pattern */}
+                  {reportExtras?.ticker === (lastReport?.ticker || '').toUpperCase() && reportExtras?.shareholding && (() => {
+                    const sh = reportExtras.shareholding;
+                    const cats = ([
+                      ['Promoter', sh.promoter], ['FII', sh.fii], ['DII', sh.dii], ['Mutual Funds', sh.mutualFund], ['Retail / Public', sh.retail],
+                    ] as [string, any][]).filter(([, c]) => c && c.value != null);
+                    if (!cats.length) return null;
+                    const arrow = (t: string) => t === 'up' ? { s: '▲', c: 'text-emerald-400', l: 'Increasing' } : t === 'down' ? { s: '▼', c: 'text-rose-400', l: 'Decreasing' } : { s: '→', c: 'text-zinc-400', l: 'Stable' };
+                    return (
+                      <div className="bg-app-surface border border-app-border rounded-3xl p-6 md:p-8 relative overflow-hidden mt-6 shadow-2xl">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[9px] font-black px-2 py-0.5 bg-gold/10 text-gold tracking-widest rounded-full uppercase border border-gold/20">Alphasynth Intel</span>
+                        </div>
+                        <h3 className="text-xl md:text-2xl font-display font-black text-white italic tracking-tight mb-1">Shareholding Pattern</h3>
+                        <p className="text-xs text-zinc-400 mb-6 font-medium">Latest quarter ownership for {(lastReport?.ticker || ticker).toUpperCase()}, with the change vs the previous quarter.</p>
+                        <div className="overflow-x-auto -mx-2 px-2">
+                          <table className="w-full min-w-[420px] border-collapse text-sm">
+                            <thead>
+                              <tr className="border-b border-app-border">
+                                <th className="text-left py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">Category</th>
+                                <th className="text-right py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">Holding %</th>
+                                <th className="text-right py-3 px-3 text-[10px] font-black text-gold uppercase tracking-widest">QoQ Trend</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {cats.map(([label, c], idx) => {
+                                const a = arrow(c.trend);
+                                return (
+                                  <tr key={label} className={`border-b border-app-border/40 ${idx % 2 === 1 ? 'bg-white/[0.02]' : ''}`}>
+                                    <td className="py-3 px-3 text-zinc-300 font-medium">{label}</td>
+                                    <td className="py-3 px-3 text-right font-mono text-white">{Number(c.value).toFixed(2)}%</td>
+                                    <td className={`py-3 px-3 text-right font-mono ${a.c}`}>{a.s} <span className="text-[10px]">{c.trend ? a.l : 'N/A'}</span></td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="mt-4 text-[10px] text-zinc-600 italic">Shareholding data sourced from latest NSE quarterly filings via AI grounded search. Verify on NSE website.</p>
+                      </div>
+                    );
+                  })()}
 
                   {/* Feature 2 — Peer Comparison Table */}
                   {(loadingPeerComparison || peerComparison.length > 0) && (
