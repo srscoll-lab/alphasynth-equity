@@ -228,6 +228,15 @@ const NSE_EQUITIES: CompanyEntry[] = (() => {
   }
 })();
 
+// Committed fallback seeds so the landing page ALWAYS renders instantly, even on a cold
+// instance with an empty in-memory cache. Fresh data then replaces these in the background.
+const loadJson = (file: string, fallback: any) => {
+  try { return JSON.parse(fs.readFileSync(path.join(process.cwd(), file), "utf-8")); }
+  catch { return fallback; }
+};
+const WATCHLIST_SEED = loadJson("watchlist-seed.json", { nonBanking: [], nbfc: [] });
+const SPOTLIGHT_SEED = loadJson("spotlight-seed.json", {});
+
 // Rank matches so the most relevant company surfaces first. Lower score = better;
 // ties break to the shorter symbol (the primary listing) then alphabetically.
 //   0 exact symbol · 1 symbol prefix · 2 name prefix · 3 any name-word prefix
@@ -1859,8 +1868,8 @@ ${rawText}` }] }],
       timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
     }).formatToParts(new Date()).map((p) => [p.type, p.value]));
     let y = +parts.year, mo = +parts.month, d = +parts.day;
-    const h = +parts.hour, mi = +parts.minute;
-    if (h < 9 || (h === 9 && mi < 15)) { // before 09:15 IST → previous market day
+    const h = +parts.hour;
+    if (h < 9) { // before 09:00 IST → previous market day (so the 09:00 warm-up builds today)
       const prev = new Date(Date.UTC(y, mo - 1, d) - 86400000);
       y = prev.getUTCFullYear(); mo = prev.getUTCMonth() + 1; d = prev.getUTCDate();
     }
@@ -1878,25 +1887,22 @@ ${rawText}` }] }],
     return null;
   };
 
-  app.get("/api/watchlist", async (req, res) => {
-    const dayKey = marketDayKey();
-    const cacheKey = `WATCHLIST_${dayKey}`;
-    const cached = reportCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < 26 * 60 * 60 * 1000) {
-      return res.json({ ...cached.data, stale: false });
-    }
-
-    const num = (v: any): number | null => {
-      if (v === null || v === undefined) return null;
-      const n = typeof v === "string" ? parseFloat(v.replace(/[^0-9.\-]/g, "")) : Number(v);
-      return Number.isFinite(n) ? n : null;
-    };
-    const pctNorm = (v: any): number | null => {
-      const n = num(v); if (n === null) return null;
-      return Math.round((Math.abs(n) < 1 ? n * 100 : n) * 10) / 10;
-    };
-
-    try {
+  // Build the watchlist (blocking, ~40-200s). Guarded by a lock so concurrent callers
+  // (e.g. the scheduler warm-up and a page's ?fresh=1) share ONE build instead of stampeding.
+  let watchlistBuildLock: Promise<any> | null = null;
+  const buildWatchlist = (dayKey: string): Promise<any> => {
+    if (watchlistBuildLock) return watchlistBuildLock;
+    watchlistBuildLock = (async () => {
+      const cacheKey = `WATCHLIST_${dayKey}`;
+      const num = (v: any): number | null => {
+        if (v === null || v === undefined) return null;
+        const n = typeof v === "string" ? parseFloat(v.replace(/[^0-9.\-]/g, "")) : Number(v);
+        return Number.isFinite(n) ? n : null;
+      };
+      const pctNorm = (v: any): number | null => {
+        const n = num(v); if (n === null) return null;
+        return Math.round((Math.abs(n) < 1 ? n * 100 : n) * 10) / 10;
+      };
       const ai = getGenAI();
       const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
       const groundPromptText = `
@@ -1988,36 +1994,60 @@ ${rawText}` }] }],
         reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
         reportCache.set("WATCHLIST_LAST", { data: payload, timestamp: Date.now() });
         console.log(`[watchlist] built for ${dayKey} — ${nonBanking.length} non-banking, ${nbfc.length} NBFC`);
-        return res.json({ ...payload, stale: false });
+        return { ...payload, stale: false };
       }
       // Short build — prefer the last good full result so the page never shows empty tables.
       const lastGood = reportCache.get("WATCHLIST_LAST");
       if (lastGood) {
         reportCache.set(cacheKey, lastGood); // pin for the day to avoid rebuilding every request
         console.log(`[watchlist] short build (${nonBanking.length}/${nbfc.length}) — serving last good`);
-        return res.json({ ...lastGood.data, stale: true });
+        return { ...lastGood.data, stale: true };
       }
-      // No prior good result yet — serve best effort and cache for the day.
       reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
       console.log(`[watchlist] best-effort build — ${nonBanking.length} non-banking, ${nbfc.length} NBFC`);
-      return res.json({ ...payload, stale: false, partial: true });
+      return { ...payload, stale: false, partial: true };
+    })().finally(() => { watchlistBuildLock = null; });
+    return watchlistBuildLock;
+  };
+
+  // Instant-first watchlist: always return SOMETHING immediately (today's cache → last-good →
+  // committed seed) so the page never blanks or spins. ?fresh=1 forces a fresh build and is
+  // used by the 09:00 scheduler warm-up and by the frontend's background refresh.
+  app.get("/api/watchlist", async (req, res) => {
+    const dayKey = marketDayKey();
+    const cacheKey = `WATCHLIST_${dayKey}`;
+    try {
+      if (req.query.fresh === "1") {
+        const built = await buildWatchlist(dayKey);
+        return res.json({ ...built, refreshing: false });
+      }
+      const today = reportCache.get(cacheKey);
+      if (today && (Date.now() - today.timestamp) < 26 * 60 * 60 * 1000) {
+        return res.json({ ...today.data, stale: false, refreshing: false });
+      }
+      const last = reportCache.get("WATCHLIST_LAST");
+      if (last) return res.json({ ...last.data, stale: true, refreshing: true }); // instant; client will ?fresh=1
+      if ((WATCHLIST_SEED.nonBanking || []).length) {
+        return res.json({ asOf: dayKey, nonBanking: WATCHLIST_SEED.nonBanking, nbfc: WATCHLIST_SEED.nbfc, stale: true, refreshing: true });
+      }
+      const built = await buildWatchlist(dayKey); // nothing to show yet — must build
+      return res.json({ ...built, refreshing: false });
     } catch (error: any) {
       console.error(`[watchlist] Error:`, error?.message || error);
       const last = reportCache.get("WATCHLIST_LAST");
-      if (last) return res.json({ ...last.data, stale: true }); // serve yesterday's data, flagged
-      res.json({ asOf: dayKey, nonBanking: [], nbfc: [], stale: false, error: true });
+      if (last) return res.json({ ...last.data, stale: true, refreshing: false });
+      res.json({ asOf: dayKey, nonBanking: WATCHLIST_SEED.nonBanking || [], nbfc: WATCHLIST_SEED.nbfc || [], stale: true, refreshing: false });
     }
   });
 
   // ── Stock of the day (landing-page spotlight) ─────────────────────────────────
   // One grounded pick with a 2–3 sentence "why interesting today" blurb. Cached per
   // IST market day; falls back to the last good pick if a build fails.
-  app.get("/api/watchlist/spotlight", async (req, res) => {
-    const dayKey = marketDayKey();
-    const cacheKey = `SPOTLIGHT_${dayKey}`;
-    const cached = reportCache.get(cacheKey);
-    if (cached && (Date.now() - cached.timestamp) < 26 * 60 * 60 * 1000) return res.json({ ...cached.data, stale: false });
-    try {
+  let spotlightBuildLock: Promise<any> | null = null;
+  const buildSpotlight = (dayKey: string): Promise<any> => {
+    if (spotlightBuildLock) return spotlightBuildLock;
+    spotlightBuildLock = (async () => {
+      const cacheKey = `SPOTLIGHT_${dayKey}`;
       const ai = getGenAI();
       const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
       const searchResult = await ai.models.generateContent({
@@ -2047,16 +2077,31 @@ ${rawText}` }] }],
       if (verified && reason) {
         reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
         reportCache.set("SPOTLIGHT_LAST", { data: payload, timestamp: Date.now() });
-        return res.json({ ...payload, stale: false });
+        return { ...payload, stale: false };
       }
       const last = reportCache.get("SPOTLIGHT_LAST");
-      if (last) return res.json({ ...last.data, stale: true });
-      return res.json({ ...payload, stale: false });
+      if (last) return { ...last.data, stale: true };
+      return { ...payload, stale: false };
+    })().finally(() => { spotlightBuildLock = null; });
+    return spotlightBuildLock;
+  };
+
+  app.get("/api/watchlist/spotlight", async (req, res) => {
+    const dayKey = marketDayKey();
+    const cacheKey = `SPOTLIGHT_${dayKey}`;
+    try {
+      if (req.query.fresh === "1") return res.json({ ...(await buildSpotlight(dayKey)), refreshing: false });
+      const today = reportCache.get(cacheKey);
+      if (today && (Date.now() - today.timestamp) < 26 * 60 * 60 * 1000) return res.json({ ...today.data, stale: false, refreshing: false });
+      const last = reportCache.get("SPOTLIGHT_LAST");
+      if (last) return res.json({ ...last.data, stale: true, refreshing: true });
+      if (SPOTLIGHT_SEED && SPOTLIGHT_SEED.ticker) return res.json({ asOf: dayKey, ...SPOTLIGHT_SEED, verified: true, stale: true, refreshing: true });
+      return res.json({ ...(await buildSpotlight(dayKey)), refreshing: false });
     } catch (error: any) {
       console.error(`[spotlight] Error:`, error?.message || error);
       const last = reportCache.get("SPOTLIGHT_LAST");
-      if (last) return res.json({ ...last.data, stale: true });
-      res.json({ asOf: dayKey, error: true });
+      if (last) return res.json({ ...last.data, stale: true, refreshing: false });
+      res.json({ asOf: dayKey, ...(SPOTLIGHT_SEED || {}), stale: true, refreshing: false });
     }
   });
 

@@ -1476,13 +1476,14 @@
       .wl-subtitle { color: var(--color-text-body); margin-top: .6rem; max-width: 56ch; font-size: .95rem; line-height: 1.5; }
       .wl-badge { display: inline-block; padding: .4rem .85rem; border-radius: 999px; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--color-gold); background: var(--color-gold-surface); border: 1px solid var(--color-gold-border); white-space: nowrap; }
       .wl-badge.wl-stale { color: #eab308; border-color: rgba(234,179,8,.4); }
-      /* Stack the two tables (full width) up to 1500px so all columns fit on standard
-         desktops (e.g. 1366px) without being cut off; only go side-by-side on wide screens. */
+      .wl-refreshing { font-size: .66rem; color: var(--color-gold); font-style: italic; opacity: .85; animation: wlPulse 1.4s ease-in-out infinite; }
+      @keyframes wlPulse { 0%,100% { opacity: .45; } 50% { opacity: .95; } }
+      /* Full-width STACKED on every screen size — each table gets the entire page width
+         (~1200px) so all columns are visible and nothing is cut off. */
       .wl-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-      @media (min-width: 1500px) { .wl-grid { grid-template-columns: 1fr 1fr; } }
       .wl-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: 1rem; padding: 1.25rem 1.25rem 1rem; min-width: 0; }
       .wl-card-title { font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--color-gold); margin: 0 0 1rem; }
-      .wl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .wl-scroll { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
       .wl-table { width: 100%; border-collapse: collapse; min-width: 340px; font-size: .82rem; }
       .wl-table th { text-align: left; padding: .5rem .45rem; font-size: .6rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-label); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
       .wl-table td { padding: .55rem .45rem; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-body); white-space: nowrap; }
@@ -1519,7 +1520,10 @@
             <h2 class="section-heading">Today's Midcap Watchlist</h2>
             <p class="wl-subtitle">Screened from Nifty 500 by fundamentals — click any company to generate a full report.</p>
           </div>
-          <span class="wl-badge" id="wl-badge">Updated daily</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.4rem">
+            <span class="wl-badge" id="wl-badge">Updated daily</span>
+            <span class="wl-refreshing" id="wl-refreshing" style="display:none">↻ Refreshing data…</span>
+          </div>
         </div>
         <!-- Stock of the day (populated by JS; hidden until data loads) -->
         <div class="wl-spotlight" id="wl-spotlight" style="display:none">
@@ -1599,21 +1603,33 @@
               + analyseCell(r) + '</tr>';
           }).join('');
         }
-        fetch('/api/watchlist').then(function (r) { return r.json(); }).then(function (d) {
+        function renderWatchlist(d) {
           var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = rowsNonBank(d.nonBanking);
           var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = rowsNbfc(d.nbfc);
           var badge = document.getElementById('wl-badge');
           if (badge && d.asOf) {
             if (d.stale) { badge.textContent = 'Data as of ' + fmtDate(d.asOf); badge.classList.add('wl-stale'); }
-            else { badge.textContent = 'Updated ' + fmtDate(d.asOf); }
+            else { badge.textContent = 'Updated ' + fmtDate(d.asOf); badge.classList.remove('wl-stale'); }
+          }
+        }
+        function setRefreshing(on) { var r = document.getElementById('wl-refreshing'); if (r) r.style.display = on ? '' : 'none'; }
+        // Instant render (today's / yesterday's / seed data); if it's stale, pull fresh in the
+        // background via ?fresh=1 and swap it in, showing a subtle "Refreshing…" indicator.
+        fetch('/api/watchlist').then(function (r) { return r.json(); }).then(function (d) {
+          renderWatchlist(d);
+          if (d && d.refreshing) {
+            setRefreshing(true);
+            fetch('/api/watchlist?fresh=1').then(function (r) { return r.json(); }).then(function (f) {
+              renderWatchlist(f); setRefreshing(false);
+            }).catch(function () { setRefreshing(false); });
           }
         }).catch(function () {
           var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = '<tr><td colspan="7" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
           var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = '<tr><td colspan="7" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
         });
 
-        // Stock of the day — populate the spotlight card if a pick is available.
-        fetch('/api/watchlist/spotlight').then(function (r) { return r.json(); }).then(function (d) {
+        // Stock of the day — instant render + background refresh, same pattern.
+        function renderSpot(d) {
           if (!d || !d.ticker || !d.reason) return;
           var card = document.getElementById('wl-spotlight'); if (!card) return;
           document.getElementById('wl-spot-name').innerHTML = esc(d.name || d.ticker) + '<span class="wl-spot-tk">' + esc(d.ticker) + '</span>';
@@ -1621,6 +1637,12 @@
           document.getElementById('wl-spot-btn').href = appLink(d.ticker);
           if (d.asOf) document.getElementById('wl-spot-date').textContent = (d.stale ? 'Pick as of ' : 'Updated ') + fmtDate(d.asOf);
           card.style.display = '';
+        }
+        fetch('/api/watchlist/spotlight').then(function (r) { return r.json(); }).then(function (d) {
+          renderSpot(d);
+          if (d && d.refreshing) {
+            fetch('/api/watchlist/spotlight?fresh=1').then(function (r) { return r.json(); }).then(renderSpot).catch(function () {});
+          }
         }).catch(function () { /* spotlight is best-effort */ });
       })();
     </script>

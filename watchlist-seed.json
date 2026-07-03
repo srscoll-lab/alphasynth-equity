@@ -1,0 +1,86 @@
+{
+"nonBanking": [
+{
+"name": "Tata Elxsi Limited",
+"ticker": "TATAELXSI",
+"sector": "IT Services",
+"pe": 55.2,
+"roe": 40.5,
+"week52Position": 4
+},
+{
+"name": "Clean Science and Technology Limited",
+"ticker": "CLEAN",
+"sector": "Chemicals",
+"pe": 60.1,
+"roe": 34.2,
+"week52Position": 15
+},
+{
+"name": "Persistent Systems Limited",
+"ticker": "PERSISTENT",
+"sector": "IT Services",
+"pe": 40.1,
+"roe": 29.2,
+"week52Position": 19
+},
+{
+"name": "Coromandel International Limited",
+"ticker": "COROMANDEL",
+"sector": "Fertilizers",
+"pe": 26.5,
+"roe": 24.3,
+"week52Position": 32
+},
+{
+"name": "KEI Industries Limited",
+"ticker": "KEI",
+"sector": "Cables & Wires",
+"pe": 65.5,
+"roe": 23.5,
+"week52Position": 80
+}
+],
+"nbfc": [
+{
+"name": "Manappuram Finance Limited",
+"ticker": "MANAPPURAM",
+"pe": 9.8,
+"roa": 3.1,
+"nim": 9.8,
+"grossNpa": 1.8
+},
+{
+"name": "Shriram Finance Limited",
+"ticker": "SHRIRAMFIN",
+"pe": 10.5,
+"roa": 2.1,
+"nim": 7.5,
+"grossNpa": 3.5
+},
+{
+"name": "Fusion Finance Limited",
+"ticker": "FUSION",
+"pe": 11.2,
+"roa": 3,
+"nim": 11.8,
+"grossNpa": 1.8
+},
+{
+"name": "Muthoot Finance Limited",
+"ticker": "MUTHOOTFIN",
+"pe": 12.5,
+"roa": 3.5,
+"nim": 11.2,
+"grossNpa": 2
+},
+{
+"name": "Spandana Sphoorty Financial Limited",
+"ticker": "SPANDANA",
+"pe": 13.9,
+"roa": 2.8,
+"nim": 10.5,
+"grossNpa": 2.5
+}
+]
+}
