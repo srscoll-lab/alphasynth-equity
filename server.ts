@@ -1836,6 +1836,23 @@ ${rawText}` }] }],
   // payload flagged stale.
   const NSE_SYMBOLS = new Set(NSE_EQUITIES.map((e) => e.symbol));
   const NSE_NAME = new Map(NSE_EQUITIES.map((e) => [e.symbol, e.name]));
+  // Normalised-name → symbol, so we can recover a valid NSE symbol when Gemini returns a
+  // slightly-off ticker (e.g. "CREDITACCESS" vs NSE "CREDITACC") but the name matches.
+  const wlNormName = (s: string) => String(s || "").toLowerCase().replace(/\b(ltd|limited|corporation|corp|the)\b/g, "").replace(/[^a-z0-9]/g, "");
+  const NSE_BY_NAME = new Map<string, string>();
+  for (const e of NSE_EQUITIES) { const n = wlNormName(e.name); if (n && !NSE_BY_NAME.has(n)) NSE_BY_NAME.set(n, e.symbol); }
+  // Resolve a Gemini candidate to a REAL NSE symbol: exact ticker → exact name → name prefix.
+  const resolveNseSymbol = (c: any): string => {
+    const t = String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, "");
+    if (NSE_SYMBOLS.has(t)) return t;
+    const nm = wlNormName(c.name);
+    if (nm.length >= 4) {
+      const exact = NSE_BY_NAME.get(nm);
+      if (exact) return exact;
+      for (const [en, sym] of NSE_BY_NAME) { if (en.length >= 4 && (en.startsWith(nm) || nm.startsWith(en))) return sym; }
+    }
+    return t; // unresolved — will be dropped by the NSE_SYMBOLS filter downstream
+  };
 
   const marketDayKey = (): string => {
     const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
@@ -1927,14 +1944,13 @@ ${rawText}` }] }],
         } catch { return { nb: [], nf: [] }; }
       };
       const positive = (v: number | null) => (v !== null && v > 0 ? v : null); // ≤0 P/E/ROE/ROA → N/A
-      const cleanSym = (c: any) => String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, "");
 
       // Table 1 — non-banking: real NSE symbols, plausible band (keeps the ROE ranking from
       // surfacing anomalies like 196% ROE), ranked ROE desc then PE asc, top 5. (No 52W yet.)
       const selectNB = (pool: any[]) => {
         const seen = new Set<string>();
         return pool
-          .map((c: any) => { const ticker = cleanSym(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, sector: c.sector || "—", pe: positive(num(c.pe)), roe: positive(pctNorm(c.roe)) }; })
+          .map((c: any) => { const ticker = resolveNseSymbol(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, sector: c.sector || "—", pe: positive(num(c.pe)), roe: positive(pctNorm(c.roe)) }; })
           .filter((c: any) => c.ticker && NSE_SYMBOLS.has(c.ticker) && !seen.has(c.ticker) && seen.add(c.ticker))
           .filter((c: any) => c.roe != null && c.roe >= 10 && c.roe <= 60 && c.pe != null && c.pe >= 5 && c.pe <= 80)
           .sort((a: any, b: any) => (b.roe ?? -Infinity) - (a.roe ?? -Infinity) || (a.pe ?? Infinity) - (b.pe ?? Infinity))
@@ -1945,7 +1961,7 @@ ${rawText}` }] }],
       const selectNF = (pool: any[]) => {
         const seen = new Set<string>();
         return pool
-          .map((c: any) => { const ticker = cleanSym(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, pe: positive(num(c.pe)), roa: num(c.roa), nim: positive(num(c.nim)), grossNpa: num(c.grossNpa) }; })
+          .map((c: any) => { const ticker = resolveNseSymbol(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, pe: positive(num(c.pe)), roa: num(c.roa), nim: positive(num(c.nim)), grossNpa: num(c.grossNpa) }; })
           .filter((c: any) => c.ticker && NSE_SYMBOLS.has(c.ticker) && !seen.has(c.ticker) && seen.add(c.ticker))
           .filter((c: any) => c.roa != null && c.roa > 1 && c.grossNpa != null && c.grossNpa >= 0 && c.grossNpa < 4 && c.pe != null && c.pe >= 5 && c.pe <= 80)
           .sort((a: any, b: any) => (a.pe ?? Infinity) - (b.pe ?? Infinity) || (b.roa ?? -Infinity) - (a.roa ?? -Infinity))
