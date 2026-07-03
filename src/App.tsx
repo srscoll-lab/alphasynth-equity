@@ -616,6 +616,11 @@ export default function App() {
   const [reportExtras, setReportExtras] = useState<any>(null);
   const [reportExtrasTicker, setReportExtrasTicker] = useState<string>('');
 
+  // Autorun — when arriving via /app?ticker=SYMBOL&autorun=true the report generates
+  // automatically. Holds the ticker being auto-run so we can show a top banner.
+  const [autorunTicker, setAutorunTicker] = useState<string>('');
+  const autorunFiredRef = useRef(false);
+
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisStatus, setAnalysisStatus] = useState<string>('');
@@ -2434,6 +2439,25 @@ ${list}
     }
   };
 
+  // Part 2 — Autorun. On first load, if the URL has ?ticker=SYMBOL&autorun=true,
+  // populate the search box and generate the report immediately. Absent autorun,
+  // nothing changes and the app behaves exactly as before.
+  useEffect(() => {
+    if (autorunFiredRef.current) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const t = (params.get('ticker') || '').toUpperCase().trim();
+      if (t && params.get('autorun') === 'true') {
+        autorunFiredRef.current = true;
+        setActiveTab('equity');
+        setTicker(t);
+        setAutorunTicker(t);
+        setTimeout(() => { scrollToWorkflow(); triggerAnalysis(undefined, t); }, 150);
+      }
+    } catch { /* ignore malformed URLs */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const runGeminiAnalysis = async (scrapedMarkdown: string, ticker: string, usedUrl: string, targetMode?: 'deep_dive' | 'earnings' | 'move', generation?: number) => {
       const myGen = generation ?? analysisGenRef.current;
       const isStale = () => analysisGenRef.current !== myGen;
@@ -4204,6 +4228,14 @@ ${list}
                 Institutional Compliance Shield Active
               </p>
             </div>
+
+            {/* Autorun banner — shown when arriving via ?ticker=…&autorun=true */}
+            {autorunTicker && (!lastReport || lastReport.ticker !== autorunTicker) && (
+              <div className="max-w-2xl mx-auto mb-4 flex items-center justify-center gap-3 px-4 py-2.5 rounded-xl bg-gold/10 border border-gold/30 text-gold text-xs font-bold">
+                <div className="w-3.5 h-3.5 border-2 border-gold/30 border-t-gold rounded-full animate-spin" />
+                Generating report for {(resolvedCompany && resolvedCompany.symbol === autorunTicker ? resolvedCompany.name : autorunTicker)}…
+              </div>
+            )}
 
             {/* Input Controls */}
             <div className="max-w-2xl mx-auto mb-10 flex flex-col md:flex-row gap-2">
