@@ -1468,6 +1468,128 @@
 
     <hr class="section-divider" />
 
+    <!-- ── Today's Midcap Watchlist ─────────────────────────────────────── -->
+    <style>
+      .watchlist-section { padding: 3.5rem 1.5rem; }
+      .wl-wrap { max-width: 80rem; margin: 0 auto; }
+      .wl-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+      .wl-subtitle { color: var(--color-text-body); margin-top: .6rem; max-width: 56ch; font-size: .95rem; line-height: 1.5; }
+      .wl-badge { display: inline-block; padding: .4rem .85rem; border-radius: 999px; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--color-gold); background: var(--color-gold-surface); border: 1px solid var(--color-gold-border); white-space: nowrap; }
+      .wl-badge.wl-stale { color: #eab308; border-color: rgba(234,179,8,.4); }
+      .wl-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+      @media (min-width: 900px) { .wl-grid { grid-template-columns: 1fr 1fr; } }
+      .wl-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: 1rem; padding: 1.25rem 1.25rem 1rem; }
+      .wl-card-title { font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--color-gold); margin: 0 0 1rem; }
+      .wl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .wl-table { width: 100%; border-collapse: collapse; min-width: 460px; font-size: .85rem; }
+      .wl-table th { text-align: left; padding: .55rem .5rem; font-size: .62rem; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-label); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+      .wl-table td { padding: .7rem .5rem; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-body); white-space: nowrap; }
+      .wl-table tr:last-child td { border-bottom: none; }
+      .wl-num { text-align: right; font-variant-numeric: tabular-nums; }
+      .wl-tk { font-family: var(--font-mono); color: var(--color-text-label); font-size: .78rem; }
+      .wl-link { color: var(--color-text-primary); font-weight: 600; text-decoration: none; border-bottom: 1px dotted var(--color-gold-border); }
+      .wl-link:hover { color: var(--color-gold); border-bottom-color: var(--color-gold); }
+      .wl-loading { text-align: center; color: var(--color-text-label); font-style: italic; padding: 1.5rem; }
+      .wl-note { margin-top: .9rem; font-size: .74rem; color: var(--color-text-body); line-height: 1.45; }
+      .wl-amber { color: #eab308; font-weight: 700; }
+      .wl-red { color: #f43f5e; font-weight: 700; }
+      .wl-goldnote { color: var(--color-text-label); font-size: .68rem; font-style: italic; font-weight: 400; white-space: nowrap; }
+      .wl-caution { color: #eab308; font-weight: 800; cursor: help; margin-left: .35rem; }
+      .wl-disclaimer { margin-top: 1.5rem; font-size: .72rem; color: var(--color-text-label); font-style: italic; line-height: 1.5; }
+    </style>
+    <section class="watchlist-section" aria-label="Today's midcap watchlist" id="watchlist">
+      <div class="wl-wrap">
+        <div class="wl-head">
+          <div>
+            <span class="section-eyebrow">Daily screener</span>
+            <h2 class="section-heading">Today's Midcap Watchlist</h2>
+            <p class="wl-subtitle">Screened from Nifty 500 by fundamentals — click any company to generate a full report.</p>
+          </div>
+          <span class="wl-badge" id="wl-badge">Updated daily</span>
+        </div>
+        <div class="wl-grid">
+          <div class="wl-card">
+            <h3 class="wl-card-title">Top 5 Midcap · Non-Banking</h3>
+            <div class="wl-scroll">
+              <table class="wl-table" id="wl-nonbank">
+                <thead><tr><th>Company</th><th>Ticker</th><th>Sector</th><th class="wl-num">PE</th><th class="wl-num">ROE %</th><th class="wl-num">52W Pos</th></tr></thead>
+                <tbody><tr><td colspan="6" class="wl-loading">Loading watchlist…</td></tr></tbody>
+              </table>
+            </div>
+            <p class="wl-note">Ranked by highest Return on Equity (ROE) — companies generating the most profit from shareholder capital, at reasonable valuations.</p>
+          </div>
+          <div class="wl-card">
+            <h3 class="wl-card-title">Top 5 Midcap · NBFC</h3>
+            <div class="wl-scroll">
+              <table class="wl-table" id="wl-nbfc">
+                <thead><tr><th>Company</th><th>Ticker</th><th class="wl-num">PE Ratio</th><th class="wl-num">ROA %</th><th class="wl-num">NIM %</th><th class="wl-num">Gross NPA %</th></tr></thead>
+                <tbody><tr><td colspan="6" class="wl-loading">Loading watchlist…</td></tr></tbody>
+              </table>
+            </div>
+            <p class="wl-note">NBFCs ranked by valuation (PE) and asset quality (ROA). NPA % shown as risk indicator — lower is better. Data via AI grounded search. Verify on RBI/NSE filings.</p>
+          </div>
+        </div>
+        <p class="wl-disclaimer">Data sourced via AI grounded search. For informational purposes only. Not investment advice. Verify figures on NSE website.</p>
+      </div>
+    </section>
+    <script>
+      (function () {
+        var fmtDate = function (iso) { try { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return iso; } };
+        var val = function (v) { return (v === null || v === undefined) ? 'N/A' : v; };
+        var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+        var nameCell = function (r) {
+          var link = '/app?ticker=' + encodeURIComponent(r.ticker) + '&autorun=true';
+          return '<td><a class="wl-link" href="' + link + '">' + esc(r.name || r.ticker) + '</a></td><td class="wl-tk">' + esc(r.ticker) + '</td>';
+        };
+        function rowsNonBank(list) {
+          if (!list || !list.length) return '<tr><td colspan="6" class="wl-loading">No data available.</td></tr>';
+          return list.map(function (r) {
+            return '<tr>' + nameCell(r) + '<td>' + esc(r.sector || '—') + '</td>'
+              + '<td class="wl-num">' + val(r.pe) + '</td>'
+              + '<td class="wl-num">' + (r.roe == null ? 'N/A' : r.roe + '%') + '</td>'
+              + '<td class="wl-num">' + (r.week52Position == null ? 'N/A' : r.week52Position + '%') + '</td></tr>';
+          }).join('');
+        }
+        // Gold-loan NBFCs run structurally high NIM — annotate so it doesn't read as an error.
+        var GOLD_LOAN = { MANAPPURAM: 1, MUTHOOTFIN: 1 };
+        // Names carrying a sector-stress caution flag with an advisory tooltip.
+        var CAUTION = { FUSION: 'Sector under stress — verify latest NPA figures independently before investing' };
+        function rowsNbfc(list) {
+          if (!list || !list.length) return '<tr><td colspan="6" class="wl-loading">No data available.</td></tr>';
+          return list.map(function (r) {
+            // Colour coding: Gross NPA > 5% red, > 3% amber; ROA < 1% amber.
+            var npaCls = (r.grossNpa != null && r.grossNpa > 5) ? ' wl-red' : (r.grossNpa != null && r.grossNpa > 3) ? ' wl-amber' : '';
+            var roaCls = (r.roa != null && r.roa < 1) ? ' wl-amber' : '';
+            var link = '/app?ticker=' + encodeURIComponent(r.ticker) + '&autorun=true';
+            var caution = CAUTION[r.ticker] ? ' <span class="wl-caution" title="' + esc(CAUTION[r.ticker]) + '">⚠</span>' : '';
+            var goldNote = GOLD_LOAN[r.ticker] ? ' <span class="wl-goldnote">(gold loan — sector norm)</span>' : '';
+            var nim = (r.nim == null ? 'N/A' : r.nim + '%');
+            return '<tr>'
+              + '<td><a class="wl-link" href="' + link + '">' + esc(r.name || r.ticker) + '</a>' + caution + '</td>'
+              + '<td class="wl-tk">' + esc(r.ticker) + '</td>'
+              + '<td class="wl-num">' + val(r.pe) + '</td>'
+              + '<td class="wl-num' + roaCls + '">' + (r.roa == null ? 'N/A' : r.roa + '%') + '</td>'
+              + '<td class="wl-num">' + nim + goldNote + '</td>'
+              + '<td class="wl-num' + npaCls + '">' + (r.grossNpa == null ? 'N/A' : r.grossNpa + '%') + '</td></tr>';
+          }).join('');
+        }
+        fetch('/api/watchlist').then(function (r) { return r.json(); }).then(function (d) {
+          var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = rowsNonBank(d.nonBanking);
+          var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = rowsNbfc(d.nbfc);
+          var badge = document.getElementById('wl-badge');
+          if (badge && d.asOf) {
+            if (d.stale) { badge.textContent = 'Data as of ' + fmtDate(d.asOf); badge.classList.add('wl-stale'); }
+            else { badge.textContent = 'Updated ' + fmtDate(d.asOf); }
+          }
+        }).catch(function () {
+          var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = '<tr><td colspan="6" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
+          var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = '<tr><td colspan="5" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
+        });
+      })();
+    </script>
+
+    <hr class="section-divider" />
+
     <!-- ── Section 1: Stat Carousel ─────────────────────────────────────── -->
     <section class="stats-section" aria-label="Platform statistics">
       <div class="stats-header reveal">

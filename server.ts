@@ -1828,6 +1828,171 @@ ${rawText}` }] }],
     }
   });
 
+  // ── Daily midcap watchlist (landing page) ─────────────────────────────────────
+  // Two lists — top-5 midcap non-banking and top-5 midcap NBFC — chosen by Gemini
+  // grounded search (P/E, ROE, sector) with the 52-week position computed live from
+  // Yahoo's chart endpoint. Cached per IST market day; the key rolls at 09:15 IST so
+  // the first request after the open refreshes it. On failure we serve the last good
+  // payload flagged stale.
+  const NSE_SYMBOLS = new Set(NSE_EQUITIES.map((e) => e.symbol));
+  const NSE_NAME = new Map(NSE_EQUITIES.map((e) => [e.symbol, e.name]));
+
+  const marketDayKey = (): string => {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(new Date()).map((p) => [p.type, p.value]));
+    let y = +parts.year, mo = +parts.month, d = +parts.day;
+    const h = +parts.hour, mi = +parts.minute;
+    if (h < 9 || (h === 9 && mi < 15)) { // before 09:15 IST → previous market day
+      const prev = new Date(Date.UTC(y, mo - 1, d) - 86400000);
+      y = prev.getUTCFullYear(); mo = prev.getUTCMonth() + 1; d = prev.getUTCDate();
+    }
+    return `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  };
+
+  // 52-week position (%) from Yahoo chart meta — reliable, unauthenticated.
+  const week52Position = async (base: string): Promise<number | null> => {
+    const meta = (await yahooChartMeta(base + ".NS")) || (await yahooChartMeta(base + ".BO"));
+    if (!meta) return null;
+    const p = meta.regularMarketPrice, hi = meta.fiftyTwoWeekHigh, lo = meta.fiftyTwoWeekLow;
+    if (typeof p === "number" && typeof hi === "number" && typeof lo === "number" && hi > lo) {
+      return Math.max(0, Math.min(100, Math.round(((p - lo) / (hi - lo)) * 100)));
+    }
+    return null;
+  };
+
+  app.get("/api/watchlist", async (req, res) => {
+    const dayKey = marketDayKey();
+    const cacheKey = `WATCHLIST_${dayKey}`;
+    const cached = reportCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < 26 * 60 * 60 * 1000) {
+      return res.json({ ...cached.data, stale: false });
+    }
+
+    const num = (v: any): number | null => {
+      if (v === null || v === undefined) return null;
+      const n = typeof v === "string" ? parseFloat(v.replace(/[^0-9.\-]/g, "")) : Number(v);
+      return Number.isFinite(n) ? n : null;
+    };
+    const pctNorm = (v: any): number | null => {
+      const n = num(v); if (n === null) return null;
+      return Math.round((Math.abs(n) < 1 ? n * 100 : n) * 10) / 10;
+    };
+
+    try {
+      const ai = getGenAI();
+      const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      const groundPromptText = `
+        You are an Indian equity screener. Using grounded search (Screener.in, Moneycontrol, NSE), as of ${todayStr} produce TWO lists of NSE-listed MIDCAP stocks (market capitalisation between ₹5,000 crore and ₹20,000 crore). Give AT LEAST 12 distinct real companies in EACH list so there is a wide pool to rank.
+        LIST A — companies EXCLUDING banks, NBFCs and insurance, with a strong but SUSTAINABLE Return on Equity (roughly 15%–55%) and a reasonable trailing P/E. IMPORTANT: exclude companies whose ROE is inflated above ~60% by a tiny equity base, one-off gains or buybacks — we want durable operating ROE, not statistical outliers. For each: company name, exact NSE ticker, sector, trailing P/E, ROE %.
+        LIST B — at least 12 distinct midcap NBFC (non-banking financial company) stocks in the same market-cap band, spanning sub-sectors: housing finance (e.g. Can Fin Homes, Home First, Aptus, Aavas, India Shelter), gold-loan and diversified lenders, vehicle finance, and microfinance (e.g. CreditAccess, Spandana, Fusion, Five-Star, MAS Financial, Poonawalla Fincorp, IIFL Finance). For each: company name, exact NSE ticker, trailing P/E, ROA % (return on assets), NIM % (net interest margin), Gross NPA %. Favour ROA above 1% and Gross NPA below 4%.
+        Express P/E as a plain number and ROE / ROA / NIM / Gross NPA as PERCENTAGE numbers (e.g. write 2.5 for 2.5%, not 0.025). Use the EXACT NSE trading symbol as listed on nseindia.com (e.g. FIVESTAR not FIVESTARR). Use real current figures. If a value is genuinely unavailable, write N/A — never guess or use 0/-1 as a placeholder.`;
+
+      // One grounded pass → structured JSON. Gemini is non-deterministic and sometimes
+      // returns few usable names, so we run this TWICE in parallel and merge the pools.
+      const buildRaw = async () => {
+        try {
+          const searchResult = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text: groundPromptText }] }],
+            config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+          });
+          const rawText = searchResult.text || "";
+          const structResult = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{ role: "user", parts: [{ text:
+`Convert the screener research below into JSON. Extract ONLY stated values; null for anything missing/N/A. tickers are NSE symbols without suffix; pe/roe/roa/nim/grossNpa are plain PERCENTAGE-style numbers (no %, ₹).
+
+Research:
+${rawText}` }] }],
+            config: {
+              responseMimeType: "application/json",
+              maxOutputTokens: 4096,
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  nonBanking: { type: "ARRAY", items: { type: "OBJECT", properties: {
+                    name: { type: "STRING" }, ticker: { type: "STRING" }, sector: { type: "STRING" }, pe: { type: "NUMBER" }, roe: { type: "NUMBER" },
+                  }, required: ["name", "ticker"] } },
+                  nbfc: { type: "ARRAY", items: { type: "OBJECT", properties: {
+                    name: { type: "STRING" }, ticker: { type: "STRING" }, pe: { type: "NUMBER" }, roa: { type: "NUMBER" }, nim: { type: "NUMBER" }, grossNpa: { type: "NUMBER" },
+                  }, required: ["name", "ticker"] } },
+                },
+                required: ["nonBanking", "nbfc"],
+              },
+            },
+          });
+          const parsed = JSON.parse(sanitizeGroundingJson(structResult.text || "{}"));
+          return { nb: Array.isArray(parsed.nonBanking) ? parsed.nonBanking : [], nf: Array.isArray(parsed.nbfc) ? parsed.nbfc : [] };
+        } catch { return { nb: [], nf: [] }; }
+      };
+      const positive = (v: number | null) => (v !== null && v > 0 ? v : null); // ≤0 P/E/ROE/ROA → N/A
+      const cleanSym = (c: any) => String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, "");
+
+      // Table 1 — non-banking: real NSE symbols, plausible band (keeps the ROE ranking from
+      // surfacing anomalies like 196% ROE), ranked ROE desc then PE asc, top 5. (No 52W yet.)
+      const selectNB = (pool: any[]) => {
+        const seen = new Set<string>();
+        return pool
+          .map((c: any) => { const ticker = cleanSym(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, sector: c.sector || "—", pe: positive(num(c.pe)), roe: positive(pctNorm(c.roe)) }; })
+          .filter((c: any) => c.ticker && NSE_SYMBOLS.has(c.ticker) && !seen.has(c.ticker) && seen.add(c.ticker))
+          .filter((c: any) => c.roe != null && c.roe >= 10 && c.roe <= 60 && c.pe != null && c.pe >= 5 && c.pe <= 80)
+          .sort((a: any, b: any) => (b.roe ?? -Infinity) - (a.roe ?? -Infinity) || (a.pe ?? Infinity) - (b.pe ?? Infinity))
+          .slice(0, 5);
+      };
+      // Table 2 — NBFC: real NSE symbols; keep only ROA>1% AND GrossNPA in [0,4); rank PE asc
+      // then ROA desc; top 5. ROA/NIM/GrossNPA taken as-is (percent) — not fraction-normalised.
+      const selectNF = (pool: any[]) => {
+        const seen = new Set<string>();
+        return pool
+          .map((c: any) => { const ticker = cleanSym(c); return { name: NSE_NAME.get(ticker) || c.name || ticker, ticker, pe: positive(num(c.pe)), roa: num(c.roa), nim: positive(num(c.nim)), grossNpa: num(c.grossNpa) }; })
+          .filter((c: any) => c.ticker && NSE_SYMBOLS.has(c.ticker) && !seen.has(c.ticker) && seen.add(c.ticker))
+          .filter((c: any) => c.roa != null && c.roa > 1 && c.grossNpa != null && c.grossNpa >= 0 && c.grossNpa < 4 && c.pe != null && c.pe >= 5 && c.pe <= 80)
+          .sort((a: any, b: any) => (a.pe ?? Infinity) - (b.pe ?? Infinity) || (b.roa ?? -Infinity) - (a.roa ?? -Infinity))
+          .slice(0, 5);
+      };
+
+      // One grounded attempt is usually enough; only retry (and merge the pool) if a table
+      // came up short. Sequential — parallel grounded calls contend and blow up latency.
+      const poolNB: any[] = []; const poolNF: any[] = [];
+      let nbSel: any[] = []; let nfSel: any[] = [];
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const raw = await buildRaw();
+        poolNB.push(...raw.nb); poolNF.push(...raw.nf);
+        nbSel = selectNB(poolNB); nfSel = selectNF(poolNF);
+        if (nbSel.length >= 5 && nfSel.length >= 5) break;
+      }
+      const pos52 = await Promise.all(nbSel.map((c: any) => week52Position(c.ticker)));
+      const nonBanking = nbSel.map((c: any, i: number) => ({ ...c, week52Position: pos52[i] }));
+      const nbfc = nfSel;
+
+      const payload = { asOf: dayKey, nonBanking, nbfc };
+      const good = nonBanking.length >= 5 && nbfc.length >= 5;
+      if (good) {
+        reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+        reportCache.set("WATCHLIST_LAST", { data: payload, timestamp: Date.now() });
+        console.log(`[watchlist] built for ${dayKey} — ${nonBanking.length} non-banking, ${nbfc.length} NBFC`);
+        return res.json({ ...payload, stale: false });
+      }
+      // Short build — prefer the last good full result so the page never shows empty tables.
+      const lastGood = reportCache.get("WATCHLIST_LAST");
+      if (lastGood) {
+        reportCache.set(cacheKey, lastGood); // pin for the day to avoid rebuilding every request
+        console.log(`[watchlist] short build (${nonBanking.length}/${nbfc.length}) — serving last good`);
+        return res.json({ ...lastGood.data, stale: true });
+      }
+      // No prior good result yet — serve best effort and cache for the day.
+      reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+      console.log(`[watchlist] best-effort build — ${nonBanking.length} non-banking, ${nbfc.length} NBFC`);
+      return res.json({ ...payload, stale: false, partial: true });
+    } catch (error: any) {
+      console.error(`[watchlist] Error:`, error?.message || error);
+      const last = reportCache.get("WATCHLIST_LAST");
+      if (last) return res.json({ ...last.data, stale: true }); // serve yesterday's data, flagged
+      res.json({ asOf: dayKey, nonBanking: [], nbfc: [], stale: false, error: true });
+    }
+  });
+
   app.post("/api/pipeline/earnings-intelligence", async (req, res) => {
     const { ticker, context } = req.body;
     if (!ticker) return res.status(400).json({ error: "Ticker required" });
