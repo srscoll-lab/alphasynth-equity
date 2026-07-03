@@ -1476,17 +1476,31 @@
       .wl-subtitle { color: var(--color-text-body); margin-top: .6rem; max-width: 56ch; font-size: .95rem; line-height: 1.5; }
       .wl-badge { display: inline-block; padding: .4rem .85rem; border-radius: 999px; font-size: .68rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--color-gold); background: var(--color-gold-surface); border: 1px solid var(--color-gold-border); white-space: nowrap; }
       .wl-badge.wl-stale { color: #eab308; border-color: rgba(234,179,8,.4); }
+      /* Stack the two tables (full width) up to 1500px so all columns fit on standard
+         desktops (e.g. 1366px) without being cut off; only go side-by-side on wide screens. */
       .wl-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
-      @media (min-width: 900px) { .wl-grid { grid-template-columns: 1fr 1fr; } }
-      .wl-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: 1rem; padding: 1.25rem 1.25rem 1rem; }
+      @media (min-width: 1500px) { .wl-grid { grid-template-columns: 1fr 1fr; } }
+      .wl-card { background: var(--color-surface-card); border: 1px solid var(--color-border); border-radius: 1rem; padding: 1.25rem 1.25rem 1rem; min-width: 0; }
       .wl-card-title { font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .12em; color: var(--color-gold); margin: 0 0 1rem; }
       .wl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-      .wl-table { width: 100%; border-collapse: collapse; min-width: 460px; font-size: .85rem; }
-      .wl-table th { text-align: left; padding: .55rem .5rem; font-size: .62rem; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-label); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
-      .wl-table td { padding: .7rem .5rem; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-body); white-space: nowrap; }
+      .wl-table { width: 100%; border-collapse: collapse; min-width: 340px; font-size: .82rem; }
+      .wl-table th { text-align: left; padding: .5rem .45rem; font-size: .6rem; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-label); border-bottom: 1px solid var(--color-border); white-space: nowrap; }
+      .wl-table td { padding: .55rem .45rem; border-bottom: 1px solid var(--color-border-subtle); color: var(--color-text-body); white-space: nowrap; }
       .wl-table tr:last-child td { border-bottom: none; }
       .wl-num { text-align: right; font-variant-numeric: tabular-nums; }
-      .wl-tk { font-family: var(--font-mono); color: var(--color-text-label); font-size: .78rem; }
+      .wl-tk { font-family: var(--font-mono); color: var(--color-text-label); font-size: .72rem; max-width: 84px; overflow: hidden; text-overflow: ellipsis; }
+      .wl-act { text-align: right; }
+      .wl-analyse { display: inline-block; padding: .3rem .6rem; border-radius: .4rem; background: var(--color-gold-surface); border: 1px solid var(--color-gold-border); color: var(--color-gold); font-weight: 700; font-size: .7rem; text-decoration: none; white-space: nowrap; }
+      .wl-analyse:hover { background: var(--color-gold); color: var(--color-gold-on); }
+      /* Stock of the day */
+      .wl-spotlight { margin-bottom: 2rem; padding: 1.5rem 1.75rem; border-radius: 1rem; background: linear-gradient(135deg, var(--color-gold-surface), var(--color-surface-card)); border: 1px solid var(--color-gold-border); }
+      .wl-spot-badge { display: inline-block; padding: .35rem .8rem; border-radius: 999px; font-size: .66rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--color-gold); background: rgba(201,145,42,.12); border: 1px solid var(--color-gold-border); }
+      .wl-spot-name { font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); margin: .85rem 0 .1rem; }
+      .wl-spot-tk { font-family: var(--font-mono); font-size: .85rem; color: var(--color-gold); margin-left: .5rem; }
+      .wl-spot-reason { color: var(--color-text-body); line-height: 1.6; margin: .5rem 0 1.15rem; max-width: 72ch; font-size: .96rem; }
+      .wl-spot-btn { display: inline-block; padding: .7rem 1.35rem; border-radius: .6rem; background: var(--color-gold); color: var(--color-gold-on); font-weight: 800; font-size: .85rem; text-decoration: none; }
+      .wl-spot-btn:hover { filter: brightness(1.08); }
+      .wl-spot-date { display: block; margin-top: .85rem; font-size: .68rem; color: var(--color-text-label); text-transform: uppercase; letter-spacing: .08em; }
       .wl-link { color: var(--color-text-primary); font-weight: 600; text-decoration: none; border-bottom: 1px dotted var(--color-gold-border); }
       .wl-link:hover { color: var(--color-gold); border-bottom-color: var(--color-gold); }
       .wl-loading { text-align: center; color: var(--color-text-label); font-style: italic; padding: 1.5rem; }
@@ -1507,13 +1521,21 @@
           </div>
           <span class="wl-badge" id="wl-badge">Updated daily</span>
         </div>
+        <!-- Stock of the day (populated by JS; hidden until data loads) -->
+        <div class="wl-spotlight" id="wl-spotlight" style="display:none">
+          <span class="wl-spot-badge">★ Today's Pick</span>
+          <h3 class="wl-spot-name" id="wl-spot-name"></h3>
+          <p class="wl-spot-reason" id="wl-spot-reason"></p>
+          <a class="wl-spot-btn" id="wl-spot-btn" href="/app">📊 Generate Full Report — Free</a>
+          <span class="wl-spot-date" id="wl-spot-date"></span>
+        </div>
         <div class="wl-grid">
           <div class="wl-card">
             <h3 class="wl-card-title">Top 5 Midcap · Non-Banking</h3>
             <div class="wl-scroll">
               <table class="wl-table" id="wl-nonbank">
-                <thead><tr><th>Company</th><th>Ticker</th><th>Sector</th><th class="wl-num">PE</th><th class="wl-num">ROE %</th><th class="wl-num">52W Pos</th></tr></thead>
-                <tbody><tr><td colspan="6" class="wl-loading">Loading watchlist…</td></tr></tbody>
+                <thead><tr><th>Company</th><th>Ticker</th><th>Sector</th><th class="wl-num">PE</th><th class="wl-num">ROE %</th><th class="wl-num">52W Pos</th><th class="wl-act">Analyse</th></tr></thead>
+                <tbody><tr><td colspan="7" class="wl-loading">Loading watchlist…</td></tr></tbody>
               </table>
             </div>
             <p class="wl-note">Ranked by highest Return on Equity (ROE) — companies generating the most profit from shareholder capital, at reasonable valuations.</p>
@@ -1522,8 +1544,8 @@
             <h3 class="wl-card-title">Top 5 Midcap · NBFC</h3>
             <div class="wl-scroll">
               <table class="wl-table" id="wl-nbfc">
-                <thead><tr><th>Company</th><th>Ticker</th><th class="wl-num">PE Ratio</th><th class="wl-num">ROA %</th><th class="wl-num">NIM %</th><th class="wl-num">Gross NPA %</th></tr></thead>
-                <tbody><tr><td colspan="6" class="wl-loading">Loading watchlist…</td></tr></tbody>
+                <thead><tr><th>Company</th><th>Ticker</th><th class="wl-num">PE Ratio</th><th class="wl-num">ROA %</th><th class="wl-num">NIM %</th><th class="wl-num">Gross NPA %</th><th class="wl-act">Analyse</th></tr></thead>
+                <tbody><tr><td colspan="7" class="wl-loading">Loading watchlist…</td></tr></tbody>
               </table>
             </div>
             <p class="wl-note">NBFCs ranked by valuation (PE) and asset quality (ROA). NPA % shown as risk indicator — lower is better. Data via AI grounded search. Verify on RBI/NSE filings.</p>
@@ -1537,17 +1559,21 @@
         var fmtDate = function (iso) { try { return new Date(iso + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (e) { return iso; } };
         var val = function (v) { return (v === null || v === undefined) ? 'N/A' : v; };
         var esc = function (s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+        var appLink = function (t) { return '/app?ticker=' + encodeURIComponent(t) + '&autorun=true'; };
         var nameCell = function (r) {
-          var link = '/app?ticker=' + encodeURIComponent(r.ticker) + '&autorun=true';
-          return '<td><a class="wl-link" href="' + link + '">' + esc(r.name || r.ticker) + '</a></td><td class="wl-tk">' + esc(r.ticker) + '</td>';
+          return '<td><a class="wl-link" href="' + appLink(r.ticker) + '">' + esc(r.name || r.ticker) + '</a></td><td class="wl-tk">' + esc(r.ticker) + '</td>';
+        };
+        var analyseCell = function (r) {
+          return '<td class="wl-act"><a class="wl-analyse" href="' + appLink(r.ticker) + '">Analyse →</a></td>';
         };
         function rowsNonBank(list) {
-          if (!list || !list.length) return '<tr><td colspan="6" class="wl-loading">No data available.</td></tr>';
+          if (!list || !list.length) return '<tr><td colspan="7" class="wl-loading">No data available.</td></tr>';
           return list.map(function (r) {
             return '<tr>' + nameCell(r) + '<td>' + esc(r.sector || '—') + '</td>'
               + '<td class="wl-num">' + val(r.pe) + '</td>'
               + '<td class="wl-num">' + (r.roe == null ? 'N/A' : r.roe + '%') + '</td>'
-              + '<td class="wl-num">' + (r.week52Position == null ? 'N/A' : r.week52Position + '%') + '</td></tr>';
+              + '<td class="wl-num">' + (r.week52Position == null ? 'N/A' : r.week52Position + '%') + '</td>'
+              + analyseCell(r) + '</tr>';
           }).join('');
         }
         // Gold-loan NBFCs run structurally high NIM — annotate so it doesn't read as an error.
@@ -1555,22 +1581,22 @@
         // Names carrying a sector-stress caution flag with an advisory tooltip.
         var CAUTION = { FUSION: 'Sector under stress — verify latest NPA figures independently before investing' };
         function rowsNbfc(list) {
-          if (!list || !list.length) return '<tr><td colspan="6" class="wl-loading">No data available.</td></tr>';
+          if (!list || !list.length) return '<tr><td colspan="7" class="wl-loading">No data available.</td></tr>';
           return list.map(function (r) {
             // Colour coding: Gross NPA > 5% red, > 3% amber; ROA < 1% amber.
             var npaCls = (r.grossNpa != null && r.grossNpa > 5) ? ' wl-red' : (r.grossNpa != null && r.grossNpa > 3) ? ' wl-amber' : '';
             var roaCls = (r.roa != null && r.roa < 1) ? ' wl-amber' : '';
-            var link = '/app?ticker=' + encodeURIComponent(r.ticker) + '&autorun=true';
             var caution = CAUTION[r.ticker] ? ' <span class="wl-caution" title="' + esc(CAUTION[r.ticker]) + '">⚠</span>' : '';
             var goldNote = GOLD_LOAN[r.ticker] ? ' <span class="wl-goldnote">(gold loan — sector norm)</span>' : '';
             var nim = (r.nim == null ? 'N/A' : r.nim + '%');
             return '<tr>'
-              + '<td><a class="wl-link" href="' + link + '">' + esc(r.name || r.ticker) + '</a>' + caution + '</td>'
+              + '<td><a class="wl-link" href="' + appLink(r.ticker) + '">' + esc(r.name || r.ticker) + '</a>' + caution + '</td>'
               + '<td class="wl-tk">' + esc(r.ticker) + '</td>'
               + '<td class="wl-num">' + val(r.pe) + '</td>'
               + '<td class="wl-num' + roaCls + '">' + (r.roa == null ? 'N/A' : r.roa + '%') + '</td>'
               + '<td class="wl-num">' + nim + goldNote + '</td>'
-              + '<td class="wl-num' + npaCls + '">' + (r.grossNpa == null ? 'N/A' : r.grossNpa + '%') + '</td></tr>';
+              + '<td class="wl-num' + npaCls + '">' + (r.grossNpa == null ? 'N/A' : r.grossNpa + '%') + '</td>'
+              + analyseCell(r) + '</tr>';
           }).join('');
         }
         fetch('/api/watchlist').then(function (r) { return r.json(); }).then(function (d) {
@@ -1582,9 +1608,20 @@
             else { badge.textContent = 'Updated ' + fmtDate(d.asOf); }
           }
         }).catch(function () {
-          var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = '<tr><td colspan="6" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
-          var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = '<tr><td colspan="5" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
+          var nb = document.querySelector('#wl-nonbank tbody'); if (nb) nb.innerHTML = '<tr><td colspan="7" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
+          var nf = document.querySelector('#wl-nbfc tbody'); if (nf) nf.innerHTML = '<tr><td colspan="7" class="wl-loading">Watchlist temporarily unavailable.</td></tr>';
         });
+
+        // Stock of the day — populate the spotlight card if a pick is available.
+        fetch('/api/watchlist/spotlight').then(function (r) { return r.json(); }).then(function (d) {
+          if (!d || !d.ticker || !d.reason) return;
+          var card = document.getElementById('wl-spotlight'); if (!card) return;
+          document.getElementById('wl-spot-name').innerHTML = esc(d.name || d.ticker) + '<span class="wl-spot-tk">' + esc(d.ticker) + '</span>';
+          document.getElementById('wl-spot-reason').textContent = d.reason;
+          document.getElementById('wl-spot-btn').href = appLink(d.ticker);
+          if (d.asOf) document.getElementById('wl-spot-date').textContent = (d.stale ? 'Pick as of ' : 'Updated ') + fmtDate(d.asOf);
+          card.style.display = '';
+        }).catch(function () { /* spotlight is best-effort */ });
       })();
     </script>
 

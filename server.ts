@@ -2009,6 +2009,57 @@ ${rawText}` }] }],
     }
   });
 
+  // ── Stock of the day (landing-page spotlight) ─────────────────────────────────
+  // One grounded pick with a 2–3 sentence "why interesting today" blurb. Cached per
+  // IST market day; falls back to the last good pick if a build fails.
+  app.get("/api/watchlist/spotlight", async (req, res) => {
+    const dayKey = marketDayKey();
+    const cacheKey = `SPOTLIGHT_${dayKey}`;
+    const cached = reportCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < 26 * 60 * 60 * 1000) return res.json({ ...cached.data, stale: false });
+    try {
+      const ai = getGenAI();
+      const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      const searchResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text:
+`Pick ONE interesting NSE-listed Indian MIDCAP stock (market cap roughly ₹5,000–40,000 cr) for a retail investor to look at today, ${todayStr}. Choose a company with a GENUINE recent catalyst — quarterly results, a big order win, sector tailwind, notable price momentum, or a striking valuation. Give the company name, the exact NSE ticker, and a 2–3 sentence explanation of why it is interesting RIGHT NOW. Use only real facts from grounded search; avoid hype and give no price target.` }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 2048 },
+      });
+      const rawText = searchResult.text || "";
+      const structResult = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text:
+`Convert to JSON: { name, ticker (NSE symbol, no exchange suffix), reason (the 2–3 sentence explanation) }. Use only facts stated below.
+
+${rawText}` }] }],
+        config: {
+          responseMimeType: "application/json", maxOutputTokens: 1024,
+          responseSchema: { type: "OBJECT", properties: { name: { type: "STRING" }, ticker: { type: "STRING" }, reason: { type: "STRING" } }, required: ["ticker", "reason"] },
+        },
+      });
+      const parsed = JSON.parse(sanitizeGroundingJson(structResult.text || "{}"));
+      const ticker = resolveNseSymbol(parsed);
+      const verified = NSE_SYMBOLS.has(ticker);
+      const name = (verified ? NSE_NAME.get(ticker) : null) || parsed.name || ticker;
+      const reason = typeof parsed.reason === "string" ? parsed.reason.trim() : null;
+      const payload = { asOf: dayKey, ticker, name, reason, verified };
+      if (verified && reason) {
+        reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+        reportCache.set("SPOTLIGHT_LAST", { data: payload, timestamp: Date.now() });
+        return res.json({ ...payload, stale: false });
+      }
+      const last = reportCache.get("SPOTLIGHT_LAST");
+      if (last) return res.json({ ...last.data, stale: true });
+      return res.json({ ...payload, stale: false });
+    } catch (error: any) {
+      console.error(`[spotlight] Error:`, error?.message || error);
+      const last = reportCache.get("SPOTLIGHT_LAST");
+      if (last) return res.json({ ...last.data, stale: true });
+      res.json({ asOf: dayKey, error: true });
+    }
+  });
+
   app.post("/api/pipeline/earnings-intelligence", async (req, res) => {
     const { ticker, context } = req.body;
     if (!ticker) return res.status(400).json({ error: "Ticker required" });
