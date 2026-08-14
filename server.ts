@@ -1253,7 +1253,7 @@ Governance Cleanliness: X`;
     }
   });
   app.post("/api/pipeline/analyze/stream", async (req, res) => {
-    const { ticker, context, mode } = req.body;
+    const { ticker, context, mode, bmsContext } = req.body;
     const ai = getGenAI();
     const cleanTicker = ticker ? ticker.toUpperCase().replace(".NS", "").replace(".BO", "").trim() : "UNKNOWN";
     console.log(`[ANALYZE/STREAM] Starting for: ${cleanTicker} | Mode: ${mode}`);
@@ -1294,7 +1294,11 @@ Governance Cleanliness: X`;
       // ── Cache check — strict ticker + mode validation on every hit ──────────
       const resolvedMode = mode || 'deep_dive';
       const cacheKey = `${cleanTicker}_${resolvedMode}`;
-      const cached = getCached(cacheKey);
+
+      // BMS-launched Deep Dives must run fresh so the current lifecycle
+      // hypothesis is independently validated instead of being skipped by cache.
+      const cached = bmsContext ? null : getCached(cacheKey);
+
       if (cached) {
         const tickerMatch = cached.ticker?.toUpperCase() === cleanTicker.toUpperCase();
         const modeMatch  = cached.mode === resolvedMode;
@@ -1391,6 +1395,121 @@ Governance Cleanliness: X`;
       });
       const rawGroundedMetrics = searchResponse.text || "";
       console.log(`[ANALYZE/STREAM] Stage 1 grounding: ${rawGroundedMetrics.length} chars`);
+
+      // ── BMS independent validation ──────────────────────────────────────
+      // Stage 1 evidence above was gathered BEFORE considering BMS.
+      // BMS is therefore treated here as a hypothesis to test, not a conclusion.
+      let bmsValidation: any = null;
+
+      if (bmsContext && resolvedMode === 'deep_dive') {
+        send({ type: 'stage', message: 'Validating Business Momentum signal...' });
+
+        try {
+          const bmsValidationPrompt = `Independently validate the deterministic Business Momentum Score (BMS) hypothesis for ${cleanTicker}.
+
+The company evidence below was gathered independently before you were shown the BMS signal.
+
+RULES:
+- BMS is a hypothesis, not a conclusion. Do not automatically agree with it.
+- BMS is a longitudinal fundamental-momentum assessment updated at a quarterly reporting checkpoint. It reflects the latest processed reporting period in the context of prior-quarter BMS trajectory, underlying fundamental evidence and persistence. Do NOT treat BMS as a single-date snapshot.
+- The independent company evidence may overlap with the same reporting-period information used by BMS, or it may contain information from a later period.
+- Do NOT describe evidence as "newer", "subsequent", "since the BMS", "after the BMS period", or equivalent unless the supplied evidence explicitly establishes that chronology.
+- Judge whether the independently gathered business evidence supports the direction and lifecycle interpretation represented by BMS.
+- A contradiction does not automatically mean the earlier BMS calculation was wrong. It means the independently gathered evidence available to this Deep Dive does not fully support that momentum interpretation.
+- Explain the result in ordinary investor language. Avoid relying on unexplained numerical BMS values in the summary.
+- Share-price movement and analyst target prices are NOT proof of business momentum.
+- CONFIRMED: multiple meaningful pieces of business evidence support the claimed momentum.
+- PARTIALLY_CONFIRMED: meaningful support exists, but important evidence is mixed or incomplete.
+- TOO_EARLY: there is not yet enough independent evidence to validate the signal reliably.
+- CONTRADICTED: meaningful business evidence conflicts with the BMS hypothesis.
+- Be especially cautious with EMERGING signals based on limited evidence.
+- For BUILDING/PERSISTENT signals, distinguish persistence from fresh acceleration.
+- For fading signals, test whether previously positive momentum has genuinely deteriorated.
+- Do not invent evidence that is absent from the supplied material.
+- Keep summary under 80 words.
+- supporting_evidence must be ONE concise sentence, maximum 60 words.
+- challenging_evidence must be ONE concise sentence, maximum 60 words.
+- what_to_watch must be ONE concise sentence, maximum 60 words.
+- Output only the requested JSON object with no Markdown or commentary.
+
+BMS HYPOTHESIS
+Symbol: ${cleanTicker}
+Period: ${bmsContext.period || 'Unknown'}
+BMS: ${bmsContext.bms ?? 'Unknown'}
+Previous BMS: ${bmsContext.previous_bms ?? 'Unknown'}
+Earlier BMS: ${bmsContext.previous2_bms ?? 'Unknown'}
+BMS Change: ${bmsContext.bms_change ?? 'Unknown'}
+Lifecycle: ${bmsContext.lifecycle_stage || 'Unknown'}
+Qualification: ${bmsContext.lifecycle_qualification || 'None'}
+Evidence Count: ${bmsContext.evidence_count ?? 'Unknown'}
+Earnings: ${bmsContext.earnings ?? 'Unknown'}
+Economics: ${bmsContext.economics ?? 'Unknown'}
+Execution: ${bmsContext.execution ?? 'Unknown'}
+Balance Sheet: ${bmsContext.balance_sheet ?? 'Unknown'}
+Management Delivery: ${bmsContext.management_delivery ?? 'Unknown'}
+Fading Warning: ${bmsContext.fading_warning ?? false}
+
+INDEPENDENT COMPANY EVIDENCE
+---
+${rawGroundedMetrics.substring(0, 7000)}
+---
+
+Return the independent BMS validation as JSON.`;
+
+          const validationRes = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [{
+              role: 'user',
+              parts: [{ text: bmsValidationPrompt }]
+            }],
+            config: {
+              responseMimeType: "application/json",
+              maxOutputTokens: 4096,
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  verdict: {
+                    type: "STRING",
+                    enum: [
+                      "CONFIRMED",
+                      "PARTIALLY_CONFIRMED",
+                      "TOO_EARLY",
+                      "CONTRADICTED"
+                    ]
+                  },
+                  summary: { type: "STRING" },
+                  supporting_evidence: { type: "STRING" },
+                  challenging_evidence: { type: "STRING" },
+                  what_to_watch: { type: "STRING" }
+                },
+                required: [
+                  "verdict",
+                  "summary",
+                  "supporting_evidence",
+                  "challenging_evidence",
+                  "what_to_watch"
+                ]
+              }
+            }
+          });
+
+          bmsValidation = JSON.parse(
+            sanitizeGroundingJson(validationRes.text || "{}")
+          );
+
+          console.log(
+            `[BMS/VALIDATION] ${cleanTicker}: ${bmsValidation?.verdict || 'UNKNOWN'}`
+          );
+
+          send({ type: 'bms_validation', data: bmsValidation });
+
+        } catch (bmsErr: any) {
+          console.warn(
+            `[BMS/VALIDATION] Failed for ${cleanTicker}:`,
+            bmsErr.message
+          );
+        }
+      }
 
       // Filter scraped context — reject nav/non-financial content universally
       const streamSafeContext = isScrapedContentUsable(context || "") ? context : "";
@@ -2040,6 +2159,228 @@ ${rawText}` }] }],
     }
   });
 
+
+  // ── Business Momentum (BMS) ────────────────────────────────────────────────
+  // AlphaSynth-facing bridge to the deterministic Python Business Momentum
+  // engine. The BMS engine remains the source of truth; AlphaSynth consumes
+  // its already-calculated signals.
+  app.get("/api/bms/watchlist", async (_req, res) => {
+    const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+
+    try {
+      const response = await fetch(`${bmsBaseUrl}/bms/watchlist/current`, {
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`BMS service returned HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return res.json({
+        ...data,
+        source: "business-momentum-engine",
+      });
+    } catch (error: any) {
+      console.error("[bms] watchlist unavailable:", error?.message || error);
+
+      return res.status(503).json({
+        name: "Business Momentum Score",
+        company_count: 0,
+        companies: [],
+        unavailable: true,
+        message: "Business Momentum data is temporarily unavailable.",
+      });
+    }
+  });
+
+  app.get("/api/bms/lifecycle", async (_req, res) => {
+    const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+
+    try {
+      const response = await fetch(`${bmsBaseUrl}/bms/lifecycle/current`, {
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (!response.ok) {
+        throw new Error(`BMS lifecycle service returned HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      return res.json({
+        ...data,
+        source: "business-momentum-engine",
+      });
+    } catch (error: any) {
+      console.error("[bms] lifecycle unavailable:", error?.message || error);
+
+      return res.status(503).json({
+        name: "Business Momentum Lifecycle",
+        company_count: 0,
+        stage_counts: {
+          watch: 0,
+          emerging: 0,
+          building: 0,
+          established: 0,
+          outside: 0,
+          fading_warnings: 0,
+        },
+        companies: [],
+        unavailable: true,
+        message: "Business Momentum lifecycle data is temporarily unavailable.",
+      });
+    }
+  });
+
+
+  // ── BMS lifecycle explanation ─────────────────────────────────────────────
+  // Gemini explains the deterministic BMS signal. It does NOT calculate,
+  // override, upgrade, or downgrade the lifecycle classification.
+  const bmsExplanationCache = new Map<string, any>();
+
+  app.post("/api/bms/explain", async (req, res) => {
+    try {
+      const {
+        symbol,
+        period,
+        bms,
+        previous_bms,
+        previous2_bms,
+        bms_change,
+        lifecycle_stage,
+        lifecycle_qualification,
+        fading_warning,
+        evidence_count,
+        earnings,
+        economics,
+        execution,
+        balance_sheet,
+        management_delivery,
+      } = req.body || {};
+
+      if (!symbol || !period || typeof bms !== "number" || !lifecycle_stage) {
+        return res.status(400).json({
+          error: "Missing required BMS explanation fields",
+        });
+      }
+
+      const cacheKey = [
+        String(symbol).toUpperCase(),
+        period,
+        Number(bms).toFixed(4),
+        lifecycle_stage,
+        lifecycle_qualification || "",
+        fading_warning ? "fading" : "",
+      ].join("|");
+
+      const cached = bmsExplanationCache.get(cacheKey);
+      if (cached) {
+        return res.json({ ...cached, cached: true });
+      }
+
+      const ai = getGenAI();
+
+      const result = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{
+          role: "user",
+          parts: [{
+            text: `You are writing a very short investor-facing explanation for AlphaSynth Business Momentum.
+
+IMPORTANT:
+The lifecycle classification below has ALREADY been calculated by a deterministic engine.
+You must explain it. You must NOT change it, upgrade it, downgrade it, contradict it without evidence, or invent new financial facts.
+
+Company: ${String(symbol).toUpperCase()}
+Period: ${period}
+Lifecycle stage: ${lifecycle_stage}
+Qualification: ${lifecycle_qualification || "None"}
+Fading warning: ${Boolean(fading_warning)}
+
+Current BMS: ${bms}
+Previous BMS: ${previous_bms ?? "Unavailable"}
+Two periods ago BMS: ${previous2_bms ?? "Unavailable"}
+Quarter-on-quarter BMS change: ${bms_change ?? "Unavailable"}
+
+Evidence count: ${evidence_count ?? 0}
+
+Underlying BMS factors:
+- Earnings: ${earnings ?? 0}
+- Economics: ${economics ?? 0}
+- Execution: ${execution ?? 0}
+- Balance sheet: ${balance_sheet ?? 0}
+- Management delivery: ${management_delivery ?? 0}
+
+Write in natural, concise investor language.
+
+Rules:
+1. Maximum 3 short sentences. Prefer 2 sentences when possible.
+2. Lead immediately with the important business-momentum change. Do not begin with the company name, "AlphaSynth", "BMS", the score, the period, or phrases such as "has changed meaningfully".
+3. Explain the dominant driver or drivers of the change using only the supplied factors.
+4. End with the single most important question the next result should answer.
+5. If evidence_count is 1 or 2, make clear in natural investor language that confirmation is still limited.
+6. Do NOT repeat the numerical BMS score, quarter-on-quarter BMS change, lifecycle stage, lifecycle qualification, evidence count, or other information already displayed elsewhere in the interface unless absolutely necessary to explain the change.
+6. If fading_warning is true, focus on deterioration/reassessment.
+7. Do NOT say buy, sell, hold, accumulate, enter, exit, target, upside, downside, recommendation, attractive opportunity, or investment advice.
+8. Do NOT use generic AI phrases such as "robust fundamentals", "strong fundamentals", "demonstrates resilience", "solid performance", "noteworthy trajectory", or "promising outlook".
+9. Do not invent revenue, profit, margins, orders, management commentary, valuations, or news not supplied above.
+10. Interpret the BMS trajectory precisely:
+- ACCELERATING means the latest period shows a meaningful fresh increase in momentum.
+- PERSISTENT means an earlier improvement has largely held into the latest period; do NOT describe this as fresh acceleration.
+- If the largest BMS increase occurred in an earlier period and the latest change is small, explicitly distinguish the earlier inflection from the latest persistence.
+11. Evidence count represents breadth of supporting observations. If evidence has broadened across periods, this can support the interpretation that the signal is becoming better confirmed.
+12. A factor value of 0 means there is no scored contribution from that factor. Do NOT describe a zero factor as weakness, deterioration, a concern, an absence that requires investigation, or evidence against the thesis.
+13. Discuss the strongest materially positive or negative supplied factors only. Do not manufacture meaning from neutral values.
+14. For BUILDING + PERSISTENT, focus on whether an earlier improvement is holding and becoming better confirmed.
+15. For EMERGING + ACCELERATING, focus on the new inflection while making clear when confirmation is still limited.
+16. For a fading warning, identify the deterioration relative to the previous BMS and frame the next step as understanding whether that deterioration is temporary or fundamental.
+17. Never expose internal implementation language to the user. Do not mention boolean values such as "true" or "false", internal field names, or the OUTSIDE lifecycle classification.
+18. When fading_warning is true, describe it naturally as "fading momentum", "a fading warning", or "a momentum reversal warning". Explain what deteriorated and whether the change needs to be tested as temporary or more durable.
+19. Do not merely repeat the lifecycle label. Explain the business-momentum pattern that caused it.
+20. Prefer natural phrases such as "the next result should help show whether..." or "the key question is whether..." instead of formal phrases such as "further investigation is warranted".
+21. Tone: concise, sharp and natural, like an experienced investor pointing out the important change to another investor. Avoid sounding like a model explaining its own classification.
+
+Return plain text only.
+Do not return JSON.
+Do not use markdown, code fences, headings, bullet points, or labels.
+Return only the final 2-3 sentence explanation.`
+          }]
+        }],
+        config: {
+          maxOutputTokens: 1500,
+          thinkingConfig: {
+            thinkingBudget: 0,
+          },
+        },
+      });
+
+      const explanation = String(result.text || "").trim();
+
+      if (!explanation) {
+        throw new Error("Gemini returned an empty BMS explanation");
+      }
+
+      const payload = {
+        symbol: String(symbol).toUpperCase(),
+        period,
+        explanation,
+        source: "gemini-bms-explainer",
+      };
+
+      bmsExplanationCache.set(cacheKey, payload);
+
+      return res.json({ ...payload, cached: false });
+    } catch (error: any) {
+      console.error("[bms] explanation failed:", error?.message || error);
+
+      return res.status(500).json({
+        error: "Unable to generate Business Momentum explanation",
+      });
+    }
+  });
+
   // ── Stock of the day (landing-page spotlight) ─────────────────────────────────
   // One grounded pick with a 2–3 sentence "why interesting today" blurb. Cached per
   // IST market day; falls back to the last good pick if a build fails.
@@ -2485,10 +2826,7 @@ For fiiNet and diiNet at the top level: use null only if genuinely unavailable. 
     }
   });
 
-  // Landing page — served at root in both dev and prod
-  app.get('/', (req, res) => {
-    res.sendFile(path.join(process.cwd(), 'landing-concept2.html'));
-  });
+    // Root is handled by the React app so Business Momentum is the primary landing experience.
 
   // Landing page assets — served individually from project root
   app.get('/sample-report.png', (req, res) => {

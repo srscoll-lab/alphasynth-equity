@@ -78,6 +78,7 @@ import {
   XAxis,
   YAxis
 } from 'recharts';
+import BusinessMomentum from "./components/BusinessMomentum";
 
 // Inject spinner keyframe
 if (typeof document !== 'undefined') {
@@ -516,8 +517,25 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
+  // The BMS dashboard is the primary AlphaSynth landing experience.
+  // Prevent the browser from restoring an old scroll position on refresh.
+  useEffect(() => {
+    if ("scrollRestoration" in window.history) {
+      window.history.scrollRestoration = "manual";
+    }
+
+    window.scrollTo(0, 0);
+  }, []);
+
+  // AlphaSynth V1 navigation:
+  // discovery = BMS-first landing experience
+  // research  = existing AlphaSynth research workspace
+  const [appView, setAppView] = useState<'discovery' | 'research'>('discovery');
+
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
   const [streamingReport, setStreamingReport] = useState<string>('');
+  const [bmsValidation, setBmsValidation] = useState<any>(null);
+  const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
   const [reportFromCache, setReportFromCache] = useState<boolean>(false);
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
@@ -2295,6 +2313,15 @@ ${list}
   const triggerAnalysis = async (modeOverride?: 'deep_dive' | 'earnings' | 'move', tickerOverride?: string, keepReportOpen: boolean = false, exactCompany?: { symbol: string; name: string }) => {
     let tkr = tickerOverride || ticker;
     if (!tkr) return;
+
+    // Manual / ordinary research should not inherit a previous Momentum Radar signal.
+    // BMS context is preserved only when the selected ticker still matches that context.
+    if (
+      bmsResearchContext &&
+      String(bmsResearchContext.symbol || "").toUpperCase() !== String(tkr).toUpperCase()
+    ) {
+      setBmsResearchContext(null);
+    }
     // GA4: a stock search was initiated (covers typed Enter and dropdown selection).
     trackEvent('ticker_searched', { ticker: String(tkr).toUpperCase() });
     // A company picked from the typeahead dropdown carries its EXACT ticker — record it
@@ -2464,6 +2491,7 @@ ${list}
 
       setIsShareMode(false);
       setStreamingReport('');
+      setBmsValidation(null);
       setReportFromCache(false);
       const activeMode = targetMode || workflowMode;
 
@@ -2473,7 +2501,12 @@ ${list}
       const streamRes = await fetch("/api/pipeline/analyze/stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ticker, context: scrapedMarkdown.substring(0, 10000), mode: activeMode }),
+        body: JSON.stringify({
+          ticker,
+          context: scrapedMarkdown.substring(0, 10000),
+          mode: activeMode,
+          bmsContext: activeMode === 'deep_dive' ? bmsResearchContext : null
+        }),
         signal: streamAbort.signal
       });
 
@@ -2515,6 +2548,8 @@ ${list}
                 setStreamingReport(accumulated);
               } else if (ev.type === 'stage') {
                 setAnalysisStatus(ev.message);
+              } else if (ev.type === 'bms_validation') {
+                setBmsValidation(ev.data || null);
               } else if (ev.type === 'done') {
                 fromCache = !!ev.fromCache;
               } else if (ev.type === 'error') {
@@ -3007,6 +3042,7 @@ ${list}
                     streamingReport.length >= 100 ? (
                       /* ── Streaming report view — shows as text arrives ── */
                       <div className="relative">
+                    {lastReport.mode === 'deep_dive' && renderBmsValidationCard()}
                         <div className="flex items-center gap-2 mb-4">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber animate-pulse" />
                           <span className="text-[9px] font-black text-gold uppercase tracking-widest">{analysisStatus || 'Streaming report...'}</span>
@@ -3054,6 +3090,7 @@ ${list}
                     )
                   ) : (
                     <div ref={reportContentRef} className="no-scrollbar">
+                  {lastReport.mode === 'deep_dive' && renderBmsValidationCard()}
                       {/* Improvement 1 — Executive Summary (first thing the reader sees) */}
                       {(() => {
                         const ex = reportExtras?.ticker === lastReport.ticker ? reportExtras : null;
@@ -3368,7 +3405,7 @@ ${list}
                             if (!strengths.length && !weaknesses.length) return null;
                             return (
                               <section className="mt-12">
-                                <h3 className="text-xs font-black text-gold uppercase tracking-[0.2em] mb-6">At a Glance — Strengths vs Risks</h3>
+                                <h3 className="text-xs font-black text-sky-300 uppercase tracking-[0.2em] mb-6">At a Glance — Strengths vs Risks</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <div className="p-5 rounded-2xl bg-emerald-500/5 border border-emerald-500/20">
                                     <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-3">Top 3 Strengths</p>
@@ -3661,6 +3698,117 @@ ${list}
       </div>
     );
   }
+
+  const renderBmsValidationCard = () => {
+    if (!bmsValidation || !bmsResearchContext) return null;
+
+    const verdict = String(bmsValidation.verdict || "").toUpperCase();
+
+    // Investor-facing BMS V1 lifecycle terminology.
+    // Backend lifecycle values remain unchanged.
+    const historicalMomentumStage =
+      bmsResearchContext.fading_warning
+        ? "FADING"
+        : bmsResearchContext.lifecycle_stage === "EMERGING"
+        ? "EMERGING"
+        : ["BUILDING", "ESTABLISHED"].includes(bmsResearchContext.lifecycle_stage)
+        ? "SUSTAINED"
+        : "WATCH";
+
+    const momentumStageClass =
+      historicalMomentumStage === "FADING"
+        ? "text-orange-300 border-orange-400/25 bg-orange-400/[0.06]"
+        : historicalMomentumStage === "EMERGING"
+        ? "text-sky-300 border-sky-400/25 bg-sky-400/[0.06]"
+        : historicalMomentumStage === "SUSTAINED"
+        ? "text-emerald-300 border-emerald-400/25 bg-emerald-400/[0.06]"
+        : "text-zinc-300 border-zinc-400/20 bg-zinc-400/[0.05]";
+
+    const displayStatus =
+      verdict === "CONFIRMED"
+        ? "Momentum Confirmed"
+        : verdict === "PARTIALLY_CONFIRMED"
+        ? "Partially Confirmed"
+        : verdict === "TOO_EARLY"
+        ? "Too Early to Confirm"
+        : verdict === "CONTRADICTED"
+        ? "Momentum Has Weakened"
+        : "Validation Available";
+
+    const statusClass =
+      verdict === "CONFIRMED"
+        ? "text-emerald-300 border-emerald-400/25 bg-emerald-400/[0.06]"
+        : verdict === "PARTIALLY_CONFIRMED"
+        ? "text-sky-300 border-sky-400/25 bg-sky-400/[0.06]"
+        : verdict === "TOO_EARLY"
+        ? "text-amber-300 border-amber-400/25 bg-amber-400/[0.06]"
+        : "text-orange-300 border-orange-400/25 bg-orange-400/[0.06]";
+
+    return (
+      <div className="mb-8 rounded-2xl border border-gold/20 bg-gradient-to-br from-[#111820] to-[#0b0f15] p-6 shadow-[0_12px_35px_rgba(0,0,0,0.28)]">
+        <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
+          <div>
+            <p className="text-[9px] font-black uppercase tracking-[0.22em] text-gold mb-2">
+              BMS & Deep Dive Momentum Validation
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-bold text-white">
+                {bmsResearchContext.symbol}
+              </span>
+
+              <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider ${momentumStageClass}`}>
+                BMS Momentum Stage: {historicalMomentumStage}
+              </span>
+            </div>
+          </div>
+
+          <span
+            className={`px-3 py-1.5 rounded-full border text-[9px] font-black uppercase tracking-[0.16em] ${statusClass}`}
+          >
+            Deep Dive: {displayStatus}
+          </span>
+        </div>
+
+        <p className="text-sm text-zinc-300 leading-relaxed mb-5">
+          {bmsValidation.summary}
+        </p>
+
+        <div className="grid md:grid-cols-3 gap-3">
+          <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.035] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300 mb-2">
+              What Supports the BMS Trend
+            </p>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {bmsValidation.supporting_evidence || "No material confirming evidence identified."}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-orange-400/15 bg-orange-400/[0.035] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-300 mb-2">
+              What Challenges the BMS Trend
+            </p>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {bmsValidation.challenging_evidence || "No material contradictory evidence identified."}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-sky-400/15 bg-sky-400/[0.035] p-4">
+            <p className="text-[9px] font-black uppercase tracking-[0.16em] text-sky-300 mb-2">
+              What to Watch Next
+            </p>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              {bmsValidation.what_to_watch || "Monitor the next company result for confirmation."}
+            </p>
+          </div>
+        </div>
+
+        <p className="mt-4 text-[10px] text-zinc-600 leading-relaxed">
+          BMS is a multi-quarter fundamental trend assessment, updated when the latest reporting period is processed. Deep Dive independently checks the business evidence available for this report against that BMS trend. The evidence may overlap with, or extend beyond, the latest BMS reporting period.
+        </p>
+      </div>
+    );
+  };
 
   return (
     <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30`}>
@@ -4036,28 +4184,18 @@ ${list}
         )}
       </AnimatePresence>
 
-      {/* Beta Banner */}
-      {showBetaBanner && (
-        <div
-          className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-center py-1.5 px-6"
-          style={{ background: 'rgba(201,145,42,0.15)', borderBottom: '1px solid rgba(201,145,42,0.3)' }}
-        >
-          <p className="text-[11px] font-medium text-amber text-center">
-            🚀 Beta — Free access to all features.&nbsp;Share feedback:&nbsp;
-            <a href="mailto:srscoll@gmail.com" className="underline hover:text-white transition-colors">srscoll@gmail.com</a>
-          </p>
-          <button
-            onClick={() => { setShowBetaBanner(false); localStorage.setItem('beta_banner_dismissed', 'true'); }}
-            className="absolute right-4 text-amber/70 hover:text-amber text-base leading-none transition-colors"
-            aria-label="Dismiss beta banner"
-          >×</button>
-        </div>
-      )}
-
       {/* Navigation */}
-      <nav className={`fixed ${showBetaBanner ? 'top-[30px]' : 'top-0'} w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50`}>
+      <nav className="fixed top-0 w-full z-50 border-b border-app-border backdrop-blur-md bg-app-bg/50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <a href="/" className="flex items-center gap-2 group relative cursor-pointer" title="Back to home">
+          <button
+            type="button"
+            onClick={() => {
+              setAppView('discovery');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className="flex items-center gap-2 group relative cursor-pointer"
+            title="Back to BMS Discovery"
+          >
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
             </div>
@@ -4066,17 +4204,30 @@ ${list}
               <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
-              ← Home
+              ← BMS Discovery
             </span>
-          </a>
+          </button>
           <div className="flex items-center gap-4">
+            {appView === 'research' && (
+              <button
+                type="button"
+                onClick={() => {
+                  setAppView('discovery');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
+                title="Return to Business Momentum Discovery"
+              >
+                ← BMS Discovery
+              </button>
+            )}
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
-               <button onClick={() => { setActiveTab('news'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
-               <button onClick={() => { setActiveTab('equity'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
-               <button onClick={() => { setActiveTab('filings'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-gold' : ''}`}>Filings</button>
-               <button onClick={() => { setActiveTab('portfolio'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-gold' : ''}`}>Audit</button>
-               <button onClick={() => { setActiveTab('marketing'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
-               <button onClick={() => { setActiveTab('community'); scrollToWorkflow(); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('news'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('equity'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('filings'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-gold' : ''}`}>Filings</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('portfolio'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-gold' : ''}`}>Audit</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('marketing'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('community'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
             </div>
             {user ? (
               <div className="flex items-center gap-3">
@@ -4107,8 +4258,35 @@ ${list}
       <div style={{width:'100%',background:'rgba(201,145,42,0.06)',borderBottom:'1px solid rgba(201,145,42,0.2)',padding:'7px 24px',textAlign:'center'}}>
         <p style={{margin:0,fontSize:11,color:'#9ca3af'}}><span style={{color:'#c9a84c',fontWeight:700}}>Alphasynth Intelligence</span> provides AI-generated market data analysis only. Not a SEBI-registered Research Analyst. Not investment advice.</p>
       </div>
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-6 relative overflow-hidden">
+      {/* ── Business Momentum — Primary Landing Experience ── */}
+      {appView === 'discovery' && (
+      <BusinessMomentum
+        onResearch={(company) => {
+          // BMS and the full AlphaSynth Deep Dive are deliberately separated.
+          // Selecting a BMS company prepares it for optional further research,
+          // but does NOT automatically launch the expensive Deep Dive pipeline.
+          setBmsResearchContext(company);
+          setTicker(company.symbol);
+          setResolvedCompany({
+            name: company.symbol,
+            symbol: company.symbol,
+            candidates: []
+          });
+          resolvedCompanyRef.current = {
+            name: company.symbol,
+            symbol: company.symbol,
+            candidates: []
+          };
+          setWorkflowMode('deep_dive');
+          setActiveTab('equity');
+          setAppView('research');
+          setTimeout(scrollToWorkflow, 100);
+        }}
+      />
+      )}
+
+      {/* Legacy AlphaSynth Hero — retained temporarily during BMS redesign */}
+      <section className="hidden pt-32 pb-20 px-6 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
@@ -4133,7 +4311,10 @@ ${list}
                    icon: BarChart3, 
                    desc: 'Institutional report with risk alpha', 
                    outcome: 'Generate conviction',
-                   accent: 'border-gold/30' 
+                   accent: 'border-sky-400/30',
+                    activeBg: 'bg-sky-400/[0.07]',
+                    iconClass: 'bg-sky-400/10 text-sky-300',
+                    lineClass: 'bg-sky-400' 
                  },
                  {
                    id: 'earnings_intelligence',
@@ -4141,7 +4322,10 @@ ${list}
                    icon: MessageSquare,
                    desc: 'Unified concall + results report',
                    outcome: 'Spot hidden signals',
-                   accent: 'border-blue-500/20'
+                   accent: 'border-teal-400/30',
+                    activeBg: 'bg-teal-400/[0.07]',
+                    iconClass: 'bg-teal-400/10 text-teal-300',
+                    lineClass: 'bg-teal-400'
                  },
                  { 
                    id: 'move', 
@@ -4149,7 +4333,10 @@ ${list}
                    icon: TrendingUp, 
                    desc: 'Why is it up/down today?', 
                    outcome: 'Audit daily spikes',
-                   accent: 'border-positive/20' 
+                   accent: 'border-emerald-400/30',
+                    activeBg: 'bg-emerald-400/[0.07]',
+                    iconClass: 'bg-emerald-400/10 text-emerald-300',
+                    lineClass: 'bg-emerald-400' 
                  },
                  { 
                    id: 'filings', 
@@ -4157,7 +4344,10 @@ ${list}
                    icon: FileText, 
                    desc: 'For forensic corporate audits', 
                    outcome: 'Audit management trust',
-                   accent: 'border-yellow-500/20' 
+                   accent: 'border-amber-400/25',
+                    activeBg: 'bg-amber-400/[0.06]',
+                    iconClass: 'bg-amber-400/10 text-amber-300',
+                    lineClass: 'bg-amber-400' 
                  }
                ].map((mode) => (
                  <button 
@@ -4176,9 +4366,9 @@ ${list}
                       setTimeout(scrollToWorkflow, 100);
                     }
                   }}
-                  className={`p-6 rounded-2xl border ${((mode.id === 'filings' && activeTab === 'filings') || (mode.id !== 'filings' && workflowMode === mode.id && activeTab === 'equity')) ? 'bg-app-surface-accent ' + mode.accent : 'bg-transparent border-app-border'} hover:border-zinc-700 transition-all text-left flex flex-col justify-between gap-4 group relative overflow-hidden h-full shadow-lg`}
+                  className={`p-6 rounded-2xl border ${((mode.id === 'filings' && activeTab === 'filings') || (mode.id !== 'filings' && workflowMode === mode.id && activeTab === 'equity')) ? `${mode.activeBg || 'bg-app-surface-accent'} ${mode.accent}` : 'bg-transparent border-app-border'} hover:border-zinc-700 transition-all text-left flex flex-col justify-between gap-4 group relative overflow-hidden h-full shadow-lg`}
                  >
-                    <div className={`p-3 rounded-xl w-fit ${workflowMode === mode.id ? 'bg-amber text-black' : 'bg-app-surface text-zinc-500'}`}>
+                    <div className={`p-3 rounded-xl w-fit ${workflowMode === mode.id ? (mode.iconClass || 'bg-sky-400/10 text-sky-300') : 'bg-app-surface text-zinc-500'}`}>
                       <mode.icon className="w-5 h-5" />
                     </div>
                     <div>
@@ -4188,7 +4378,9 @@ ${list}
                         <Zap className="w-2.5 h-2.5" /> {mode.outcome}
                       </div>
                     </div>
-                    {workflowMode === mode.id && <div className="absolute bottom-0 left-0 h-0.5 w-full bg-amber" />}
+                    {workflowMode === mode.id && (
+                    <div className={`absolute bottom-0 left-0 h-0.5 w-full ${mode.lineClass || 'bg-sky-400'}`} />
+                  )}
                  </button>
                ))}
             </div>
@@ -4252,7 +4444,7 @@ ${list}
                   role="combobox"
                   aria-expanded={showSuggestions}
                   aria-autocomplete="list"
-                  className="w-full px-4 py-4 bg-app-surface border border-app-border rounded-xl text-sm text-white focus:outline-none focus:border-gold transition-colors placeholder:text-zinc-600 font-semibold"
+                  className="w-full px-4 py-4 bg-app-surface border border-app-border rounded-xl text-sm text-white focus:outline-none focus:border-sky-400/60 focus:ring-1 focus:ring-sky-400/15 transition-colors placeholder:text-zinc-600 font-semibold"
                 />
                 {showSuggestions && suggestions.length > 0 && (
                   <ul
@@ -4338,7 +4530,8 @@ ${list}
         </div>
       </section>
 
-      {/* Dynamic Workflow Tab */}
+      {/* Dynamic Workflow Tab — visible only after deliberate Research entry */}
+      {appView === 'research' && (
       <section id="workflow" className="py-20 px-6 border-t border-app-border bg-app-surface/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-4 justify-center mb-16">
@@ -4893,12 +5086,14 @@ ${list}
                           ) : (lastReport && lastReport.ticker === ticker) ? (
                             lastReport.rawReport
                           ) : ticker ? (
-                            <div className="bg-zinc-900/50 p-4 border border-zinc-800 rounded-xl not-italic group-hover:bg-zinc-800/80 transition-colors">
-                              <span className="text-gold font-bold block mb-2">
-                                {ticker} SELECTION CONFIRMED
+                            <div className="bg-gradient-to-br from-sky-400/[0.06] to-teal-400/[0.03] p-5 border border-sky-400/20 rounded-xl not-italic group-hover:border-sky-400/35 transition-all">
+                              <span className="text-sky-300 font-black block mb-2 uppercase tracking-[0.12em]">
+                                {bmsResearchContext ? `${ticker} SELECTED FROM BMS` : `${ticker} SELECTION CONFIRMED`}
                               </span>
-                              <span className="text-zinc-500">
-                                Click this card or the <strong className="text-white">"Scrape NSE Data"</strong> button above to initiate institutional research for {ticker}.
+                              <span className="text-zinc-300 block leading-relaxed">
+                                {bmsResearchContext
+                                  ? `Ready for institutional Deep Dive research. Run the analysis to independently examine ${ticker} against its BMS momentum signal.`
+                                  : `Ready for institutional research on ${ticker}.`}
                               </span>
                             </div>
                           ) : (
@@ -4906,8 +5101,20 @@ ${list}
                           )}
                         </div>
                         <div className="text-[10px] font-bold uppercase tracking-widest text-gold flex flex-wrap items-center justify-between gap-2">
-                          <span className="flex items-center gap-2">
-                            {(lastReport && lastReport.ticker === ticker) ? 'View Full Analysis' : analyzing ? 'Researching...' : 'Initiate Analysis'} 
+                          <span
+                            className={`flex items-center gap-2 ${
+                              !(lastReport && lastReport.ticker === ticker) && !analyzing
+                                ? "px-5 py-3 rounded-xl bg-amber text-black shadow-[0_0_20px_rgba(201,145,42,0.18)]"
+                                : ""
+                            }`}
+                          >
+                            {(lastReport && lastReport.ticker === ticker)
+                              ? 'View Full Analysis'
+                              : analyzing
+                              ? 'Researching...'
+                              : bmsResearchContext
+                              ? 'Run Deep Dive'
+                              : 'Initiate Analysis'}
                             <ArrowRight className={`w-3 h-3 ${analyzing ? 'animate-bounce' : ''}`} />
                           </span>
                           {(lastReport && lastReport.ticker === ticker) && (
@@ -5240,9 +5447,9 @@ ${list}
                               </div>
 
                               {/* Actionable Direct Broker Gateways */}
-                              <div className="p-6 bg-gold/[0.03] border border-gold/25 rounded-[1.5rem] space-y-4">
+                              <div className="p-6 bg-teal-400/[0.035] border border-teal-400/20 rounded-[1.5rem] space-y-4">
                                  <div>
-                                    <span className="text-[8px] font-black px-2 py-0.5 bg-gold/15 text-gold tracking-widest rounded uppercase">Cognitive Action Hub</span>
+                                    <span className="text-[8px] font-black px-2 py-0.5 bg-teal-400/[0.08] text-teal-300 tracking-widest rounded uppercase">Cognitive Action Hub</span>
                                     <h4 className="text-xs font-black text-white uppercase tracking-wider mt-2.5">TRANSLATE DISCLOSURE ANALYSIS INTO ACTIONS ON {filingsReport.ticker}</h4>
                                     <p className="text-[10px] text-zinc-400 mt-1 font-semibold leading-relaxed">
                                        Seamlessly transmit researched insights directly to India's leading broker execution terminals to execute trades with preselected stock tickers.
@@ -5334,7 +5541,7 @@ ${list}
                      {/* Right Advisory Sidebar Panel */}
                      <div className="lg:col-span-4 space-y-6">
                         <div className="p-6 bg-app-surface border border-app-border rounded-3xl">
-                           <span className="text-[8px] font-black px-2 py-0.5 bg-gold/10 border border-gold/20 text-gold tracking-widest rounded uppercase">Compliance Node</span>
+                           <span className="text-[8px] font-black px-2 py-0.5 bg-sky-400/[0.07] border border-sky-400/20 text-sky-300 tracking-widest rounded uppercase">Compliance Node</span>
                            <h4 className="text-sm font-bold text-white uppercase mt-4 mb-2">Corporate Disclosures Scope</h4>
                            <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
                               This model specializes in examining management honesty, transcript inconsistencies, SEBI filing transparency audits, and capital reallocation pledge fluctuations.
@@ -5955,6 +6162,7 @@ ${list}
           </div>
         </div>
       </section>
+      )}
 
       {/* Beta Access Section */}
       <section className="py-24 px-6 border-t border-app-border bg-app-bg">
