@@ -531,6 +531,9 @@ export default function App() {
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
   const [appView, setAppView] = useState<'discovery' | 'research'>('discovery');
+  const [showResearchNotice, setShowResearchNotice] = useState<boolean>(
+    () => localStorage.getItem('alphasynth_consent_v1') !== 'true'
+  );
 
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
   const [streamingReport, setStreamingReport] = useState<string>('');
@@ -3812,15 +3815,18 @@ ${list}
 
   return (
     <div className={`min-h-screen ${COLORS.bg} text-white font-sans selection:bg-gold/30`}>
-      {!localStorage.getItem('alphasynth_consent_v1') && (
+      {showResearchNotice && (
         <div style={{position:'fixed',inset:0,zIndex:9999,background:'rgba(0,0,0,0.93)',display:'flex',alignItems:'center',justifyContent:'center',padding:24}}>
           <div style={{background:'#13161f',border:'1px solid rgba(201,145,42,0.3)',borderRadius:16,padding:40,maxWidth:480,width:'100%'}}>
-            <h2 style={{color:'#fff',fontSize:22,fontWeight:700,marginBottom:16}}>Before you begin</h2>
+            <h2 style={{color:'#fff',fontSize:22,fontWeight:700,marginBottom:16}}>Research Use Notice</h2>
             <p style={{color:'#9ca3af',fontSize:13,lineHeight:1.7,marginBottom:28}}>
               Alphasynth Intelligence provides AI-generated market data analysis only. It is not a SEBI-registered Research Analyst and does not provide investment advice or stock recommendations. All analysis is for informational and educational purposes only. Please consult a SEBI-registered investment advisor before making any investment decisions.
             </p>
             <button
-              onClick={function(){localStorage.setItem('alphasynth_consent_v1','true');window.location.reload();}}
+              onClick={function(){
+                localStorage.setItem('alphasynth_consent_v1', 'true');
+                setShowResearchNotice(false);
+              }}
               style={{width:'100%',padding:'14px 0',background:'#c9a84c',color:'#000',fontWeight:800,fontSize:12,textTransform:'uppercase',letterSpacing:'0.15em',borderRadius:10,border:'none',cursor:'pointer'}}
             >
               I understand - continue
