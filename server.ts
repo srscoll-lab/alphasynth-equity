@@ -2233,6 +2233,58 @@ ${rawText}` }] }],
       });
     }
   });
+    // ── BMS focused research via n8n Research Agent ─────────────────────────
+  app.post("/api/bms/research", async (req, res) => {
+    try {
+      const { ticker } = req.body || {};
+
+      if (!ticker || typeof ticker !== "string") {
+        return res.status(400).json({
+          error: "Ticker is required",
+        });
+      }
+
+      const cleanTicker = ticker.trim().toUpperCase();
+
+      const n8nWebhookUrl =
+        process.env.BMS_RESEARCH_WEBHOOK_URL ||
+        "http://localhost:5678/webhook/bms-research";
+
+      const response = await fetch(n8nWebhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker: cleanTicker,
+        }),
+        signal: AbortSignal.timeout(120000),
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `BMS Research Agent returned HTTP ${response.status}`
+        );
+      }
+
+      const research = await response.text();
+
+      return res.json({
+        ticker: cleanTicker,
+        research,
+        source: "bms-research-agent",
+      });
+    } catch (error: any) {
+      console.error(
+        "[bms] research agent unavailable:",
+        error?.message || error
+      );
+
+      return res.status(503).json({
+        error: "BMS Research Agent is temporarily unavailable.",
+      });
+    }
+  });
 
 
   // ── BMS lifecycle explanation ─────────────────────────────────────────────

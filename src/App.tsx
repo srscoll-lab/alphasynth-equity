@@ -539,6 +539,9 @@ export default function App() {
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
   const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
+  const [bmsResearchText, setBmsResearchText] = useState<string>("");
+  const [bmsResearchLoading, setBmsResearchLoading] = useState<boolean>(false);
+  const [bmsResearchError, setBmsResearchError] = useState<string>("");
   const [reportFromCache, setReportFromCache] = useState<boolean>(false);
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
@@ -578,6 +581,40 @@ export default function App() {
   };
 
   const closeSuggestions = () => { setShowSuggestions(false); setActiveSuggestion(-1); };
+
+  const runBmsResearch = async (symbol: string) => {
+    try {
+      setBmsResearchLoading(true);
+      setBmsResearchError("");
+      setBmsResearchText("");
+
+      const response = await fetch("/api/bms/research", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ticker: symbol,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`BMS Research failed with HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+
+      setBmsResearchText(data.research || "");
+    } catch (error: any) {
+      console.error("[bms] research failed:", error);
+
+      setBmsResearchError(
+        error?.message || "Unable to complete BMS research."
+      );
+    } finally {
+      setBmsResearchLoading(false);
+    }
+  };
 
   // User picked a suggestion → use the EXACT ticker, skip the resolver completely.
   const selectSuggestion = (item: { symbol: string; name: string }) => {
@@ -963,7 +1000,7 @@ export default function App() {
           { ticker: "TCS.NS", reason: "Large-scale AI implementation contract from global client." }
         ],
         marketSentiment: "Market shows consolidation at life-highs with positive institutional bias.",
-        marketMoodScore: null,
+        marketMoodScore: undefined,
         sources: []
       });
       const fallbackIntel = {
@@ -4272,6 +4309,7 @@ ${list}
           // Selecting a BMS company prepares it for optional further research,
           // but does NOT automatically launch the expensive Deep Dive pipeline.
           setBmsResearchContext(company);
+          runBmsResearch(company.symbol);
           setTicker(company.symbol);
           setResolvedCompany({
             name: company.symbol,
@@ -4905,8 +4943,10 @@ ${list}
                                 <Tooltip
                                   contentStyle={{ background: '#0f1012', border: '1px solid #2a2d2f', borderRadius: 8, fontSize: 11 }}
                                   labelStyle={{ color: '#d4a843', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em' }}
-                                  formatter={(value: any, name: string) => [`₹${Number(value).toLocaleString('en-IN')} Cr`, name === 'fiiNet' ? 'FII Net' : 'DII Net']}
-                                />
+                                        formatter={(value: any, name: any) => [
+                                          `₹${Number(value).toLocaleString('en-IN')} Cr`,
+                                          name === 'fiiNet' ? 'FII Net' : 'DII Net'
+                                        ]} />
                                 <Bar dataKey="fiiNet" name="FII Net" radius={[3, 3, 0, 0]}>
                                   {([...fiiDiiData.last10Days].reverse() as any[]).map((entry: any, index: number) => (
                                     <Cell key={`fii-${index}`} fill={(entry.fiiNet ?? 0) >= 0 ? '#10b981' : '#f43f5e'} />
@@ -5096,11 +5136,37 @@ ${list}
                               <span className="text-sky-300 font-black block mb-2 uppercase tracking-[0.12em]">
                                 {bmsResearchContext ? `${ticker} SELECTED FROM BMS` : `${ticker} SELECTION CONFIRMED`}
                               </span>
-                              <span className="text-zinc-300 block leading-relaxed">
-                                {bmsResearchContext
-                                  ? `Ready for institutional Deep Dive research. Run the analysis to independently examine ${ticker} against its BMS momentum signal.`
-                                  : `Ready for institutional research on ${ticker}.`}
-                              </span>
+                              <div className="text-zinc-300 block leading-relaxed">
+                                        {bmsResearchContext ? (
+                                          <div className="space-y-4">
+                                            {bmsResearchLoading && (
+                                              <div className="text-sky-300">
+                                                Researching the BMS signal...
+                                              </div>
+                                            )}
+
+                                            {bmsResearchError && (
+                                              <div className="text-red-400">
+                                                {bmsResearchError}
+                                              </div>
+                                            )}
+
+                                            {bmsResearchText && (
+                                              <div className="whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+                                                {bmsResearchText}
+                                              </div>
+                                            )}
+
+                                            {!bmsResearchLoading && !bmsResearchText && !bmsResearchError && (
+                                              <div>
+                                                Ready to investigate why the BMS signal changed for {ticker}.
+                                              </div>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          `Ready for institutional research on ${ticker}.`
+                                        )}
+                                      </div>
                             </div>
                           ) : (
                             "Click the 'Scrape NSE Data' button above to generate a real-time equity analysis for your chosen ticker."

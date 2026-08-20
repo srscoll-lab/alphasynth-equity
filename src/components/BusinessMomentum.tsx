@@ -441,6 +441,8 @@ export default function BusinessMomentum({ onResearch }: Props) {
     ? momentumStageLabel(selected)
     : null;
 
+  const selectedBmsChange = selected?.bms_change ?? null;
+
   const investorStageCounts = {
     WATCH: companies.filter(
       (company) => momentumStageLabel(company) === "WATCH"
@@ -726,23 +728,24 @@ export default function BusinessMomentum({ onResearch }: Props) {
                         </span>
                       </div>
 
-                      <span
-                        className={`text-[9px] font-mono ${
-                          selected.bms_change > 0
-                            ? "text-emerald-300"
-                            : selected.bms_change < 0
-                            ? "text-amber-300"
-                            : "text-zinc-500"
-                        }`}
-                      >
-                        {selected.bms_change > 0
-                          ? "↑"
-                          : selected.bms_change < 0
-                          ? "↓"
-                          : "→"}{" "}
-                        {selected.bms_change > 0 ? "+" : ""}
-                        {scorePointChange(selected.bms_change)} pts QoQ
-                      </span>
+                        {selectedBmsChange !== null && (
+                          <span
+                            className={`text-[9px] font-mono ${selectedBmsChange > 0
+                                ? "text-emerald-300"
+                                : selectedBmsChange < 0
+                                  ? "text-amber-300"
+                                  : "text-zinc-500"
+                              }`}
+                          >
+                            {selectedBmsChange > 0
+                              ? "↑"
+                              : selectedBmsChange < 0
+                                ? "↓"
+                                : "→"}{" "}
+                            {selectedBmsChange > 0 ? "+" : ""}
+                            {scorePointChange(selectedBmsChange)} pts QoQ
+                          </span>
+                        )}
                     </div>
                   </div>
 
@@ -905,18 +908,18 @@ export default function BusinessMomentum({ onResearch }: Props) {
                     <div className="flex items-center justify-between gap-4">
                       <div>
                         <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
-                          Optional Further Research
+                          BMS Signal Research
                         </p>
                         <p className="text-xs text-zinc-400 mt-1">
-                          Run the full AlphaSynth research pipeline only if you want a comprehensive company analysis.
                         </p>
+                        Investigate why the BMS signal changed, what supports it, what challenges it, and what to watch next.
                       </div>
 
-                      <button
-                        onClick={() => onResearch?.(selected)}
-                        className="shrink-0 flex items-center justify-center gap-2 rounded-xl border border-gold/30 bg-gold/[0.08] text-gold px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] hover:bg-gold/[0.14] transition-all"
-                      >
-                        Full Deep Dive
+                        <button
+                          onClick={() => onResearch?.(selected)}
+                          className="shrink-0 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] hover:bg-emerald-400/[0.14] transition-all"
+                         > 
+                          Research Signal
                         <ArrowRight className="w-4 h-4" />
                       </button>
                     </div>
