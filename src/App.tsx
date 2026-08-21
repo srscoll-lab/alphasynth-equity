@@ -582,7 +582,11 @@ export default function App() {
 
   const closeSuggestions = () => { setShowSuggestions(false); setActiveSuggestion(-1); };
 
-  const runBmsResearch = async (symbol: string) => {
+  const runBmsResearch = async (
+    symbol: string,
+    period?: string,
+    bms?: number
+  ) => {
     try {
       setBmsResearchLoading(true);
       setBmsResearchError("");
@@ -595,6 +599,8 @@ export default function App() {
         },
         body: JSON.stringify({
           ticker: symbol,
+          period,
+          bms,
         }),
       });
 
@@ -4305,27 +4311,42 @@ ${list}
       {appView === 'discovery' && (
       <BusinessMomentum
         onResearch={(company) => {
-          // BMS and the full AlphaSynth Deep Dive are deliberately separated.
-          // Selecting a BMS company prepares it for optional further research,
-          // but does NOT automatically launch the expensive Deep Dive pipeline.
+          // Focused BMS signal investigation only.
+          // Stay inside the discovery experience.
           setBmsResearchContext(company);
-          runBmsResearch(company.symbol);
+          setBmsResearchText("");
+          setBmsResearchError("");
+          runBmsResearch(
+            company.symbol,
+            company.period,
+            company.bms
+          );
+        }}
+        onDeepDive={(company) => {
+          // Full AlphaSynth Deep Dive.
+          // Deliberately separate from the focused BMS signal investigation.
           setTicker(company.symbol);
+
           setResolvedCompany({
-            name: company.symbol,
+            name: company.company_name || company.symbol,
             symbol: company.symbol,
             candidates: []
           });
+
           resolvedCompanyRef.current = {
-            name: company.symbol,
+            name: company.company_name || company.symbol,
             symbol: company.symbol,
             candidates: []
           };
+
           setWorkflowMode('deep_dive');
           setActiveTab('equity');
           setAppView('research');
           setTimeout(scrollToWorkflow, 100);
         }}
+        researchText={bmsResearchText}
+        researchLoading={bmsResearchLoading}
+        researchError={bmsResearchError}
       />
       )}
 

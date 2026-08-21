@@ -918,6 +918,153 @@ Company: ${companyName || ticker}`;
     if (quote) return res.json(quote);
     return res.json({ ticker: cleanTicker, price: null, change: null, percentChange: null, asOf: null, source: null, unavailable: true });
   });
+
+  app.post("/api/bms/market-context", async (req, res) => {
+    const { ticker } = req.body;
+    if (!ticker) return res.status(400).json({ error: "Missing ticker" });
+
+    const cleanTicker = String(ticker)
+      .toUpperCase()
+      .replace(".NS", "")
+      .replace(".BO", "")
+      .trim();
+
+    const fetchHistory = async (symbol: string) => {
+      const r = await fetch(
+        `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y`,
+        { headers: { "User-Agent": "Mozilla/5.0 (compatible; EquityAI/1.0)" } }
+      );
+
+      if (!r.ok) return null;
+
+      const j: any = await r.json();
+      const result = j?.chart?.result?.[0];
+      if (!result) return null;
+
+      const timestamps: number[] = result?.timestamp || [];
+      const closesRaw: any[] = result?.indicators?.quote?.[0]?.close || [];
+
+      const points = timestamps
+        .map((ts: number, i: number) => ({
+          ts,
+          close: closesRaw[i]
+        }))
+        .filter(
+          (p: any) =>
+            typeof p.ts === "number" &&
+            typeof p.close === "number" &&
+            p.close > 0
+        );
+
+      if (!points.length) return null;
+
+      const meta = result.meta || {};
+      const current =
+        typeof meta.regularMarketPrice === "number" && meta.regularMarketPrice > 0
+          ? meta.regularMarketPrice
+          : points[points.length - 1].close;
+
+      return {
+        current,
+        points,
+        asOf: meta.regularMarketTime
+          ? new Date(meta.regularMarketTime * 1000).toISOString()
+          : null
+      };
+    };
+
+    const returnForDays = (
+      history: { current: number; points: Array<{ ts: number; close: number }> },
+      days: number
+    ) => {
+      const targetTs = Date.now() / 1000 - days * 24 * 60 * 60;
+
+      let candidate = history.points[0];
+
+      for (const p of history.points) {
+        if (p.ts <= targetTs) {
+          candidate = p;
+        } else {
+          break;
+        }
+      }
+
+      if (!candidate?.close || candidate.close <= 0) return null;
+
+      return Math.round(
+        ((history.current - candidate.close) / candidate.close) * 1000
+      ) / 10;
+    };
+
+    try {
+      let stockHistory = await fetchHistory(`${cleanTicker}.NS`);
+
+      if (!stockHistory) {
+        stockHistory = await fetchHistory(`${cleanTicker}.BO`);
+      }
+
+      const niftyHistory = await fetchHistory("^NSEI");
+
+      if (!stockHistory) {
+        return res.json({
+          ticker: cleanTicker,
+          unavailable: true,
+          source: "yahoo"
+        });
+      }
+
+      const periods = {
+        oneMonth: 30,
+        threeMonth: 91,
+        sixMonth: 182,
+        twelveMonth: 365
+      };
+
+      const buildPeriod = (days: number) => {
+        const stockReturn = returnForDays(stockHistory!, days);
+        const niftyReturn = niftyHistory
+          ? returnForDays(niftyHistory, days)
+          : null;
+
+        const relativeReturn =
+          stockReturn !== null && niftyReturn !== null
+            ? Math.round((stockReturn - niftyReturn) * 10) / 10
+            : null;
+
+        return {
+          stockReturn,
+          niftyReturn,
+          relativeReturn
+        };
+      };
+
+      return res.json({
+        ticker: cleanTicker,
+        price: Math.round(stockHistory.current * 100) / 100,
+        asOf: stockHistory.asOf,
+        periods: {
+          oneMonth: buildPeriod(periods.oneMonth),
+          threeMonth: buildPeriod(periods.threeMonth),
+          sixMonth: buildPeriod(periods.sixMonth),
+          twelveMonth: buildPeriod(periods.twelveMonth)
+        },
+        source: "yahoo",
+        delayed: true
+      });
+    } catch (error: any) {
+      console.error(
+        `[bms/market-context/${cleanTicker}]`,
+        error?.message || error
+      );
+
+      return res.json({
+        ticker: cleanTicker,
+        unavailable: true,
+        source: "yahoo"
+      });
+    }
+  });
+
   app.post("/api/pipeline/analyze", async (req, res) => {
     const { ticker, context, mode } = req.body;
     const ai = getGenAI();
@@ -2234,9 +2381,23 @@ ${rawText}` }] }],
     }
   });
     // ── BMS focused research via n8n Research Agent ─────────────────────────
+  //
+  // Completed signal investigations are cached by:
+  // ticker + reporting period + deterministic BMS score.
+  //
+  // This means repeated views are effectively instant, while a new quarter
+  // or changed BMS automatically generates a fresh investigation.
+  const bmsResearchCache = new Map<
+    string,
+    { research: string; timestamp: number }
+  >();
+
+  const BMS_RESEARCH_CACHE_TTL_MS =
+    7 * 24 * 60 * 60 * 1000; // 7 days
+
   app.post("/api/bms/research", async (req, res) => {
     try {
-      const { ticker } = req.body || {};
+      const { ticker, period, bms } = req.body || {};
 
       if (!ticker || typeof ticker !== "string") {
         return res.status(400).json({
@@ -2245,6 +2406,30 @@ ${rawText}` }] }],
       }
 
       const cleanTicker = ticker.trim().toUpperCase();
+
+      const cacheKey = [
+        cleanTicker,
+        String(period || "unknown"),
+        typeof bms === "number" ? bms.toFixed(4) : "unknown",
+      ].join("|");
+
+      const cached = bmsResearchCache.get(cacheKey);
+
+      if (
+        cached &&
+        Date.now() - cached.timestamp < BMS_RESEARCH_CACHE_TTL_MS
+      ) {
+        console.log(`[CACHE] BMS RESEARCH HIT — ${cacheKey}`);
+
+        return res.json({
+          ticker: cleanTicker,
+          research: cached.research,
+          source: "bms-research-cache",
+          cached: true,
+        });
+      }
+
+      console.log(`[CACHE] BMS RESEARCH MISS — ${cacheKey}`);
 
       const n8nWebhookUrl =
         process.env.BMS_RESEARCH_WEBHOOK_URL ||
@@ -2269,10 +2454,18 @@ ${rawText}` }] }],
 
       const research = await response.text();
 
+      bmsResearchCache.set(cacheKey, {
+        research,
+        timestamp: Date.now(),
+      });
+
+      console.log(`[CACHE] BMS RESEARCH WRITTEN — ${cacheKey}`);
+
       return res.json({
         ticker: cleanTicker,
         research,
         source: "bms-research-agent",
+        cached: false,
       });
     } catch (error: any) {
       console.error(
@@ -2354,7 +2547,13 @@ Fading warning: ${Boolean(fading_warning)}
 Current BMS: ${bms}
 Previous BMS: ${previous_bms ?? "Unavailable"}
 Two periods ago BMS: ${previous2_bms ?? "Unavailable"}
-Quarter-on-quarter BMS change: ${bms_change ?? "Unavailable"}
+Change in BMS since the last reported result: ${bms_change ?? "Unavailable"}
+
+Important interpretation:
+- The CURRENT BMS is based on same-quarter-prior-year fundamentals.
+- Example: Q3 FY26 BMS reflects Q3 FY26 fundamentals compared with Q3 FY25.
+- The BMS change above compares the current BMS score with the BMS score from the immediately preceding reported result.
+- Do NOT describe this BMS change as financial QoQ growth.
 
 Evidence count: ${evidence_count ?? 0}
 

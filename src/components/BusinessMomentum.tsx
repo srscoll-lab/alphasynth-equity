@@ -12,6 +12,8 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { motion } from "motion/react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -46,6 +48,14 @@ type BmsCompany = {
   lifecycle_qualification: string | null;
   fading_warning: boolean;
   bms_trajectory: BmsTrajectoryPoint[];
+
+  // Expanded Nifty 500 product interpretation fields.
+  company_name?: string;
+  evidence_strength?: string;
+  previous_evidence_count?: number;
+  bms_change_reliability?: string;
+  bms_change_display?: string;
+  reversal_warning?: string;
 };
 
 type BmsResponse = {
@@ -66,6 +76,10 @@ type BmsResponse = {
 
 type Props = {
   onResearch?: (company: BmsCompany) => void;
+  onDeepDive?: (company: BmsCompany) => void;
+  researchText?: string;
+  researchLoading?: boolean;
+  researchError?: string;
 };
 
 // Investor-facing BMS Change Score.
@@ -88,7 +102,7 @@ const score100 = (value: number) =>
     0,
     Math.min(
       100,
-      Math.round(50 + (value / 0.4) * 50)
+      Math.round(50 + (value / 0.75) * 50)
     )
   );
 
@@ -103,7 +117,7 @@ const scorePointChange = (value: number) =>
     -50,
     Math.min(
       50,
-      Math.round((value / 0.4) * 50)
+      Math.round((value / 0.75) * 50)
     )
   );
 
@@ -122,16 +136,98 @@ function fundamentalMomentumLabel(value: number): FundamentalMomentumLabel {
   return "STRONG NEGATIVE";
 }
 
+// BMS V1 measures each reported quarter against the SAME quarter
+// of the previous financial year.
+//
+// Example:
+// Q3 FY26 BMS is based on Q3 FY26 vs Q3 FY25 fundamentals.
+function priorYearComparison(period: string): string {
+  const match = period.match(/^Q([1-4])\s+FY(\d{2})$/i);
+
+  if (!match) return "same quarter of the prior year";
+
+  const quarter = match[1];
+  const fiscalYear = Number(match[2]);
+
+  return `Q${quarter} FY${String(fiscalYear - 1).padStart(2, "0")}`;
+}
+
+function bmsDirectionText(company: BmsCompany): string {
+  if (company.bms_change_reliability === "New signal") {
+    return "New BMS signal";
+  }
+
+  if (company.bms_change === null) {
+    return "No prior BMS comparison";
+  }
+
+  const points = scorePointChange(company.bms_change);
+  const sign = points > 0 ? "+" : "";
+
+  if (company.bms_change_reliability === "Limited history") {
+    return `${sign}${points} BMS pts since last result`;
+  }
+
+  return `${sign}${points} BMS pts since last result`;
+}
+
+function reliabilityLabel(company: BmsCompany): string | null {
+  if (company.bms_change_reliability === "New signal") {
+    return "NEW SIGNAL";
+  }
+
+  if (company.bms_change_reliability === "Limited history") {
+    return "LIMITED HISTORY";
+  }
+
+  if (company.evidence_count < 4) {
+    return "LIMITED EVIDENCE";
+  }
+
+  return null;
+}
+
+function reliabilityClass(company: BmsCompany): string {
+  if (company.bms_change_reliability === "New signal") {
+    return "text-sky-300 border-sky-400/20 bg-sky-400/[0.07]";
+  }
+
+  if (
+    company.bms_change_reliability === "Limited history" ||
+    company.evidence_count < 4
+  ) {
+    return "text-amber-300 border-amber-400/20 bg-amber-400/[0.07]";
+  }
+
+  return "text-zinc-400 border-white/10 bg-white/[0.03]";
+}
+
+function reversalClass(company: BmsCompany): string {
+  if (company.reversal_warning === "High") {
+    return "text-rose-300 border-rose-400/20 bg-rose-400/[0.07]";
+  }
+
+  if (
+    company.reversal_warning === "Moderate" ||
+    company.reversal_warning === "Early"
+  ) {
+    return "text-amber-300 border-amber-400/20 bg-amber-400/[0.07]";
+  }
+
+  return "text-zinc-400 border-white/10 bg-white/[0.03]";
+}
+
 // Investor-facing lifecycle terminology only.
 // Backend lifecycle classifications remain unchanged.
 function momentumStageLabel(company: BmsCompany): string {
   if (company.fading_warning) return "FADING";
 
-  if (
-    company.lifecycle_stage === "BUILDING" ||
-    company.lifecycle_stage === "ESTABLISHED"
-  ) {
-    return "SUSTAINED";
+  if (company.lifecycle_stage === "ESTABLISHED") {
+    return "ESTABLISHED";
+  }
+
+  if (company.lifecycle_stage === "BUILDING") {
+    return "BUILDING";
   }
 
   if (company.lifecycle_stage === "EMERGING") {
@@ -148,8 +244,12 @@ function momentumStageClass(company: BmsCompany): string {
     return "text-amber-300 border-amber-400/20 bg-amber-400/[0.07]";
   }
 
-  if (stage === "SUSTAINED") {
+  if (stage === "ESTABLISHED") {
     return "text-gold border-gold/20 bg-gold/[0.07]";
+  }
+
+  if (stage === "BUILDING") {
+    return "text-emerald-300 border-emerald-400/20 bg-emerald-400/[0.07]";
   }
 
   if (stage === "EMERGING") {
@@ -224,6 +324,30 @@ function researchAction(company: BmsCompany) {
     };
   }
 
+  if (company.lifecycle_stage === "EMERGING") {
+    const isNewSignal =
+      company.lifecycle_qualification === "NEW_SIGNAL";
+
+    const isLimitedHistory =
+      company.lifecycle_qualification === "LIMITED_HISTORY";
+
+    return {
+      state: isNewSignal ? "INVESTIGATE" : "WAIT FOR CONFIRMATION",
+      priority: "MEDIUM",
+      title: isNewSignal
+        ? "New Momentum Signal Detected"
+        : isLimitedHistory
+          ? "Early Signal — History Is Still Limited"
+          : "Early Momentum Signal",
+      copy: isNewSignal
+        ? "A new positive business-momentum signal has appeared. It deserves investigation, but the evidence is still early."
+        : "A positive business-momentum signal is forming. More evidence is needed before treating it as a confirmed acceleration.",
+      nextTrigger:
+        "Investigate the underlying business drivers and watch the next result for confirmation that the improvement is persistent.",
+      tone: isNewSignal ? "emerald" : "amber",
+    };
+  }
+
   if (
     company.lifecycle_stage === "BUILDING" &&
     company.lifecycle_qualification === "ACCELERATING"
@@ -295,7 +419,13 @@ function researchAction(company: BmsCompany) {
   };
 }
 
-export default function BusinessMomentum({ onResearch }: Props) {
+export default function BusinessMomentum({
+  onResearch,
+  onDeepDive,
+  researchText = "",
+  researchLoading = false,
+  researchError = "",
+}: Props) {
   const [data, setData] = useState<BmsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -303,10 +433,13 @@ export default function BusinessMomentum({ onResearch }: Props) {
   const [explanation, setExplanation] = useState("");
   const [explanationLoading, setExplanationLoading] = useState(false);
   const [explanationError, setExplanationError] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [visibleCount, setVisibleCount] = useState(12);
+
   const [activeStage, setActiveStage] =
-    useState<"WATCH" | "EMERGING" | "SUSTAINED" | "FADING">(
-      "EMERGING"
-    );
+    useState<
+      "WATCH" | "EMERGING" | "BUILDING" | "ESTABLISHED" | "FADING"
+    >("EMERGING");
 
   const loadBms = async () => {
     setLoading(true);
@@ -335,22 +468,41 @@ export default function BusinessMomentum({ onResearch }: Props) {
   );
 
   const stageCompanies = useMemo(() => {
-    const filtered = companies.filter(
-      (company) => momentumStageLabel(company) === activeStage
-    );
+    const query = searchTerm.trim().toUpperCase();
+
+    const filtered = companies.filter((company) => {
+      const correctStage =
+        momentumStageLabel(company) === activeStage;
+
+      if (!correctStage) return false;
+
+      if (!query) return true;
+
+      const symbol = company.symbol.toUpperCase();
+      const companyName = (company.company_name || "").toUpperCase();
+
+      return (
+        symbol.includes(query) ||
+        companyName.includes(query)
+      );
+    });
 
     return filtered.sort((a, b) => {
-      if (activeStage === "EMERGING") {
-        return (b.bms_change ?? -999) - (a.bms_change ?? -999);
-      }
+      // User-facing ranking is always based on the visible BMS score.
+      // Raw BMS breaks ties between equal displayed scores.
+      const displayDiff = score100(b.bms) - score100(a.bms);
 
-      if (activeStage === "FADING") {
-        return (a.bms_change ?? 999) - (b.bms_change ?? 999);
+      if (displayDiff !== 0) {
+        return displayDiff;
       }
 
       return b.bms - a.bms;
     });
-  }, [companies, activeStage]);
+  }, [companies, activeStage, searchTerm]);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [activeStage, searchTerm]);
 
   useEffect(() => {
     if (!stageCompanies.length) {
@@ -431,6 +583,74 @@ export default function BusinessMomentum({ onResearch }: Props) {
     };
   }, [selected]);
 
+  const [marketContext, setMarketContext] = useState<any>(null);
+  const [marketContextLoading, setMarketContextLoading] = useState(false);
+
+  useEffect(() => {
+    if (!selected?.symbol) {
+      setMarketContext(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadMarketContext = async () => {
+      setMarketContextLoading(true);
+      setMarketContext(null);
+
+      try {
+        const response = await fetch("/api/bms/market-context", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ticker: selected.symbol,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Market context unavailable");
+        }
+
+        const payload = await response.json();
+
+        if (!cancelled) {
+          setMarketContext(payload);
+        }
+      } catch {
+        if (!cancelled) {
+          setMarketContext({
+            unavailable: true,
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setMarketContextLoading(false);
+        }
+      }
+    };
+
+    loadMarketContext();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selected?.symbol]);
+
+  const formatReturn = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return "—";
+    const sign = value > 0 ? "+" : "";
+    return `${sign}${value.toFixed(1)}%`;
+  };
+
+  const returnClass = (value: number | null | undefined) => {
+    if (value === null || value === undefined) return "text-zinc-500";
+    if (value > 0) return "text-emerald-300";
+    if (value < 0) return "text-amber-300";
+    return "text-zinc-300";
+  };
+
   const counts = data?.stage_counts;
   const action = selected ? researchAction(selected) : null;
   const selectedMeta = selected ? stageMeta[selected.lifecycle_stage] : null;
@@ -450,8 +670,11 @@ export default function BusinessMomentum({ onResearch }: Props) {
     EMERGING: companies.filter(
       (company) => momentumStageLabel(company) === "EMERGING"
     ).length,
-    SUSTAINED: companies.filter(
-      (company) => momentumStageLabel(company) === "SUSTAINED"
+    BUILDING: companies.filter(
+      (company) => momentumStageLabel(company) === "BUILDING"
+    ).length,
+    ESTABLISHED: companies.filter(
+      (company) => momentumStageLabel(company) === "ESTABLISHED"
     ).length,
     FADING: companies.filter(
       (company) => momentumStageLabel(company) === "FADING"
@@ -470,9 +693,14 @@ export default function BusinessMomentum({ onResearch }: Props) {
       count: investorStageCounts.EMERGING,
     },
     {
-      id: "SUSTAINED" as const,
-      label: "Sustained",
-      count: investorStageCounts.SUSTAINED,
+      id: "BUILDING" as const,
+      label: "Building",
+      count: investorStageCounts.BUILDING,
+    },
+    {
+      id: "ESTABLISHED" as const,
+      label: "Established",
+      count: investorStageCounts.ESTABLISHED,
     },
     {
       id: "FADING" as const,
@@ -566,7 +794,7 @@ export default function BusinessMomentum({ onResearch }: Props) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
           {stages.map((stage) => {
             const active = activeStage === stage.id;
 
@@ -616,6 +844,16 @@ export default function BusinessMomentum({ onResearch }: Props) {
                 </span>
               </div>
 
+              <div className="px-6 py-4 border-b border-white/[0.07]">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  placeholder="Search symbol or company..."
+                  className="w-full rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white placeholder:text-zinc-600 outline-none focus:border-emerald-400/30 focus:bg-white/[0.025] transition-all"
+                />
+              </div>
+
               <div className="divide-y divide-white/[0.06]">
                 {loading &&
                   Array.from({ length: 5 }).map((_, i) => (
@@ -626,7 +864,7 @@ export default function BusinessMomentum({ onResearch }: Props) {
                   ))}
 
                 {!loading &&
-                  stageCompanies.slice(0, 12).map((company, index) => (
+                  stageCompanies.slice(0, visibleCount).map((company, index) => (
                     <button
                       key={company.symbol}
                       onClick={() => setSelected(company)}
@@ -653,6 +891,23 @@ export default function BusinessMomentum({ onResearch }: Props) {
                           >
                             {momentumStageLabel(company)}
                           </span>
+
+                          {reliabilityLabel(company) && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${reliabilityClass(company)}`}
+                            >
+                              {reliabilityLabel(company)}
+                            </span>
+                          )}
+
+                          {company.reversal_warning &&
+                            company.reversal_warning !== "None" && (
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider border ${reversalClass(company)}`}
+                              >
+                                {company.reversal_warning} REVERSAL
+                              </span>
+                            )}
                         </div>
 
                         <p className="text-xs text-zinc-500 mt-1">
@@ -667,8 +922,7 @@ export default function BusinessMomentum({ onResearch }: Props) {
                                     : "text-amber-300"
                                 }
                               >
-                                QoQ {company.bms_change >= 0 ? "+" : ""}
-                                {scorePointChange(company.bms_change)} pts
+                                {bmsDirectionText(company)}
                               </span>
                             </>
                           )}
@@ -690,9 +944,26 @@ export default function BusinessMomentum({ onResearch }: Props) {
 
                 {!loading && stageCompanies.length === 0 && (
                   <div className="p-10 text-center text-zinc-500">
-                    No companies currently qualify for this lifecycle stage.
+                    {searchTerm
+                      ? "No matching companies found in this lifecycle stage."
+                      : "No companies currently qualify for this lifecycle stage."}
                   </div>
                 )}
+
+                {!loading &&
+                  stageCompanies.length > visibleCount && (
+                    <div className="p-4 bg-black/10">
+                      <button
+                        onClick={() =>
+                          setVisibleCount((count) => count + 20)
+                        }
+                        className="w-full rounded-xl border border-white/10 bg-white/[0.025] px-4 py-3 text-xs font-bold text-zinc-300 hover:bg-white/[0.05] hover:text-white transition-all"
+                      >
+                        Show 20 more ·{" "}
+                        {stageCompanies.length - visibleCount} remaining
+                      </button>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -742,8 +1013,7 @@ export default function BusinessMomentum({ onResearch }: Props) {
                               : selectedBmsChange < 0
                                 ? "↓"
                                 : "→"}{" "}
-                            {selectedBmsChange > 0 ? "+" : ""}
-                            {scorePointChange(selectedBmsChange)} pts QoQ
+                            {bmsDirectionText(selected)}
                           </span>
                         )}
                     </div>
@@ -758,8 +1028,170 @@ export default function BusinessMomentum({ onResearch }: Props) {
                     </p>
 
                     <p className="text-[9px] text-zinc-500 mt-1.5 leading-relaxed">
-                      Momentum Stage shows <span className="font-bold text-zinc-400">how that change is evolving over time</span> — Watch, Emerging, Sustained or Fading. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
+                      Lifecycle shows <span className="font-bold text-zinc-400">how Business Momentum is evolving across successive results</span> — Watch, Emerging, Building, Established or Fading. It combines current BMS strength, movement in BMS since the last result and evidence maturity. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
                     </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-3 gap-3 mb-6">
+                    <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.035] p-4">
+                      <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
+                        Current Business Momentum
+                      </p>
+                      <div className="flex items-end gap-2 mt-2">
+                        <span className="text-2xl font-mono font-bold text-emerald-300">
+                          {score100(selected.bms)}
+                        </span>
+                        <span className="text-[10px] font-bold text-zinc-400 mb-1">
+                          {selectedMomentum}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                        Based on {selected.period} vs{" "}
+                        {priorYearComparison(selected.period)} fundamentals
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
+                        Momentum Direction
+                      </p>
+                      <p className={`text-sm font-bold mt-2 ${
+                        selectedBmsChange !== null && selectedBmsChange > 0
+                          ? "text-emerald-300"
+                          : selectedBmsChange !== null && selectedBmsChange < 0
+                            ? "text-amber-300"
+                            : "text-zinc-300"
+                      }`}>
+                        {bmsDirectionText(selected)}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                        {selected.previous_bms !== null
+                          ? `Previous BMS ${score100(selected.previous_bms)} → Current BMS ${score100(selected.bms)}`
+                          : "Prior BMS unavailable"}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                      <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
+                        Lifecycle & Evidence
+                      </p>
+                      <p className="text-sm font-bold text-white mt-2">
+                        {selectedStage}
+                      </p>
+                      <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
+                        Evidence: {selected.evidence_strength || `${selected.evidence_count} points`}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {reliabilityLabel(selected) && (
+                          <span
+                            className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider border ${reliabilityClass(selected)}`}
+                          >
+                            {reliabilityLabel(selected)}
+                          </span>
+                        )}
+
+                        {selected.reversal_warning &&
+                          selected.reversal_warning !== "None" && (
+                            <span
+                              className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-wider border ${reversalClass(selected)}`}
+                            >
+                              {selected.reversal_warning} REVERSAL WARNING
+                            </span>
+                          )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-sky-400/15 bg-sky-400/[0.025] p-4 mb-6">
+                    <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+                      <div>
+                        <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
+                          Market Context
+                        </p>
+
+                        <p className="text-[10px] text-zinc-500 mt-1">
+                          Price performance is context only — not a valuation or investment signal.
+                        </p>
+                      </div>
+
+                      {!marketContextLoading &&
+                        marketContext &&
+                        !marketContext.unavailable &&
+                        marketContext.price && (
+                          <div className="text-right">
+                            <p className="text-[9px] uppercase tracking-wider text-zinc-600">
+                              Current Price
+                            </p>
+                            <p className="text-lg font-mono font-bold text-white">
+                              ₹{Number(marketContext.price).toLocaleString("en-IN")}
+                            </p>
+                          </div>
+                        )}
+                    </div>
+
+                    {marketContextLoading ? (
+                      <div className="py-5 text-center">
+                        <RefreshCw className="w-4 h-4 animate-spin text-zinc-500 mx-auto mb-2" />
+                        <p className="text-[10px] text-zinc-600">
+                          Loading market context…
+                        </p>
+                      </div>
+                    ) : marketContext?.unavailable ? (
+                      <p className="text-[10px] text-zinc-600 py-3">
+                        Market performance is temporarily unavailable.
+                      </p>
+                    ) : marketContext?.periods ? (
+                      <>
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            ["1M", marketContext.periods.oneMonth],
+                            ["3M", marketContext.periods.threeMonth],
+                            ["6M", marketContext.periods.sixMonth],
+                            ["12M", marketContext.periods.twelveMonth],
+                          ].map(([label, period]: any) => (
+                            <div
+                              key={label}
+                              className="rounded-xl border border-white/[0.07] bg-black/20 p-3"
+                            >
+                              <p className="text-[9px] font-black tracking-wider text-zinc-500">
+                                {label}
+                              </p>
+
+                              <p
+                                className={`text-sm font-mono font-bold mt-2 ${returnClass(
+                                  period?.stockReturn
+                                )}`}
+                              >
+                                {formatReturn(period?.stockReturn)}
+                              </p>
+
+                              <p className="text-[9px] text-zinc-600 mt-2">
+                                Nifty {formatReturn(period?.niftyReturn)}
+                              </p>
+
+                              <p
+                                className={`text-[9px] font-bold mt-1 ${returnClass(
+                                  period?.relativeReturn
+                                )}`}
+                              >
+                                vs Nifty {formatReturn(period?.relativeReturn)}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-[9px] text-zinc-600">
+                            Relative return = stock return minus Nifty 50 return
+                          </p>
+
+                          <p className="text-[9px] text-zinc-600">
+                            Source: Yahoo Finance · delayed market data
+                          </p>
+                        </div>
+                      </>
+                    ) : null}
                   </div>
 
                   <div className="rounded-2xl border border-white/10 bg-black/20 p-4 mb-6">
@@ -905,25 +1337,149 @@ export default function BusinessMomentum({ onResearch }: Props) {
                   </div>
 
                   <div className="mt-6 rounded-2xl border border-gold/15 bg-gold/[0.025] p-4">
-                    <div className="flex items-center justify-between gap-4">
-                      <div>
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="max-w-xl">
                         <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
-                          BMS Signal Research
+                          Further Investigation
                         </p>
-                        <p className="text-xs text-zinc-400 mt-1">
+
+                        <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                          Investigate why Business Momentum changed, or open the full
+                          AlphaSynth company research workflow.
                         </p>
-                        Investigate why the BMS signal changed, what supports it, what challenges it, and what to watch next.
                       </div>
 
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => onResearch?.(selected)}
-                          className="shrink-0 flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] hover:bg-emerald-400/[0.14] transition-all"
-                         > 
-                          Research Signal
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                          disabled={researchLoading}
+                          className={`flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
+                            researchLoading
+                              ? "opacity-70 cursor-wait"
+                              : "hover:bg-emerald-400/[0.14]"
+                          }`}
+                        >
+                          {researchLoading ? "Investigating…" : "Research Signal"}
+                          {researchLoading ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <ArrowRight className="w-4 h-4" />
+                          )}
+                        </button>
+
+                        <button
+                          onClick={() => onDeepDive?.(selected)}
+                          className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
+                            selectedStage === "EMERGING" ||
+                            selectedStage === "BUILDING"
+                              ? "border border-gold/40 bg-gold text-black hover:bg-gold/90"
+                              : "border border-gold/25 bg-gold/[0.06] text-gold hover:bg-gold/[0.12]"
+                          }`}
+                        >
+                          Deep Dive
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
+                      <p className="text-[9px] text-zinc-600 leading-relaxed">
+                        <span className="font-bold text-zinc-500">Research Signal:</span>{" "}
+                        Why has BMS changed? Supporting evidence, challenges and what to watch.
+                      </p>
+
+                      <p className="text-[9px] text-zinc-600 leading-relaxed">
+                        <span className="font-bold text-zinc-500">Deep Dive:</span>{" "}
+                        Full company, valuation, sector, earnings and risk research.
+                      </p>
                     </div>
                   </div>
+
+                  {(researchLoading || researchText || researchError) && (
+                    <div className="mt-4 rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.025] p-5">
+                      <div className="flex items-center justify-between gap-3 mb-4">
+                        <div>
+                          <p className="text-[9px] uppercase tracking-[0.18em] font-black text-emerald-300">
+                            Signal Investigation
+                          </p>
+
+                          <p className="text-[10px] text-zinc-500 mt-1">
+                            Why AlphaSynth flagged {selected.symbol} now
+                          </p>
+                        </div>
+
+                        {researchLoading && (
+                          <RefreshCw className="w-4 h-4 animate-spin text-emerald-300" />
+                        )}
+                      </div>
+
+                      {researchLoading && (
+                        <div className="py-4">
+                          <p className="text-sm text-zinc-400">
+                            Investigating the BMS signal…
+                          </p>
+                          <p className="text-[10px] text-zinc-600 mt-2">
+                            Reviewing supporting evidence, challenges and what to watch next.
+                          </p>
+                        </div>
+                      )}
+
+                      {!researchLoading && researchError && (
+                        <div className="rounded-xl border border-red-400/15 bg-red-400/[0.04] p-4">
+                          <p className="text-sm text-red-300">
+                            {researchError}
+                          </p>
+                        </div>
+                      )}
+
+                      {!researchLoading && researchText && (
+                        <div className="text-sm leading-7 text-zinc-300">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              h1: ({ children }) => (
+                                <h3 className="text-sm font-bold text-emerald-300 mt-5 mb-2">
+                                  {children}
+                                </h3>
+                              ),
+                              h2: ({ children }) => (
+                                <h3 className="text-sm font-bold text-emerald-300 mt-5 mb-2">
+                                  {children}
+                                </h3>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="text-sm font-bold text-emerald-300 mt-5 mb-2">
+                                  {children}
+                                </h3>
+                              ),
+                              p: ({ children }) => (
+                                <p className="text-zinc-300 mb-3 leading-6">
+                                  {children}
+                                </p>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="space-y-2 mb-4 pl-5 list-disc marker:text-emerald-400">
+                                  {children}
+                                </ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="space-y-2 mb-4 pl-5 list-decimal marker:text-emerald-400">
+                                  {children}
+                                </ol>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="font-bold text-white">
+                                  {children}
+                                </strong>
+                              ),
+                            }}
+                          >
+                            {researchText}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="h-full flex items-center justify-center text-zinc-500">
