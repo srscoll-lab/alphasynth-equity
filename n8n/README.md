@@ -4,8 +4,11 @@
 It validates the application request and creates separate official-evidence and social-discovery
 plans. It deliberately does not replace or activate the live BMS workflows.
 
-The downstream workflows named in its output must be implemented and tested before this webhook
-is configured as `DOSSIER_WEBHOOK_URL` in Cloud Run.
+The downstream workflows named in its output must be implemented and tested before production use.
+This intake webhook returns a discovery plan, not a completed dossier, and therefore must **not**
+be configured as `DOSSIER_WEBHOOK_URL`. That variable must point to a future orchestration workflow
+that runs discovery, reading, admission, classification, aggregation, and assembly and returns the
+canonical `ResearchDossier` payload.
 
 `official-source-admission-v1.json` is the deterministic trust gate for discovered URLs. It
 requires verified company domains, rejects undated and post-cutoff material, blocks lookalike

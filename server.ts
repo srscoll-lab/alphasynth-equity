@@ -605,6 +605,9 @@ const scrapeFailureTracker = new Map<string, { failures: number; lastAttempt: nu
 const runtimeSkipSet = new Set<string>();
 const MAX_FAILURES_BEFORE_SKIP = 3;
 const FAILURE_MEMORY_MS = 24 * 60 * 60 * 1000;
+const dossierGenerationWindows = new Map<string, { count: number; startedAt: number }>();
+const DOSSIER_RATE_WINDOW_MS = 10 * 60 * 1000;
+const DOSSIER_RATE_LIMIT = 5;
 
 async function startServer() {
   app.use(express.json());
@@ -2346,6 +2349,29 @@ ${rawText}` }] }],
         error: "The Research Dossier pilot is not configured.",
         pilot: true,
       });
+    }
+
+    let parsedWebhookUrl: URL;
+    try {
+      parsedWebhookUrl = new URL(webhookUrl);
+    } catch {
+      return res.status(503).json({ error: "The Research Dossier webhook URL is invalid." });
+    }
+    if (parsedWebhookUrl.pathname.includes("alphasynth-dossier-v1")) {
+      return res.status(503).json({
+        error: "The intake-only workflow cannot be used as the completed dossier webhook.",
+      });
+    }
+
+    const rateKey = req.ip || req.socket.remoteAddress || "unknown";
+    const now = Date.now();
+    const currentWindow = dossierGenerationWindows.get(rateKey);
+    if (!currentWindow || now - currentWindow.startedAt >= DOSSIER_RATE_WINDOW_MS) {
+      dossierGenerationWindows.set(rateKey, { count: 1, startedAt: now });
+    } else if (currentWindow.count >= DOSSIER_RATE_LIMIT) {
+      return res.status(429).json({ error: "Too many dossier requests. Please try again later." });
+    } else {
+      currentWindow.count += 1;
     }
 
     try {

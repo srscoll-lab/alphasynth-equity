@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Activity,
@@ -439,9 +439,11 @@ export default function BusinessMomentum({
   const [dossier, setDossier] = useState<ResearchDossier | null>(null);
   const [dossierLoading, setDossierLoading] = useState(false);
   const [dossierError, setDossierError] = useState("");
+  const dossierRequestId = useRef(0);
 
   const generateDossier = async () => {
     if (!selected) return;
+    const requestId = ++dossierRequestId.current;
     setDossierLoading(true);
     setDossierError("");
     setDossier(null);
@@ -457,11 +459,13 @@ export default function BusinessMomentum({
       });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
-      setDossier(payload);
+      if (requestId === dossierRequestId.current) setDossier(payload);
     } catch (error: any) {
-      setDossierError(error?.message || "Dossier generation failed");
+      if (requestId === dossierRequestId.current) {
+        setDossierError(error?.message || "Dossier generation failed");
+      }
     } finally {
-      setDossierLoading(false);
+      if (requestId === dossierRequestId.current) setDossierLoading(false);
     }
   };
 
@@ -532,6 +536,13 @@ export default function BusinessMomentum({
   useEffect(() => {
     setVisibleCount(12);
   }, [activeStage, searchTerm]);
+
+  useEffect(() => {
+    dossierRequestId.current += 1;
+    setDossier(null);
+    setDossierError("");
+    setDossierLoading(false);
+  }, [selected?.symbol, selected?.period]);
 
   useEffect(() => {
     if (!stageCompanies.length) {
