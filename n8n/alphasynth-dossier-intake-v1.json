@@ -1,0 +1,51 @@
+{
+  "name": "AlphaSynth Research Dossier Intake v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-dossier-v1", "responseMode": "responseNode", "options": {} },
+      "id": "dossier-webhook",
+      "name": "Dossier Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-620, 0],
+      "webhookId": "alphasynth-dossier-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json; const ticker=String(b.ticker??'').trim().toUpperCase(); if(!/^[A-Z0-9&.-]{1,24}$/.test(ticker)) throw new Error('Valid ticker required'); if(b.social_affects_bms!==false) throw new Error('social_affects_bms must be false'); const cutoff=String(b.information_cutoff??''); if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(cutoff)) throw new Error('information_cutoff must be YYYY-MM-DD'); return [{json:{schema_version:'1.0.0',ticker,company_name:String(b.company_name??ticker),reporting_period:b.reporting_period??null,information_cutoff:cutoff,include_social_pilot:b.include_social_pilot===true,social_affects_bms:false,requested_at:new Date().toISOString()}}];"
+      },
+      "id": "validate-request",
+      "name": "Validate Dossier Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-360, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const r=$json; const q=(suffix)=>`${r.company_name} ${r.ticker} ${suffix}`; return [{json:{...r,status:'ready_for_discovery',official_queries:[q('official investor relations annual report'),q('site:nseindia.com filing results'),q('site:bseindia.com corporate announcement'),q('investor presentation earnings transcript')],social_queries:r.include_social_pilot?[q('site:valuepickr.com discussion'),q('Substack investor opinion')]:[],source_policy:{official:['verified_company_domain','nseindia.com','nsearchives.nseindia.com','bseindia.com','sebi.gov.in'],market_conversation:['valuepickr','substack_rss','approved_api'],reject:['undated_official_claim','post_cutoff_source','domain_lookalike','unsupported_claim'],social_affects_bms:false},next_workflows:['Official Domain Discovery v1','Dossier Document Reader v1','Market Conversation Pilot v1','Dossier Assembly and QC v1']}}];"
+      },
+      "id": "build-plan",
+      "name": "Build Source Discovery Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-80, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Discovery Job",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [200, 0]
+    }
+  ],
+  "connections": {
+    "Dossier Webhook": { "main": [[{ "node": "Validate Dossier Request", "type": "main", "index": 0 }]] },
+    "Validate Dossier Request": { "main": [[{ "node": "Build Source Discovery Plan", "type": "main", "index": 0 }]] },
+    "Build Source Discovery Plan": { "main": [[{ "node": "Return Discovery Job", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-dossier-intake-v1"
+}

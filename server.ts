@@ -4,6 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
+import { isResearchDossier } from "./src/dossier";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -2306,6 +2307,70 @@ ${rawText}` }] }],
     }
   });
 
+
+  // ── Shared Company Research Dossier ────────────────────────────────────────
+  // The dossier is shared by AlphaSynth and BMS. Social conversation is
+  // explicitly non-scoring and the existing report pipeline remains available
+  // while the pilot is validated.
+  app.get("/api/dossier/companies", async (_req, res) => {
+    const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+    try {
+      const response = await fetch(`${bmsBaseUrl}/bms/lifecycle/current`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error(`BMS service returned HTTP ${response.status}`);
+      const payload: any = await response.json();
+      const companies = Array.isArray(payload.companies)
+        ? payload.companies.map((company: any) => ({
+            symbol: String(company.symbol || "").toUpperCase(),
+            name: String(company.company_name || company.symbol || ""),
+            sector: company.sector_profile || company.sector || null,
+          })).filter((company: any) => company.symbol)
+        : [];
+      return res.json({ company_count: companies.length, companies, source: "bms-lifecycle-universe" });
+    } catch (error: any) {
+      console.error("[dossier] company universe unavailable:", error?.message || error);
+      return res.status(503).json({ company_count: 0, companies: [], unavailable: true });
+    }
+  });
+
+  app.post("/api/dossier/generate", async (req, res) => {
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    if (!ticker || !/^[A-Z0-9&.-]{1,24}$/.test(ticker)) {
+      return res.status(400).json({ error: "A valid ticker is required." });
+    }
+
+    const webhookUrl = process.env.DOSSIER_WEBHOOK_URL;
+    if (!webhookUrl) {
+      return res.status(503).json({
+        error: "The Research Dossier pilot is not configured.",
+        pilot: true,
+      });
+    }
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker,
+          company_name: req.body?.company_name || ticker,
+          reporting_period: req.body?.reporting_period || null,
+          information_cutoff: req.body?.information_cutoff || new Date().toISOString().slice(0, 10),
+          include_social_pilot: true,
+          social_affects_bms: false,
+        }),
+        signal: AbortSignal.timeout(180000),
+      });
+      if (!response.ok) throw new Error(`Dossier workflow returned HTTP ${response.status}`);
+      const dossier = await response.json();
+      if (!isResearchDossier(dossier)) throw new Error("Dossier workflow returned an invalid contract");
+      return res.json(dossier);
+    } catch (error: any) {
+      console.error("[dossier] generation failed:", error?.message || error);
+      return res.status(502).json({ error: "Research Dossier generation failed." });
+    }
+  });
 
   // ── Business Momentum (BMS) ────────────────────────────────────────────────
   // AlphaSynth-facing bridge to the deterministic Python Business Momentum
