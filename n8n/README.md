@@ -1,5 +1,18 @@
 # Research Dossier workflows
 
+`dossier-orchestrator-v1.json` is the inactive end-to-end official-evidence pilot. It validates
+the public request and calls the private AlphaSynth evidence builder using environment-backed
+credentials. Its production webhook URL is the value intended for `DOSSIER_WEBHOOK_URL` after
+import, credential configuration, and pilot testing.
+
+Required n8n environment variables:
+
+- `ALPHASYNTH_INTERNAL_URL`: network-reachable AlphaSynth service origin
+- `DOSSIER_INTERNAL_TOKEN`: shared secret also configured on AlphaSynth
+
+The orchestrator remains inactive in source control. Activate it only after a dated-official-source
+test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.
+
 `alphasynth-dossier-intake-v1.json` is the inactive, importable entry workflow for the pilot.
 It validates the application request and creates separate official-evidence and social-discovery
 plans. It deliberately does not replace or activate the live BMS workflows.

@@ -4,7 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
-import { isResearchDossier } from "./src/dossier";
+import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -2442,6 +2442,101 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     } catch (error: any) {
       console.error("[dossier] opinion classification failed:", error?.message || error);
       return res.status(502).json({ error: "Opinion classification failed." });
+    }
+  });
+
+  app.post("/api/dossier/research-evidence", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Dossier evidence research is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const companyName = String(req.body?.company_name || ticker).trim();
+    const cutoff = String(req.body?.information_cutoff || "");
+    const officialDomains = Array.isArray(req.body?.official_domains)
+      ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
+      : [];
+    if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
+      return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
+    }
+
+    const scraper = getFirecrawl();
+    if (!scraper) return res.status(503).json({ error: "The official-source scraper is not configured." });
+
+    try {
+      const query = `${companyName} ${ticker} annual report quarterly results investor presentation `
+        + `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
+      const search: any = await scraper.search(query, { limit: 10 });
+      const candidates = [...(search?.web || []), ...(search?.news || [])];
+      const seen = new Set<string>();
+      const sources: any[] = [];
+      const evidence: Array<{ sourceId: string; text: string }> = [];
+
+      for (const candidate of candidates) {
+        if (sources.length >= 6) break;
+        const url = String(candidate?.url || "");
+        if (!isOfficialDossierSource(url, officialDomains) || seen.has(url)) continue;
+        const scraped: any = await scraper.scrape(url, { formats: ["markdown"], onlyMainContent: true });
+        const publishedAt = String(candidate?.publishedDate || candidate?.date
+          || scraped?.metadata?.publishedTime || scraped?.metadata?.publishedDate || "").slice(0, 10);
+        const text = String(scraped?.markdown || "").replace(/\s+/g, " ").trim().slice(0, 12000);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(publishedAt) || publishedAt > cutoff || text.length < 200) continue;
+        seen.add(url);
+        const host = new URL(url).hostname.toLowerCase();
+        const sourceId = `official-${String(sources.length + 1).padStart(3, "0")}`;
+        const sourceClass = host.endsWith("sebi.gov.in") ? "regulator"
+          : (host.endsWith("nseindia.com") || host.endsWith("bseindia.com")) ? "exchange" : "company_official";
+        sources.push({ sourceId, url, sourceClass, publishedAt, retrievedAt: new Date().toISOString() });
+        evidence.push({ sourceId, text });
+      }
+
+      if (!sources.length) return res.status(422).json({
+        error: "No dated official evidence passed the admission policy.",
+      });
+
+      const ai = getGenAI();
+      const response = await ai.models.generateContent({
+        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT",
+            required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"],
+            properties: Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
+              type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
+                text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+                status: { type: "STRING", enum: ["supported", "conflict"] },
+              } },
+            }]))
+          }
+        },
+      });
+      const rawSections = JSON.parse(sanitizeJsonShell(response.text || "{}"));
+      let claimNumber = 0;
+      const sourceIds = new Set(sources.map(source => source.sourceId));
+      const sectionNames = ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"];
+      const sections = Object.fromEntries(sectionNames.map(name => [name,
+        (Array.isArray(rawSections[name]) ? rawSections[name] : []).map((claim: any) => ({
+          claimId: `claim-${String(++claimNumber).padStart(3, "0")}`,
+          text: String(claim.text || "").trim(),
+          sourceIds: [...new Set((Array.isArray(claim.sourceIds) ? claim.sourceIds : []).filter((id: string) => sourceIds.has(id)))],
+          status: claim.status === "conflict" ? "conflict" : "supported",
+        })).filter((claim: any) => claim.text && claim.sourceIds.length),
+      ]));
+      const dossier: any = {
+        schemaVersion: "1.0.0", reportId: `${ticker}-${Date.now()}`, generatedAt: new Date().toISOString(),
+        company: { symbol: ticker, name: companyName, exchange: req.body?.exchange || "NSE", sector: req.body?.sector || "Unclassified", officialDomains },
+        sections, sources,
+        marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
+        qualityControl: { unsupportedClaims: 0, conflicts: Object.values(sections).flat().filter((claim: any) => claim.status === "conflict").length, humanReviewRequired: true },
+      };
+      if (!isResearchDossier(dossier)) throw new Error("Generated evidence failed the dossier contract");
+      return res.json(dossier);
+    } catch (error: any) {
+      console.error("[dossier] official evidence research failed:", error?.message || error);
+      return res.status(502).json({ error: "Official evidence research failed." });
     }
   });
 
