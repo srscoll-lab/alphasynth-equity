@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 
 const workflow = JSON.parse(fs.readFileSync("n8n/dossier-orchestrator-v1.json", "utf8"));
+assert.equal(workflow.id, "alphasynthDossierV1");
 assert.equal(workflow.active, false);
 assert.ok(workflow.nodes.some(node => node.name === "Validate Request"));
 const research = workflow.nodes.find(node => node.name === "Build Official Evidence Dossier");
