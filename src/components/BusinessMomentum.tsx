@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Activity,
@@ -14,6 +14,7 @@ import {
 import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import type { ResearchDossier } from "../dossier";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -435,6 +436,38 @@ export default function BusinessMomentum({
   const [explanationError, setExplanationError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [visibleCount, setVisibleCount] = useState(12);
+  const [dossier, setDossier] = useState<ResearchDossier | null>(null);
+  const [dossierLoading, setDossierLoading] = useState(false);
+  const [dossierError, setDossierError] = useState("");
+  const dossierRequestId = useRef(0);
+
+  const generateDossier = async () => {
+    if (!selected) return;
+    const requestId = ++dossierRequestId.current;
+    setDossierLoading(true);
+    setDossierError("");
+    setDossier(null);
+    try {
+      const response = await fetch("/api/dossier/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker: selected.symbol,
+          company_name: selected.company_name || selected.symbol,
+          reporting_period: selected.period,
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
+      if (requestId === dossierRequestId.current) setDossier(payload);
+    } catch (error: any) {
+      if (requestId === dossierRequestId.current) {
+        setDossierError(error?.message || "Dossier generation failed");
+      }
+    } finally {
+      if (requestId === dossierRequestId.current) setDossierLoading(false);
+    }
+  };
 
   const [activeStage, setActiveStage] =
     useState<
@@ -503,6 +536,13 @@ export default function BusinessMomentum({
   useEffect(() => {
     setVisibleCount(12);
   }, [activeStage, searchTerm]);
+
+  useEffect(() => {
+    dossierRequestId.current += 1;
+    setDossier(null);
+    setDossierError("");
+    setDossierLoading(false);
+  }, [selected?.symbol, selected?.period]);
 
   useEffect(() => {
     if (!stageCompanies.length) {
@@ -1368,6 +1408,15 @@ export default function BusinessMomentum({
                         </button>
 
                         <button
+                          onClick={generateDossier}
+                          disabled={dossierLoading}
+                          className="flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-400/[0.08] text-blue-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all hover:bg-blue-400/[0.14] disabled:opacity-70"
+                        >
+                          {dossierLoading ? "Building Dossier…" : "Research Dossier"}
+                          {dossierLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Layers3 className="w-4 h-4" />}
+                        </button>
+
+                        <button
                           onClick={() => onDeepDive?.(selected)}
                           className={`flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
                             selectedStage === "EMERGING" ||
@@ -1476,6 +1525,29 @@ export default function BusinessMomentum({
                           >
                             {researchText}
                           </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(dossierLoading || dossier || dossierError) && (
+                    <div className="mt-4 rounded-2xl border border-blue-400/15 bg-blue-400/[0.025] p-5">
+                      <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Shared Research Dossier · Pilot</p>
+                      {dossierLoading && <p className="mt-3 text-sm text-zinc-400">Collecting and validating cited company evidence…</p>}
+                      {dossierError && <p className="mt-3 text-sm text-red-300">{dossierError}</p>}
+                      {dossier && (
+                        <div className="mt-4 space-y-5">
+                          {Object.entries(dossier.sections).map(([section, claims]) => (
+                            <section key={section}>
+                              <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-300">{section.replace(/([A-Z])/g, " $1")}</h4>
+                              {claims.length ? (
+                                <ul className="mt-2 space-y-2 text-xs text-zinc-400">
+                                  {claims.map((claim) => <li key={claim.claimId}>• {claim.text}</li>)}
+                                </ul>
+                              ) : <p className="mt-2 text-xs text-zinc-600">No verified evidence available.</p>}
+                            </section>
+                          ))}
+                          <p className="text-[9px] text-zinc-600">Market conversation is experimental and does not affect BMS.</p>
                         </div>
                       )}
                     </div>

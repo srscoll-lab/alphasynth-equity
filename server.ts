@@ -4,6 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
+import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -604,6 +605,9 @@ const scrapeFailureTracker = new Map<string, { failures: number; lastAttempt: nu
 const runtimeSkipSet = new Set<string>();
 const MAX_FAILURES_BEFORE_SKIP = 3;
 const FAILURE_MEMORY_MS = 24 * 60 * 60 * 1000;
+const dossierGenerationWindows = new Map<string, { count: number; startedAt: number }>();
+const DOSSIER_RATE_WINDOW_MS = 10 * 60 * 1000;
+const DOSSIER_RATE_LIMIT = 5;
 
 async function startServer() {
   app.use(express.json());
@@ -2306,6 +2310,235 @@ ${rawText}` }] }],
     }
   });
 
+
+  // ── Shared Company Research Dossier ────────────────────────────────────────
+  // The dossier is shared by AlphaSynth and BMS. Social conversation is
+  // explicitly non-scoring and the existing report pipeline remains available
+  // while the pilot is validated.
+  app.get("/api/dossier/companies", async (_req, res) => {
+    const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+    try {
+      const response = await fetch(`${bmsBaseUrl}/bms/lifecycle/current`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error(`BMS service returned HTTP ${response.status}`);
+      const payload: any = await response.json();
+      const companies = Array.isArray(payload.companies)
+        ? payload.companies.map((company: any) => ({
+            symbol: String(company.symbol || "").toUpperCase(),
+            name: String(company.company_name || company.symbol || ""),
+            sector: company.sector_profile || company.sector || null,
+          })).filter((company: any) => company.symbol)
+        : [];
+      return res.json({ company_count: companies.length, companies, source: "bms-lifecycle-universe" });
+    } catch (error: any) {
+      console.error("[dossier] company universe unavailable:", error?.message || error);
+      return res.status(503).json({ company_count: 0, companies: [], unavailable: true });
+    }
+  });
+
+  app.post("/api/dossier/generate", async (req, res) => {
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    if (!ticker || !/^[A-Z0-9&.-]{1,24}$/.test(ticker)) {
+      return res.status(400).json({ error: "A valid ticker is required." });
+    }
+
+    const webhookUrl = process.env.DOSSIER_WEBHOOK_URL;
+    if (!webhookUrl) {
+      return res.status(503).json({
+        error: "The Research Dossier pilot is not configured.",
+        pilot: true,
+      });
+    }
+
+    let parsedWebhookUrl: URL;
+    try {
+      parsedWebhookUrl = new URL(webhookUrl);
+    } catch {
+      return res.status(503).json({ error: "The Research Dossier webhook URL is invalid." });
+    }
+    if (parsedWebhookUrl.pathname.includes("alphasynth-dossier-v1")) {
+      return res.status(503).json({
+        error: "The intake-only workflow cannot be used as the completed dossier webhook.",
+      });
+    }
+
+    const rateKey = req.ip || req.socket.remoteAddress || "unknown";
+    const now = Date.now();
+    const currentWindow = dossierGenerationWindows.get(rateKey);
+    if (!currentWindow || now - currentWindow.startedAt >= DOSSIER_RATE_WINDOW_MS) {
+      dossierGenerationWindows.set(rateKey, { count: 1, startedAt: now });
+    } else if (currentWindow.count >= DOSSIER_RATE_LIMIT) {
+      return res.status(429).json({ error: "Too many dossier requests. Please try again later." });
+    } else {
+      currentWindow.count += 1;
+    }
+
+    try {
+      const response = await fetch(webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ticker,
+          company_name: req.body?.company_name || ticker,
+          reporting_period: req.body?.reporting_period || null,
+          information_cutoff: req.body?.information_cutoff || new Date().toISOString().slice(0, 10),
+          include_social_pilot: true,
+          social_affects_bms: false,
+        }),
+        signal: AbortSignal.timeout(180000),
+      });
+      if (!response.ok) throw new Error(`Dossier workflow returned HTTP ${response.status}`);
+      const dossier = await response.json();
+      if (!isResearchDossier(dossier)) throw new Error("Dossier workflow returned an invalid contract");
+      return res.json(dossier);
+    } catch (error: any) {
+      console.error("[dossier] generation failed:", error?.message || error);
+      return res.status(502).json({ error: "Research Dossier generation failed." });
+    }
+  });
+
+  app.post("/api/dossier/classify-opinions", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Dossier classifier is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const items = Array.isArray(req.body?.items) ? req.body.items.slice(0, 50) : [];
+    if (!ticker || !items.length || items.some((item: any) =>
+      !item.source_id || !item.url || !item.text || item.author_handle !== null
+    )) return res.status(400).json({ error: "Sanitized classification items are required." });
+
+    try {
+      const ai = getGenAI();
+      const prompt = `Classify public market conversation about ${ticker}. This is categorisation, not investment advice.
+For each item, preserve source_id and url. Return sentiment as positive, neutral, or negative; confidence from 0 to 1; sarcasm_possible as boolean; and at most three short factual theme labels. Do not write a narrative, recommendation, target, or BMS assessment. Treat promotional certainty and unsupported claims cautiously.\n\n${JSON.stringify(items)}`;
+      const response = await ai.models.generateContent({
+        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            required: ["items"],
+            properties: {
+              items: { type: "ARRAY", items: { type: "OBJECT", required: ["source_id", "url", "text", "sentiment", "confidence", "sarcasm_possible", "themes"], properties: {
+                source_id: { type: "STRING" }, url: { type: "STRING" }, text: { type: "STRING" },
+                sentiment: { type: "STRING", enum: ["positive", "neutral", "negative"] },
+                confidence: { type: "NUMBER", minimum: 0, maximum: 1 }, sarcasm_possible: { type: "BOOLEAN" },
+                themes: { type: "ARRAY", maxItems: 3, items: { type: "STRING" } }
+              } } }
+            }
+          },
+          maxOutputTokens: 8192,
+        },
+      });
+      const classified = JSON.parse(sanitizeGroundingJson(response.text || "{}"));
+      const inputIds = new Set(items.map((item: any) => String(item.source_id)));
+      if (!Array.isArray(classified.items) || classified.items.some((item: any) => !inputIds.has(String(item.source_id)))) {
+        throw new Error("Classifier returned invalid source references");
+      }
+      return res.json({ ticker, social_affects_bms: false, items: classified.items });
+    } catch (error: any) {
+      console.error("[dossier] opinion classification failed:", error?.message || error);
+      return res.status(502).json({ error: "Opinion classification failed." });
+    }
+  });
+
+  app.post("/api/dossier/research-evidence", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Dossier evidence research is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const companyName = String(req.body?.company_name || ticker).trim();
+    const cutoff = String(req.body?.information_cutoff || "");
+    const officialDomains = Array.isArray(req.body?.official_domains)
+      ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
+      : [];
+    if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
+      return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
+    }
+
+    const scraper = getFirecrawl();
+    if (!scraper) return res.status(503).json({ error: "The official-source scraper is not configured." });
+
+    try {
+      const query = `${companyName} ${ticker} annual report quarterly results investor presentation `
+        + `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
+      const search: any = await scraper.search(query, { limit: 10 });
+      const candidates = [...(search?.web || []), ...(search?.news || [])];
+      const seen = new Set<string>();
+      const sources: any[] = [];
+      const evidence: Array<{ sourceId: string; text: string }> = [];
+
+      for (const candidate of candidates) {
+        if (sources.length >= 6) break;
+        const url = String(candidate?.url || "");
+        if (!isOfficialDossierSource(url, officialDomains) || seen.has(url)) continue;
+        const scraped: any = await scraper.scrape(url, { formats: ["markdown"], onlyMainContent: true });
+        const publishedAt = String(candidate?.publishedDate || candidate?.date
+          || scraped?.metadata?.publishedTime || scraped?.metadata?.publishedDate || "").slice(0, 10);
+        const text = String(scraped?.markdown || "").replace(/\s+/g, " ").trim().slice(0, 12000);
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(publishedAt) || publishedAt > cutoff || text.length < 200) continue;
+        seen.add(url);
+        const host = new URL(url).hostname.toLowerCase();
+        const sourceId = `official-${String(sources.length + 1).padStart(3, "0")}`;
+        const sourceClass = host.endsWith("sebi.gov.in") ? "regulator"
+          : (host.endsWith("nseindia.com") || host.endsWith("bseindia.com")) ? "exchange" : "company_official";
+        sources.push({ sourceId, url, sourceClass, publishedAt, retrievedAt: new Date().toISOString() });
+        evidence.push({ sourceId, text });
+      }
+
+      if (!sources.length) return res.status(422).json({
+        error: "No dated official evidence passed the admission policy.",
+      });
+
+      const ai = getGenAI();
+      const response = await ai.models.generateContent({
+        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT",
+            required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"],
+            properties: Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
+              type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
+                text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+                status: { type: "STRING", enum: ["supported", "conflict"] },
+              } },
+            }]))
+          }
+        },
+      });
+      const rawSections = JSON.parse(sanitizeJsonShell(response.text || "{}"));
+      let claimNumber = 0;
+      const sourceIds = new Set(sources.map(source => source.sourceId));
+      const sectionNames = ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"];
+      const sections = Object.fromEntries(sectionNames.map(name => [name,
+        (Array.isArray(rawSections[name]) ? rawSections[name] : []).map((claim: any) => ({
+          claimId: `claim-${String(++claimNumber).padStart(3, "0")}`,
+          text: String(claim.text || "").trim(),
+          sourceIds: [...new Set((Array.isArray(claim.sourceIds) ? claim.sourceIds : []).filter((id: string) => sourceIds.has(id)))],
+          status: claim.status === "conflict" ? "conflict" : "supported",
+        })).filter((claim: any) => claim.text && claim.sourceIds.length),
+      ]));
+      const dossier: any = {
+        schemaVersion: "1.0.0", reportId: `${ticker}-${Date.now()}`, generatedAt: new Date().toISOString(),
+        company: { symbol: ticker, name: companyName, exchange: req.body?.exchange || "NSE", sector: req.body?.sector || "Unclassified", officialDomains },
+        sections, sources,
+        marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
+        qualityControl: { unsupportedClaims: 0, conflicts: Object.values(sections).flat().filter((claim: any) => claim.status === "conflict").length, humanReviewRequired: true },
+      };
+      if (!isResearchDossier(dossier)) throw new Error("Generated evidence failed the dossier contract");
+      return res.json(dossier);
+    } catch (error: any) {
+      console.error("[dossier] official evidence research failed:", error?.message || error);
+      return res.status(502).json({ error: "Official evidence research failed." });
+    }
+  });
 
   // ── Business Momentum (BMS) ────────────────────────────────────────────────
   // AlphaSynth-facing bridge to the deterministic Python Business Momentum

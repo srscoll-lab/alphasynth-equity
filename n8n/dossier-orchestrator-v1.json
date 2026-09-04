@@ -1,0 +1,35 @@
+{
+  "name": "AlphaSynth Dossier Orchestrator v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-dossier-orchestrator-v1", "responseMode": "responseNode", "options": {} },
+      "id": "webhook", "name": "Dossier Request", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [-480, 0],
+      "webhookId": "alphasynth-dossier-orchestrator-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;const ticker=String(b.ticker??'').trim().toUpperCase();const cutoff=String(b.information_cutoff??'');if(!/^[A-Z0-9&.-]{1,24}$/.test(ticker)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(cutoff))throw new Error('Valid ticker and cutoff required');if(b.social_affects_bms!==false)throw new Error('social_affects_bms must be false');return[{json:{ticker,company_name:String(b.company_name??ticker),reporting_period:b.reporting_period??null,information_cutoff:cutoff,official_domains:Array.isArray(b.official_domains)?b.official_domains:[],exchange:b.exchange??'NSE',sector:b.sector??'Unclassified',social_affects_bms:false}}];"
+      },
+      "id": "validate", "name": "Validate Request", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-240, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "={{ $env.ALPHASYNTH_INTERNAL_URL + '/api/dossier/research-evidence' }}",
+        "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "x-dossier-token", "value": "={{ $env.DOSSIER_INTERNAL_TOKEN }}" }] },
+        "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}", "options": { "timeout": 180000 }
+      },
+      "id": "research", "name": "Build Official Evidence Dossier", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [20, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond", "name": "Return Dossier", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4, "position": [280, 0]
+    }
+  ],
+  "connections": {
+    "Dossier Request": { "main": [[{ "node": "Validate Request", "type": "main", "index": 0 }]] },
+    "Validate Request": { "main": [[{ "node": "Build Official Evidence Dossier", "type": "main", "index": 0 }]] },
+    "Build Official Evidence Dossier": { "main": [[{ "node": "Return Dossier", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {}, "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false, "versionId": "alphasynth-dossier-orchestrator-v1"
+}

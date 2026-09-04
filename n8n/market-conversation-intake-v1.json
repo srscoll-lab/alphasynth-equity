@@ -1,0 +1,40 @@
+{
+  "name": "AlphaSynth Market Conversation Intake v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-market-conversation-intake-v1", "responseMode": "responseNode", "options": {} },
+      "id": "intake-webhook",
+      "name": "Public Conversation Candidates",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "alphasynth-market-conversation-intake-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;if(b.social_affects_bms!==false)throw new Error('social_affects_bms must be false');const allowed=['valuepickr.com','substack.com'];const match=(h,d)=>h===d||h.endsWith('.'+d);const cutoff=String(b.information_cutoff??'');if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(cutoff))throw new Error('Valid information_cutoff required');const admitted=[],rejected=[];const seen=new Set();for(const x of (Array.isArray(b.items)?b.items:[])){try{const u=new URL(String(x.url??''));const host=u.hostname.toLowerCase().replace(/^www\\./,'');const published=String(x.published_at??'');const text=String(x.text??'').replace(/\\s+/g,' ').trim().slice(0,2000);let reason='';if(u.protocol!=='https:')reason='non_https';else if(!allowed.some(d=>match(host,d)))reason='unsupported_source';else if(u.username||u.password||/\\b(login|signin|private)\\b/i.test(u.pathname))reason='non_public_url';else if(!published)reason='missing_publication_date';else if(published>cutoff)reason='post_cutoff';else if(!text)reason='empty_content';else if(seen.has(u.href))reason='duplicate';if(reason){rejected.push({url:u.href,reason});continue;}seen.add(u.href);admitted.push({source_id:`social-${String(admitted.length+1).padStart(3,'0')}`,url:u.href,source:match(host,'valuepickr.com')?'valuepickr':'substack',published_at:published,text,author_handle:null,retrieved_at:new Date().toISOString()});}catch{rejected.push({url:String(x.url??''),reason:'invalid_url'});}}return[{json:{ticker:String(b.ticker??'').toUpperCase(),social_affects_bms:false,items:admitted,rejected,privacy:{author_handles_stored:false,raw_text_limit:2000},quality_control:{candidate_count:(b.items??[]).length,admitted_count:admitted.length,rejected_count:rejected.length}}}];"
+      },
+      "id": "admit",
+      "name": "Apply Public Source and Privacy Policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-180, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Classification Intake",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [160, 0]
+    }
+  ],
+  "connections": {
+    "Public Conversation Candidates": { "main": [[{ "node": "Apply Public Source and Privacy Policy", "type": "main", "index": 0 }]] },
+    "Apply Public Source and Privacy Policy": { "main": [[{ "node": "Return Classification Intake", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-market-conversation-intake-v1"
+}

@@ -1,0 +1,69 @@
+{
+  "name": "AlphaSynth Market Conversation Classifier Connector v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-market-classify-v1", "responseMode": "responseNode", "options": {} },
+      "id": "classifier-webhook",
+      "name": "Sanitized Opinion Batch",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-540, 0],
+      "webhookId": "alphasynth-market-classify-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;if(b.social_affects_bms!==false)throw new Error('social_affects_bms must be false');const items=Array.isArray(b.items)?b.items.slice(0,50):[];if(!items.length)throw new Error('No sanitized items supplied');if(items.some(x=>x.author_handle!==null||!x.source_id||!x.url||!x.text))throw new Error('Only sanitized intake records are allowed');return[{json:{ticker:String(b.ticker??'').toUpperCase(),items,social_affects_bms:false}}];"
+      },
+      "id": "validate-batch",
+      "name": "Validate Sanitized Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-300, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.ALPHASYNTH_INTERNAL_URL + '/api/dossier/classify-opinions' }}",
+        "sendHeaders": true,
+        "headerParameters": { "parameters": [{ "name": "x-dossier-token", "value": "={{ $env.DOSSIER_INTERNAL_TOKEN }}" }] },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": { "timeout": 120000 }
+      },
+      "id": "classify",
+      "name": "Call Private AlphaSynth Classifier",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-20, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json;if(b.social_affects_bms!==false||!Array.isArray(b.items))throw new Error('Invalid classifier response');const allowed=new Set(['positive','neutral','negative']);for(const x of b.items){if(!x.source_id||!allowed.has(x.sentiment)||typeof x.confidence!=='number'||x.confidence<0||x.confidence>1||typeof x.sarcasm_possible!=='boolean'||!Array.isArray(x.themes))throw new Error('Malformed classification item');}return[{json:b}];"
+      },
+      "id": "validate-response",
+      "name": "Validate Classifier Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Classified Opinions",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [520, 0]
+    }
+  ],
+  "connections": {
+    "Sanitized Opinion Batch": { "main": [[{ "node": "Validate Sanitized Batch", "type": "main", "index": 0 }]] },
+    "Validate Sanitized Batch": { "main": [[{ "node": "Call Private AlphaSynth Classifier", "type": "main", "index": 0 }]] },
+    "Call Private AlphaSynth Classifier": { "main": [[{ "node": "Validate Classifier Response", "type": "main", "index": 0 }]] },
+    "Validate Classifier Response": { "main": [[{ "node": "Return Classified Opinions", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-market-classifier-connector-v1"
+}
