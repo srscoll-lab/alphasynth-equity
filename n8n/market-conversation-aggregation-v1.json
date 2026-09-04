@@ -1,0 +1,51 @@
+{
+  "name": "AlphaSynth Market Conversation Aggregation v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-market-conversation-v1", "responseMode": "responseNode", "options": {} },
+      "id": "conversation-webhook",
+      "name": "Classified Conversation Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "alphasynth-market-conversation-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json; if(b.social_affects_bms!==false) throw new Error('social_affects_bms must be false'); const allowed=new Set(['positive','neutral','negative']); const raw=Array.isArray(b.items)?b.items:[]; const seen=new Set(); const items=[]; let rejected=0; for(const x of raw){const id=String(x.source_id??'');const text=String(x.text??'').trim();const sentiment=String(x.sentiment??'');const confidence=Number(x.confidence);const url=String(x.url??'');if(!id||!text||!allowed.has(sentiment)||!Number.isFinite(confidence)||confidence<0||confidence>1||!/^https:\\/\\//.test(url)||seen.has(id)){rejected++;continue;}seen.add(id);const uncertainty=x.sarcasm_possible===true?0.5:1;items.push({...x,source_id:id,text,url,sentiment,confidence,weight:confidence*uncertainty});} return [{json:{ticker:String(b.ticker??'').toUpperCase(),items,rejected,social_affects_bms:false}}];"
+      },
+      "id": "validate",
+      "name": "Validate and Deduplicate Opinions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json;const counts={positive:0,neutral:0,negative:0};const sources={};const themes=new Map();let total=0;for(const x of b.items){counts[x.sentiment]+=x.weight;total+=x.weight;const host=new URL(x.url).hostname.replace(/^www\\./,'');sources[host]=(sources[host]||0)+1;for(const label of (Array.isArray(x.themes)?x.themes:[]).slice(0,3)){const k=String(label).trim().toLowerCase();if(!k)continue;const old=themes.get(k)||{label:k,weight:0,positive:0,neutral:0,negative:0,source_ids:[]};old.weight+=x.weight;old[x.sentiment]+=x.weight;old.source_ids.push(x.source_id);themes.set(k,old);}}const ratio=k=>total?Number((counts[k]/total).toFixed(4)):0;const ranked=[...themes.values()].sort((a,z)=>z.weight-a.weight).slice(0,5).map(t=>({label:t.label,stance:t.positive>t.negative*1.25?'bullish':t.negative>t.positive*1.25?'bearish':t.positive+t.negative>t.neutral?'mixed':'neutral',source_ids:[...new Set(t.source_ids)]}));const sufficient=b.items.length>=5&&Object.keys(sources).length>=2;return [{json:{status:sufficient?'available':'insufficient_data',affectsBms:false,sampleSize:b.items.length,sentiment:{positive:ratio('positive'),neutral:ratio('neutral'),negative:ratio('negative')},themes:sufficient?ranked:[],sourceCoverage:sources,rejectedItems:b.rejected,confidence:sufficient?(b.items.length>=20?'high':'moderate'):'low'}}];"
+      },
+      "id": "aggregate",
+      "name": "Aggregate Without Narrative",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Market Conversation",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [300, 0]
+    }
+  ],
+  "connections": {
+    "Classified Conversation Webhook": { "main": [[{ "node": "Validate and Deduplicate Opinions", "type": "main", "index": 0 }]] },
+    "Validate and Deduplicate Opinions": { "main": [[{ "node": "Aggregate Without Narrative", "type": "main", "index": 0 }]] },
+    "Aggregate Without Narrative": { "main": [[{ "node": "Return Market Conversation", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-market-conversation-v1"
+}

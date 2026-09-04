@@ -2372,6 +2372,53 @@ ${rawText}` }] }],
     }
   });
 
+  app.post("/api/dossier/classify-opinions", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Dossier classifier is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const items = Array.isArray(req.body?.items) ? req.body.items.slice(0, 50) : [];
+    if (!ticker || !items.length || items.some((item: any) =>
+      !item.source_id || !item.url || !item.text || item.author_handle !== null
+    )) return res.status(400).json({ error: "Sanitized classification items are required." });
+
+    try {
+      const ai = getGenAI();
+      const prompt = `Classify public market conversation about ${ticker}. This is categorisation, not investment advice.
+For each item, preserve source_id and url. Return sentiment as positive, neutral, or negative; confidence from 0 to 1; sarcasm_possible as boolean; and at most three short factual theme labels. Do not write a narrative, recommendation, target, or BMS assessment. Treat promotional certainty and unsupported claims cautiously.\n\n${JSON.stringify(items)}`;
+      const response = await ai.models.generateContent({
+        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "OBJECT",
+            required: ["items"],
+            properties: {
+              items: { type: "ARRAY", items: { type: "OBJECT", required: ["source_id", "url", "text", "sentiment", "confidence", "sarcasm_possible", "themes"], properties: {
+                source_id: { type: "STRING" }, url: { type: "STRING" }, text: { type: "STRING" },
+                sentiment: { type: "STRING", enum: ["positive", "neutral", "negative"] },
+                confidence: { type: "NUMBER", minimum: 0, maximum: 1 }, sarcasm_possible: { type: "BOOLEAN" },
+                themes: { type: "ARRAY", maxItems: 3, items: { type: "STRING" } }
+              } } }
+            }
+          },
+          maxOutputTokens: 8192,
+        },
+      });
+      const classified = JSON.parse(sanitizeGroundingJson(response.text || "{}"));
+      const inputIds = new Set(items.map((item: any) => String(item.source_id)));
+      if (!Array.isArray(classified.items) || classified.items.some((item: any) => !inputIds.has(String(item.source_id)))) {
+        throw new Error("Classifier returned invalid source references");
+      }
+      return res.json({ ticker, social_affects_bms: false, items: classified.items });
+    } catch (error: any) {
+      console.error("[dossier] opinion classification failed:", error?.message || error);
+      return res.status(502).json({ error: "Opinion classification failed." });
+    }
+  });
+
   // ── Business Momentum (BMS) ────────────────────────────────────────────────
   // AlphaSynth-facing bridge to the deterministic Python Business Momentum
   // engine. The BMS engine remains the source of truth; AlphaSynth consumes

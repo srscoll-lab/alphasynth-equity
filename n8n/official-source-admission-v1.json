@@ -1,0 +1,40 @@
+{
+  "name": "AlphaSynth Official Source Admission v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-official-source-admission-v1", "responseMode": "responseNode", "options": {} },
+      "id": "source-webhook",
+      "name": "Source Candidates Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-540, 0],
+      "webhookId": "alphasynth-official-source-admission-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json; const domains=Array.isArray(b.official_domains)?b.official_domains:[]; const candidates=Array.isArray(b.candidates)?b.candidates:[]; const cutoff=String(b.information_cutoff??''); if(!domains.length) throw new Error('At least one verified official domain is required'); if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(cutoff)) throw new Error('Valid information_cutoff required'); const trusted=['nseindia.com','nsearchives.nseindia.com','bseindia.com','sebi.gov.in',...domains].map(d=>String(d).toLowerCase().replace(/^www\\./,'')); const match=(h,d)=>h===d||h.endsWith('.'+d); const admitted=[]; const rejected=[]; const seen=new Set(); for(const c of candidates){ try{ const u=new URL(String(c.url??'')); const host=u.hostname.toLowerCase().replace(/^www\\./,''); const date=c.published_at?String(c.published_at):null; let reason=''; if(u.protocol!=='https:') reason='non_https'; else if(!trusted.some(d=>match(host,d))) reason='unverified_domain'; else if(!date) reason='missing_publication_date'; else if(date>cutoff) reason='post_cutoff'; else if(seen.has(u.href)) reason='duplicate'; if(reason){rejected.push({url:u.href,reason});continue;} seen.add(u.href); const sourceClass=match(host,'sebi.gov.in')?'regulator':(match(host,'nseindia.com')||match(host,'nsearchives.nseindia.com')||match(host,'bseindia.com'))?'exchange':'company_official'; const priority=sourceClass==='regulator'?3:sourceClass==='exchange'?2:1; admitted.push({source_id:'official-'+String(admitted.length+1).padStart(3,'0'),url:u.href,title:String(c.title??''),published_at:date,retrieved_at:new Date().toISOString(),source_class:sourceClass,priority}); }catch{rejected.push({url:String(c.url??''),reason:'invalid_url'});} } admitted.sort((a,b)=>b.priority-a.priority||String(b.published_at).localeCompare(String(a.published_at))); return [{json:{ticker:String(b.ticker??'').toUpperCase(),information_cutoff:cutoff,official_domains:domains,admitted,rejected,quality_control:{candidate_count:candidates.length,admitted_count:admitted.length,rejected_count:rejected.length,human_review_required:admitted.length===0}}}];"
+      },
+      "id": "admit-sources",
+      "name": "Apply Official Source Policy",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-220, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Admitted Sources",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [100, 0]
+    }
+  ],
+  "connections": {
+    "Source Candidates Webhook": { "main": [[{ "node": "Apply Official Source Policy", "type": "main", "index": 0 }]] },
+    "Apply Official Source Policy": { "main": [[{ "node": "Return Admitted Sources", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-official-source-admission-v1"
+}

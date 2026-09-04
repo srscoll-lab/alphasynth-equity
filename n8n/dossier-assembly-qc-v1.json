@@ -1,0 +1,40 @@
+{
+  "name": "AlphaSynth Dossier Assembly and QC v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-dossier-assembly-v1", "responseMode": "responseNode", "options": {} },
+      "id": "assembly-webhook",
+      "name": "Dossier Evidence Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-520, 0],
+      "webhookId": "alphasynth-dossier-assembly-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;const company=b.company??{};if(!company.symbol||!company.name||!company.exchange||!company.sector||!Array.isArray(company.officialDomains)||!company.officialDomains.length)throw new Error('Complete verified company identity required');const sources=Array.isArray(b.sources)?b.sources:[];const ids=new Set();for(const s of sources){if(!s.sourceId||ids.has(s.sourceId))throw new Error('Source IDs must be present and unique');ids.add(s.sourceId);}const names=['snapshot','developments','operatingEvidence','managementCommitments','risks'];const sections={};let unsupported=0,conflicts=0;for(const name of names){const input=Array.isArray(b.sections?.[name])?b.sections[name]:[];sections[name]=input.map((c,i)=>{const refs=Array.isArray(c.sourceIds)?c.sourceIds.filter(id=>ids.has(id)):[];let status=c.status;if(!refs.length){status='insufficient_evidence';unsupported++;}if(status==='conflict')conflicts++;return{claimId:String(c.claimId??`${name}-${i+1}`),text:String(c.text??'').trim(),sourceIds:refs,status};}).filter(c=>c.text);}const mc=b.marketConversation??{status:'disabled',affectsBms:false,sampleSize:0,sentiment:{positive:0,neutral:1,negative:0},themes:[]};if(mc.affectsBms!==false)throw new Error('Market conversation cannot affect BMS');const thin=sources.length<2||sections.snapshot.length===0;return[{json:{schemaVersion:'1.0.0',reportId:String(b.reportId??`${company.symbol}-${Date.now()}`),generatedAt:new Date().toISOString(),company,sections,sources,marketConversation:mc,qualityControl:{unsupportedClaims:unsupported,conflicts,humanReviewRequired:true,thinEvidence:thin}}}];"
+      },
+      "id": "assemble",
+      "name": "Assemble and Audit Dossier",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, 0]
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "id": "respond",
+      "name": "Return Validated Dossier",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [120, 0]
+    }
+  ],
+  "connections": {
+    "Dossier Evidence Webhook": { "main": [[{ "node": "Assemble and Audit Dossier", "type": "main", "index": 0 }]] },
+    "Assemble and Audit Dossier": { "main": [[{ "node": "Return Validated Dossier", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-dossier-assembly-v1"
+}

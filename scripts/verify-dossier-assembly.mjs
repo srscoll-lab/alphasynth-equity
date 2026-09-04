@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const workflow=JSON.parse(fs.readFileSync("n8n/dossier-assembly-qc-v1.json","utf8"));
+const code=workflow.nodes.find(n=>n.name==="Assemble and Audit Dossier").parameters.jsCode;
+const run=new Function("$json",code);
+const base={company:{symbol:"TEST",name:"Test Ltd",exchange:"NSE",sector:"Industrial",officialDomains:["example.com"]},sources:[{sourceId:"s1",url:"https://example.com/report.pdf",sourceClass:"company_official",publishedAt:"2026-09-01",retrievedAt:"2026-09-04T00:00:00Z"}],sections:{snapshot:[{claimId:"c1",text:"Supported",sourceIds:["s1"],status:"supported"}],developments:[{claimId:"c2",text:"Unsupported",sourceIds:["missing"],status:"supported"}],operatingEvidence:[],managementCommitments:[],risks:[]},marketConversation:{status:"disabled",affectsBms:false,sampleSize:0,sentiment:{positive:0,neutral:1,negative:0},themes:[]}};
+const [result]=run({body:base});
+assert.equal(result.json.schemaVersion,"1.0.0");
+assert.equal(result.json.sections.developments[0].status,"insufficient_evidence");
+assert.equal(result.json.sections.developments[0].sourceIds.length,0);
+assert.equal(result.json.qualityControl.unsupportedClaims,1);
+assert.equal(result.json.qualityControl.humanReviewRequired,true);
+assert.throws(()=>run({body:{...base,marketConversation:{...base.marketConversation,affectsBms:true}}}));
+console.log("PASS: dossier assembly and QC");
