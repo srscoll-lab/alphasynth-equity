@@ -616,16 +616,51 @@ function normalizeEvidenceDate(...values: unknown[]): string | null {
     aug: "08", august: "08", sep: "09", sept: "09", september: "09", oct: "10", october: "10",
     nov: "11", november: "11", dec: "12", december: "12",
   };
+  const validIsoDate = (year: string, month: string, day: string): string | null => {
+    const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    const parsed = new Date(`${iso}T00:00:00Z`);
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso ? iso : null;
+  };
+  const conservativeMonthDate = (year: string, month: string): string | null => {
+    const monthNumber = Number(month);
+    if (monthNumber < 1 || monthNumber > 12) return null;
+    const lastDay = new Date(Date.UTC(Number(year), monthNumber, 0)).getUTCDate();
+    return validIsoDate(year, month, String(lastDay));
+  };
   for (const value of values) {
     const text = String(value || "").trim();
     if (!text) continue;
     let match = text.match(/\b(20\d{2})[-/]([01]\d)[-/]([0-3]\d)\b/);
-    if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+    if (match) {
+      const date = validIsoDate(match[1], match[2], match[3]);
+      if (date) return date;
+    }
     match = text.match(/\b([0-3]?\d)[-/. ]([01]?\d)[-/. ](20\d{2})\b/);
-    if (match) return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+    if (match) {
+      const date = validIsoDate(match[3], match[2], match[1]);
+      if (date) return date;
+    }
     match = text.match(/\b([0-3]?\d)\s+([A-Za-z]{3,9})\s*,?\s*(20\d{2})\b/i);
     if (match && months[match[2].toLowerCase()]) {
-      return `${match[3]}-${months[match[2].toLowerCase()]}-${match[1].padStart(2, "0")}`;
+      const date = validIsoDate(match[3], months[match[2].toLowerCase()], match[1]);
+      if (date) return date;
+    }
+    match = text.match(/\b([A-Za-z]{3,9})\s+([0-3]?\d)\s*,?\s*(20\d{2})\b/i);
+    if (match && months[match[1].toLowerCase()]) {
+      const date = validIsoDate(match[3], months[match[1].toLowerCase()], match[2]);
+      if (date) return date;
+    }
+    // Some official investor-relations pages disclose only a publication month.
+    // Use that month's final day so the cutoff check remains conservative.
+    match = text.match(/\b([A-Za-z]{3,9})\s+(20\d{2})\b/i);
+    if (match && months[match[1].toLowerCase()]) {
+      const date = conservativeMonthDate(match[2], months[match[1].toLowerCase()]);
+      if (date) return date;
+    }
+    match = text.match(/(?:^|\D)(20\d{2})[-/]([01]\d)(?:\D|$)/);
+    if (match) {
+      const date = conservativeMonthDate(match[1], match[2]);
+      if (date) return date;
     }
   }
   return null;
