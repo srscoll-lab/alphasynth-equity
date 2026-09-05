@@ -2569,25 +2569,42 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       });
 
       const ai = getGenAI();
+      const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+      const responseSchema = {
+        type: "OBJECT",
+        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"],
+        properties: Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
+          type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
+            text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+            status: { type: "STRING", enum: ["supported", "conflict"] },
+          } },
+        }]))
+      };
       const response = await ai.models.generateContent({
-        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        model,
         contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
-          responseSchema: {
-            type: "OBJECT",
-            required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"],
-            properties: Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
-              type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
-                text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
-                status: { type: "STRING", enum: ["supported", "conflict"] },
-              } },
-            }]))
-          }
+          responseSchema,
         },
       });
-      const rawSections = JSON.parse(sanitizeJsonShell(response.text || "{}"));
+      let rawSections: any;
+      try {
+        rawSections = JSON.parse(sanitizeJsonShell(response.text || "{}"));
+      } catch (parseError: any) {
+        console.warn("[dossier] malformed model JSON; attempting one schema-constrained repair:", parseError?.message || parseError);
+        const repairResponse = await ai.models.generateContent({
+          model,
+          contents: [{ role: "user", parts: [{ text: `Repair the malformed JSON below. Preserve its factual content and sourceId values exactly; do not add claims or sources. Return only valid JSON matching the required schema.\n\n${response.text || "{}"}` }] }],
+          config: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 8192,
+            responseSchema,
+          },
+        });
+        rawSections = JSON.parse(sanitizeJsonShell(repairResponse.text || "{}"));
+      }
       let claimNumber = 0;
       const sourceIds = new Set(sources.map(source => source.sourceId));
       const sectionNames = ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"];
