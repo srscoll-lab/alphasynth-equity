@@ -609,6 +609,28 @@ const dossierGenerationWindows = new Map<string, { count: number; startedAt: num
 const DOSSIER_RATE_WINDOW_MS = 10 * 60 * 1000;
 const DOSSIER_RATE_LIMIT = 5;
 
+function normalizeEvidenceDate(...values: unknown[]): string | null {
+  const months: Record<string, string> = {
+    jan: "01", january: "01", feb: "02", february: "02", mar: "03", march: "03",
+    apr: "04", april: "04", may: "05", jun: "06", june: "06", jul: "07", july: "07",
+    aug: "08", august: "08", sep: "09", sept: "09", september: "09", oct: "10", october: "10",
+    nov: "11", november: "11", dec: "12", december: "12",
+  };
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (!text) continue;
+    let match = text.match(/\b(20\d{2})[-/]([01]\d)[-/]([0-3]\d)\b/);
+    if (match) return `${match[1]}-${match[2]}-${match[3]}`;
+    match = text.match(/\b([0-3]?\d)[-/. ]([01]?\d)[-/. ](20\d{2})\b/);
+    if (match) return `${match[3]}-${match[2].padStart(2, "0")}-${match[1].padStart(2, "0")}`;
+    match = text.match(/\b([0-3]?\d)\s+([A-Za-z]{3,9})\s*,?\s*(20\d{2})\b/i);
+    if (match && months[match[2].toLowerCase()]) {
+      return `${match[3]}-${months[match[2].toLowerCase()]}-${match[1].padStart(2, "0")}`;
+    }
+  }
+  return null;
+}
+
 async function startServer() {
   app.use(express.json());
 
@@ -2471,16 +2493,31 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const seen = new Set<string>();
       const sources: any[] = [];
       const evidence: Array<{ sourceId: string; text: string }> = [];
+      const rejectionReasons: Record<string, number> = {};
+      const reject = (reason: string) => { rejectionReasons[reason] = (rejectionReasons[reason] || 0) + 1; };
 
       for (const candidate of candidates) {
         if (sources.length >= 6) break;
         const url = String(candidate?.url || "");
-        if (!isOfficialDossierSource(url, officialDomains) || seen.has(url)) continue;
-        const scraped: any = await scraper.scrape(url, { formats: ["markdown"], onlyMainContent: true });
-        const publishedAt = String(candidate?.publishedDate || candidate?.date
-          || scraped?.metadata?.publishedTime || scraped?.metadata?.publishedDate || "").slice(0, 10);
+        if (!isOfficialDossierSource(url, officialDomains)) { reject("unverified_domain"); continue; }
+        if (seen.has(url)) { reject("duplicate"); continue; }
+        let scraped: any;
+        try {
+          scraped = await scraper.scrape(url, { formats: ["markdown"], onlyMainContent: true });
+        } catch {
+          reject("scrape_failed");
+          continue;
+        }
         const text = String(scraped?.markdown || "").replace(/\s+/g, " ").trim().slice(0, 12000);
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(publishedAt) || publishedAt > cutoff || text.length < 200) continue;
+        if (text.length < 200) { reject("thin_content"); continue; }
+        const labelledDate = text.slice(0, 2000).match(/\b(?:publication date|published|dated|date|uploaded on)\s*[:\-]?\s*([^|,;]{6,40})/i)?.[1];
+        const publishedAt = normalizeEvidenceDate(
+          candidate?.publishedDate, candidate?.date, candidate?.title,
+          scraped?.metadata?.publishedTime, scraped?.metadata?.publishedDate,
+          scraped?.metadata?.date, labelledDate, url,
+        );
+        if (!publishedAt) { reject("missing_publication_date"); continue; }
+        if (publishedAt > cutoff) { reject("post_cutoff"); continue; }
         seen.add(url);
         const host = new URL(url).hostname.toLowerCase();
         const sourceId = `official-${String(sources.length + 1).padStart(3, "0")}`;
@@ -2492,6 +2529,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
 
       if (!sources.length) return res.status(422).json({
         error: "No dated official evidence passed the admission policy.",
+        candidateCount: candidates.length,
+        rejectionReasons,
       });
 
       const ai = getGenAI();
