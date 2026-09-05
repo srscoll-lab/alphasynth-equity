@@ -2523,7 +2523,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     try {
       const query = `${companyName} ${ticker} annual report quarterly results investor presentation `
         + `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
-      const search: any = await scraper.search(query, { limit: 10 });
+      const configuredSearchLimit = Number.parseInt(process.env.DOSSIER_SEARCH_LIMIT || "3", 10);
+      const searchLimit = Number.isFinite(configuredSearchLimit)
+        ? Math.min(10, Math.max(1, configuredSearchLimit))
+        : 3;
+      const search: any = await scraper.search(query, { limit: searchLimit });
       const candidates = [...(search?.web || []), ...(search?.news || [])];
       const seen = new Set<string>();
       const sources: any[] = [];
