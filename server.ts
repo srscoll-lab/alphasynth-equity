@@ -4,7 +4,8 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
-import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
+import { isResearchDossier } from "./src/dossier";
+import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -609,62 +610,6 @@ const dossierGenerationWindows = new Map<string, { count: number; startedAt: num
 const DOSSIER_RATE_WINDOW_MS = 10 * 60 * 1000;
 const DOSSIER_RATE_LIMIT = 5;
 
-function normalizeEvidenceDate(...values: unknown[]): string | null {
-  const months: Record<string, string> = {
-    jan: "01", january: "01", feb: "02", february: "02", mar: "03", march: "03",
-    apr: "04", april: "04", may: "05", jun: "06", june: "06", jul: "07", july: "07",
-    aug: "08", august: "08", sep: "09", sept: "09", september: "09", oct: "10", october: "10",
-    nov: "11", november: "11", dec: "12", december: "12",
-  };
-  const validIsoDate = (year: string, month: string, day: string): string | null => {
-    const iso = `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-    const parsed = new Date(`${iso}T00:00:00Z`);
-    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === iso ? iso : null;
-  };
-  const conservativeMonthDate = (year: string, month: string): string | null => {
-    const monthNumber = Number(month);
-    if (monthNumber < 1 || monthNumber > 12) return null;
-    const lastDay = new Date(Date.UTC(Number(year), monthNumber, 0)).getUTCDate();
-    return validIsoDate(year, month, String(lastDay));
-  };
-  for (const value of values) {
-    const text = String(value || "").trim();
-    if (!text) continue;
-    let match = text.match(/\b(20\d{2})[-/]([01]\d)[-/]([0-3]\d)\b/);
-    if (match) {
-      const date = validIsoDate(match[1], match[2], match[3]);
-      if (date) return date;
-    }
-    match = text.match(/\b([0-3]?\d)[-/. ]([01]?\d)[-/. ](20\d{2})\b/);
-    if (match) {
-      const date = validIsoDate(match[3], match[2], match[1]);
-      if (date) return date;
-    }
-    match = text.match(/\b([0-3]?\d)\s+([A-Za-z]{3,9})\s*,?\s*(20\d{2})\b/i);
-    if (match && months[match[2].toLowerCase()]) {
-      const date = validIsoDate(match[3], months[match[2].toLowerCase()], match[1]);
-      if (date) return date;
-    }
-    match = text.match(/\b([A-Za-z]{3,9})\s+([0-3]?\d)\s*,?\s*(20\d{2})\b/i);
-    if (match && months[match[1].toLowerCase()]) {
-      const date = validIsoDate(match[3], months[match[1].toLowerCase()], match[2]);
-      if (date) return date;
-    }
-    // Some official investor-relations pages disclose only a publication month.
-    // Use that month's final day so the cutoff check remains conservative.
-    match = text.match(/\b([A-Za-z]{3,9})\s+(20\d{2})\b/i);
-    if (match && months[match[1].toLowerCase()]) {
-      const date = conservativeMonthDate(match[2], months[match[1].toLowerCase()]);
-      if (date) return date;
-    }
-    match = text.match(/(?:^|\D)(20\d{2})[-/]([01]\d)(?:\D|$)/);
-    if (match) {
-      const date = conservativeMonthDate(match[1], match[2]);
-      if (date) return date;
-    }
-  }
-  return null;
-}
 
 async function startServer() {
   app.use(express.json());
@@ -2529,47 +2474,17 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         : 3;
       const search: any = await scraper.search(query, { limit: searchLimit });
       const candidates = [...(search?.web || []), ...(search?.news || [])];
-      const seen = new Set<string>();
-      const sources: any[] = [];
-      const evidence: Array<{ sourceId: string; text: string }> = [];
-      const rejectionReasons: Record<string, number> = {};
-      const reject = (reason: string) => { rejectionReasons[reason] = (rejectionReasons[reason] || 0) + 1; };
-
-      for (const candidate of candidates) {
-        if (sources.length >= 6) break;
-        const url = String(candidate?.url || "");
-        if (!isOfficialDossierSource(url, officialDomains)) { reject("unverified_domain"); continue; }
-        if (seen.has(url)) { reject("duplicate"); continue; }
-        let scraped: any;
-        try {
-          scraped = await scraper.scrape(url, { formats: ["markdown"], onlyMainContent: true });
-        } catch {
-          reject("scrape_failed");
-          continue;
-        }
-        const text = String(scraped?.markdown || "").replace(/\s+/g, " ").trim().slice(0, 12000);
-        if (text.length < 200) { reject("thin_content"); continue; }
-        const labelledDate = text.slice(0, 2000).match(/\b(?:publication date|published|dated|date|uploaded on)\s*[:\-]?\s*([^|,;]{6,40})/i)?.[1];
-        const publishedAt = normalizeEvidenceDate(
-          candidate?.publishedDate, candidate?.date, candidate?.title,
-          scraped?.metadata?.publishedTime, scraped?.metadata?.publishedDate,
-          scraped?.metadata?.date, labelledDate, url,
-        );
-        if (!publishedAt) { reject("missing_publication_date"); continue; }
-        if (publishedAt > cutoff) { reject("post_cutoff"); continue; }
-        seen.add(url);
-        const host = new URL(url).hostname.toLowerCase();
-        const sourceId = `official-${String(sources.length + 1).padStart(3, "0")}`;
-        const sourceClass = host.endsWith("sebi.gov.in") ? "regulator"
-          : (host.endsWith("nseindia.com") || host.endsWith("bseindia.com")) ? "exchange" : "company_official";
-        sources.push({ sourceId, url, sourceClass, publishedAt, retrievedAt: new Date().toISOString() });
-        evidence.push({ sourceId, text });
-      }
+      const { sources, evidence, rejectionReasons, diagnostics, discoveredCount } = await collectOfficialEvidence(
+        candidates, officialDomains, cutoff, (url, options) => scraper.scrape(url, options),
+      );
+      console.info("[dossier] evidence admission", JSON.stringify({ ticker, cutoff, diagnostics }));
 
       if (!sources.length) return res.status(422).json({
         error: "No dated official evidence passed the admission policy.",
         candidateCount: candidates.length,
         rejectionReasons,
+        discoveredCount,
+        diagnostics,
       });
 
       const ai = getGenAI();

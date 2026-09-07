@@ -17,12 +17,12 @@
       "parameters": {
         "method": "POST", "url": "={{ $env.ALPHASYNTH_INTERNAL_URL + '/api/dossier/research-evidence' }}",
         "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "x-dossier-token", "value": "={{ $env.DOSSIER_INTERNAL_TOKEN }}" }] },
-        "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}", "options": { "timeout": 180000 }
+        "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}", "options": { "timeout": 280000, "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" } } }
       },
-      "id": "research", "name": "Build Official Evidence Dossier", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [20, 0]
+      "id": "research", "name": "Build Official Evidence Dossier", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [20, 0], "onError": "continueRegularOutput"
     },
     {
-      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": {} },
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json.body ?? { error: 'Dossier backend request failed. Inspect the research node execution.' } }}", "options": { "responseCode": "={{ $json.statusCode ?? 502 }}" } },
       "id": "respond", "name": "Return Dossier", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4, "position": [280, 0]
     }
   ],
