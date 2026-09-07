@@ -35,6 +35,9 @@ publication metadata, dated exchange cover letters, PDF filenames, and structure
 labelled dates tied to the document on its official index. Common same-origin PDF viewer/download
 wrappers are normalized; cross-origin wrapper targets, upload folders, and fiscal-period labels
 are never treated as publication evidence.
+PDF extraction uses fast text parsing and is capped at 20 pages per attempted document by default
+to prevent a large annual report from exhausting provider credits. Set `DOSSIER_PDF_MAX_PAGES`
+between 5 and 30 only when a different bounded tradeoff is required.
 Undated, unofficial and post-cutoff sources remain rejected. A 422 includes per-URL diagnostics.
 If a broad search returns only undated landing pages, the backend makes one bounded PDF-focused
 fallback search for the cutoff year; all normal domain, exact-date and cutoff checks still apply.

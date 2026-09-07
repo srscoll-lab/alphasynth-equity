@@ -177,6 +177,8 @@ export async function collectOfficialEvidence(candidates: Candidate[], domains: 
   const rejectionReasons: Record<string, number> = {};
   let discoveryPages = 0;
   let documentAttempts = 0;
+  const configuredPdfMaxPages = Number.parseInt(process.env.DOSSIER_PDF_MAX_PAGES || "20", 10);
+  const pdfMaxPages = Number.isFinite(configuredPdfMaxPages) ? Math.min(30, Math.max(5, configuredPdfMaxPages)) : 20;
   const reject = (url: string, outcome: string) => {
     rejectionReasons[outcome] = (rejectionReasons[outcome] || 0) + 1;
     diagnostics.push({ url, outcome });
@@ -191,7 +193,12 @@ export async function collectOfficialEvidence(candidates: Candidate[], domains: 
     else if (++discoveryPages > 2) continue;
     let scraped: Scraped;
     try {
-      scraped = await scrape(url, { formats: isPdf(url) ? ["markdown"] : ["markdown", "rawHtml"], onlyMainContent: true, timeout: 45000 });
+      scraped = await scrape(url, {
+        formats: isPdf(url) ? ["markdown"] : ["markdown", "rawHtml"],
+        onlyMainContent: true,
+        timeout: 45000,
+        ...(isPdf(url) ? { parsers: [{ type: "pdf", mode: "fast", maxPages: pdfMaxPages }] } : {}),
+      });
     } catch { reject(url, "scrape_failed"); continue; }
     const finalUrl = scraped.metadata?.url || scraped.metadata?.sourceURL || url;
     if (!isOfficialDossierSource(finalUrl, domains)) { reject(url, "unverified_redirect"); continue; }

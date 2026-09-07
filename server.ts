@@ -2585,6 +2585,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       return res.json(dossier);
     } catch (error: any) {
       console.error("[dossier] official evidence research failed:", error?.message || error);
+      if (/insufficient credits/i.test(String(error?.message || error))) {
+        return res.status(503).json({
+          error: "The official-evidence provider has insufficient credits.",
+          provider: "firecrawl",
+          retryable: false,
+        });
+      }
       return res.status(502).json({ error: "Official evidence research failed." });
     }
   });
