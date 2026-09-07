@@ -69,6 +69,20 @@ assert.deepEqual(
   ),
   { date: "2026-04-23", basis: "structured_publication_metadata" },
 );
+assert.deepEqual(
+  documentPublicationDate(
+    { markdown: "Q1 FY27\nEarnings Presentation\n31st July 2026\nNSE:SUNPHARMA\n" + "Performance highlights. ".repeat(30) },
+    { url: "https://issuer.example/Q1FY27-Earnings-Presentation.pdf" },
+  ),
+  { date: "2026-07-31", basis: "document_title_page" },
+);
+assert.equal(
+  documentPublicationDate(
+    { markdown: "Earnings Presentation\nQuarter ended 30.06.2026\nReleased 31.07.2026\n" + "Performance highlights. ".repeat(30) },
+    { url: "https://issuer.example/Q1FY27-Earnings-Presentation.pdf" },
+  ).date,
+  null,
+);
 
 const calls: string[] = [];
 const result = await collectOfficialEvidence([{ url: base }, { url: "https://evil.example/report.pdf" }], domains, "2026-09-05", async url => {

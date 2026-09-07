@@ -31,8 +31,8 @@ corrected file. This preserves the live URL, encrypted credential references and
 
 The evidence collector follows a bounded number of official PDF links from investor-relations
 indexes, including icon-only links omitted by markdown conversion. It accepts exact dates from
-publication metadata, dated exchange cover letters, PDF filenames, and structured or explicitly
-labelled dates tied to the document on its official index. Common same-origin PDF viewer/download
+publication metadata, dated exchange cover letters, exact unambiguous document-title-page dates,
+PDF filenames, and structured or explicitly labelled dates tied to the document on its official index. Common same-origin PDF viewer/download
 wrappers are normalized; cross-origin wrapper targets, upload folders, and fiscal-period labels
 are never treated as publication evidence.
 PDF extraction uses fast text parsing and is capped at 20 pages per attempted document by default

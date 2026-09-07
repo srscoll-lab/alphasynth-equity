@@ -29,6 +29,17 @@ export function exactEvidenceDate(value: unknown): string | null {
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0, 10) === iso ? iso : null;
 }
 
+function uniqueExactEvidenceDates(value: unknown): string[] {
+  const text = String(value || "");
+  const tokens = [
+    ...text.matchAll(/(?<!\d)20\d{2}-\d{2}-\d{2}(?!\d)/g),
+    ...text.matchAll(/\b\d{1,2}[/.-]\d{1,2}[/.-]20\d{2}\b/g),
+    ...text.matchAll(/\b\d{1,2}(?:st|nd|rd|th)?\s+(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s*,?\s*20\d{2}\b/gi),
+    ...text.matchAll(/\b(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\s+\d{1,2}(?:st|nd|rd|th)?\s*,?\s*20\d{2}\b/gi),
+  ];
+  return [...new Set(tokens.map(match => exactEvidenceDate(match[0])).filter((date): date is string => Boolean(date)))];
+}
+
 const plain = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/&(?:nbsp|amp);/g, " ").replace(/\s+/g, " ").trim();
 const isPdf = (url: string) => /\.pdf(?:[?#]|$)/i.test(url);
 
@@ -159,6 +170,11 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
       if (date) return { date, basis: "document_filename" };
     }
     const cover = String(scraped.markdown || "").slice(0, 1800);
+    const titleArea = cover.slice(0, 700);
+    if (/\b(?:(?:earnings|investor)\s+presentation|press release|earnings call transcript)\b/i.test(titleArea)) {
+      const titleDates = uniqueExactEvidenceDates(titleArea);
+      if (titleDates.length === 1) return { date: titleDates[0], basis: "document_title_page" };
+    }
     const recipient = cover.search(/\b(?:BSE Limited|National Stock Exchange|To,?\s*\n)/i);
     if (recipient >= 0 && /\b(?:subject|scrip|symbol|regulation)\b/i.test(cover)) {
       const date = exactEvidenceDate(cover.slice(0, Math.min(recipient, 500)));
