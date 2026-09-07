@@ -1049,6 +1049,9 @@ Company: ${companyName || ticker}`;
         ticker: cleanTicker,
         price: Math.round(stockHistory.current * 100) / 100,
         asOf: stockHistory.asOf,
+        priceHistory: stockHistory.points
+          .filter((_, index, points) => index % Math.max(1, Math.ceil(points.length / 52)) === 0 || index === points.length - 1)
+          .map(point => ({ date: new Date(point.ts * 1000).toISOString().slice(0, 10), close: Math.round(point.close * 100) / 100 })),
         periods: {
           oneMonth: buildPeriod(periods.oneMonth),
           threeMonth: buildPeriod(periods.threeMonth),
@@ -1839,6 +1842,14 @@ Return the independent BMS validation as JSON.`;
       const out = Math.abs(n) < 1 ? n * 100 : n;
       return Math.round(out * 10) / 10;
     };
+    const positiveNum = (v: any): number | null => {
+      const n = num(v);
+      return n !== null && n > 0 ? n : null;
+    };
+    const nonNegativeNum = (v: any): number | null => {
+      const n = num(v);
+      return n !== null && n >= 0 ? n : null;
+    };
 
     // Live Yahoo metrics for one base symbol: price + 52W high/low + trailing 52W return.
     // Same unauthenticated v8 chart endpoint the price route uses; range=1y gives the
@@ -1956,14 +1967,14 @@ ${rawText}` }] }],
           ticker: String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, ""),
           name: c.name || String(c.ticker || "").toUpperCase(),
           epsTtm: num(c.epsTtm ?? c.eps),
-          pe: num(c.pe ?? c.peRatio),
-          pb: num(c.pb ?? c.priceToBook),
+          pe: positiveNum(c.pe ?? c.peRatio),
+          pb: positiveNum(c.pb ?? c.priceToBook),
           roe: pctNorm(c.roe ?? c.returnOnEquity),
           roce: pctNorm(c.roce ?? c.returnOnCapitalEmployed),
-          debtEquity: num(c.debtEquity ?? c.debtToEquity),
+          debtEquity: nonNegativeNum(c.debtEquity ?? c.debtToEquity),
           revenueGrowthYoY: pctNorm(c.revenueGrowthYoY ?? c.revenueGrowth),
           operatingMargin: pctNorm(c.operatingMargin ?? c.operatingMarginPct),
-          marketCapCr: num(c.marketCap ?? c.marketCapCr ?? c.market_cap),
+          marketCapCr: positiveNum(c.marketCap ?? c.marketCapCr ?? c.market_cap),
           isTarget: false,
         }))
         .filter((c: any) => c.ticker && !seen.has(c.ticker) && seen.add(c.ticker));
@@ -2043,11 +2054,16 @@ ${rawText}` }] }],
       const groundPrompt = `
         You are an equity analyst. Subject: the NSE-listed company "${cleanTicker}" (${subjectName}).
         Using grounded search (Screener.in, Moneycontrol, NSE filings, trendlyne), provide, as of ${todayStr}:
+        Prefer the official company website and the latest NSE/BSE filings for company identity, history, promoters and ownership. Use secondary financial sites only when an official source is unavailable.
         1. companyLine: one sentence (max 20 words) on what the company does.
-        2. keyNumber: the single most defining current number for this stock right now, as a short phrase (e.g. "P/E 28x", "ARPU ₹245 (+15% YoY)", "Net debt ₹1.2L cr").
-        3. biggestRisk: the single biggest risk in one short line.
-        4. signalSupport: 2-3 specific data points that justify a "${sig}" signal for this stock, plus a one-line plain-English explanation of what "${sig}" means for a retail investor here.
-        5. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
+        2. companyHistory: a neutral two-sentence history (max 75 words) covering origin/founding and major evolution; do not use promotional language.
+        3. promoterNames: the names of the current disclosed promoters or promoter group principals. Do not infer names from management titles.
+        4. keyNumber: the single most defining current number for this stock right now, as a short phrase (e.g. "P/E 28x", "ARPU ₹245 (+15% YoY)", "Net debt ₹1.2L cr").
+        5. biggestRisk: the single biggest risk in one short line.
+        6. signalSupport: 2-3 specific data points that justify a "${sig}" signal for this stock, plus a one-line plain-English explanation of what "${sig}" means for a retail investor here.
+        7. shareholdingAsOf: the latest disclosed quarter/date for the ownership figures.
+        8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
+        9. sourceUrls: up to five direct URLs actually used for company history, promoter identity or shareholding.
         Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -2070,6 +2086,8 @@ ${rawText}` }] }],
             type: "OBJECT",
             properties: {
               companyLine: { type: "STRING" },
+              companyHistory: { type: "STRING" },
+              promoterNames: { type: "ARRAY", items: { type: "STRING" } },
               keyNumber: { type: "STRING" },
               biggestRisk: { type: "STRING" },
               signalDataPoints: { type: "ARRAY", items: { type: "STRING" } },
@@ -2084,22 +2102,33 @@ ${rawText}` }] }],
                   retail: { type: "OBJECT", properties: { value: { type: "NUMBER" }, trend: { type: "STRING" } } },
                 },
               },
+              shareholdingAsOf: { type: "STRING" },
+              sourceUrls: { type: "ARRAY", items: { type: "STRING" } },
             },
           },
         },
       });
       const parsed = JSON.parse(sanitizeGroundingJson(structResult.text || "{}"));
       const sh = parsed.shareholding || {};
-      const shCat = (c: any) => (c && (c.value !== undefined || c.trend !== undefined)) ? { value: num(c.value), trend: trend(c.trend) } : { value: null, trend: null };
+      const shCat = (c: any) => {
+        const value = num(c?.value);
+        return c && (c.value !== undefined || c.trend !== undefined)
+          ? { value: value !== null && value >= 0 && value <= 100 ? value : null, trend: trend(c.trend) }
+          : { value: null, trend: null };
+      };
 
       const payload = {
         ticker: cleanTicker,
         companyName: subjectName,
         executiveSummary: {
           companyLine: parsed.companyLine || null,
+          companyHistory: parsed.companyHistory || null,
           keyNumber: parsed.keyNumber || null,
           biggestRisk: parsed.biggestRisk || null,
         },
+        promoterNames: Array.isArray(parsed.promoterNames)
+          ? parsed.promoterNames.filter((name: any) => typeof name === "string" && name.trim()).slice(0, 8)
+          : [],
         signal: {
           verdict: sig,
           dataPoints: Array.isArray(parsed.signalDataPoints) ? parsed.signalDataPoints.filter((x: any) => typeof x === 'string' && x.trim()).slice(0, 3) : [],
@@ -2112,6 +2141,10 @@ ${rawText}` }] }],
           mutualFund: shCat(sh.mutualFund || sh.mf),
           retail: shCat(sh.retail || sh.public),
         },
+        shareholdingAsOf: parsed.shareholdingAsOf || null,
+        sourceUrls: Array.isArray(parsed.sourceUrls)
+          ? parsed.sourceUrls.filter((url: any) => typeof url === "string" && /^https:\/\//i.test(url)).slice(0, 5)
+          : [],
       };
       reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
       console.log(`[CACHE] EXTRAS WRITTEN — ${cleanTicker}`);

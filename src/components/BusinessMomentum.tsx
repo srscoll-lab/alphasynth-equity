@@ -76,6 +76,27 @@ type DossierPeerRow = {
   week52Return: number | null;
 };
 
+type DossierEnrichment = {
+  executiveSummary?: {
+    companyLine?: string | null;
+    companyHistory?: string | null;
+    keyNumber?: string | null;
+    biggestRisk?: string | null;
+  };
+  promoterNames?: string[];
+  shareholdingAsOf?: string | null;
+  shareholding?: Record<string, { value: number | null; trend: "up" | "down" | "stable" | null }>;
+  sourceUrls?: string[];
+};
+
+type DossierMarketContext = {
+  price?: number | null;
+  asOf?: string | null;
+  source?: string | null;
+  delayed?: boolean;
+  priceHistory?: Array<{ date: string; close: number }>;
+};
+
 type BmsResponse = {
   name: string;
   company_count: number;
@@ -457,6 +478,8 @@ export default function BusinessMomentum({
   const [dossierLoading, setDossierLoading] = useState(false);
   const [dossierError, setDossierError] = useState("");
   const [dossierPeers, setDossierPeers] = useState<DossierPeerRow[]>([]);
+  const [dossierEnrichment, setDossierEnrichment] = useState<DossierEnrichment | null>(null);
+  const [dossierMarket, setDossierMarket] = useState<DossierMarketContext | null>(null);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
@@ -468,41 +491,91 @@ export default function BusinessMomentum({
       const pageWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       const contentWidth = pageWidth - margin * 2;
+      const navy: [number, number, number] = [23, 32, 51];
+      const green: [number, number, number] = [42, 130, 95];
+      const gold: [number, number, number] = [205, 164, 52];
+      const slate: [number, number, number] = [102, 112, 133];
       let y = 18;
+      let currentSection = "Overview";
       const safe = (value: unknown) => String(value ?? "")
         .replaceAll("₹", "Rs. ").replaceAll("·", "-").replaceAll("–", "-").replaceAll("—", "-")
         .replaceAll("’", "'").replaceAll("“", '"').replaceAll("”", '"');
+      pdf.setLineHeightFactor(1.25);
+      const continuationHeader = () => {
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(...slate);
+        pdf.text(`ALPHASYNTH INTELLIGENCE | ${safe(currentSection).toUpperCase()} - CONTINUED`, margin, y);
+        y += 4;
+        pdf.setDrawColor(...gold);
+        pdf.setLineWidth(0.45);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 7;
+      };
       const ensureRoom = (height: number) => {
         if (y + height <= pageHeight - 17) return;
         pdf.addPage();
         y = 18;
+        continuationHeader();
+      };
+      const sectionPage = (title: string, subtitle?: string) => {
+        pdf.addPage();
+        currentSection = title;
+        y = 18;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(8);
+        pdf.setTextColor(...gold);
+        pdf.text("ALPHASYNTH INTELLIGENCE - RESEARCH DOSSIER", margin, y);
+        y += 9;
+        pdf.setFontSize(18);
+        pdf.setTextColor(...navy);
+        pdf.text(safe(title), margin, y);
+        y += 5;
+        pdf.setDrawColor(...green);
+        pdf.setLineWidth(0.8);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 7;
+        if (subtitle) {
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(8);
+          pdf.setTextColor(...slate);
+          pdf.text(pdf.splitTextToSize(safe(subtitle), contentWidth), margin, y);
+          y += 8;
+        }
       };
       const write = (text: unknown, size = 9.5, indent = 0, color: [number, number, number] = [38, 47, 65]) => {
         pdf.setFont("helvetica", "normal");
         pdf.setFontSize(size);
         pdf.setTextColor(...color);
         const lines = pdf.splitTextToSize(safe(text), contentWidth - indent);
-        const height = lines.length * (size * 0.42) + 1.5;
+        const height = lines.length * (size * 0.44) + 2;
         ensureRoom(height);
         pdf.text(lines, margin + indent, y);
         y += height;
       };
       const heading = (text: string) => {
-        ensureRoom(12);
-        y += 3;
+        ensureRoom(21);
+        y += 4;
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(12);
-        pdf.setTextColor(23, 32, 51);
+        pdf.setFontSize(11.5);
+        pdf.setTextColor(...navy);
         pdf.text(safe(text), margin, y);
         y += 3;
-        pdf.setDrawColor(215, 220, 229);
+        pdf.setDrawColor(...green);
+        pdf.setLineWidth(0.45);
         pdf.line(margin, y, pageWidth - margin, y);
-        y += 5;
+        y += 6;
       };
       const fmt = (value: number | null | undefined, suffix = "") => value == null
         ? "N/A"
         : `${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}${suffix}`;
       const drawBars = (title: string, values: Array<{ label: string; value: number }>, maximum = 100) => {
+        if (!values.length) {
+          heading(title);
+          write("Verified data was not available for this section.", 8.5, 0, slate);
+          return;
+        }
+        ensureRoom(22 + values.length * 8);
         heading(title);
         for (const item of values) {
           ensureRoom(9);
@@ -514,22 +587,22 @@ export default function BusinessMomentum({
           const barWidth = contentWidth - 58;
           pdf.setFillColor(235, 238, 244);
           pdf.roundedRect(barX, y, barWidth, 4, 1, 1, "F");
-          pdf.setFillColor(42, 130, 95);
+          pdf.setFillColor(...green);
           pdf.roundedRect(barX, y, Math.max(1, barWidth * Math.min(1, Math.max(0, item.value / maximum))), 4, 1, 1, "F");
           pdf.text(fmt(item.value), pageWidth - margin - 12, y + 3);
           y += 8;
         }
       };
       const drawTable = (title: string, headers: string[], widths: number[], rows: string[][]) => {
+        ensureRoom(32);
         heading(title);
         if (!rows.length) {
-          write("Comparable structured figures were not available in the admitted evidence.", 9, 0, [102, 112, 133]);
+          write("Comparable structured figures were not available.", 9, 0, slate);
           return;
         }
         const drawHeader = () => {
-          ensureRoom(9);
           let x = margin;
-          pdf.setFillColor(23, 32, 51);
+          pdf.setFillColor(...navy);
           pdf.rect(margin, y, widths.reduce((sum, width) => sum + width, 0), 8, "F");
           pdf.setFont("helvetica", "bold");
           pdf.setFontSize(6.7);
@@ -547,10 +620,12 @@ export default function BusinessMomentum({
           if (y + rowHeight > pageHeight - 17) {
             pdf.addPage();
             y = 18;
+            continuationHeader();
             drawHeader();
           }
           let x = margin;
-          pdf.setFillColor(rowIndex % 2 ? 248 : 255, rowIndex % 2 ? 249 : 255, rowIndex % 2 ? 251 : 255);
+          if (rowIndex === 0) pdf.setFillColor(235, 247, 241);
+          else pdf.setFillColor(rowIndex % 2 ? 248 : 255, rowIndex % 2 ? 249 : 255, rowIndex % 2 ? 251 : 255);
           pdf.rect(margin, y, widths.reduce((sum, width) => sum + width, 0), rowHeight, "F");
           pdf.setFont("helvetica", rowIndex === 0 ? "bold" : "normal");
           pdf.setFontSize(6.7);
@@ -562,26 +637,78 @@ export default function BusinessMomentum({
           y += rowHeight;
         });
       };
+      const drawPriceChart = () => {
+        const points = (dossierMarket?.priceHistory || []).filter(point => Number.isFinite(point.close));
+        ensureRoom(95);
+        heading("Twelve-month share-price movement");
+        if (points.length < 2) {
+          write("Verified price history was not available.", 8.5, 0, slate);
+          return;
+        }
+        const chartX = margin + 13;
+        const chartY = y + 3;
+        const chartWidth = contentWidth - 18;
+        const chartHeight = 52;
+        const closes = points.map(point => point.close);
+        const low = Math.min(...closes);
+        const high = Math.max(...closes);
+        const range = Math.max(1, high - low);
+        pdf.setDrawColor(225, 229, 236);
+        pdf.setLineWidth(0.25);
+        for (let grid = 0; grid <= 4; grid += 1) {
+          const gy = chartY + (chartHeight * grid) / 4;
+          pdf.line(chartX, gy, chartX + chartWidth, gy);
+        }
+        pdf.setDrawColor(...green);
+        pdf.setLineWidth(1.1);
+        for (let index = 1; index < points.length; index += 1) {
+          const x1 = chartX + ((index - 1) / (points.length - 1)) * chartWidth;
+          const x2 = chartX + (index / (points.length - 1)) * chartWidth;
+          const y1 = chartY + chartHeight - ((points[index - 1].close - low) / range) * chartHeight;
+          const y2 = chartY + chartHeight - ((points[index].close - low) / range) * chartHeight;
+          pdf.line(x1, y1, x2, y2);
+        }
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(7);
+        pdf.setTextColor(...slate);
+        pdf.text(`Rs. ${fmt(high)}`, margin, chartY + 2);
+        pdf.text(`Rs. ${fmt(low)}`, margin, chartY + chartHeight);
+        pdf.text(safe(points[0].date), chartX, chartY + chartHeight + 6);
+        pdf.text(safe(points[points.length - 1].date), chartX + chartWidth, chartY + chartHeight + 6, { align: "right" });
+        y = chartY + chartHeight + 12;
+        write(`Latest available close: Rs. ${fmt(dossierMarket?.price)}. Source: Yahoo Finance chart data${dossierMarket?.delayed ? " (delayed)" : ""}; as of ${dossierMarket?.asOf ? new Date(dossierMarket.asOf).toLocaleDateString("en-IN") : "latest available date"}.`, 7.5, 0, slate);
+      };
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
-      pdf.setTextColor(154, 117, 22);
+      pdf.setTextColor(...gold);
       pdf.text("ALPHASYNTH INTELLIGENCE - RESEARCH DOSSIER", margin, y);
       y += 10;
       pdf.setFontSize(22);
-      pdf.setTextColor(23, 32, 51);
+      pdf.setTextColor(...navy);
       pdf.text(pdf.splitTextToSize(safe(dossier.company.name), contentWidth), margin, y);
       y += 12;
-      write(`${dossier.company.symbol} - ${dossier.company.exchange} - ${dossier.company.sector}`, 9, 0, [102, 112, 133]);
-      write(`Report ${dossier.reportId} - Generated ${new Date(dossier.generatedAt).toLocaleString()}`, 8, 0, [102, 112, 133]);
+      write(`${dossier.company.symbol} - ${dossier.company.exchange} - ${dossier.company.sector}`, 9, 0, slate);
+      write(`Report ${dossier.reportId} - Generated ${new Date(dossier.generatedAt).toLocaleString()}`, 8, 0, slate);
       y += 3;
-      pdf.setDrawColor(205, 164, 52);
+      pdf.setDrawColor(...gold);
       pdf.setLineWidth(0.8);
       pdf.line(margin, y, pageWidth - margin, y);
       y += 5;
 
+      if (dossierEnrichment?.executiveSummary?.companyLine) {
+        write(dossierEnrichment.executiveSummary.companyLine, 11, 0, navy);
+      }
+      heading("Company history");
+      write(dossierEnrichment?.executiveSummary?.companyHistory || "A verified concise company history was not available from the supplemental sources.", 9.5, 0, dossierEnrichment?.executiveSummary?.companyHistory ? navy : slate);
+      heading("Promoters and company identity");
+      if (dossierEnrichment?.promoterNames?.length) {
+        write(`Disclosed promoters / promoter principals: ${dossierEnrichment.promoterNames.join(", ")}.`, 9.5);
+      } else {
+        write("Verified promoter names were not available in the supplemental response.", 8.5, 0, slate);
+      }
       heading("Company at a glance");
-      dossier.sections.snapshot.filter(claim => claim.status === "supported").slice(0, 3).forEach(claim => {
+      dossier.sections.snapshot.filter(claim => claim.status === "supported").slice(0, 2).forEach(claim => {
         write(`${claim.text} [${claim.sourceIds.join(", ")}]`, 9.5, 3);
         y += 1;
       });
@@ -593,16 +720,31 @@ export default function BusinessMomentum({
         { label: "Balance sheet", value: score100(selected?.balance_sheet || 0) },
         { label: "Management", value: score100(selected?.management_delivery || 0) },
       ]);
+
       const allClaims = Object.values(dossier.sections).flat();
       const supportedCount = allClaims.filter(claim => claim.status === "supported").length;
       const conflictCount = allClaims.filter(claim => claim.status === "conflict").length;
       const insufficientCount = allClaims.filter(claim => claim.status === "insufficient_evidence").length;
+
+      sectionPage("Market and ownership", "Price history and ownership data are supplemental market information, separate from the admitted official-evidence record.");
+      drawPriceChart();
+      const shareholdingLabels: Record<string, string> = {
+        promoter: "Promoter", fii: "Foreign institutions", dii: "Domestic institutions", mutualFund: "Mutual funds", retail: "Retail / public",
+      };
+      const shareholdingRows = Object.entries(dossierEnrichment?.shareholding || {})
+        .filter(([, item]) => item?.value != null)
+        .map(([key, item]) => ({
+          label: `${shareholdingLabels[key] || key}${item.trend ? ` (${item.trend} QoQ)` : ""}`,
+          value: Number(item.value),
+        }));
+      drawBars(`Shareholding pattern${dossierEnrichment?.shareholdingAsOf ? ` - ${dossierEnrichment.shareholdingAsOf}` : ""}`, shareholdingRows, 100);
       drawBars("Evidence quality", [
         { label: "Supported", value: supportedCount },
         { label: "Conflicts", value: conflictCount },
         { label: "Insufficient", value: insufficientCount },
       ], Math.max(1, allClaims.length));
 
+      sectionPage("Financial performance and peers", "Company figures cite admitted official documents. Peer figures are supplemental market comparisons and may use a different reporting basis.");
       drawTable("Quarter-wise financial performance",
         ["Period", "Basis", "Revenue Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"],
         [25, 29, 36, 28, 32, 24],
@@ -610,7 +752,7 @@ export default function BusinessMomentum({
           `${quarter.period} [${quarter.sourceIds.join(", ")}]`, quarter.basis, fmt(quarter.revenueCr), fmt(quarter.ebitdaMarginPct, "%"), fmt(quarter.patCr), fmt(quarter.eps),
         ]));
 
-      write(`Peer figures are a separate market-data comparison generated on ${dossier.generatedAt.slice(0, 10)}; they are not part of the admitted official-evidence record.`, 7.5, 0, [102, 112, 133]);
+      write(`Peer comparison generated on ${dossier.generatedAt.slice(0, 10)}. Missing values are shown as N/A and are never estimated.`, 7.5, 0, slate);
       drawTable("Peer comparison - valuation and returns",
         ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"],
         [48, 27, 24, 24, 25, 26],
@@ -620,10 +762,11 @@ export default function BusinessMomentum({
         [48, 23, 31, 31, 38, 27],
         dossierPeers.map(peer => [peer.ticker, fmt(peer.debtEquity), fmt(peer.revenueGrowthYoY, "%"), fmt(peer.operatingMargin, "%"), fmt(peer.marketCapCr), fmt(peer.week52Return, "%")]));
 
+      sectionPage("Key research findings", "Only material developments, operating evidence, commitments and risks are shown. Supported claims carry compact source references.");
       for (const section of ["developments", "operatingEvidence", "managementCommitments", "risks"] as const) {
-        const claims = dossier.sections[section].slice(0, 6);
+        const claims = dossier.sections[section].slice(0, 5);
         heading(section.replace(/([A-Z])/g, " $1").trim().replace(/^./, value => value.toUpperCase()));
-        if (!claims.length) write("No verified evidence available.", 9, 0, [102, 112, 133]);
+        if (!claims.length) write("No verified evidence available.", 9, 0, slate);
         for (const claim of claims) {
           const reviewPrefix = claim.status === "supported" ? "" : `${claim.status.replaceAll("_", " ").toUpperCase()}: `;
           write(`${reviewPrefix}${claim.text} [${claim.sourceIds.join(", ")}]`, 9.5, 3);
@@ -631,16 +774,21 @@ export default function BusinessMomentum({
         }
       }
 
+      sectionPage("Sources and quality control");
       heading("Official sources");
       for (const source of dossier.sources) {
         write(`${source.sourceId} - Published ${source.publishedAt}`, 9, 3);
         write(source.url, 7.5, 3, [37, 87, 167]);
         y += 1.5;
       }
+      if (dossierEnrichment?.sourceUrls?.length) {
+        heading("Supplemental profile and ownership sources");
+        dossierEnrichment.sourceUrls.forEach((url, index) => write(`${index + 1}. ${url}`, 7.5, 3, [37, 87, 167]));
+      }
       heading("Quality control");
       write(`Unsupported claims: ${dossier.qualityControl.unsupportedClaims}   Conflicts: ${dossier.qualityControl.conflicts}   Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}`, 9);
       y += 4;
-      write("AI-generated research for informational purposes only. Verify material claims against the cited official documents. This is not investment advice.", 8, 0, [102, 112, 133]);
+      write("AI-generated research for informational purposes only. Verify material claims against the cited official documents. Supplemental market, promoter and shareholding data should be checked against the latest exchange filing. This is not investment advice.", 8, 0, slate);
 
       const pages = pdf.getNumberOfPages();
       for (let page = 1; page <= pages; page += 1) {
@@ -663,9 +811,11 @@ export default function BusinessMomentum({
     setDossierError("");
     setDossier(null);
     setDossierPeers([]);
+    setDossierEnrichment(null);
+    setDossierMarket(null);
     try {
       const requestBody = JSON.stringify({ ticker: selected.symbol });
-      const [response, peerPayload] = await Promise.all([
+      const [response, peerPayload, enrichmentPayload, marketPayload] = await Promise.all([
         fetch("/api/dossier/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -680,12 +830,24 @@ export default function BusinessMomentum({
           headers: { "Content-Type": "application/json" },
           body: requestBody,
         }).then(async peerResponse => peerResponse.ok ? peerResponse.json() : null).catch(() => null),
+        fetch("/api/pipeline/report-extras", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ticker: selected.symbol, signal: selected.momentum_state || selected.lifecycle_stage }),
+        }).then(async extraResponse => extraResponse.ok ? extraResponse.json() : null).catch(() => null),
+        fetch("/api/bms/market-context", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        }).then(async marketResponse => marketResponse.ok ? marketResponse.json() : null).catch(() => null),
       ]);
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
       if (requestId === dossierRequestId.current) {
         setDossier(payload);
         setDossierPeers(Array.isArray(peerPayload?.rows) ? peerPayload.rows : []);
+        setDossierEnrichment(enrichmentPayload || null);
+        setDossierMarket(marketPayload || null);
       }
     } catch (error: any) {
       if (requestId === dossierRequestId.current) {
@@ -769,6 +931,8 @@ export default function BusinessMomentum({
     setDossier(null);
     setDossierError("");
     setDossierPeers([]);
+    setDossierEnrichment(null);
+    setDossierMarket(null);
     setDossierLoading(false);
   }, [selected?.symbol, selected?.period]);
 
