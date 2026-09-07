@@ -444,73 +444,94 @@ export default function BusinessMomentum({
 
   const downloadDossierPdf = async () => {
     if (!dossier) return;
-    const escapeHtml = (value: unknown) => String(value ?? "")
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-    const sectionHtml = Object.entries(dossier.sections).map(([section, claims]) => `
-      <section>
-        <h2>${escapeHtml(section.replace(/([A-Z])/g, " $1"))}</h2>
-        ${claims.length ? `<ul>${claims.map((claim) => `
-          <li>
-            <span class="status ${escapeHtml(claim.status)}">${escapeHtml(claim.status.replace("_", " "))}</span>
-            ${escapeHtml(claim.text)}
-            <small>Sources: ${escapeHtml(claim.sourceIds.join(", "))}</small>
-          </li>`).join("")}</ul>` : "<p class=\"muted\">No verified evidence available.</p>"}
-      </section>`).join("");
-    const sourceHtml = dossier.sources.map((source) => `
-      <li><strong>${escapeHtml(source.sourceId)}</strong> · ${escapeHtml(source.publishedAt)}<br>
-        <a href="${escapeHtml(source.url)}">${escapeHtml(source.url)}</a>
-      </li>`).join("");
-    const container = document.createElement("div");
-    container.style.cssText = "position:fixed;left:-10000px;top:0;width:760px;background:#fff;color:#172033;padding:40px;z-index:-1";
-    container.innerHTML = `
-      <style>
-        * { box-sizing: border-box; } .pdf-report { color:#172033; font: 10.5pt/1.5 Arial,sans-serif; margin:0; }
-        header { border-bottom:3px solid #cda434; padding-bottom:18px; margin-bottom:24px; }
-        .brand { color:#9a7516; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
-        h1 { font-size:26px; margin:8px 0 3px; } .meta,.muted,small { color:#667085; }
-        h2 { border-bottom:1px solid #d7dce5; font-size:14px; margin:22px 0 8px; padding-bottom:5px; text-transform:capitalize; }
-        ul { margin:0; padding-left:20px; } li { margin:0 0 9px; break-inside:avoid; }
-        small { display:block; font-size:8.5px; margin-top:2px; }
-        .status { border-radius:10px; display:inline-block; font-size:7.5px; font-weight:700; margin-right:5px; padding:2px 6px; text-transform:uppercase; }
-        .supported { background:#def7e7; color:#18733a; } .conflict { background:#fff0d5; color:#934f00; }
-        .insufficient_evidence { background:#f3f4f6; color:#596273; }
-        .qc { background:#f6f8fb; border:1px solid #d7dce5; border-radius:8px; padding:12px; }
-        a { color:#2557a7; overflow-wrap:anywhere; } footer { border-top:1px solid #d7dce5; color:#667085; font-size:8.5px; margin-top:25px; padding-top:10px; }
-      </style><div class="pdf-report">
-      <header><div class="brand">AlphaSynth Intelligence · Research Dossier</div>
-        <h1>${escapeHtml(dossier.company.name)}</h1>
-        <div class="meta">${escapeHtml(dossier.company.symbol)} · ${escapeHtml(dossier.company.exchange)} · ${escapeHtml(dossier.company.sector)}</div>
-        <div class="meta">Report ${escapeHtml(dossier.reportId)} · Generated ${escapeHtml(new Date(dossier.generatedAt).toLocaleString())}</div>
-      </header>
-      ${sectionHtml}
-      <section><h2>Official sources</h2><ol>${sourceHtml}</ol></section>
-      <section><h2>Quality control</h2><div class="qc">
-        Unsupported claims: ${escapeHtml(dossier.qualityControl.unsupportedClaims)} ·
-        Conflicts: ${escapeHtml(dossier.qualityControl.conflicts)} ·
-        Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}
-      </div></section>
-      <footer>AI-generated research for informational purposes only. Verify material claims against the cited official documents. This is not investment advice.</footer>
-      </div>`;
-    document.body.appendChild(container);
     try {
-      const { default: html2pdf } = await import("html2pdf.js");
-      await html2pdf().set({
-        margin: 8,
-        filename: `${dossier.company.symbol}-Research-Dossier-${dossier.generatedAt.slice(0, 10)}.pdf`,
-        enableLinks: true,
-        image: { type: "jpeg", quality: 0.96 },
-        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      }).from(container).save();
+      const { jsPDF } = await import("jspdf");
+      const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+      const margin = 16;
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const contentWidth = pageWidth - margin * 2;
+      let y = 18;
+      const safe = (value: unknown) => String(value ?? "")
+        .replaceAll("₹", "Rs. ").replaceAll("·", "-").replaceAll("–", "-").replaceAll("—", "-")
+        .replaceAll("’", "'").replaceAll("“", '"').replaceAll("”", '"');
+      const ensureRoom = (height: number) => {
+        if (y + height <= pageHeight - 17) return;
+        pdf.addPage();
+        y = 18;
+      };
+      const write = (text: unknown, size = 9.5, indent = 0, color: [number, number, number] = [38, 47, 65]) => {
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(size);
+        pdf.setTextColor(...color);
+        const lines = pdf.splitTextToSize(safe(text), contentWidth - indent);
+        const height = lines.length * (size * 0.42) + 1.5;
+        ensureRoom(height);
+        pdf.text(lines, margin + indent, y);
+        y += height;
+      };
+      const heading = (text: string) => {
+        ensureRoom(12);
+        y += 3;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(23, 32, 51);
+        pdf.text(safe(text), margin, y);
+        y += 3;
+        pdf.setDrawColor(215, 220, 229);
+        pdf.line(margin, y, pageWidth - margin, y);
+        y += 5;
+      };
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(9);
+      pdf.setTextColor(154, 117, 22);
+      pdf.text("ALPHASYNTH INTELLIGENCE - RESEARCH DOSSIER", margin, y);
+      y += 10;
+      pdf.setFontSize(22);
+      pdf.setTextColor(23, 32, 51);
+      pdf.text(pdf.splitTextToSize(safe(dossier.company.name), contentWidth), margin, y);
+      y += 12;
+      write(`${dossier.company.symbol} - ${dossier.company.exchange} - ${dossier.company.sector}`, 9, 0, [102, 112, 133]);
+      write(`Report ${dossier.reportId} - Generated ${new Date(dossier.generatedAt).toLocaleString()}`, 8, 0, [102, 112, 133]);
+      y += 3;
+      pdf.setDrawColor(205, 164, 52);
+      pdf.setLineWidth(0.8);
+      pdf.line(margin, y, pageWidth - margin, y);
+      y += 5;
+
+      for (const [section, claims] of Object.entries(dossier.sections)) {
+        heading(section.replace(/([A-Z])/g, " $1").trim().replace(/^./, value => value.toUpperCase()));
+        if (!claims.length) write("No verified evidence available.", 9, 0, [102, 112, 133]);
+        for (const claim of claims) {
+          write(`[${claim.status.replaceAll("_", " ").toUpperCase()}] ${claim.text}`, 9.5, 3);
+          write(`Sources: ${claim.sourceIds.join(", ")}`, 7.5, 3, [102, 112, 133]);
+          y += 1.5;
+        }
+      }
+
+      heading("Official sources");
+      for (const source of dossier.sources) {
+        write(`${source.sourceId} - Published ${source.publishedAt}`, 9, 3);
+        write(source.url, 7.5, 3, [37, 87, 167]);
+        y += 1.5;
+      }
+      heading("Quality control");
+      write(`Unsupported claims: ${dossier.qualityControl.unsupportedClaims}   Conflicts: ${dossier.qualityControl.conflicts}   Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}`, 9);
+      y += 4;
+      write("AI-generated research for informational purposes only. Verify material claims against the cited official documents. This is not investment advice.", 8, 0, [102, 112, 133]);
+
+      const pages = pdf.getNumberOfPages();
+      for (let page = 1; page <= pages; page += 1) {
+        pdf.setPage(page);
+        pdf.setFontSize(7.5);
+        pdf.setTextColor(120, 128, 145);
+        pdf.text(`AlphaSynth Intelligence | ${dossier.company.symbol} | Page ${page} of ${pages}`, margin, pageHeight - 8);
+      }
+      pdf.save(`${dossier.company.symbol}-Research-Dossier-${dossier.generatedAt.slice(0, 10)}.pdf`);
     } catch (error) {
       console.error("Dossier PDF download failed", error);
       window.alert("The PDF could not be generated. Please try again.");
-    } finally {
-      container.remove();
     }
   };
 
