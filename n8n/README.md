@@ -40,6 +40,13 @@ The explicitly invoked `check-radico-evidence.ts` and `test-dossier-pilot.ts` sc
 pilot requests and may consume provider credits; the latter supports `--webhook` after clicking
 the full workflow's **Execute workflow** button. Do not publish to run a manual webhook test.
 
+Cross-company candidate validation is run sequentially with
+`node --import tsx scripts/test-dossier-universe.ts --cutoff=YYYY-MM-DD`. The manifest in
+`scripts/dossier-pilot-companies.json` deliberately covers different issuer-site patterns.
+Use `--limit=N` for a low-credit smoke test or `--ticker=SYMBOL` for one company. Full responses
+are written under `/tmp/dossier-universe-YYYYMMDD`; terminal output remains a compact summary.
+Use `--list` to inspect the selected companies without calling the service or consuming credits.
+
 `alphasynth-dossier-intake-v1.json` is the inactive, importable entry workflow for the pilot.
 It validates the application request and creates separate official-evidence and social-discovery
 plans. It deliberately does not replace or activate the live BMS workflows.

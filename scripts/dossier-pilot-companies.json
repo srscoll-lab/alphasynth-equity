@@ -1,0 +1,37 @@
+[
+  {
+    "ticker": "RADICO",
+    "company_name": "Radico Khaitan Limited",
+    "official_domains": ["radicokhaitan.com"],
+    "exchange": "NSE",
+    "sector": "Alcoholic Beverages"
+  },
+  {
+    "ticker": "INFY",
+    "company_name": "Infosys Limited",
+    "official_domains": ["infosys.com"],
+    "exchange": "NSE",
+    "sector": "Information Technology"
+  },
+  {
+    "ticker": "MARUTI",
+    "company_name": "Maruti Suzuki India Limited",
+    "official_domains": ["marutisuzuki.com"],
+    "exchange": "NSE",
+    "sector": "Automobiles"
+  },
+  {
+    "ticker": "SUNPHARMA",
+    "company_name": "Sun Pharmaceutical Industries Limited",
+    "official_domains": ["sunpharma.com"],
+    "exchange": "NSE",
+    "sector": "Pharmaceuticals"
+  },
+  {
+    "ticker": "IRCTC",
+    "company_name": "Indian Railway Catering and Tourism Corporation Limited",
+    "official_domains": ["irctc.com"],
+    "exchange": "NSE",
+    "sector": "Travel Services"
+  }
+]
