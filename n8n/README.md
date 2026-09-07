@@ -30,8 +30,11 @@ To repair an existing inactive pilot, export it first, retain the original, and 
 corrected file. This preserves the live URL, encrypted credential references and request body.
 
 The evidence collector follows a bounded number of official PDF links from investor-relations
-indexes, including icon-only links omitted by markdown conversion. It uses publication metadata
-or the document's dated exchange cover letter, not upload-folder dates or fiscal-period labels.
+indexes, including icon-only links omitted by markdown conversion. It accepts exact dates from
+publication metadata, dated exchange cover letters, PDF filenames, and structured or explicitly
+labelled dates tied to the document on its official index. Common same-origin PDF viewer/download
+wrappers are normalized; cross-origin wrapper targets, upload folders, and fiscal-period labels
+are never treated as publication evidence.
 Undated, unofficial and post-cutoff sources remain rejected. A 422 includes per-URL diagnostics.
 If a broad search returns only undated landing pages, the backend makes one bounded PDF-focused
 fallback search for the cutoff year; all normal domain, exact-date and cutoff checks still apply.

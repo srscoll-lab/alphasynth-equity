@@ -1,6 +1,6 @@
 import { isOfficialDossierSource, type DossierSource } from "./dossier";
 
-type Candidate = { url: string; title?: string; publishedDate?: string; date?: string; depth?: number };
+type Candidate = { url: string; title?: string; publishedDate?: string; date?: string; dateBasis?: string; depth?: number };
 type Scraped = { markdown?: string; rawHtml?: string; metadata?: Record<string, any> };
 type Scrape = (url: string, options: any) => Promise<Scraped>;
 
@@ -9,7 +9,7 @@ export function exactEvidenceDate(value: unknown): string | null {
   const text = String(value || "").replace(/<[^>]*>/g, " ").replace(/[*_]/g, "");
   const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
   let parts: string[] | undefined;
-  let m = text.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);
+  let m = text.match(/(?<!\d)(20\d{2})-(\d{2})-(\d{2})(?!\d)/);
   if (m) parts = [m[1], m[2], m[3]];
   if (!parts) {
     m = text.match(/\b(\d{1,2})[/.\-](\d{1,2})[/.\-](20\d{2})\b/);
@@ -37,28 +37,66 @@ const isPdf = (url: string) => /\.pdf(?:[?#]|$)/i.test(url);
 export function unwrapOfficialPdfViewerUrl(value: string): string {
   try {
     const viewer = new URL(value);
-    const wrapped = viewer.searchParams.get("pdf");
-    if (!wrapped || !/\.pdf(?:[?#]|$)/i.test(wrapped)) return viewer.href;
-    const direct = new URL(wrapped, viewer.origin);
-    return direct.origin === viewer.origin ? direct.href : viewer.href;
+    for (const key of ["pdf", "file", "document", "doc", "download", "url"]) {
+      const wrapped = viewer.searchParams.get(key);
+      if (!wrapped || !/\.pdf(?:[?#]|$)/i.test(wrapped)) continue;
+      const direct = new URL(wrapped, viewer.origin);
+      if (direct.origin === viewer.origin) return direct.href;
+    }
+    return viewer.href;
   } catch {
     return value;
   }
 }
 
-// Icon-only anchors have no useful markdown label. Read the surrounding HTML
-// paragraph/list item, but use that label for discovery/ranking, NEVER dating.
+function containingBlock(html: string, start: number, end: number): string {
+  const lower = html.toLowerCase();
+  let bestStart = -1;
+  let bestEnd = -1;
+  for (const tag of ["tr", "li", "p", "article"]) {
+    const open = lower.lastIndexOf(`<${tag}`, start);
+    if (open < 0 || lower.indexOf(`</${tag}>`, open) < start) continue;
+    const close = lower.indexOf(`</${tag}>`, end);
+    if (close >= 0 && open > bestStart && close - open < 5000) {
+      bestStart = open;
+      bestEnd = close + tag.length + 3;
+    }
+  }
+  return bestStart >= 0 ? html.slice(bestStart, bestEnd) : html.slice(Math.max(0, start - 400), Math.min(html.length, end + 400));
+}
+
+function exactIndexContextDate(attributes: string, block: string): string | null {
+  for (const name of ["datetime", "data-date", "data-published", "data-published-at"]) {
+    const value = attributes.match(new RegExp(`\\b${name}\\s*=\\s*["']([^"']+)["']`, "i"))?.[1];
+    const date = exactEvidenceDate(value);
+    if (date) return date;
+  }
+  for (const time of block.matchAll(/<time\b[^>]*datetime\s*=\s*["']([^"']+)["'][^>]*>/gi)) {
+    const date = exactEvidenceDate(time[1]);
+    if (date) return date;
+  }
+  const labelled = plain(block).match(/\b(?:published(?:\s+on)?|publication date|release date|dated)\s*[:\-]?\s*(.{0,60})/i);
+  return exactEvidenceDate(labelled?.[1]);
+}
+
+// Icon-only controls have no useful markdown label. Read the containing official
+// index block for discovery/ranking and only accept structured or explicitly
+// labelled publication dates tied to that same block.
 export function discoverOfficialDocuments(html: string, base: string, domains: string[]): Candidate[] {
   const found = new Map<string, Candidate>();
-  for (const match of html.slice(0, 2_000_000).matchAll(/<a\b[^>]*href\s*=\s*["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi)) {
+  const documentHtml = html.slice(0, 2_000_000);
+  for (const match of documentHtml.matchAll(/<(a|button)\b([^>]*)>([\s\S]*?)<\/\1>/gi)) {
+    const attributes = match[2];
+    const rawUrl = attributes.match(/\b(?:href|data-href|data-url|data-file)\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!rawUrl) continue;
     let url: string;
-    try { url = new URL(match[1].replace(/&amp;/g, "&"), base).href; } catch { continue; }
+    try { url = unwrapOfficialPdfViewerUrl(new URL(rawUrl.replace(/&amp;/g, "&"), base).href); } catch { continue; }
     if (!isPdf(url) || !isOfficialDossierSource(url, domains)) continue;
-    const before = html.slice(Math.max(0, match.index! - 400), match.index);
-    const block = before.split(/<(?:p|li)\b[^>]*>/i).slice(-1)[0];
-    const title = plain(`${block} ${match[2]}`).slice(0, 300);
+    const block = containingBlock(documentHtml, match.index!, match.index! + match[0].length);
+    const title = plain(block).slice(0, 300);
     if (!/presentation|financial results|earnings|transcript|annual report|press release/i.test(title)) continue;
-    if (!found.has(url)) found.set(url, { url, title, depth: 1 });
+    const publishedDate = exactIndexContextDate(attributes, block) || undefined;
+    if (!found.has(url)) found.set(url, { url, title, publishedDate, dateBasis: publishedDate ? "official_index_context" : undefined, depth: 1 });
   }
   const score = (c: Candidate) => {
     // Do not mistake digits inside document IDs (e.g. 020525 or timestamps)
@@ -70,9 +108,29 @@ export function discoverOfficialDocuments(html: string, base: string, domains: s
 }
 
 export function documentPublicationDate(scraped: Scraped, candidate: Candidate): { date: string | null; basis: string } {
-  for (const value of [scraped.metadata?.publishedTime, scraped.metadata?.publishedDate, candidate.publishedDate, candidate.date]) {
+  for (const [value, basis] of [
+    [scraped.metadata?.publishedTime, "publication_metadata"],
+    [scraped.metadata?.publishedDate, "publication_metadata"],
+    [scraped.metadata?.datePublished, "publication_metadata"],
+    [scraped.metadata?.articlePublishedTime, "publication_metadata"],
+    [candidate.publishedDate, candidate.dateBasis || "search_result_date"],
+    [candidate.date, candidate.dateBasis || "search_result_date"],
+  ] as Array<[unknown, string]>) {
     const date = exactEvidenceDate(value);
-    if (date) return { date, basis: "publication_metadata" };
+    if (date) return { date, basis };
+  }
+  const structuredHtml = String(scraped.rawHtml || "").slice(0, 150_000);
+  for (const match of structuredHtml.matchAll(/["']datePublished["']\s*:\s*["']([^"']+)["']/gi)) {
+    const date = exactEvidenceDate(match[1]);
+    if (date) return { date, basis: "structured_publication_metadata" };
+  }
+  for (const match of structuredHtml.matchAll(/<meta\b([^>]+)>/gi)) {
+    const attributes = match[1];
+    const name = attributes.match(/\b(?:name|property)\s*=\s*["']([^"']+)["']/i)?.[1];
+    if (!name || !/^(?:article:published_time|date|datePublished)$/i.test(name)) continue;
+    const value = attributes.match(/\bcontent\s*=\s*["']([^"']+)["']/i)?.[1];
+    const date = exactEvidenceDate(value);
+    if (date) return { date, basis: "structured_publication_metadata" };
   }
   const lines = String(scraped.markdown || "").slice(0, 2400).split(/\n/);
   for (const line of lines) {
@@ -88,9 +146,16 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
     // the filename (for example, q4-apr23-2026.pdf). Accept only an explicit
     // day-month-year filename pattern; quarter/year folders remain insufficient.
     const filename = decodeURIComponent(new URL(candidate.url).pathname.split("/").pop() || "");
+    const filenameDate = exactEvidenceDate(filename.replace(/_/g, " "));
+    if (filenameDate) return { date: filenameDate, basis: "document_filename" };
     const compactUrlDate = filename.match(/(?:^|[-_])(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)(\d{1,2})[-_](20\d{2})(?:[-_.]|$)/i);
     if (compactUrlDate) {
       const date = exactEvidenceDate(`${compactUrlDate[2]} ${compactUrlDate[1]} ${compactUrlDate[3]}`);
+      if (date) return { date, basis: "document_filename" };
+    }
+    const compactNumericDate = filename.match(/(?:^|\D)(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?:\D|$)/);
+    if (compactNumericDate) {
+      const date = exactEvidenceDate(`${compactNumericDate[1]}-${compactNumericDate[2]}-${compactNumericDate[3]}`);
       if (date) return { date, basis: "document_filename" };
     }
     const cover = String(scraped.markdown || "").slice(0, 1800);
