@@ -13,6 +13,33 @@ Required n8n environment variables:
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.
 
+## Pilot diagnostics and response handling
+
+On n8n installations that block `$env`, configure the HTTP node with a literal candidate URL
+and an encrypted **Header Auth** credential named `x-dossier-token`. Do not paste the token into
+the workflow JSON or enable global environment access just for this workflow.
+
+The HTTP node must use `specifyBody: "json"` and `jsonBody: "={{ $json }}"`. `specifyBody` is a
+mode selector, not the request body. Response options include the full status/body and allow
+non-2xx responses through to **Return Dossier**, which forwards the backend status and body.
+Transport failures return a generic 502. A green n8n execution means the response was delivered;
+it does not make a backend 422 into a successful dossier.
+
+To repair an existing inactive pilot, export it first, retain the original, and run
+`node scripts/patch-dossier-workflow.mjs backup.json corrected.json` before importing the
+corrected file. This preserves the live URL, encrypted credential references and request body.
+
+The evidence collector follows a bounded number of official PDF links from investor-relations
+indexes, including icon-only links omitted by markdown conversion. It uses publication metadata
+or the document's dated exchange cover letter, not upload-folder dates or fiscal-period labels.
+Undated, unofficial and post-cutoff sources remain rejected. A 422 includes per-URL diagnostics.
+
+Regression tests: `node --import tsx scripts/verify-dossier-evidence.ts` and
+`node --import tsx scripts/verify-dossier-contract.ts`.
+The explicitly invoked `check-radico-evidence.ts` and `test-dossier-pilot.ts` scripts make live
+pilot requests and may consume provider credits; the latter supports `--webhook` after clicking
+the full workflow's **Execute workflow** button. Do not publish to run a manual webhook test.
+
 `alphasynth-dossier-intake-v1.json` is the inactive, importable entry workflow for the pilot.
 It validates the application request and creates separate official-evidence and social-discovery
 plans. It deliberately does not replace or activate the live BMS workflows.
