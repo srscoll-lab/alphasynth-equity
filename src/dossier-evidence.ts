@@ -47,7 +47,9 @@ export function discoverOfficialDocuments(html: string, base: string, domains: s
     if (!found.has(url)) found.set(url, { url, title, depth: 1 });
   }
   const score = (c: Candidate) => {
-    const year = Math.max(0, ...(`${c.title} ${c.url}`.match(/20\d{2}/g) || []).map(Number));
+    // Do not mistake digits inside document IDs (e.g. 020525 or timestamps)
+    // for future years and rank an old archive above current filings.
+    const year = Math.max(0, ...(`${c.title} ${new URL(c.url).pathname}`.match(/(?<!\d)20\d{2}(?!\d)/g) || []).map(Number));
     return year * 10 + (/earnings.*presentation|financial results/i.test(c.title || "") ? 5 : /presentation/i.test(c.title || "") ? 4 : /transcript/i.test(c.title || "") ? 3 : 1);
   };
   return [...found.values()].sort((a, b) => score(b) - score(a));

@@ -13,6 +13,8 @@ const links = discoverOfficialDocuments(html, base, domains);
 assert.equal(links.length, 2);
 assert.equal(links[0].url, pdf);
 assert.match(links[0].title!, /Earnings Presentation/);
+const archive = discoverOfficialDocuments(html + '<p>Press release May 02, 2025 <a href="/2025/pressrelease020525.pdf">PDF</a></p><p>Q3 FY2019 Earnings Call <a href="/2019/CLT_20190122045559.pdf">PDF</a></p>', base, domains);
+assert.equal(archive[0].url, pdf);
 assert.equal(exactEvidenceDate("July 28, 2026"), "2026-07-28");
 assert.equal(exactEvidenceDate("28 July 2026"), "2026-07-28");
 assert.equal(exactEvidenceDate("2026-02-30"), null);
