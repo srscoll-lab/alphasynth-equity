@@ -1890,12 +1890,16 @@ Return the independent BMS validation as JSON.`;
         STEP 3: For the subject AND each of the 4 peers, give as of ${todayStr}:
           - exact NSE ticker symbol (no exchange suffix)
           - short company name
+          - EPS (trailing twelve months), plain INR number
           - P/E ratio (trailing twelve months), plain number
+          - Price-to-Book ratio, plain number
           - ROE % (return on equity), plain number
+          - ROCE % (return on capital employed), plain number
           - Debt-to-Equity ratio, plain number
           - Revenue growth YoY %, plain number
+          - Operating margin %, plain number
           - Market capitalisation in INR crores, plain number (e.g. 1769000)
-        Use the trailing-twelve-month P/E as shown on Yahoo Finance / Screener.in. If a metric is genuinely unavailable for a company, write "N/A" (do NOT guess or output 0). Return a labelled list of all 5 companies with all metrics.`;
+        Use a consistent trailing or latest annual basis across the peer set and state the source basis. For banks and lenders, omit ROCE and Debt-to-Equity when they are not economically comparable. If a metric is genuinely unavailable for a company, write "N/A" (do NOT guess or output 0). Return a labelled list of all 5 companies with all metrics.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: groundPrompt }] }],
@@ -1908,7 +1912,7 @@ Return the independent BMS validation as JSON.`;
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text:
 `Convert the peer data below into JSON for subject "${cleanTicker}" (${subjectName}).
-Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; pe/roe/debtEquity/revenueGrowthYoY/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
+Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; epsTtm/pe/pb/roe/roce/debtEquity/revenueGrowthYoY/operatingMargin/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
 
 Source data:
 ${rawText}` }] }],
@@ -1925,10 +1929,14 @@ ${rawText}` }] }],
                   properties: {
                     ticker: { type: "STRING" },
                     name: { type: "STRING" },
+                    epsTtm: { type: "NUMBER" },
                     pe: { type: "NUMBER" },
+                    pb: { type: "NUMBER" },
                     roe: { type: "NUMBER" },
+                    roce: { type: "NUMBER" },
                     debtEquity: { type: "NUMBER" },
                     revenueGrowthYoY: { type: "NUMBER" },
+                    operatingMargin: { type: "NUMBER" },
                     marketCap: { type: "NUMBER" },
                     isTarget: { type: "BOOLEAN" },
                   },
@@ -1947,10 +1955,14 @@ ${rawText}` }] }],
         .map((c: any) => ({
           ticker: String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, ""),
           name: c.name || String(c.ticker || "").toUpperCase(),
+          epsTtm: num(c.epsTtm ?? c.eps),
           pe: num(c.pe ?? c.peRatio),
+          pb: num(c.pb ?? c.priceToBook),
           roe: pctNorm(c.roe ?? c.returnOnEquity),
+          roce: pctNorm(c.roce ?? c.returnOnCapitalEmployed),
           debtEquity: num(c.debtEquity ?? c.debtToEquity),
           revenueGrowthYoY: pctNorm(c.revenueGrowthYoY ?? c.revenueGrowth),
+          operatingMargin: pctNorm(c.operatingMargin ?? c.operatingMarginPct),
           marketCapCr: num(c.marketCap ?? c.marketCapCr ?? c.market_cap),
           isTarget: false,
         }))
@@ -1958,7 +1970,7 @@ ${rawText}` }] }],
 
       // Force the subject to be present and first, flagged as the target.
       let target = companies.find((c: any) => c.ticker === cleanTicker);
-      if (!target) { target = { ticker: cleanTicker, name: subjectName, pe: null, roe: null, debtEquity: null, revenueGrowthYoY: null, marketCapCr: null, isTarget: true }; }
+      if (!target) { target = { ticker: cleanTicker, name: subjectName, epsTtm: null, pe: null, pb: null, roe: null, roce: null, debtEquity: null, revenueGrowthYoY: null, operatingMargin: null, marketCapCr: null, isTarget: true }; }
       target.isTarget = true;
       if (target.name === cleanTicker) target.name = subjectName;
       const ordered = [target, ...companies.filter((c: any) => c.ticker !== cleanTicker)].slice(0, 5);
@@ -2544,17 +2556,37 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const responseSchema = {
         type: "OBJECT",
-        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"],
-        properties: Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
-          type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
-            text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
-            status: { type: "STRING", enum: ["supported", "conflict"] },
-          } },
-        }]))
+        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks", "quarterlyPerformance"],
+        properties: {
+          ...Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
+            type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
+              text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+              status: { type: "STRING", enum: ["supported", "conflict"] },
+            } },
+          }])),
+          quarterlyPerformance: {
+            type: "ARRAY",
+            maxItems: 8,
+            items: {
+              type: "OBJECT",
+              required: ["period", "basis", "sourceIds"],
+              properties: {
+                period: { type: "STRING" },
+                basis: { type: "STRING", enum: ["consolidated", "standalone", "unknown"] },
+                revenueCr: { type: "NUMBER" },
+                ebitdaCr: { type: "NUMBER" },
+                ebitdaMarginPct: { type: "NUMBER" },
+                patCr: { type: "NUMBER" },
+                eps: { type: "NUMBER" },
+                sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+              },
+            },
+          },
+        },
       };
       const response = await ai.models.generateContent({
         model,
-        contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
+        contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim and every quarterly row must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
@@ -2579,6 +2611,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       let claimNumber = 0;
       const sourceIds = new Set(sources.map(source => source.sourceId));
+      const finiteOrNull = (value: unknown) => {
+        if (value === null || value === undefined || value === "") return null;
+        const numeric = typeof value === "number" ? value : Number(value);
+        return Number.isFinite(numeric) ? numeric : null;
+      };
       const sectionNames = ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"];
       const sections = Object.fromEntries(sectionNames.map(name => [name,
         (Array.isArray(rawSections[name]) ? rawSections[name] : []).map((claim: any) => ({
@@ -2588,10 +2625,23 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           status: claim.status === "conflict" ? "conflict" : "supported",
         })).filter((claim: any) => claim.text && claim.sourceIds.length),
       ]));
+      const quarterlyPerformance = (Array.isArray(rawSections.quarterlyPerformance) ? rawSections.quarterlyPerformance : [])
+        .map((quarter: any) => ({
+          period: String(quarter.period || "").trim(),
+          basis: ["consolidated", "standalone"].includes(quarter.basis) ? quarter.basis : "unknown",
+          revenueCr: finiteOrNull(quarter.revenueCr),
+          ebitdaCr: finiteOrNull(quarter.ebitdaCr),
+          ebitdaMarginPct: finiteOrNull(quarter.ebitdaMarginPct),
+          patCr: finiteOrNull(quarter.patCr),
+          eps: finiteOrNull(quarter.eps),
+          sourceIds: [...new Set((Array.isArray(quarter.sourceIds) ? quarter.sourceIds : []).filter((id: string) => sourceIds.has(id)))],
+        }))
+        .filter((quarter: any) => quarter.period && quarter.sourceIds.length
+          && [quarter.revenueCr, quarter.ebitdaCr, quarter.ebitdaMarginPct, quarter.patCr, quarter.eps].some((value) => value !== null));
       const dossier: any = {
         schemaVersion: "1.0.0", reportId: `${ticker}-${Date.now()}`, generatedAt: new Date().toISOString(),
         company: { symbol: ticker, name: companyName, exchange: req.body?.exchange || "NSE", sector: req.body?.sector || "Unclassified", officialDomains },
-        sections, sources,
+        sections, quarterlyPerformance, sources,
         marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
         qualityControl: { unsupportedClaims: 0, conflicts: Object.values(sections).flat().filter((claim: any) => claim.status === "conflict").length, humanReviewRequired: true },
       };

@@ -15,6 +15,17 @@ export interface DossierClaim {
   status: DossierClaimStatus;
 }
 
+export interface DossierQuarterPerformance {
+  period: string;
+  basis: "consolidated" | "standalone" | "unknown";
+  revenueCr: number | null;
+  ebitdaCr: number | null;
+  ebitdaMarginPct: number | null;
+  patCr: number | null;
+  eps: number | null;
+  sourceIds: string[];
+}
+
 export interface ResearchDossier {
   schemaVersion: "1.0.0";
   reportId: string;
@@ -33,6 +44,7 @@ export interface ResearchDossier {
     managementCommitments: DossierClaim[];
     risks: DossierClaim[];
   };
+  quarterlyPerformance?: DossierQuarterPerformance[];
   sources: DossierSource[];
   marketConversation: {
     status: "available" | "insufficient_data" | "disabled";
@@ -93,6 +105,15 @@ export function isResearchDossier(value: unknown): value is ResearchDossier {
 
   const claims = Object.values(dossier.sections).flat();
   if (claims.some((claim) => claim.sourceIds.some((id) => !sourceIds.has(id)))) return false;
+
+  if (dossier.quarterlyPerformance !== undefined) {
+    if (!Array.isArray(dossier.quarterlyPerformance)) return false;
+    if (dossier.quarterlyPerformance.some((quarter) => !quarter.period
+      || !["consolidated", "standalone", "unknown"].includes(quarter.basis)
+      || !Array.isArray(quarter.sourceIds)
+      || !quarter.sourceIds.length
+      || quarter.sourceIds.some((id) => !sourceIds.has(id)))) return false;
+  }
 
   const officialClasses = new Set(["exchange", "company_official", "regulator"]);
   if (dossier.sources.some((source) => officialClasses.has(source.sourceClass)

@@ -60,6 +60,22 @@ type BmsCompany = {
   reversal_warning?: string;
 };
 
+type DossierPeerRow = {
+  ticker: string;
+  name: string;
+  isTarget: boolean;
+  epsTtm: number | null;
+  pe: number | null;
+  pb: number | null;
+  roe: number | null;
+  roce: number | null;
+  debtEquity: number | null;
+  revenueGrowthYoY: number | null;
+  operatingMargin: number | null;
+  marketCapCr: number | null;
+  week52Return: number | null;
+};
+
 type BmsResponse = {
   name: string;
   company_count: number;
@@ -440,6 +456,7 @@ export default function BusinessMomentum({
   const [dossier, setDossier] = useState<ResearchDossier | null>(null);
   const [dossierLoading, setDossierLoading] = useState(false);
   const [dossierError, setDossierError] = useState("");
+  const [dossierPeers, setDossierPeers] = useState<DossierPeerRow[]>([]);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
@@ -482,6 +499,69 @@ export default function BusinessMomentum({
         pdf.line(margin, y, pageWidth - margin, y);
         y += 5;
       };
+      const fmt = (value: number | null | undefined, suffix = "") => value == null
+        ? "N/A"
+        : `${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}${suffix}`;
+      const drawBars = (title: string, values: Array<{ label: string; value: number }>, maximum = 100) => {
+        heading(title);
+        for (const item of values) {
+          ensureRoom(9);
+          pdf.setFont("helvetica", "normal");
+          pdf.setFontSize(8);
+          pdf.setTextColor(45, 55, 72);
+          pdf.text(safe(item.label), margin, y + 3);
+          const barX = margin + 42;
+          const barWidth = contentWidth - 58;
+          pdf.setFillColor(235, 238, 244);
+          pdf.roundedRect(barX, y, barWidth, 4, 1, 1, "F");
+          pdf.setFillColor(42, 130, 95);
+          pdf.roundedRect(barX, y, Math.max(1, barWidth * Math.min(1, Math.max(0, item.value / maximum))), 4, 1, 1, "F");
+          pdf.text(fmt(item.value), pageWidth - margin - 12, y + 3);
+          y += 8;
+        }
+      };
+      const drawTable = (title: string, headers: string[], widths: number[], rows: string[][]) => {
+        heading(title);
+        if (!rows.length) {
+          write("Comparable structured figures were not available in the admitted evidence.", 9, 0, [102, 112, 133]);
+          return;
+        }
+        const drawHeader = () => {
+          ensureRoom(9);
+          let x = margin;
+          pdf.setFillColor(23, 32, 51);
+          pdf.rect(margin, y, widths.reduce((sum, width) => sum + width, 0), 8, "F");
+          pdf.setFont("helvetica", "bold");
+          pdf.setFontSize(6.7);
+          pdf.setTextColor(255, 255, 255);
+          headers.forEach((header, index) => {
+            pdf.text(safe(header), x + 1.5, y + 5.2);
+            x += widths[index];
+          });
+          y += 8;
+        };
+        drawHeader();
+        rows.forEach((row, rowIndex) => {
+          const cells = row.map((cell, index) => pdf.splitTextToSize(safe(cell), widths[index] - 3).slice(0, 3));
+          const rowHeight = Math.max(7, Math.max(...cells.map(cell => cell.length)) * 3.1 + 2);
+          if (y + rowHeight > pageHeight - 17) {
+            pdf.addPage();
+            y = 18;
+            drawHeader();
+          }
+          let x = margin;
+          pdf.setFillColor(rowIndex % 2 ? 248 : 255, rowIndex % 2 ? 249 : 255, rowIndex % 2 ? 251 : 255);
+          pdf.rect(margin, y, widths.reduce((sum, width) => sum + width, 0), rowHeight, "F");
+          pdf.setFont("helvetica", rowIndex === 0 ? "bold" : "normal");
+          pdf.setFontSize(6.7);
+          pdf.setTextColor(38, 47, 65);
+          cells.forEach((cell, index) => {
+            pdf.text(cell, x + 1.5, y + 4.2);
+            x += widths[index];
+          });
+          y += rowHeight;
+        });
+      };
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(9);
@@ -500,12 +580,53 @@ export default function BusinessMomentum({
       pdf.line(margin, y, pageWidth - margin, y);
       y += 5;
 
-      for (const [section, claims] of Object.entries(dossier.sections)) {
+      heading("Company at a glance");
+      dossier.sections.snapshot.filter(claim => claim.status === "supported").slice(0, 3).forEach(claim => {
+        write(`${claim.text} [${claim.sourceIds.join(", ")}]`, 9.5, 3);
+        y += 1;
+      });
+
+      drawBars("Business Momentum components", [
+        { label: "Earnings", value: score100(selected?.earnings || 0) },
+        { label: "Economics", value: score100(selected?.economics || 0) },
+        { label: "Execution", value: score100(selected?.execution || 0) },
+        { label: "Balance sheet", value: score100(selected?.balance_sheet || 0) },
+        { label: "Management", value: score100(selected?.management_delivery || 0) },
+      ]);
+      const allClaims = Object.values(dossier.sections).flat();
+      const supportedCount = allClaims.filter(claim => claim.status === "supported").length;
+      const conflictCount = allClaims.filter(claim => claim.status === "conflict").length;
+      const insufficientCount = allClaims.filter(claim => claim.status === "insufficient_evidence").length;
+      drawBars("Evidence quality", [
+        { label: "Supported", value: supportedCount },
+        { label: "Conflicts", value: conflictCount },
+        { label: "Insufficient", value: insufficientCount },
+      ], Math.max(1, allClaims.length));
+
+      drawTable("Quarter-wise financial performance",
+        ["Period", "Basis", "Revenue Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"],
+        [25, 29, 36, 28, 32, 24],
+        (dossier.quarterlyPerformance || []).map(quarter => [
+          `${quarter.period} [${quarter.sourceIds.join(", ")}]`, quarter.basis, fmt(quarter.revenueCr), fmt(quarter.ebitdaMarginPct, "%"), fmt(quarter.patCr), fmt(quarter.eps),
+        ]));
+
+      write(`Peer figures are a separate market-data comparison generated on ${dossier.generatedAt.slice(0, 10)}; they are not part of the admitted official-evidence record.`, 7.5, 0, [102, 112, 133]);
+      drawTable("Peer comparison - valuation and returns",
+        ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"],
+        [48, 27, 24, 24, 25, 26],
+        dossierPeers.map(peer => [peer.ticker, fmt(peer.epsTtm), fmt(peer.pe), fmt(peer.pb), fmt(peer.roe), fmt(peer.roce)]));
+      drawTable("Peer comparison - growth and financial position",
+        ["Company", "D/E", "Revenue YoY", "Op. margin", "Mkt cap Rs.Cr", "52W return"],
+        [48, 23, 31, 31, 38, 27],
+        dossierPeers.map(peer => [peer.ticker, fmt(peer.debtEquity), fmt(peer.revenueGrowthYoY, "%"), fmt(peer.operatingMargin, "%"), fmt(peer.marketCapCr), fmt(peer.week52Return, "%")]));
+
+      for (const section of ["developments", "operatingEvidence", "managementCommitments", "risks"] as const) {
+        const claims = dossier.sections[section].slice(0, 6);
         heading(section.replace(/([A-Z])/g, " $1").trim().replace(/^./, value => value.toUpperCase()));
         if (!claims.length) write("No verified evidence available.", 9, 0, [102, 112, 133]);
         for (const claim of claims) {
-          write(`[${claim.status.replaceAll("_", " ").toUpperCase()}] ${claim.text}`, 9.5, 3);
-          write(`Sources: ${claim.sourceIds.join(", ")}`, 7.5, 3, [102, 112, 133]);
+          const reviewPrefix = claim.status === "supported" ? "" : `${claim.status.replaceAll("_", " ").toUpperCase()}: `;
+          write(`${reviewPrefix}${claim.text} [${claim.sourceIds.join(", ")}]`, 9.5, 3);
           y += 1.5;
         }
       }
@@ -541,19 +662,31 @@ export default function BusinessMomentum({
     setDossierLoading(true);
     setDossierError("");
     setDossier(null);
+    setDossierPeers([]);
     try {
-      const response = await fetch("/api/dossier/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ticker: selected.symbol,
-          company_name: selected.company_name || selected.symbol,
-          reporting_period: selected.period,
+      const requestBody = JSON.stringify({ ticker: selected.symbol });
+      const [response, peerPayload] = await Promise.all([
+        fetch("/api/dossier/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ticker: selected.symbol,
+            company_name: selected.company_name || selected.symbol,
+            reporting_period: selected.period,
+          }),
         }),
-      });
+        fetch("/api/pipeline/peer-comparison", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        }).then(async peerResponse => peerResponse.ok ? peerResponse.json() : null).catch(() => null),
+      ]);
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
-      if (requestId === dossierRequestId.current) setDossier(payload);
+      if (requestId === dossierRequestId.current) {
+        setDossier(payload);
+        setDossierPeers(Array.isArray(peerPayload?.rows) ? peerPayload.rows : []);
+      }
     } catch (error: any) {
       if (requestId === dossierRequestId.current) {
         setDossierError(error?.message || "Dossier generation failed");
@@ -635,6 +768,7 @@ export default function BusinessMomentum({
     dossierRequestId.current += 1;
     setDossier(null);
     setDossierError("");
+    setDossierPeers([]);
     setDossierLoading(false);
   }, [selected?.symbol, selected?.period]);
 
@@ -796,6 +930,12 @@ export default function BusinessMomentum({
     : null;
 
   const selectedBmsChange = selected?.bms_change ?? null;
+  const dossierClaims = dossier ? Object.values(dossier.sections).flat() : [];
+  const dossierSupported = dossierClaims.filter((claim) => claim.status === "supported").length;
+  const dossierConflicts = dossierClaims.filter((claim) => claim.status === "conflict").length;
+  const dossierHighlights = dossier
+    ? (dossier.sections.developments.length ? dossier.sections.developments : dossier.sections.snapshot).slice(0, 3)
+    : [];
 
   const investorStageCounts = {
     WATCH: companies.filter(
@@ -1506,7 +1646,7 @@ export default function BusinessMomentum({
                           disabled={dossierLoading}
                           className="flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-400/[0.08] text-blue-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all hover:bg-blue-400/[0.14] disabled:opacity-70"
                         >
-                          {dossierLoading ? "Building Dossier…" : "Research Dossier"}
+                          {dossierLoading ? "Building PDF Dossier…" : "Generate PDF Dossier"}
                           {dossierLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Layers3 className="w-4 h-4" />}
                         </button>
 
@@ -1627,7 +1767,10 @@ export default function BusinessMomentum({
                   {(dossierLoading || dossier || dossierError) && (
                     <div className="mt-4 rounded-2xl border border-blue-400/15 bg-blue-400/[0.025] p-5">
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Shared Research Dossier · Pilot</p>
+                        <div>
+                          <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Research Dossier · PDF</p>
+                          <p className="mt-1 text-[9px] text-zinc-600">Full tables, charts, peer comparison and cited evidence</p>
+                        </div>
                         {dossier && (
                           <button
                             type="button"
@@ -1641,18 +1784,30 @@ export default function BusinessMomentum({
                       {dossierLoading && <p className="mt-3 text-sm text-zinc-400">Collecting and validating cited company evidence…</p>}
                       {dossierError && <p className="mt-3 text-sm text-red-300">{dossierError}</p>}
                       {dossier && (
-                        <div className="mt-4 space-y-5">
-                          {Object.entries(dossier.sections).map(([section, claims]) => (
-                            <section key={section}>
-                              <h4 className="text-[10px] font-black uppercase tracking-widest text-zinc-300">{section.replace(/([A-Z])/g, " $1")}</h4>
-                              {claims.length ? (
-                                <ul className="mt-2 space-y-2 text-xs text-zinc-400">
-                                  {claims.map((claim) => <li key={claim.claimId}>• {claim.text}</li>)}
-                                </ul>
-                              ) : <p className="mt-2 text-xs text-zinc-600">No verified evidence available.</p>}
-                            </section>
-                          ))}
-                          <p className="text-[9px] text-zinc-600">Market conversation is experimental and does not affect BMS.</p>
+                        <div className="mt-4 space-y-4">
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              ["Sources", dossier.sources.length],
+                              ["Supported", dossierSupported],
+                              ["Conflicts", dossierConflicts],
+                            ].map(([label, value]) => (
+                              <div key={label} className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+                                <p className="text-base font-black text-zinc-100">{value}</p>
+                                <p className="text-[8px] font-bold uppercase tracking-wider text-zinc-600">{label}</p>
+                              </div>
+                            ))}
+                          </div>
+                          <section>
+                            <h4 className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Key developments</h4>
+                            {dossierHighlights.length ? (
+                              <ul className="mt-2 space-y-2 text-xs leading-relaxed text-zinc-400">
+                                {dossierHighlights.map((claim) => <li key={claim.claimId}>• {claim.text}</li>)}
+                              </ul>
+                            ) : <p className="mt-2 text-xs text-zinc-600">No verified developments available.</p>}
+                          </section>
+                          <p className="text-[9px] leading-relaxed text-zinc-600">
+                            The PDF contains the complete cited dossier{dossier.quarterlyPerformance?.length ? ", quarter-wise performance" : ""}{dossierPeers.length ? ", peer ratios" : ""} and quality-control appendix.
+                          </p>
                         </div>
                       )}
                     </div>
