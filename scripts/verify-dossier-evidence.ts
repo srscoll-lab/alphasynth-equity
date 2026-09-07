@@ -22,6 +22,20 @@ assert.equal(exactEvidenceDate("August 2026"), null);
 assert.equal(exactEvidenceDate("/uploads/2026/07/report.pdf"), null);
 assert.equal(documentPublicationDate({ markdown: cover }, { url: pdf }).date, "2026-07-28");
 assert.equal(documentPublicationDate({ markdown: "Quarter ended June 30, 2026\nFinancial results" }, { url: pdf }).date, null);
+assert.deepEqual(
+  documentPublicationDate(
+    { markdown: "Infosys quarterly press release. ".repeat(20) },
+    { url: "https://www.infosys.com/newsroom/press-releases/documents/2026/q4-apr23-2026.pdf" },
+  ),
+  { date: "2026-04-23", basis: "document_filename" },
+);
+assert.equal(
+  documentPublicationDate(
+    { markdown: "Infosys earnings call transcript. ".repeat(20) },
+    { url: "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q4/documents/transcripts/earningscall.pdf" },
+  ).date,
+  null,
+);
 
 const calls: string[] = [];
 const result = await collectOfficialEvidence([{ url: base }, { url: "https://evil.example/report.pdf" }], domains, "2026-09-05", async url => {

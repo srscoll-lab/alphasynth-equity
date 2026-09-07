@@ -70,6 +70,15 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
   // Stock-exchange cover letters place their filing date at the top, before
   // the recipient/subject. Never search the report body for a reporting-period date.
   if (isPdf(candidate.url)) {
+    // Some issuers publish undated PDF text but encode an exact release date in
+    // the filename (for example, q4-apr23-2026.pdf). Accept only an explicit
+    // day-month-year filename pattern; quarter/year folders remain insufficient.
+    const filename = decodeURIComponent(new URL(candidate.url).pathname.split("/").pop() || "");
+    const compactUrlDate = filename.match(/(?:^|[-_])(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)(\d{1,2})[-_](20\d{2})(?:[-_.]|$)/i);
+    if (compactUrlDate) {
+      const date = exactEvidenceDate(`${compactUrlDate[2]} ${compactUrlDate[1]} ${compactUrlDate[3]}`);
+      if (date) return { date, basis: "document_filename" };
+    }
     const cover = String(scraped.markdown || "").slice(0, 1800);
     const recipient = cover.search(/\b(?:BSE Limited|National Stock Exchange|To,?\s*\n)/i);
     if (recipient >= 0 && /\b(?:subject|scrip|symbol|regulation)\b/i.test(cover)) {
