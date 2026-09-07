@@ -10,6 +10,7 @@ import {
   Zap,
   Layers3,
   ShieldCheck,
+  Download,
 } from "lucide-react";
 import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
@@ -440,6 +441,67 @@ export default function BusinessMomentum({
   const [dossierLoading, setDossierLoading] = useState(false);
   const [dossierError, setDossierError] = useState("");
   const dossierRequestId = useRef(0);
+
+  const downloadDossierPdf = () => {
+    if (!dossier) return;
+    const escapeHtml = (value: unknown) => String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+    const sectionHtml = Object.entries(dossier.sections).map(([section, claims]) => `
+      <section>
+        <h2>${escapeHtml(section.replace(/([A-Z])/g, " $1"))}</h2>
+        ${claims.length ? `<ul>${claims.map((claim) => `
+          <li>
+            <span class="status ${escapeHtml(claim.status)}">${escapeHtml(claim.status.replace("_", " "))}</span>
+            ${escapeHtml(claim.text)}
+            <small>Sources: ${escapeHtml(claim.sourceIds.join(", "))}</small>
+          </li>`).join("")}</ul>` : "<p class=\"muted\">No verified evidence available.</p>"}
+      </section>`).join("");
+    const sourceHtml = dossier.sources.map((source) => `
+      <li><strong>${escapeHtml(source.sourceId)}</strong> · ${escapeHtml(source.publishedAt)}<br>
+        <a href="${escapeHtml(source.url)}">${escapeHtml(source.url)}</a>
+      </li>`).join("");
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      window.alert("Please allow popups to download the dossier PDF.");
+      return;
+    }
+    printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(dossier.company.symbol)} Research Dossier</title>
+      <style>
+        @page { size: A4; margin: 16mm; }
+        * { box-sizing: border-box; } body { color:#172033; font: 10.5pt/1.5 Arial,sans-serif; margin:0; }
+        header { border-bottom:3px solid #cda434; padding-bottom:18px; margin-bottom:24px; }
+        .brand { color:#9a7516; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
+        h1 { font-size:26px; margin:8px 0 3px; } .meta,.muted,small { color:#667085; }
+        h2 { border-bottom:1px solid #d7dce5; font-size:14px; margin:22px 0 8px; padding-bottom:5px; text-transform:capitalize; }
+        ul { margin:0; padding-left:20px; } li { margin:0 0 9px; break-inside:avoid; }
+        small { display:block; font-size:8.5px; margin-top:2px; }
+        .status { border-radius:10px; display:inline-block; font-size:7.5px; font-weight:700; margin-right:5px; padding:2px 6px; text-transform:uppercase; }
+        .supported { background:#def7e7; color:#18733a; } .conflict { background:#fff0d5; color:#934f00; }
+        .insufficient_evidence { background:#f3f4f6; color:#596273; }
+        .qc { background:#f6f8fb; border:1px solid #d7dce5; border-radius:8px; padding:12px; }
+        a { color:#2557a7; overflow-wrap:anywhere; } footer { border-top:1px solid #d7dce5; color:#667085; font-size:8.5px; margin-top:25px; padding-top:10px; }
+      </style></head><body>
+      <header><div class="brand">AlphaSynth Intelligence · Research Dossier</div>
+        <h1>${escapeHtml(dossier.company.name)}</h1>
+        <div class="meta">${escapeHtml(dossier.company.symbol)} · ${escapeHtml(dossier.company.exchange)} · ${escapeHtml(dossier.company.sector)}</div>
+        <div class="meta">Report ${escapeHtml(dossier.reportId)} · Generated ${escapeHtml(new Date(dossier.generatedAt).toLocaleString())}</div>
+      </header>
+      ${sectionHtml}
+      <section><h2>Official sources</h2><ol>${sourceHtml}</ol></section>
+      <section><h2>Quality control</h2><div class="qc">
+        Unsupported claims: ${escapeHtml(dossier.qualityControl.unsupportedClaims)} ·
+        Conflicts: ${escapeHtml(dossier.qualityControl.conflicts)} ·
+        Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}
+      </div></section>
+      <footer>AI-generated research for informational purposes only. Verify material claims against the cited official documents. This is not investment advice.</footer>
+      <script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script>
+      </body></html>`);
+    printWindow.document.close();
+  };
 
   const generateDossier = async () => {
     if (!selected) return;
@@ -1532,7 +1594,18 @@ export default function BusinessMomentum({
 
                   {(dossierLoading || dossier || dossierError) && (
                     <div className="mt-4 rounded-2xl border border-blue-400/15 bg-blue-400/[0.025] p-5">
-                      <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Shared Research Dossier · Pilot</p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Shared Research Dossier · Pilot</p>
+                        {dossier && (
+                          <button
+                            type="button"
+                            onClick={downloadDossierPdf}
+                            className="flex items-center gap-1.5 rounded-lg border border-blue-400/25 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-blue-300 transition-colors hover:bg-blue-400/10"
+                          >
+                            <Download className="h-3.5 w-3.5" /> Download PDF
+                          </button>
+                        )}
+                      </div>
                       {dossierLoading && <p className="mt-3 text-sm text-zinc-400">Collecting and validating cited company evidence…</p>}
                       {dossierError && <p className="mt-3 text-sm text-red-300">{dossierError}</p>}
                       {dossier && (
