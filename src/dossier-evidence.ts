@@ -32,6 +32,20 @@ export function exactEvidenceDate(value: unknown): string | null {
 const plain = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/&(?:nbsp|amp);/g, " ").replace(/\s+/g, " ").trim();
 const isPdf = (url: string) => /\.pdf(?:[?#]|$)/i.test(url);
 
+// Some issuer sites expose PDFs through a same-origin viewer URL. Scrape the
+// underlying document, but never follow a viewer parameter to another origin.
+export function unwrapOfficialPdfViewerUrl(value: string): string {
+  try {
+    const viewer = new URL(value);
+    const wrapped = viewer.searchParams.get("pdf");
+    if (!wrapped || !/\.pdf(?:[?#]|$)/i.test(wrapped)) return viewer.href;
+    const direct = new URL(wrapped, viewer.origin);
+    return direct.origin === viewer.origin ? direct.href : viewer.href;
+  } catch {
+    return value;
+  }
+}
+
 // Icon-only anchors have no useful markdown label. Read the surrounding HTML
 // paragraph/list item, but use that label for discovery/ranking, NEVER dating.
 export function discoverOfficialDocuments(html: string, base: string, domains: string[]): Candidate[] {
@@ -90,7 +104,7 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
 }
 
 export async function collectOfficialEvidence(candidates: Candidate[], domains: string[], cutoff: string, scrape: Scrape) {
-  const queue: Candidate[] = candidates.map(c => ({ ...c, depth: 0 }));
+  const queue: Candidate[] = candidates.map(c => ({ ...c, url: unwrapOfficialPdfViewerUrl(c.url), depth: 0 }));
   const seen = new Set<string>();
   const sources: DossierSource[] = [];
   const evidence: Array<{ sourceId: string; text: string }> = [];
@@ -119,7 +133,7 @@ export async function collectOfficialEvidence(candidates: Candidate[], domains: 
     if (Number(scraped.metadata?.statusCode || 200) >= 400) { reject(url, "source_http_error"); continue; }
     const links = !candidate.depth ? discoverOfficialDocuments(scraped.rawHtml || "", url, domains) : [];
     if (links.length) {
-      queue.splice(index + 1, 0, ...links.slice(0, 6));
+      queue.splice(index + 1, 0, ...links.slice(0, 6).map(c => ({ ...c, url: unwrapOfficialPdfViewerUrl(c.url) })));
       diagnostics.push({ url, outcome: "discovery_index" });
       continue; // An index is not the report and cannot inherit report dates.
     }

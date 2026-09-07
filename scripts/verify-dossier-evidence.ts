@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate } from "../src/dossier-evidence";
+import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence";
 
 const base = "https://radicokhaitan.com/investor-relations/";
 const domains = ["radicokhaitan.com"];
@@ -35,6 +35,15 @@ assert.equal(
     { url: "https://www.infosys.com/investors/reports-filings/quarterly-results/2025-2026/q4/documents/transcripts/earningscall.pdf" },
   ).date,
   null,
+);
+const marutiViewer = "https://www.marutisuzuki.com/pdf-viewer?pdf=%2Fcontent%2Fdam%2Fmsil%2Fcorporate%2Fevents%2Fpdf%2FCopy-of-Financial-Results.pdf";
+assert.equal(
+  unwrapOfficialPdfViewerUrl(marutiViewer),
+  "https://www.marutisuzuki.com/content/dam/msil/corporate/events/pdf/Copy-of-Financial-Results.pdf",
+);
+assert.equal(
+  unwrapOfficialPdfViewerUrl("https://www.marutisuzuki.com/pdf-viewer?pdf=https%3A%2F%2Fevil.example%2Freport.pdf"),
+  "https://www.marutisuzuki.com/pdf-viewer?pdf=https%3A%2F%2Fevil.example%2Freport.pdf",
 );
 
 const calls: string[] = [];
