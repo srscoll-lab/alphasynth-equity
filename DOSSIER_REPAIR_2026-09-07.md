@@ -35,9 +35,9 @@ The n8n HTTP node now retains status/body and forwards non-2xx responses to Retu
 
 Execution and source-reference validation are not independent verification of every generated claim. The successful webhook dossier labelled six business-risk items as `conflict`; a spot-check showed that these labels are not proof of contradictory sources. Review risk classification and claim wording against the PDFs before publishing or using the output for decisions. `humanReviewRequired` remains true, social analysis remains disabled, and social content cannot affect BMS.
 
-## Deferred production UI cleanup
+## Production UI cleanup
 
-- Keep the current public landing page and Research Use Notice during the temporary pilot.
-- Before the permanent production launch, remove/bypass that landing experience so the production URL opens the application directly. Preserve the research-use disclosure inside the application rather than as a blocking entry screen.
+- The blocking Research Use Notice entry screen was removed after pilot review.
+- Research-use disclosures remain inside the application and exported dossier instead of blocking entry.
 
 This repair does not claim universal coverage of all issuer websites. Undated evidence remains a legitimate, clearly reported rejection rather than permission to weaken admission rules.

@@ -442,7 +442,7 @@ export default function BusinessMomentum({
   const [dossierError, setDossierError] = useState("");
   const dossierRequestId = useRef(0);
 
-  const downloadDossierPdf = () => {
+  const downloadDossierPdf = async () => {
     if (!dossier) return;
     const escapeHtml = (value: unknown) => String(value ?? "")
       .replaceAll("&", "&amp;")
@@ -464,15 +464,11 @@ export default function BusinessMomentum({
       <li><strong>${escapeHtml(source.sourceId)}</strong> · ${escapeHtml(source.publishedAt)}<br>
         <a href="${escapeHtml(source.url)}">${escapeHtml(source.url)}</a>
       </li>`).join("");
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      window.alert("Please allow popups to download the dossier PDF.");
-      return;
-    }
-    printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(dossier.company.symbol)} Research Dossier</title>
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;left:-10000px;top:0;width:760px;background:#fff;color:#172033;padding:40px;z-index:-1";
+    container.innerHTML = `
       <style>
-        @page { size: A4; margin: 16mm; }
-        * { box-sizing: border-box; } body { color:#172033; font: 10.5pt/1.5 Arial,sans-serif; margin:0; }
+        * { box-sizing: border-box; } .pdf-report { color:#172033; font: 10.5pt/1.5 Arial,sans-serif; margin:0; }
         header { border-bottom:3px solid #cda434; padding-bottom:18px; margin-bottom:24px; }
         .brand { color:#9a7516; font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; }
         h1 { font-size:26px; margin:8px 0 3px; } .meta,.muted,small { color:#667085; }
@@ -484,7 +480,7 @@ export default function BusinessMomentum({
         .insufficient_evidence { background:#f3f4f6; color:#596273; }
         .qc { background:#f6f8fb; border:1px solid #d7dce5; border-radius:8px; padding:12px; }
         a { color:#2557a7; overflow-wrap:anywhere; } footer { border-top:1px solid #d7dce5; color:#667085; font-size:8.5px; margin-top:25px; padding-top:10px; }
-      </style></head><body>
+      </style><div class="pdf-report">
       <header><div class="brand">AlphaSynth Intelligence · Research Dossier</div>
         <h1>${escapeHtml(dossier.company.name)}</h1>
         <div class="meta">${escapeHtml(dossier.company.symbol)} · ${escapeHtml(dossier.company.exchange)} · ${escapeHtml(dossier.company.sector)}</div>
@@ -498,9 +494,24 @@ export default function BusinessMomentum({
         Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}
       </div></section>
       <footer>AI-generated research for informational purposes only. Verify material claims against the cited official documents. This is not investment advice.</footer>
-      <script>window.onload=()=>setTimeout(()=>window.print(),250);<\/script>
-      </body></html>`);
-    printWindow.document.close();
+      </div>`;
+    document.body.appendChild(container);
+    try {
+      const { default: html2pdf } = await import("html2pdf.js");
+      await html2pdf().set({
+        margin: 8,
+        filename: `${dossier.company.symbol}-Research-Dossier-${dossier.generatedAt.slice(0, 10)}.pdf`,
+        enableLinks: true,
+        image: { type: "jpeg", quality: 0.96 },
+        html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      }).from(container).save();
+    } catch (error) {
+      console.error("Dossier PDF download failed", error);
+      window.alert("The PDF could not be generated. Please try again.");
+    } finally {
+      container.remove();
+    }
   };
 
   const generateDossier = async () => {
