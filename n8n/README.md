@@ -12,6 +12,9 @@ Required n8n environment variables:
 
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.
+The public application route resolves official domains from the reviewed registry in
+`src/dossier-companies.ts`; it does not trust caller-supplied domains. Add and validate a company
+there before enabling dossier generation for it in the application.
 
 ## Pilot diagnostics and response handling
 

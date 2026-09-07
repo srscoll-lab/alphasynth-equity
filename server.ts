@@ -6,6 +6,7 @@ import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
 import { isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence } from "./src/dossier-evidence";
+import { dossierCompanyProfile } from "./src/dossier-companies";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -2345,6 +2346,16 @@ ${rawText}` }] }],
       return res.status(400).json({ error: "A valid ticker is required." });
     }
 
+    // The public application route must never trust caller-supplied domains.
+    // Resolve them from the centrally reviewed pilot registry instead.
+    const company = dossierCompanyProfile(ticker);
+    if (!company) {
+      return res.status(422).json({
+        error: "Research Dossier is not yet enabled for this company.",
+        pilot: true,
+      });
+    }
+
     const webhookUrl = process.env.DOSSIER_WEBHOOK_URL;
     if (!webhookUrl) {
       return res.status(503).json({
@@ -2382,9 +2393,12 @@ ${rawText}` }] }],
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ticker,
-          company_name: req.body?.company_name || ticker,
+          company_name: company.companyName,
           reporting_period: req.body?.reporting_period || null,
           information_cutoff: req.body?.information_cutoff || new Date().toISOString().slice(0, 10),
+          official_domains: company.officialDomains,
+          exchange: company.exchange,
+          sector: company.sector,
           include_social_pilot: true,
           social_affects_bms: false,
         }),
