@@ -2466,22 +2466,61 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (!scraper) return res.status(503).json({ error: "The official-source scraper is not configured." });
 
     try {
-      const query = `${companyName} ${ticker} annual report quarterly results investor presentation `
-        + `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
+      const siteScope = `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
+      const query = `${companyName} ${ticker} annual report quarterly results investor presentation ${siteScope}`;
       const configuredSearchLimit = Number.parseInt(process.env.DOSSIER_SEARCH_LIMIT || "3", 10);
       const searchLimit = Number.isFinite(configuredSearchLimit)
         ? Math.min(10, Math.max(1, configuredSearchLimit))
         : 3;
       const search: any = await scraper.search(query, { limit: searchLimit });
       const candidates = [...(search?.web || []), ...(search?.news || [])];
-      const { sources, evidence, rejectionReasons, diagnostics, discoveredCount } = await collectOfficialEvidence(
+      let admission = await collectOfficialEvidence(
         candidates, officialDomains, cutoff, (url, options) => scraper.scrape(url, options),
       );
+      let candidateCount = candidates.length;
+
+      // Search engines often rank an issuer's undated investor landing page above
+      // the dated filings beneath it. If the bounded HTML pass finds no documents,
+      // make one bounded PDF-focused query instead of weakening date admission.
+      if (!admission.sources.length) {
+        const cutoffYear = cutoff.slice(0, 4);
+        const fallbackQuery = `${companyName} ${ticker} ${cutoffYear} filetype:pdf `
+          + `quarterly results earnings presentation annual report ${siteScope}`;
+        const fallbackLimit = Math.min(10, Math.max(4, searchLimit * 2));
+        const fallbackSearch: any = await scraper.search(fallbackQuery, { limit: fallbackLimit });
+        const initialUrls = new Set(candidates.map((candidate: any) => String(candidate?.url || "")));
+        const fallbackCandidates = [...(fallbackSearch?.web || []), ...(fallbackSearch?.news || [])]
+          .filter((candidate: any) => candidate?.url && !initialUrls.has(String(candidate.url)));
+        candidateCount += fallbackCandidates.length;
+        const fallbackAdmission = await collectOfficialEvidence(
+          fallbackCandidates, officialDomains, cutoff, (url, options) => scraper.scrape(url, options),
+        );
+        const combinedRejectionReasons = { ...admission.rejectionReasons };
+        for (const [reason, count] of Object.entries(fallbackAdmission.rejectionReasons)) {
+          combinedRejectionReasons[reason] = (combinedRejectionReasons[reason] || 0) + count;
+        }
+        if (fallbackAdmission.sources.length) {
+          admission = {
+            ...fallbackAdmission,
+            diagnostics: [...admission.diagnostics, ...fallbackAdmission.diagnostics],
+            rejectionReasons: combinedRejectionReasons,
+            candidateCount,
+            discoveredCount: admission.discoveredCount + fallbackAdmission.discoveredCount,
+          };
+        } else {
+          admission.rejectionReasons = combinedRejectionReasons;
+          admission.diagnostics.push(...fallbackAdmission.diagnostics);
+          admission.discoveredCount += fallbackAdmission.discoveredCount;
+          admission.candidateCount = candidateCount;
+        }
+      }
+
+      const { sources, evidence, rejectionReasons, diagnostics, discoveredCount } = admission;
       console.info("[dossier] evidence admission", JSON.stringify({ ticker, cutoff, diagnostics }));
 
       if (!sources.length) return res.status(422).json({
         error: "No dated official evidence passed the admission policy.",
-        candidateCount: candidates.length,
+        candidateCount,
         rejectionReasons,
         discoveredCount,
         diagnostics,

@@ -33,6 +33,8 @@ The evidence collector follows a bounded number of official PDF links from inves
 indexes, including icon-only links omitted by markdown conversion. It uses publication metadata
 or the document's dated exchange cover letter, not upload-folder dates or fiscal-period labels.
 Undated, unofficial and post-cutoff sources remain rejected. A 422 includes per-URL diagnostics.
+If a broad search returns only undated landing pages, the backend makes one bounded PDF-focused
+fallback search for the cutoff year; all normal domain, exact-date and cutoff checks still apply.
 
 Regression tests: `node --import tsx scripts/verify-dossier-evidence.ts` and
 `node --import tsx scripts/verify-dossier-contract.ts`.
