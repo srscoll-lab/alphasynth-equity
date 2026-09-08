@@ -1935,6 +1935,79 @@ Return the independent BMS validation as JSON.`;
       return null;
     };
 
+    // Use Gemini to select genuinely comparable peers, then overlay the numeric
+    // chart inputs from each company's published Screener page.
+    const screenerFundamentals = async (base: string) => {
+      for (const sourceUrl of [
+        `https://www.screener.in/company/${encodeURIComponent(base)}/consolidated/`,
+        `https://www.screener.in/company/${encodeURIComponent(base)}/`,
+      ]) {
+        try {
+          const response = await fetch(sourceUrl, {
+            headers: { "User-Agent": "AlphaSynth research dossier/1.0" },
+            signal: AbortSignal.timeout(20_000),
+          });
+          if (!response.ok) continue;
+          const html = await response.text();
+          const strip = (value: string) => value.replace(/<[^>]+>/g, " ")
+            .replace(/&nbsp;|&#160;/gi, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
+          const metricMap = new Map<string, number>();
+          const topRatios = html.match(/<ul[^>]*id=["']top-ratios["'][\s\S]*?<\/ul>/i)?.[0] || "";
+          for (const item of topRatios.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)) {
+            const name = strip(item[1].match(/<span[^>]*class=["'][^"']*\bname\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1] || "");
+            const rawValue = strip(item[1].match(/<span[^>]*class=["'][^"']*\bnumber\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/i)?.[1] || "");
+            const value = Number(rawValue.replace(/[,\u20b9%\s]/g, ""));
+            if (name && Number.isFinite(value)) metricMap.set(name.toLowerCase(), value);
+          }
+
+          const section = html.match(/<section[^>]*id=["']quarters["'][\s\S]*?<\/section>/i)?.[0] || "";
+          const matrix = [...section.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)]
+            .map((match) => [...match[1].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)].map((cell) => strip(cell[1])))
+            .filter((cells) => cells.length > 1);
+          const periods = (matrix[0] || []).slice(1);
+          const valuesFor = (pattern: RegExp) => {
+            const row = matrix.find((cells) => pattern.test(cells[0] || ""));
+            return (row?.slice(1) || []).map((value) => {
+              if (!value || /^(?:-|N\/?A)$/i.test(value.trim())) return null;
+              const parsed = Number(value.replace(/[,\u20b9%\s]/g, ""));
+              return Number.isFinite(parsed) ? parsed : null;
+            });
+          };
+          const sales = valuesFor(/^Sales\b/i);
+          const margins = valuesFor(/^OPM\s*%/i);
+          const epsRows = valuesFor(/^EPS in Rs\b/i);
+          if (!periods.length || !sales.length || !margins.length) continue;
+          const latest = periods.length - 1;
+          const priorYear = latest - 4;
+          const revenueGrowthYoY = priorYear >= 0 && sales[latest] != null && sales[priorYear] != null && sales[priorYear] !== 0
+            ? (Number(sales[latest]) - Number(sales[priorYear])) / Math.abs(Number(sales[priorYear])) * 100 : null;
+          const sumFour = (values: Array<number | null>) => values.length === 4 && values.every((value) => value != null)
+            ? values.reduce<number>((total, value) => total + Number(value), 0) : null;
+          const currentEps = sumFour(epsRows.slice(Math.max(0, latest - 3), latest + 1));
+          const previousEps = sumFour(epsRows.slice(Math.max(0, latest - 7), Math.max(0, latest - 3)));
+          const epsGrowthYoY = currentEps != null && previousEps != null && previousEps !== 0
+            ? (currentEps - previousEps) / Math.abs(previousEps) * 100 : null;
+          const price = metricMap.get("current price") ?? null;
+          const pe = metricMap.get("stock p/e") ?? null;
+          const bookValue = metricMap.get("book value") ?? null;
+          return {
+            epsTtm: currentEps,
+            epsGrowthYoY,
+            peg: pe != null && epsGrowthYoY != null && epsGrowthYoY > 0 ? pe / epsGrowthYoY : null,
+            pe,
+            pb: price != null && bookValue != null && bookValue > 0 ? price / bookValue : null,
+            roe: metricMap.get("roe") ?? null,
+            roce: metricMap.get("roce") ?? null,
+            revenueGrowthYoY,
+            operatingMargin: margins[latest] ?? null,
+            marketCapCr: metricMap.get("market cap") ?? null,
+            sourceUrl,
+          };
+        } catch { /* try standalone page */ }
+      }
+      return null;
+    };
+
     try {
       const ai = getGenAI();
       const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -2050,9 +2123,23 @@ ${rawText}` }] }],
       // (v7/quote, quoteSummary) require a crumb that Yahoo 429-blocks from datacenter IPs
       // like Cloud Run, so they are unreachable server-side; the open chart endpoint
       // (price, 52W) is the only Yahoo data we can rely on.
-      const live = await Promise.all(ordered.map((c: any) => yahooLive(c.ticker)));
+      const [live, published] = await Promise.all([
+        Promise.all(ordered.map((c: any) => yahooLive(c.ticker))),
+        Promise.all(ordered.map((c: any) => screenerFundamentals(c.ticker))),
+      ]);
       const rows = ordered.map((c: any, i: number) => ({
-        ...c,                                          // pe, marketCapCr, roe, debtEquity, revenueGrowthYoY (Gemini)
+        ...c,
+        epsTtm: published[i]?.epsTtm ?? c.epsTtm,
+        epsGrowthYoY: published[i]?.epsGrowthYoY ?? c.epsGrowthYoY,
+        peg: published[i]?.peg ?? c.peg,
+        pe: published[i]?.pe ?? c.pe,
+        pb: published[i]?.pb ?? c.pb,
+        roe: published[i]?.roe ?? c.roe,
+        roce: published[i]?.roce ?? c.roce,
+        revenueGrowthYoY: published[i]?.revenueGrowthYoY ?? c.revenueGrowthYoY,
+        operatingMargin: published[i]?.operatingMargin ?? c.operatingMargin,
+        marketCapCr: published[i]?.marketCapCr ?? c.marketCapCr,
+        fundamentalsSourceUrl: published[i]?.sourceUrl ?? null,
         price: live[i]?.price ?? null,                 // Yahoo
         week52Return: live[i]?.week52Return ?? null,   // Yahoo
         fiftyTwoWeekHigh: live[i]?.fiftyTwoWeekHigh ?? null,
@@ -2741,12 +2828,15 @@ ${rawText}` }] }],
         .some((value) => value !== null && value !== undefined)) || [];
     const pricePoints = payload.market?.priceHistory?.filter((point) =>
       point.date && Number.isFinite(point.close)) || [];
-    if (quarterlyRows.length < 2 || pricePoints.length < 2) {
+    const plottablePeers = (payload.peers || []).filter((peer) =>
+      peer.revenueGrowthYoY != null && peer.operatingMargin != null);
+    if (quarterlyRows.length < 2 || pricePoints.length < 2 || plottablePeers.length < 2) {
       return res.status(422).json({
-        error: "The dossier is missing sufficient verified financial or price history for its charts. No incomplete PDF was generated.",
+        error: "The dossier is missing sufficient financial, price or peer history for its charts. No incomplete PDF was generated.",
         code: "DOSSIER_CHART_DATA_INCOMPLETE",
         quarterlyRows: quarterlyRows.length,
         pricePoints: pricePoints.length,
+        plottablePeers: plottablePeers.length,
       });
     }
     try {

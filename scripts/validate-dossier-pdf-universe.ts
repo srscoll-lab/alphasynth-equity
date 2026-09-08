@@ -83,8 +83,10 @@ for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || 
     };
     const quarterCount = pdfPayload.financials?.length || dossier.quarterlyPerformance?.length || 0;
     const pricePointCount = market?.priceHistory?.length || 0;
-    if (quarterCount < 2 || pricePointCount < 2) {
-      throw new Error(`Incomplete chart data: ${quarterCount} quarterly rows and ${pricePointCount} price points. PDF not generated.`);
+    const peerChartCount = (pdfPayload.peers || []).filter((peer) =>
+      peer.revenueGrowthYoY != null && peer.operatingMargin != null).length;
+    if (quarterCount < 2 || pricePointCount < 2 || peerChartCount < 2) {
+      throw new Error(`Incomplete chart data: ${quarterCount} quarterly rows, ${pricePointCount} price points and ${peerChartCount} plottable peers. PDF not generated.`);
     }
     const pdf = await renderDossierPdf(pdfPayload);
     const pdfPath = path.join(outputDirectory, `${company.ticker}-Research-Dossier.pdf`);
