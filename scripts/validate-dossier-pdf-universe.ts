@@ -8,7 +8,7 @@ type PilotCompany = {
 };
 
 const baseUrl = (process.argv.find((arg) => arg.startsWith("--base-url="))
-  ?.slice("--base-url=".length) || "https://alphasynth-equity-oqc2y4ogda-uc.a.run.app").replace(/\/$/, "");
+  ?.slice("--base-url=".length) || "https://dossier-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app").replace(/\/$/, "");
 const cutoff = process.argv.find((arg) => arg.startsWith("--cutoff="))?.slice("--cutoff=".length)
   || new Date().toISOString().slice(0, 10);
 const outputDirectory = path.resolve("output/pdf/template-validation");
@@ -78,6 +78,11 @@ for (const company of manifest.slice(0, 5)) {
         ] : [],
       },
     };
+    const quarterCount = dossier.quarterlyPerformance?.length || 0;
+    const pricePointCount = market?.priceHistory?.length || 0;
+    if (quarterCount < 2 || pricePointCount < 2) {
+      throw new Error(`Incomplete chart data: ${quarterCount} quarterly rows and ${pricePointCount} price points. PDF not generated.`);
+    }
     const pdf = await renderDossierPdf(pdfPayload);
     const pdfPath = path.join(outputDirectory, `${company.ticker}-Research-Dossier.pdf`);
     const jsonPath = path.join(outputDirectory, `${company.ticker}-payload.json`);

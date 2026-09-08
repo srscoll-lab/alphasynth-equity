@@ -2560,6 +2560,19 @@ ${rawText}` }] }],
     if (!payload?.dossier || !isResearchDossier(payload.dossier)) {
       return res.status(400).json({ error: "A valid completed dossier is required." });
     }
+    const quarterlyRows = payload.dossier.quarterlyPerformance?.filter((row) =>
+      [row.revenueCr, row.ebitdaCr, row.ebitdaMarginPct, row.patCr, row.eps]
+        .some((value) => value !== null && value !== undefined)) || [];
+    const pricePoints = payload.market?.priceHistory?.filter((point) =>
+      point.date && Number.isFinite(point.close)) || [];
+    if (quarterlyRows.length < 2 || pricePoints.length < 2) {
+      return res.status(422).json({
+        error: "The dossier is missing sufficient verified financial or price history for its charts. No incomplete PDF was generated.",
+        code: "DOSSIER_CHART_DATA_INCOMPLETE",
+        quarterlyRows: quarterlyRows.length,
+        pricePoints: pricePoints.length,
+      });
+    }
     try {
       const pdf = await renderDossierPdf(payload);
       const symbol = payload.dossier.company.symbol.replace(/[^A-Z0-9&.-]/gi, "");

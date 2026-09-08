@@ -514,7 +514,10 @@ export default function BusinessMomentum({
           },
         }),
       });
-      if (!response.ok) throw new Error(`PDF service returned HTTP ${response.status}`);
+      if (!response.ok) {
+        const failure = await response.json().catch(() => null);
+        throw new Error(failure?.error || `PDF service returned HTTP ${response.status}`);
+      }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
