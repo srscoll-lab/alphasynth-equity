@@ -2008,6 +2008,46 @@ Return the independent BMS validation as JSON.`;
       return null;
     };
 
+    const screenerIndustryPeers = async (base: string) => {
+      try {
+        let companyHtml = "";
+        for (const sourceUrl of [
+          `https://www.screener.in/company/${encodeURIComponent(base)}/consolidated/`,
+          `https://www.screener.in/company/${encodeURIComponent(base)}/`,
+        ]) {
+          const response = await fetch(sourceUrl, {
+            headers: { "User-Agent": "AlphaSynth research dossier/1.0" },
+            signal: AbortSignal.timeout(20_000),
+          });
+          if (response.ok) { companyHtml = await response.text(); break; }
+        }
+        if (!companyHtml) return [];
+        const industryAnchor = [...companyHtml.matchAll(/<a\b[^>]*>/gi)]
+          .map((match) => match[0])
+          .find((tag) => /title=["']Industry["']/i.test(tag) && /href=["']\/market\//i.test(tag));
+        const industryPath = industryAnchor?.match(/href=["']([^"']+)["']/i)?.[1];
+        if (!industryPath) return [];
+        const response = await fetch(new URL(industryPath, "https://www.screener.in").toString(), {
+          headers: { "User-Agent": "AlphaSynth research dossier/1.0" },
+          signal: AbortSignal.timeout(20_000),
+        });
+        if (!response.ok) return [];
+        const html = await response.text();
+        const rows = [...html.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)].map((row) => {
+          const anchor = row[1].match(/<a[^>]+href=["']\/company\/([^/"']+)[^"']*["'][^>]*>([\s\S]*?)<\/a>/i);
+          if (!anchor) return null;
+          const ticker = anchor[1].toUpperCase().replace(/[^A-Z0-9&-]/g, "");
+          const name = anchor[2].replace(/<[^>]+>/g, " ").replace(/&amp;/gi, "&").replace(/\s+/g, " ").trim();
+          return ticker && name ? { ticker, name } : null;
+        }).filter((row): row is { ticker: string; name: string } => Boolean(row));
+        const unique = [...new Map(rows.map((row) => [row.ticker, row])).values()];
+        const target = unique.find((row) => row.ticker === base);
+        return [target, ...unique.filter((row) => row.ticker !== base)].filter((row): row is { ticker: string; name: string } => Boolean(row)).slice(0, 5);
+      } catch {
+        return [];
+      }
+    };
+
     try {
       const ai = getGenAI();
       const todayStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
@@ -2109,6 +2149,19 @@ ${rawText}` }] }],
           isTarget: false,
         }))
         .filter((c: any) => c.ticker && !seen.has(c.ticker) && seen.add(c.ticker));
+
+      // Screener's industry classification supplies a stable fallback peer set and
+      // avoids symbol hallucinations such as UNITEDSPR instead of UNITDSPR.
+      const industryPeers = await screenerIndustryPeers(cleanTicker);
+      if (industryPeers.length >= 3) {
+        const modelByTicker = new Map<string, any>(companies.map((company: any) => [company.ticker, company]));
+        companies = industryPeers.map((peer) => ({
+          ...(modelByTicker.get(peer.ticker) || {}),
+          ticker: peer.ticker,
+          name: peer.name,
+          isTarget: peer.ticker === cleanTicker,
+        }));
+      }
 
       // Force the subject to be present and first, flagged as the target.
       let target = companies.find((c: any) => c.ticker === cleanTicker);
