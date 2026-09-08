@@ -36,7 +36,8 @@ export type BmsFactorComparison = {
   previous: BmsFactorMeasurement;
   current: BmsFactorMeasurement;
   factorScoreChange: number | null;
-  weightedContribution: number | null;
+  weightedScoreContribution: number | null;
+  weightedChangeContribution: number | null;
   explanation: string | null;
   evidenceRefs: string[];
   availability: BmsFactorAvailability;
@@ -120,8 +121,12 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
       ? current.factorScore - previous.factorScore
       : null;
     const factorScoreChange = explicitChange ?? calculatedChange;
-    const explicitContribution = finiteNumberOrNull(raw.weightedContribution ?? raw.weighted_contribution);
-    const weightedContribution = explicitContribution ?? (factorScoreChange === null
+    const explicitScoreContribution = finiteNumberOrNull(raw.weightedScoreContribution ?? raw.weighted_score_contribution);
+    const weightedScoreContribution = explicitScoreContribution ?? (current.factorScore === null
+      ? null
+      : current.factorScore * definition.weight);
+    const explicitChangeContribution = finiteNumberOrNull(raw.weightedChangeContribution ?? raw.weighted_change_contribution);
+    const weightedChangeContribution = explicitChangeContribution ?? (factorScoreChange === null
       ? null
       : factorScoreChange * definition.weight);
     const hasPrevious = previous.factorScore !== null || previous.metrics.length > 0;
@@ -145,7 +150,8 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
       previous,
       current,
       factorScoreChange,
-      weightedContribution,
+      weightedScoreContribution,
+      weightedChangeContribution,
       explanation: stringOrNull(raw.explanation),
       evidenceRefs,
       availability,
@@ -160,6 +166,61 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
     generatedAt: stringOrNull(supplied?.generatedAt ?? supplied?.generated_at),
     factors,
   };
+}
+
+export function factorAnalysisFromResearchContext(context: any): BmsFactorAnalysis {
+  const period = stringOrNull(context?.period);
+  const factorScores = context?.factor_scores && typeof context.factor_scores === "object"
+    ? context.factor_scores
+    : {};
+  const drivers = Array.isArray(context?.fresh_drivers) ? context.fresh_drivers : [];
+
+  return normalizeBmsFactorAnalysis({
+    period,
+    factor_analysis: {
+      generated_at: null,
+      factors: BMS_FACTOR_DEFINITIONS.map((definition) => {
+        const factorDrivers = drivers.filter((driver: any) => driver?.factor === definition.id);
+        const previousPeriod = factorDrivers.map((driver: any) => stringOrNull(driver?.previous_period)).find(Boolean) ?? null;
+        const currentPeriod = factorDrivers.map((driver: any) => stringOrNull(driver?.current_period)).find(Boolean) ?? period;
+        const previousMetrics = factorDrivers.flatMap((driver: any) => {
+          const key = stringOrNull(driver?.metric);
+          if (!key) return [];
+          return [{ key, label: key.replaceAll("_", " "), value: finiteNumberOrNull(driver?.previous_value), unit: null }];
+        });
+        const currentMetrics = factorDrivers.flatMap((driver: any) => {
+          const key = stringOrNull(driver?.metric);
+          if (!key) return [];
+          return [{
+            key,
+            label: key.replaceAll("_", " "),
+            value: finiteNumberOrNull(driver?.current_value),
+            unit: null,
+            displayValue: finiteNumberOrNull(driver?.change_value) === null
+              ? null
+              : `${finiteNumberOrNull(driver?.change_value)?.toFixed(2)}% change`,
+          }];
+        });
+        const confidences = factorDrivers.map((driver: any) => finiteNumberOrNull(driver?.confidence)).filter((value: number | null): value is number => value !== null);
+        const meanConfidence = confidences.length
+          ? confidences.reduce((sum: number, value: number) => sum + value, 0) / confidences.length
+          : null;
+        return {
+          id: definition.id,
+          previous: { period: previousPeriod, factor_score: null, metrics: previousMetrics },
+          current: { period: currentPeriod, factor_score: factorScores[definition.id], metrics: currentMetrics },
+          weighted_score_contribution: finiteNumberOrNull(factorScores[definition.id]) === null
+            ? null
+            : Number(factorScores[definition.id]) * definition.weight,
+          explanation: factorDrivers.length
+            ? `${factorDrivers.length} fresh ${definition.label.toLowerCase()} measurement${factorDrivers.length === 1 ? "" : "s"} contributed to the current score.`
+            : null,
+          evidence_refs: factorDrivers.map((driver: any) => `change-record-${driver.change_record_id}`).filter((value: string) => !value.endsWith("undefined")),
+          confidence: meanConfidence === null ? "unavailable" : meanConfidence >= 0.8 ? "high" : meanConfidence >= 0.6 ? "medium" : "low",
+        };
+      }),
+    },
+  });
 }
 
 export const BMS_FACTOR_SCHEMA_DESCRIPTION = {

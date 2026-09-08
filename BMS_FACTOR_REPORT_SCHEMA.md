@@ -14,7 +14,8 @@ Each of the five factors carries:
 - previous and current factor scores;
 - the underlying metrics used at each measurement, including units;
 - factor-score change;
-- weighted contribution to the BMS change;
+- weighted contribution to the current BMS score;
+- weighted contribution to the BMS change, when a stored previous factor score exists;
 - a concise evidence-bound explanation;
 - dated evidence references;
 - availability and confidence labels.
@@ -31,4 +32,4 @@ The five factors remain Earnings (25%), Economics (25%), Execution (25%), Balanc
 
 ## Migration
 
-Legacy lifecycle responses are normalized automatically. Their current factor scores are exposed, while unavailable previous measurements, changes, contributions, explanations, and evidence remain explicitly unavailable. The BMS engine can populate the full `factor_analysis` object prospectively without breaking older clients.
+Legacy lifecycle responses are normalized automatically. The live research-context bridge adds genuine previous/current driver measurements and current weighted-score contributions. Previous factor-score changes remain unavailable until the BMS service exposes its stored historical factor snapshots; these fields stay `null` rather than being reconstructed. The BMS engine can populate the full `factor_analysis` object prospectively without breaking older clients.

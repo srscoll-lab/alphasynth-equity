@@ -47,7 +47,7 @@ for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || 
   try {
     const bmsCompany = bmsCompanies.find((item: any) => String(item.symbol).toUpperCase() === company.ticker);
     const sharedBody = { ticker: company.ticker };
-    const [dossier, peerPayload, financialPayload, enrichment, market] = await Promise.all([
+    const [dossier, peerPayload, financialPayload, enrichment, market, factorPayload] = await Promise.all([
       fetchJson("/api/dossier/generate", {
         ticker: company.ticker,
         company_name: company.company_name,
@@ -61,6 +61,7 @@ for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || 
         signal: bmsCompany?.momentum_state || bmsCompany?.lifecycle_stage,
       }).catch(() => null),
       fetchJson("/api/bms/market-context", sharedBody).catch(() => null),
+      fetchJson(`/api/bms/factor-analysis/${encodeURIComponent(company.ticker)}`).catch(() => null),
     ]);
     const pdfPayload: DossierPdfPayload = {
       dossier,
@@ -72,7 +73,7 @@ for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || 
         score: bmsCompany?.bms ?? null,
         stage: bmsCompany?.lifecycle_stage ?? null,
         period: bmsCompany?.period ?? null,
-        factorAnalysis: bmsCompany?.factor_analysis ?? null,
+        factorAnalysis: factorPayload?.factor_analysis ?? bmsCompany?.factor_analysis ?? null,
         components: bmsCompany ? [
           { label: "Earnings", score: score100(bmsCompany.earnings) },
           { label: "Economics", score: score100(bmsCompany.economics) },

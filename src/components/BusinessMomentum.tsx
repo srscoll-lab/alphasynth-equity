@@ -507,6 +507,11 @@ export default function BusinessMomentum({
   const downloadDossierPdf = async () => {
     if (!dossier) return;
     try {
+      const factorPayload = selected?.symbol
+        ? await fetch(`/api/bms/factor-analysis/${encodeURIComponent(selected.symbol)}`)
+          .then((factorResponse) => factorResponse.ok ? factorResponse.json() : null)
+          .catch(() => null)
+        : null;
       const response = await fetch("/api/dossier/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -520,7 +525,7 @@ export default function BusinessMomentum({
             score: selected?.bms ?? null,
             stage: selected?.lifecycle_stage ?? null,
             period: selected?.period ?? null,
-            factorAnalysis: selected?.factor_analysis ?? null,
+            factorAnalysis: factorPayload?.factor_analysis ?? selected?.factor_analysis ?? null,
             components: selected ? [
               { label: "Earnings", score: score100(selected.earnings) },
               { label: "Economics", score: score100(selected.economics) },

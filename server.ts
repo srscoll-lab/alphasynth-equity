@@ -10,6 +10,7 @@ import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import {
   BMS_FACTOR_SCHEMA_DESCRIPTION,
+  factorAnalysisFromResearchContext,
   normalizeBmsFactorAnalysis,
 } from "./src/bms-factor-schema";
 import { GoogleGenAI } from "@google/genai";
@@ -3229,6 +3230,31 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
 
   app.get("/api/bms/factor-schema", (_req, res) => {
     return res.json(BMS_FACTOR_SCHEMA_DESCRIPTION);
+  });
+
+  app.get("/api/bms/factor-analysis/:symbol", async (req, res) => {
+    const symbol = String(req.params.symbol || "").trim().toUpperCase();
+    if (!symbol || !/^[A-Z0-9&.-]{1,24}$/.test(symbol)) {
+      return res.status(400).json({ error: "A valid ticker is required." });
+    }
+    const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+    try {
+      const response = await fetch(`${bmsBaseUrl}/bms/research-context/${encodeURIComponent(symbol)}`, {
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error(`BMS research context returned HTTP ${response.status}`);
+      const context: any = await response.json();
+      if (context?.found === false) return res.status(404).json({ error: "BMS factor record was not found." });
+      return res.json({
+        symbol,
+        factor_analysis: factorAnalysisFromResearchContext(context),
+        bms_signal: context?.bms_signal ?? null,
+        source: "business-momentum-engine",
+      });
+    } catch (error: any) {
+      console.error("[bms] factor analysis unavailable:", error?.message || error);
+      return res.status(503).json({ error: "BMS factor analysis is temporarily unavailable." });
+    }
   });
     // ── BMS focused research via n8n Research Agent ─────────────────────────
   //
