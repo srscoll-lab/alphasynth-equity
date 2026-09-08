@@ -72,6 +72,7 @@ for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || 
         score: bmsCompany?.bms ?? null,
         stage: bmsCompany?.lifecycle_stage ?? null,
         period: bmsCompany?.period ?? null,
+        factorAnalysis: bmsCompany?.factor_analysis ?? null,
         components: bmsCompany ? [
           { label: "Earnings", score: score100(bmsCompany.earnings) },
           { label: "Economics", score: score100(bmsCompany.economics) },

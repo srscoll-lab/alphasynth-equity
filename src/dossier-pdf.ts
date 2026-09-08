@@ -1,5 +1,6 @@
 import PDFDocument from "pdfkit";
 import type { ResearchDossier } from "./dossier";
+import type { BmsFactorAnalysis } from "./bms-factor-schema";
 
 export type DossierPdfPeer = {
   ticker: string;
@@ -71,6 +72,7 @@ export type DossierPdfPayload = {
     score?: number | null;
     stage?: string | null;
     period?: string | null;
+    factorAnalysis?: BmsFactorAnalysis | null;
     components?: Array<{ label: string; score: number }>;
   } | null;
 };

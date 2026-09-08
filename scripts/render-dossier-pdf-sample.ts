@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { renderDossierPdf, type DossierPdfPayload } from "../src/dossier-pdf";
+import { normalizeBmsFactorAnalysis } from "../src/bms-factor-schema";
 
 const sourceIds = ["official-001", "official-002", "official-003"];
 const claim = (claimId: string, text: string, sourceId = "official-001") => ({ claimId, text, sourceIds: [sourceId], status: "supported" as const });
@@ -78,7 +79,16 @@ const payload: DossierPdfPayload = {
     price: 2669.6, asOf: "2026-09-07", delayed: true,
     priceHistory: Array.from({ length: 52 }, (_, index) => ({ date: new Date(Date.UTC(2025, 8, 8 + index * 7)).toISOString().slice(0, 10), close: 1840 + index * 19 + Math.sin(index / 3) * 145 })),
   },
-  bms: { score: 84, stage: "ESTABLISHED", period: "Q1 FY2027", components: [
+  bms: { score: 84, stage: "ESTABLISHED", period: "Q1 FY2027", factorAnalysis: normalizeBmsFactorAnalysis({
+    period: "Q1 FY2027",
+    factor_analysis: { factors: [
+      { id: "earnings", previous: { period: "Q1 FY2026", factor_score: 0.67 }, current: { period: "Q1 FY2027", factor_score: 0.87 }, explanation: "Earnings momentum strengthened.", evidence_refs: ["official-001"], confidence: "high" },
+      { id: "economics", previous: { period: "Q1 FY2026", factor_score: 0.70 }, current: { period: "Q1 FY2027", factor_score: 0.76 }, explanation: "Industry conditions improved modestly.", evidence_refs: ["official-001"], confidence: "medium" },
+      { id: "execution", previous: { period: "Q1 FY2026", factor_score: 0.69 }, current: { period: "Q1 FY2027", factor_score: 0.81 }, explanation: "Premium portfolio execution broadened.", evidence_refs: ["official-001"], confidence: "high" },
+      { id: "balance_sheet", previous: { period: "Q1 FY2026", factor_score: 0.62 }, current: { period: "Q1 FY2027", factor_score: 0.72 }, explanation: "Net debt declined.", evidence_refs: ["official-002"], confidence: "high" },
+      { id: "management_delivery", previous: { period: "Q1 FY2026", factor_score: 0.71 }, current: { period: "Q1 FY2027", factor_score: 0.79 }, explanation: "Reported delivery remained aligned with stated priorities.", evidence_refs: ["official-003"], confidence: "medium" },
+    ] },
+  }), components: [
     { label: "Earnings", score: 87 }, { label: "Economics", score: 76 }, { label: "Execution", score: 81 }, { label: "Balance sheet", score: 72 }, { label: "Management", score: 79 },
   ] },
 };

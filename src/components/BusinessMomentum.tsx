@@ -16,6 +16,7 @@ import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ResearchDossier } from "../dossier";
+import type { BmsFactorAnalysis } from "../bms-factor-schema";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -50,6 +51,7 @@ type BmsCompany = {
   lifecycle_qualification: string | null;
   fading_warning: boolean;
   bms_trajectory: BmsTrajectoryPoint[];
+  factor_analysis?: BmsFactorAnalysis;
 
   // Expanded Nifty 500 product interpretation fields.
   company_name?: string;
@@ -518,6 +520,7 @@ export default function BusinessMomentum({
             score: selected?.bms ?? null,
             stage: selected?.lifecycle_stage ?? null,
             period: selected?.period ?? null,
+            factorAnalysis: selected?.factor_analysis ?? null,
             components: selected ? [
               { label: "Earnings", score: score100(selected.earnings) },
               { label: "Economics", score: score100(selected.economics) },

@@ -8,6 +8,10 @@ import { isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
+import {
+  BMS_FACTOR_SCHEMA_DESCRIPTION,
+  normalizeBmsFactorAnalysis,
+} from "./src/bms-factor-schema";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -3188,10 +3192,18 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         throw new Error(`BMS lifecycle service returned HTTP ${response.status}`);
       }
 
-      const data = await response.json();
+      const data: any = await response.json();
+      const companies = Array.isArray(data?.companies)
+        ? data.companies.map((company: any) => ({
+            ...company,
+            factor_analysis: normalizeBmsFactorAnalysis(company),
+          }))
+        : [];
 
       return res.json({
         ...data,
+        companies,
+        factor_schema: BMS_FACTOR_SCHEMA_DESCRIPTION,
         source: "business-momentum-engine",
       });
     } catch (error: any) {
@@ -3213,6 +3225,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         message: "Business Momentum lifecycle data is temporarily unavailable.",
       });
     }
+  });
+
+  app.get("/api/bms/factor-schema", (_req, res) => {
+    return res.json(BMS_FACTOR_SCHEMA_DESCRIPTION);
   });
     // ── BMS focused research via n8n Research Agent ─────────────────────────
   //
