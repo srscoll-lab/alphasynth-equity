@@ -84,7 +84,11 @@ type DossierEnrichment = {
     biggestRisk?: string | null;
   };
   promoterNames?: string[];
-  companyImage?: { url?: string | null; caption?: string | null; sourceUrl?: string | null } | null;
+  publicCommentary?: {
+    asOf?: string | null;
+    summary?: string | null;
+    viewpoints?: Array<{ sourceName: string; publishedAt?: string | null; stance: "positive" | "cautious" | "mixed" | "negative"; summary: string; url: string }>;
+  } | null;
   shareholdingAsOf?: string | null;
   shareholding?: Record<string, { value: number | null; trend: "up" | "down" | "stable" | null }>;
   sourceUrls?: string[];

@@ -57,12 +57,18 @@ const payload: DossierPdfPayload = {
     executiveSummary: {
       companyLine: "A premiumisation-led alcoholic beverages company with strengthening earnings momentum and improving balance-sheet flexibility.",
       companyHistory: "The business traces its roots to Rampur Distillery, established in 1943. It evolved from a bulk-spirits producer into a branded portfolio company and adopted the Radico Khaitan name in 1999. Its current strategy emphasises premium Indian spirits, brand-led growth and selective capacity expansion.",
+      keyNumber: "20.7% EBITDA margin",
+      biggestRisk: "Premium valuation leaves limited room for execution slippage.",
     },
     promoterNames: ["Lalit Khaitan", "Abhishek Khaitan", "Amar Sinha"],
-    companyImage: {
-      url: "https://radicokhaitan.com/wp-content/uploads/2019/05/manufacturing.jpg",
-      caption: "Manufacturing at Radico Khaitan. Official company image; source: radicokhaitan.com/key-verticals/manufacturing/.",
-      sourceUrl: "https://radicokhaitan.com/key-verticals/manufacturing/",
+    publicCommentary: {
+      asOf: "7 September 2026",
+      summary: "Recent public analysis broadly recognises the strength of premiumisation and deleveraging, while repeatedly questioning whether the valuation already discounts much of that improvement.",
+      viewpoints: [
+        { sourceName: "MarketSmith India", publishedAt: "7 July 2026", stance: "mixed", summary: "The investment newsletter describes simultaneous momentum in premium volumes, luxury growth and deleveraging, but notes that the elevated valuation requires sustained execution.", url: "https://marketsmithin.substack.com/p/radico-khaitan-the-compounding-thesis" },
+        { sourceName: "Business Standard / Jefferies", publishedAt: "29 June 2026", stance: "positive", summary: "Reported analyst commentary highlights a long premiumisation runway and strong brand execution, while acknowledging that the shares command a premium valuation.", url: "https://www.business-standard.com/markets/news/jefferies-sees-premium-tailwind-intact-in-alcobev-prefers-radico-abdl-126062900329_1.html" },
+        { sourceName: "QuarterMark Research", publishedAt: "29 July 2026", stance: "cautious", summary: "The quarterly review credits premium mix for stronger growth and margins, but says new investment must still convert into repeat consumption and profitable scale.", url: "https://quartermark.in/companies/RADICO/earnings-calls/Q1-FY27/earnings" },
+      ],
     },
     shareholdingAsOf: "30 June 2026",
     shareholding: { promoter: { value: 40.25 }, fii: { value: 18.1 }, dii: { value: 9.8 }, mutualFund: { value: 7.4 }, retail: { value: 24.45 } },
@@ -75,13 +81,6 @@ const payload: DossierPdfPayload = {
     { label: "Earnings", score: 87 }, { label: "Economics", score: 76 }, { label: "Execution", score: 81 }, { label: "Balance sheet", score: 72 }, { label: "Management", score: 79 },
   ] },
 };
-
-try {
-  const imageResponse = await fetch(payload.enrichment?.companyImage?.url || "");
-  if (imageResponse.ok) payload.companyImageData = Buffer.from(await imageResponse.arrayBuffer());
-} catch {
-  payload.companyImageData = null;
-}
 
 const output = path.resolve("output/pdf/AlphaSynth-Professional-Dossier-Sample.pdf");
 await fs.mkdir(path.dirname(output), { recursive: true });

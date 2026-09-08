@@ -26,12 +26,21 @@ export type DossierPdfPayload = {
       biggestRisk?: string | null;
     };
     promoterNames?: string[];
-    companyImage?: { url?: string | null; caption?: string | null; sourceUrl?: string | null } | null;
+    publicCommentary?: {
+      asOf?: string | null;
+      summary?: string | null;
+      viewpoints?: Array<{
+        sourceName: string;
+        publishedAt?: string | null;
+        stance: "positive" | "cautious" | "mixed" | "negative";
+        summary: string;
+        url: string;
+      }>;
+    } | null;
     shareholdingAsOf?: string | null;
     shareholding?: Record<string, { value?: number | null; trend?: string | null }>;
     sourceUrls?: string[];
   } | null;
-  companyImageData?: Buffer | null;
   market?: {
     price?: number | null;
     asOf?: string | null;
@@ -55,7 +64,6 @@ const C = {
   green: "#2A825F",
   greenPale: "#EAF6F0",
   gold: "#CDA434",
-  red: "#B54747",
   white: "#FFFFFF",
 };
 
@@ -196,9 +204,9 @@ class Report {
     });
     this.doc.stroke();
     const extrema = [
-      { index: values.indexOf(Math.min(...values)), color: C.red, label: "LOW" },
+      { index: values.indexOf(Math.min(...values)), color: C.navy, label: "LOW" },
       { index: values.indexOf(Math.max(...values)), color: C.gold, label: "HIGH" },
-      { index: valid.length - 1, color: "#2878B5", label: "LATEST" },
+      { index: valid.length - 1, color: C.green, label: "LATEST" },
     ].filter((marker, index, list) => list.findIndex((candidate) => candidate.index === marker.index) === index);
     extrema.forEach((marker) => {
       const point = valid[marker.index];
@@ -245,16 +253,86 @@ class Report {
       const barWidth = Math.min(24, groupWidth * 0.23);
       const revenueHeight = chartHeight * (row.revenue || 0) / maximum;
       const patHeight = chartHeight * (row.pat || 0) / maximum;
-      this.doc.rect(baseX, chartY + chartHeight - revenueHeight, barWidth, revenueHeight).fill("#2878B5");
+      this.doc.rect(baseX, chartY + chartHeight - revenueHeight, barWidth, revenueHeight).fill(C.navy);
       this.doc.rect(baseX + barWidth + 4, chartY + chartHeight - patHeight, barWidth, patHeight).fill(C.gold);
       this.doc.font("Helvetica-Bold").fontSize(6).fillColor(C.slate)
         .text(clean(row.period), chartX + index * groupWidth, chartY + chartHeight + 7, { width: groupWidth, align: "center" });
     });
-    this.doc.rect(chartX, chartY + chartHeight + 25, 8, 8).fill("#2878B5");
+    this.doc.rect(chartX, chartY + chartHeight + 25, 8, 8).fill(C.navy);
     this.doc.font("Helvetica").fontSize(7).fillColor(C.slate).text("Revenue", chartX + 12, chartY + chartHeight + 25);
     this.doc.rect(chartX + 75, chartY + chartHeight + 25, 8, 8).fill(C.gold);
     this.doc.text("PAT", chartX + 87, chartY + chartHeight + 25);
     this.y = chartY + chartHeight + 48;
+  }
+
+  marginAndEpsTrend(rows: Array<{ period: string; margin: number | null; eps: number | null }>) {
+    this.ensure(155);
+    this.heading("Margin and earnings-per-share trend");
+    const valid = rows.slice().reverse();
+    const panels = [
+      { label: "EBITDA MARGIN (%)", color: C.green, values: valid.map((row) => row.margin) },
+      { label: "EPS (RS.)", color: C.gold, values: valid.map((row) => row.eps) },
+    ];
+    const panelWidth = (this.width - 18) / 2;
+    const top = this.y + 6;
+    panels.forEach((panel, panelIndex) => {
+      const x = this.margin + panelIndex * (panelWidth + 18);
+      const numbers = panel.values.filter((value): value is number => value != null && Number.isFinite(value));
+      const maximum = Math.max(1, ...numbers) * 1.12;
+      this.doc.roundedRect(x, top, panelWidth, 92, 5).fill(C.pale);
+      this.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text(panel.label, x + 10, top + 9);
+      const chartX = x + 12;
+      const chartY = top + 26;
+      const chartWidth = panelWidth - 24;
+      const chartHeight = 43;
+      this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(chartX, chartY + chartHeight).lineTo(chartX + chartWidth, chartY + chartHeight).stroke();
+      panel.values.forEach((value, index) => {
+        if (value == null) return;
+        const barWidth = Math.min(22, chartWidth / Math.max(1, valid.length) * 0.48);
+        const center = chartX + (index + 0.5) / valid.length * chartWidth;
+        const height = chartHeight * value / maximum;
+        this.doc.rect(center - barWidth / 2, chartY + chartHeight - height, barWidth, height).fill(panel.color);
+        this.doc.font("Helvetica-Bold").fontSize(6).fillColor(C.ink).text(fmt(value), center - 22, chartY + chartHeight - height - 10, { width: 44, align: "center" });
+        this.doc.font("Helvetica").fontSize(5.6).fillColor(C.slate).text(clean(valid[index].period), center - 28, chartY + chartHeight + 6, { width: 56, align: "center" });
+      });
+    });
+    this.y = top + 112;
+  }
+
+  peerPositionChart(peers: DossierPdfPeer[]) {
+    const valid = peers.filter((peer) => peer.revenueGrowthYoY != null && peer.operatingMargin != null);
+    if (valid.length < 2) return;
+    this.ensure(205);
+    this.heading("Peer positioning - growth versus operating margin");
+    const chartX = this.margin + 46;
+    const chartY = this.y + 9;
+    const chartWidth = this.width - 58;
+    const chartHeight = 118;
+    const xs = valid.map((peer) => Number(peer.revenueGrowthYoY));
+    const ys = valid.map((peer) => Number(peer.operatingMargin));
+    const xMin = Math.min(...xs) - 2;
+    const xMax = Math.max(...xs) + 2;
+    const yMin = Math.max(0, Math.min(...ys) - 2);
+    const yMax = Math.max(...ys) + 2;
+    for (let i = 0; i <= 4; i += 1) {
+      const gx = chartX + chartWidth * i / 4;
+      const gy = chartY + chartHeight * i / 4;
+      this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(gx, chartY).lineTo(gx, chartY + chartHeight).stroke();
+      this.doc.moveTo(chartX, gy).lineTo(chartX + chartWidth, gy).stroke();
+    }
+    valid.forEach((peer, index) => {
+      const x = chartX + (Number(peer.revenueGrowthYoY) - xMin) / Math.max(1, xMax - xMin) * chartWidth;
+      const y = chartY + chartHeight - (Number(peer.operatingMargin) - yMin) / Math.max(1, yMax - yMin) * chartHeight;
+      const color = index === 0 ? C.gold : C.green;
+      this.doc.circle(x, y, index === 0 ? 5 : 4).fill(color);
+      this.doc.font(index === 0 ? "Helvetica-Bold" : "Helvetica").fontSize(6.5).fillColor(C.ink)
+        .text(clean(peer.ticker), x + 6, y - 4, { width: 70, lineBreak: false });
+    });
+    this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate)
+      .text("REVENUE GROWTH (YOY) ->", chartX, chartY + chartHeight + 14, { width: chartWidth, align: "center" });
+    this.doc.save().rotate(-90, { origin: [this.margin + 9, chartY + chartHeight / 2] })
+      .text("OPERATING MARGIN ->", this.margin - 48, chartY + chartHeight / 2 - 4, { width: 118, align: "center", lineBreak: false }).restore();
+    this.y = chartY + chartHeight + 38;
   }
 
   table(title: string, headers: string[], widths: number[], rows: string[][]) {
@@ -303,40 +381,6 @@ class Report {
     }
   }
 
-  companyVisual(imageData: Buffer | null | undefined, caption: string | null | undefined, dossier: ResearchDossier) {
-    this.ensure(190);
-    this.heading("Company visual");
-    const boxY = this.y;
-    const boxHeight = 142;
-    this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).fill(C.pale);
-    if (imageData?.length) {
-      try {
-        this.doc.save();
-        this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).clip();
-        this.doc.image(imageData, this.margin, boxY, { cover: [this.width, boxHeight], align: "center", valign: "center" });
-        this.doc.restore();
-      } catch {
-        this.doc.restore();
-        this.identityFallback(boxY, boxHeight, dossier);
-      }
-    } else {
-      this.identityFallback(boxY, boxHeight, dossier);
-    }
-    this.y = boxY + boxHeight + 7;
-    this.paragraph(caption || `Official company identity panel for ${dossier.company.name}.`, { size: 7, color: C.slate });
-  }
-
-  identityFallback(boxY: number, boxHeight: number, dossier: ResearchDossier) {
-    this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).fill(C.navy);
-    this.doc.font("Helvetica-Bold").fontSize(8).fillColor(C.gold)
-      .text("COMPANY IDENTITY", this.margin + 18, boxY + 24);
-    this.doc.font("Helvetica-Bold").fontSize(24).fillColor(C.white)
-      .text(clean(dossier.company.symbol), this.margin + 18, boxY + 44);
-    this.doc.font("Helvetica").fontSize(10).fillColor("#C8D0DF")
-      .text(`${clean(dossier.company.sector)}  /  ${clean(dossier.company.exchange)}`, this.margin + 18, boxY + 78);
-    this.doc.font("Helvetica").fontSize(8).fillColor("#C8D0DF")
-      .text(`Official domains: ${dossier.company.officialDomains.join(", ")}`, this.margin + 18, boxY + 102, { width: this.width - 36 });
-  }
 }
 
 export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buffer> {
@@ -381,11 +425,21 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.heading("Company snapshot");
   dossier.sections.snapshot.filter((claim) => claim.status === "supported").slice(0, 4)
     .forEach((claim) => r.paragraph(`${claim.text} [${claim.sourceIds.join(", ")}]`, { indent: 8 }));
-  r.companyVisual(payload.companyImageData, enrichment?.companyImage?.caption, dossier);
+  r.heading("Research snapshot");
+  const panelY = r.y;
+  const panelWidth = (r.width - 12) / 2;
+  r.doc.roundedRect(r.margin, panelY, panelWidth, 68, 5).fill(C.greenPale);
+  r.doc.roundedRect(r.margin + panelWidth + 12, panelY, panelWidth, 68, 5).fill(C.pale);
+  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("DEFINING FIGURE", r.margin + 12, panelY + 12);
+  r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.green).text(clean(enrichment?.executiveSummary?.keyNumber || "Verified figure unavailable"), r.margin + 12, panelY + 29, { width: panelWidth - 24 });
+  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PRINCIPAL WATCH ITEM", r.margin + panelWidth + 24, panelY + 12);
+  r.doc.font("Helvetica-Bold").fontSize(10).fillColor(C.navy).text(clean(enrichment?.executiveSummary?.biggestRisk || "No supplemental risk summary available"), r.margin + panelWidth + 24, panelY + 28, { width: panelWidth - 24, height: 31, ellipsis: true });
+  r.y = panelY + 82;
+  r.paragraph("The snapshot is intentionally concise. Detailed evidence, financial comparisons and source records follow on the subsequent pages.", { size: 8, color: C.slate });
 
   r.title("Momentum anatomy", "The five bars are normalized change scores. Fifty is the neutral reference point; these are not portfolio weights.");
   r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,
-    [C.green, "#2878B5", C.gold, "#7C63A8", "#D46B4C"]);
+    [C.green]);
   r.paragraph("How to read the chart: scores above 50 indicate improving evidence relative to the model's comparison basis; scores below 50 indicate deterioration. The components explain the overall signal, but none is an allocation recommendation.", { size: 8, color: C.slate });
   if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
   r.paragraph(`Latest available close: Rs. ${fmt(market?.price)}${market?.asOf ? ` as of ${clean(market.asOf).slice(0, 10)}` : ""}${market?.delayed ? " (delayed market data)" : ""}.`, { size: 8, color: C.slate });
@@ -395,19 +449,21 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     .filter(([, item]) => item?.value != null)
     .map(([key, item]) => ({ label: labels[key] || key, value: Number(item.value) }));
   r.bars(`Latest disclosed shareholding${enrichment?.shareholdingAsOf ? ` - ${enrichment.shareholdingAsOf}` : ""}`, ownership, false,
-    [C.gold, "#2878B5", C.green, "#7C63A8", "#D46B4C"]);
+    [C.gold, C.green, C.navy]);
   r.paragraph("A quarter-on-quarter direction is deliberately not shown unless both current and prior dated shareholding filings are present and comparable.", { size: 8, color: C.slate });
 
   r.title("Financial performance", "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
   r.financialTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr, pat: quarter.patCr })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", "EBITDA Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     (dossier.quarterlyPerformance || []).map((q) => [`${q.period} [${q.sourceIds.join(", ")}]`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
+  r.marginAndEpsTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct, eps: quarter.eps })));
   r.paragraph("Peer figures are supplemental market comparisons and may use a different reporting basis or update time from the company's official quarterly figures.", { size: 8, color: C.slate });
   r.newPage(true);
   r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
     peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));
   r.table("Peer comparison - growth and position", ["Company", "D/E", "Revenue YoY", "Op. margin", "Mkt cap Rs.Cr", "52W return"], [28, 14, 20, 19, 24, 18],
     peers.map((p) => [p.ticker, fmt(p.debtEquity), fmt(p.revenueGrowthYoY, "%"), fmt(p.operatingMargin, "%"), fmt(p.marketCapCr), fmt(p.week52Return, "%")]));
+  r.peerPositionChart(peers);
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");
   const sections: Array<[keyof ResearchDossier["sections"], string]> = [
@@ -418,22 +474,70 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     r.heading(label);
     const claims = dossier.sections[key].slice(0, 6);
     if (!claims.length) r.paragraph("No verified evidence was available.", { color: C.slate });
-    claims.forEach((claim) => r.paragraph(`${claim.status === "supported" ? "" : `${claim.status.replaceAll("_", " ").toUpperCase()}: `}${claim.text} [${claim.sourceIds.join(", ")}]`, { indent: 8 }));
+    claims.forEach((claim) => r.paragraph(`${claim.status === "supported" ? "" : `${claim.status.replaceAll("_", " ").toUpperCase()}: `}${claim.text}`, { indent: 8 }));
+    const references = [...new Set(claims.flatMap((claim) => claim.sourceIds))];
+    if (references.length) r.paragraph(`Supporting records: ${references.join(", ")}.`, { size: 7, color: C.slate, indent: 8 });
   });
 
-  if (dossier.marketConversation.status === "available" && dossier.marketConversation.sampleSize > 0) {
-    r.heading("Market conversation - experimental, non-scoring");
-    r.paragraph(`Sample size ${dossier.marketConversation.sampleSize}. Sentiment mix: ${fmt(dossier.marketConversation.sentiment.positive * 100, "%")} positive, ${fmt(dossier.marketConversation.sentiment.neutral * 100, "%")} neutral and ${fmt(dossier.marketConversation.sentiment.negative * 100, "%")} negative. This section never affects BMS.`, { size: 8.5 });
+  const publicCommentary = enrichment?.publicCommentary;
+  if (publicCommentary?.viewpoints?.length) {
+    r.heading("Public market commentary");
+    if (publicCommentary.summary) r.paragraph(publicCommentary.summary, { size: 8.5, color: C.slate });
+    publicCommentary.viewpoints.slice(0, 3).forEach((viewpoint, index) => {
+      r.ensure(67);
+      const top = r.y + 3;
+      const accent = viewpoint.stance === "positive" ? C.green : viewpoint.stance === "negative" ? C.navy : C.gold;
+      r.doc.roundedRect(r.margin, top, r.width, 56, 5).fill(C.pale);
+      r.doc.rect(r.margin, top, 4, 56).fill(accent);
+      r.doc.font("Helvetica-Bold").fontSize(7).fillColor(accent)
+        .text(`${index + 1}. ${clean(viewpoint.sourceName).toUpperCase()}  /  ${clean(viewpoint.stance).toUpperCase()}${viewpoint.publishedAt ? `  /  ${clean(viewpoint.publishedAt)}` : ""}`, r.margin + 13, top + 9, { width: r.width - 26 });
+      r.doc.font("Helvetica").fontSize(8).fillColor(C.ink)
+        .text(clean(viewpoint.summary), r.margin + 13, top + 24, { width: r.width - 26, height: 25, ellipsis: true, lineGap: 1 });
+      r.y = top + 64;
+    });
+    r.paragraph("These are dated, paraphrased external opinions. Full links appear in the source register.", { size: 7.5, color: C.slate });
   }
 
   r.title("Sources and quality control");
+  const sectionLabels: Record<string, string> = {
+    snapshot: "Snapshot", developments: "Developments", operatingEvidence: "Operating evidence",
+    managementCommitments: "Commitments", risks: "Risks",
+  };
+  const sourceCoverage = new Map<string, Set<string>>();
+  Object.entries(dossier.sections).forEach(([section, claims]) => {
+    claims.forEach((claim) => claim.sourceIds.forEach((sourceId) => {
+      const covered = sourceCoverage.get(sourceId) || new Set<string>();
+      covered.add(sectionLabels[section] || section);
+      sourceCoverage.set(sourceId, covered);
+    }));
+  });
+  r.heading("Evidence coverage at a glance");
+  const coverageY = r.y;
+  const coverageWidth = (r.width - 18) / 3;
+  [
+    ["OFFICIAL RECORDS", fmt(dossier.sources.length)],
+    ["SUPPORTED CLAIMS", fmt(supported)],
+    ["CONFLICTS", fmt(dossier.qualityControl.conflicts)],
+  ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (coverageWidth + 9), coverageWidth));
+  r.y = coverageY + 55;
+  r.paragraph(`Report generated: ${clean(dossier.generatedAt).slice(0, 10)}. Every factual claim must trace to an admitted, dated official record. Public commentary is kept separate and is never treated as company evidence.`, { size: 8, color: C.slate });
   r.heading("Admitted official sources");
   dossier.sources.forEach((source) => {
     r.paragraph(`${source.sourceId}  /  ${source.sourceClass}  /  Published ${source.publishedAt || "date unavailable"}`, { size: 8, bold: true });
-    r.paragraph(source.url, { size: 7, color: "#2557A7", indent: 8 });
+    const coverage = [...(sourceCoverage.get(source.sourceId) || [])];
+    if (coverage.length) r.paragraph(`Used for: ${coverage.join(", ")}.`, { size: 7, color: C.slate, indent: 8 });
+    r.paragraph(source.url, { size: 7, color: C.navy, indent: 8 });
   });
+  if (publicCommentary?.viewpoints?.length) {
+    r.heading("Public-commentary sources");
+    publicCommentary.viewpoints.slice(0, 5).forEach((viewpoint, index) => {
+      r.paragraph(`${index + 1}. ${viewpoint.sourceName}${viewpoint.publishedAt ? ` - ${viewpoint.publishedAt}` : ""}`, { size: 8, bold: true });
+      r.paragraph(`${viewpoint.stance.toUpperCase()} viewpoint - ${viewpoint.url}`, { size: 7, color: C.navy, indent: 8 });
+    });
+  }
   r.heading("Quality-control summary");
   r.paragraph(`Unsupported claims: ${dossier.qualityControl.unsupportedClaims}. Conflicts: ${dossier.qualityControl.conflicts}. Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}.`, { bold: true });
+  r.paragraph("Coverage note: source counts measure admitted documents, not completeness of the investment case. Market opinions may change after publication and should be read as sentiment, not verified fact.", { size: 8, color: C.slate });
   r.paragraph("AI-generated research for informational purposes only. Verify material claims against the cited official documents. Supplemental market, promoter, ownership and peer data should be checked against the latest exchange filing. This is not investment advice.", { size: 8, color: C.slate });
 
   r.footer(dossier.company.symbol);

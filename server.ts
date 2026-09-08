@@ -2116,7 +2116,7 @@ ${rawText}` }] }],
         7. shareholdingAsOf: the latest disclosed quarter/date for the ownership figures.
         8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
         9. sourceUrls: up to five direct URLs actually used for company history, promoter identity or shareholding.
-        10. companyImage: if available, one direct HTTPS URL for a landscape factory, facility or representative product-portfolio image hosted on the company's OFFICIAL domain, plus a factual caption and the official webpage URL containing it. Never use a search-result or third-party image.
+        10. publicCommentary: a balanced summary of current, dated PUBLIC MARKET OPINION from up to five traceable sources such as ValuePickr, reputable financial publications, analyst commentary or named investment newsletters. For every viewpoint return sourceName, publishedAt, stance (positive/cautious/mixed/negative), a neutral paraphrase of at most 45 words, and the direct URL. Do not treat these opinions as company facts. Exclude anonymous claims that cannot be traced to a dated page.
         Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -2157,12 +2157,24 @@ ${rawText}` }] }],
               },
               shareholdingAsOf: { type: "STRING" },
               sourceUrls: { type: "ARRAY", items: { type: "STRING" } },
-              companyImage: {
+              publicCommentary: {
                 type: "OBJECT",
                 properties: {
-                  url: { type: "STRING" },
-                  caption: { type: "STRING" },
-                  sourceUrl: { type: "STRING" },
+                  asOf: { type: "STRING" },
+                  summary: { type: "STRING" },
+                  viewpoints: {
+                    type: "ARRAY",
+                    items: {
+                      type: "OBJECT",
+                      properties: {
+                        sourceName: { type: "STRING" },
+                        publishedAt: { type: "STRING" },
+                        stance: { type: "STRING" },
+                        summary: { type: "STRING" },
+                        url: { type: "STRING" },
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -2206,11 +2218,19 @@ ${rawText}` }] }],
         sourceUrls: Array.isArray(parsed.sourceUrls)
           ? parsed.sourceUrls.filter((url: any) => typeof url === "string" && /^https:\/\//i.test(url)).slice(0, 5)
           : [],
-        companyImage: parsed.companyImage && typeof parsed.companyImage === "object"
+        publicCommentary: parsed.publicCommentary && typeof parsed.publicCommentary === "object"
           ? {
-              url: typeof parsed.companyImage.url === "string" ? parsed.companyImage.url : null,
-              caption: typeof parsed.companyImage.caption === "string" ? parsed.companyImage.caption.slice(0, 180) : null,
-              sourceUrl: typeof parsed.companyImage.sourceUrl === "string" ? parsed.companyImage.sourceUrl : null,
+              asOf: typeof parsed.publicCommentary.asOf === "string" ? parsed.publicCommentary.asOf : null,
+              summary: typeof parsed.publicCommentary.summary === "string" ? parsed.publicCommentary.summary.slice(0, 450) : null,
+              viewpoints: Array.isArray(parsed.publicCommentary.viewpoints)
+                ? parsed.publicCommentary.viewpoints.filter((item: any) => item && typeof item.url === "string" && /^https:\/\//i.test(item.url) && typeof item.summary === "string").slice(0, 5).map((item: any) => ({
+                    sourceName: String(item.sourceName || "Public commentary").slice(0, 80),
+                    publishedAt: typeof item.publishedAt === "string" ? item.publishedAt.slice(0, 40) : null,
+                    stance: ["positive", "cautious", "mixed", "negative"].includes(String(item.stance).toLowerCase()) ? String(item.stance).toLowerCase() : "mixed",
+                    summary: item.summary.slice(0, 320),
+                    url: item.url,
+                  }))
+                : [],
             }
           : null,
       };
@@ -2533,29 +2553,7 @@ ${rawText}` }] }],
       return res.status(400).json({ error: "A valid completed dossier is required." });
     }
     try {
-      let companyImageData: Buffer | null = null;
-      const imageUrl = payload.enrichment?.companyImage?.url;
-      if (imageUrl) {
-        try {
-          const parsed = new URL(imageUrl);
-          const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
-          const official = payload.dossier.company.officialDomains.some((domain) => {
-            const allowed = domain.toLowerCase().replace(/^www\./, "");
-            return host === allowed || host.endsWith(`.${allowed}`);
-          });
-          if (parsed.protocol === "https:" && official) {
-            const imageResponse = await fetch(parsed, { signal: AbortSignal.timeout(8000) });
-            const contentType = imageResponse.headers.get("content-type") || "";
-            if (imageResponse.ok && /^image\/(jpeg|png)/i.test(contentType)) {
-              const bytes = Buffer.from(await imageResponse.arrayBuffer());
-              if (bytes.length <= 4 * 1024 * 1024) companyImageData = bytes;
-            }
-          }
-        } catch (error: any) {
-          console.warn("[dossier] official image unavailable; using identity panel:", error?.message || error);
-        }
-      }
-      const pdf = await renderDossierPdf({ ...payload, companyImageData });
+      const pdf = await renderDossierPdf(payload);
       const symbol = payload.dossier.company.symbol.replace(/[^A-Z0-9&.-]/gi, "");
       const date = payload.dossier.generatedAt.slice(0, 10);
       res.setHeader("Content-Type", "application/pdf");
