@@ -82,7 +82,7 @@ const payload: DossierPdfPayload = {
   bms: { score: 84, stage: "ESTABLISHED", period: "Q1 FY2027", factorAnalysis: normalizeBmsFactorAnalysis({
     period: "Q1 FY2027",
     factor_analysis: { factors: [
-      { id: "earnings", previous: { period: "Q1 FY2026", factor_score: 0.67 }, current: { period: "Q1 FY2027", factor_score: 0.87 }, explanation: "Earnings momentum strengthened.", evidence_refs: ["official-001"], confidence: "high" },
+      { id: "earnings", previous: { period: "Q1 FY2026", factor_score: 0.67, metrics: [{ key: "revenue", label: "Revenue", value: 1425.4, unit: "Rs.Cr" }, { key: "pat", label: "PAT", value: 77.4, unit: "Rs.Cr" }] }, current: { period: "Q1 FY2027", factor_score: 0.87, metrics: [{ key: "revenue", label: "Revenue", value: 1683.7, unit: "Rs.Cr", displayValue: "+18.1% YoY" }, { key: "pat", label: "PAT", value: 98.6, unit: "Rs.Cr", displayValue: "+27.4% YoY" }] }, explanation: "Earnings momentum strengthened.", evidence_refs: ["official-001"], confidence: "high" },
       { id: "economics", previous: { period: "Q1 FY2026", factor_score: 0.70 }, current: { period: "Q1 FY2027", factor_score: 0.76 }, explanation: "Industry conditions improved modestly.", evidence_refs: ["official-001"], confidence: "medium" },
       { id: "execution", previous: { period: "Q1 FY2026", factor_score: 0.69 }, current: { period: "Q1 FY2027", factor_score: 0.81 }, explanation: "Premium portfolio execution broadened.", evidence_refs: ["official-001"], confidence: "high" },
       { id: "balance_sheet", previous: { period: "Q1 FY2026", factor_score: 0.62 }, current: { period: "Q1 FY2027", factor_score: 0.72 }, explanation: "Net debt declined.", evidence_refs: ["official-002"], confidence: "high" },

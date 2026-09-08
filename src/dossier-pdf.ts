@@ -506,16 +506,32 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,
     [C.green]);
   r.paragraph("How to read the chart: scores above 50 indicate improving evidence relative to the model's comparison basis; scores below 50 indicate deterioration. The components explain the overall signal, but none is an allocation recommendation.", { size: 8, color: C.slate });
+  const factorAnalysis = bms?.factorAnalysis;
+  const scoreAsPoints = (value: number | null | undefined) => value == null
+    ? "N/A"
+    : fmt(Math.abs(value) <= 1 ? value * 100 : value);
+  const measurementText = (measurement: BmsFactorAnalysis["factors"][number]["current"]) => {
+    const metrics = measurement.metrics.slice(0, 2).map((metric) => {
+      const value = metric.value == null
+        ? "N/A"
+        : typeof metric.value === "number" ? fmt(metric.value) : clean(metric.value);
+      return `${metric.label}: ${value}${metric.unit ? ` ${metric.unit}` : ""}${metric.displayValue ? ` (${metric.displayValue})` : ""}`;
+    });
+    return [measurement.period, ...metrics].filter(Boolean).join("\n") || "Not available";
+  };
+  if (factorAnalysis?.factors?.length) {
+    r.table("BMS measurement bridge", ["Factor", "Weight", "Previous evidence", "Current evidence", "Score", "Weighted score"], [18, 9, 25, 27, 9, 12],
+      factorAnalysis.factors.map((factor) => [
+        factor.label,
+        `${fmt(factor.weight * 100)}%`,
+        measurementText(factor.previous),
+        measurementText(factor.current),
+        scoreAsPoints(factor.current.factorScore),
+        scoreAsPoints(factor.weightedScoreContribution),
+      ]));
+    r.paragraph("Weighted score is the current factor score multiplied by its frozen BMS V1 weight. A score-change contribution is shown only when the engine supplies a stored prior factor score; it is never reconstructed.", { size: 7.5, color: C.slate });
+  }
   if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
-  r.paragraph(`Latest available close: Rs. ${fmt(market?.price)}${market?.asOf ? ` as of ${clean(market.asOf).slice(0, 10)}` : ""}${market?.delayed ? " (delayed market data)" : ""}.`, { size: 8, color: C.slate });
-
-  const labels: Record<string, string> = { promoter: "Promoter", fii: "Foreign institutions", dii: "Domestic institutions", mutualFund: "Mutual funds", retail: "Retail / public" };
-  const ownership = Object.entries(enrichment?.shareholding || {})
-    .filter(([, item]) => item?.value != null)
-    .map(([key, item]) => ({ label: labels[key] || key, value: Number(item.value) }));
-  r.bars(`Latest disclosed shareholding${enrichment?.shareholdingAsOf ? ` - ${enrichment.shareholdingAsOf}` : ""}`, ownership, false,
-    [C.gold, C.green, C.navy]);
-  r.paragraph("A quarter-on-quarter direction is deliberately not shown unless both current and prior dated shareholding filings are present and comparable.", { size: 8, color: C.slate });
 
   r.title("Financial performance", usesOperatingProfit
     ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
