@@ -2073,14 +2073,92 @@ ${rawText}` }] }],
   // Dossier claim extraction is deliberately strict and may admit only the latest
   // quarter. Charts need a comparable series, so retrieve a separately labelled,
   // source-traced history rather than inventing prior periods or leaving blank art.
+  const decodeTableText = (html: string): string => html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/&#8377;|&₹;/gi, "Rs.")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const parseScreenerQuarterlyHistory = async (ticker: string, cutoff: string) => {
+    const candidates = [
+      `https://www.screener.in/company/${encodeURIComponent(ticker)}/consolidated/`,
+      `https://www.screener.in/company/${encodeURIComponent(ticker)}/`,
+    ];
+    for (const sourceUrl of candidates) {
+      const response = await fetch(sourceUrl, {
+        headers: { "User-Agent": "AlphaSynth research dossier/1.0" },
+        signal: AbortSignal.timeout(20_000),
+      });
+      if (!response.ok) continue;
+      const html = await response.text();
+      const section = html.match(/<section[^>]*id=["']quarters["'][\s\S]*?<\/section>/i)?.[0];
+      if (!section) continue;
+      const matrix = [...section.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)]
+        .map((match) => [...match[1].matchAll(/<t[hd][^>]*>([\s\S]*?)<\/t[hd]>/gi)]
+          .map((cell) => decodeTableText(cell[1])))
+        .filter((cells) => cells.length > 1);
+      const header = matrix[0] || [];
+      const periods = header.slice(1);
+      if (!periods.length) continue;
+
+      const valuesFor = (pattern: RegExp) => {
+        const row = matrix.find((cells) => pattern.test(cells[0] || ""));
+        return row?.slice(1) || [];
+      };
+      const sales = valuesFor(/^Sales\b/i);
+      const operatingProfit = valuesFor(/^Operating Profit\b/i);
+      const operatingMargin = valuesFor(/^OPM\s*%/i);
+      const netProfit = valuesFor(/^Net Profit\b/i);
+      const eps = valuesFor(/^EPS in Rs\b/i);
+      if (!sales.length || !operatingProfit.length) continue;
+
+      const numberOrNull = (value: string | undefined): number | null => {
+        if (!value || /^(?:-|N\/?A)$/i.test(value.trim())) return null;
+        const parsed = Number(value.replace(/[,\u20b9%\s]/g, "").replace(/^Rs\.?/i, ""));
+        return Number.isFinite(parsed) ? parsed : null;
+      };
+      const periodDate = (period: string): string | null => {
+        const match = period.match(/^(Mar|Jun|Sep|Dec)\s+(\d{4})$/i);
+        if (!match) return null;
+        const monthEnd: Record<string, string> = { mar: "03-31", jun: "06-30", sep: "09-30", dec: "12-31" };
+        return `${match[2]}-${monthEnd[match[1].toLowerCase()]}`;
+      };
+      const basis = /\/consolidated\/$/i.test(sourceUrl) ? "consolidated" : "standalone";
+      const rows = periods.map((period, index) => ({
+        period,
+        basis,
+        revenueCr: numberOrNull(sales[index]),
+        ebitdaCr: numberOrNull(operatingProfit[index]),
+        ebitdaMarginPct: numberOrNull(operatingMargin[index]),
+        patCr: numberOrNull(netProfit[index]),
+        eps: numberOrNull(eps[index]),
+        profitMetric: "operating_profit" as const,
+        sourceUrl,
+        sourceLabel: "Screener quarterly results (supplemental; verify against exchange filing)",
+      })).filter((row) => {
+        const date = periodDate(row.period);
+        return date && date <= cutoff && [row.revenueCr, row.ebitdaCr, row.ebitdaMarginPct, row.patCr, row.eps]
+          .filter((value) => value !== null).length >= 3;
+      }).slice(-8).reverse();
+      if (rows.length >= 2) return { rows, sourceUrl, basis };
+    }
+    return null;
+  };
+
   app.post("/api/pipeline/quarterly-performance", async (req, res) => {
     const ticker = String(req.body?.ticker || "").toUpperCase().replace(".NS", "").replace(".BO", "").trim();
     if (!ticker) return res.status(400).json({ error: "Missing ticker" });
 
-    const cacheKey = `QUARTERLY_${ticker}`;
+    const requestedCutoff = String(req.body?.information_cutoff || req.body?.cutoff || "");
+    const cutoff = /^\d{4}-\d{2}-\d{2}$/.test(requestedCutoff) ? requestedCutoff : new Date().toISOString().slice(0, 10);
+    const cacheKey = `QUARTERLY_${ticker}_${cutoff}`;
     const cached = reportCache.get(cacheKey);
     if (cached && (Date.now() - cached.timestamp) < EXTRAS_CACHE_TTL_MS) {
-      return res.json({ ...cached.data, cached: true });
+      return res.status(cached.data?.complete ? 200 : 422).json({ ...cached.data, cached: true });
     }
 
     const finiteOrNull = (value: unknown): number | null => {
@@ -2090,10 +2168,18 @@ ${rawText}` }] }],
     };
 
     try {
-      const ai = getGenAI();
       const subjectInfo = await verifyNseBse(ticker);
       const companyName = subjectInfo?.name || ticker;
-      const cutoff = new Date().toISOString().slice(0, 10);
+      const deterministic = await parseScreenerQuarterlyHistory(ticker, cutoff);
+      if (deterministic) {
+        const payload = { ticker, companyName, rows: deterministic.rows, complete: true, method: "published_table" };
+        reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+        return res.json(payload);
+      }
+
+      // Fallback for sites that Screener does not cover. This path is deliberately
+      // secondary because grounded prose extraction is less reliable for tables.
+      const ai = getGenAI();
       const research = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: `Research the latest four to eight REPORTED quarters for ${companyName} (${ticker}), using information published on or before ${cutoff}. Prefer consolidated results and use a consistent basis. For each quarter return period, revenue from operations in INR crore, EBITDA in INR crore, EBITDA margin percent, PAT in INR crore and diluted or basic EPS in INR. Use the company's official results, NSE/BSE filings or investor presentations as primary evidence; Screener.in or Moneycontrol may only fill a missing historical row. Never estimate, annualise or convert a year-to-date number into a quarter. Give a direct source URL for every row and clearly identify the source. If two sources disagree, retain the official filing value and note the official source.` }] }],
@@ -2143,6 +2229,7 @@ ${rawText}` }] }],
         ebitdaMarginPct: finiteOrNull(row.ebitdaMarginPct),
         patCr: finiteOrNull(row.patCr),
         eps: finiteOrNull(row.eps),
+        profitMetric: "ebitda" as const,
         sourceUrl: /^https?:\/\//i.test(String(row.sourceUrl || "")) ? String(row.sourceUrl) : null,
         sourceLabel: String(row.sourceLabel || "Quarterly financial result").slice(0, 120),
       })).filter((row: any) => row.period && row.sourceUrl
@@ -2150,7 +2237,7 @@ ${rawText}` }] }],
         && !seen.has(row.period.toUpperCase()) && seen.add(row.period.toUpperCase())).slice(0, 8);
 
       const payload = { ticker, companyName, rows, complete: rows.length >= 2 };
-      reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+      if (rows.length >= 2) reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
       return res.status(rows.length >= 2 ? 200 : 422).json(payload);
     } catch (error: any) {
       console.error(`[quarterly-performance/${ticker}]`, error?.message || error);

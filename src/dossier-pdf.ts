@@ -27,6 +27,7 @@ export type DossierPdfFinancialRow = {
   ebitdaMarginPct?: number | null;
   patCr?: number | null;
   eps?: number | null;
+  profitMetric?: "ebitda" | "operating_profit";
   sourceIds?: string[];
   sourceUrl?: string | null;
   sourceLabel?: string | null;
@@ -284,12 +285,12 @@ class Report {
     this.y = chartY + chartHeight + 48;
   }
 
-  marginAndEpsTrend(rows: Array<{ period: string; margin: number | null; eps: number | null }>) {
+  marginAndEpsTrend(rows: Array<{ period: string; margin: number | null; eps: number | null }>, marginLabel = "EBITDA MARGIN (%)") {
     this.ensure(185);
     this.heading("Margin and earnings-per-share trend");
     const valid = rows.slice().reverse();
     const panels = [
-      { label: "EBITDA MARGIN (%)", color: C.green, values: valid.map((row) => row.margin) },
+      { label: marginLabel, color: C.green, values: valid.map((row) => row.margin) },
       { label: "EPS (RS.)", color: C.gold, values: valid.map((row) => row.eps) },
     ];
     const panelWidth = (this.width - 18) / 2;
@@ -467,6 +468,9 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     .forEach((claim) => r.paragraph(claim.text, { indent: 8 }));
   r.heading("Research snapshot");
   const quarterRows = financialRows;
+  const usesOperatingProfit = financialRows.some((row) => row.profitMetric === "operating_profit");
+  const profitLabel = usesOperatingProfit ? "Op. profit" : "EBITDA";
+  const marginLabel = usesOperatingProfit ? "OPM (%)" : "EBITDA MARGIN (%)";
   const latestPat = quarterRows[0]?.patCr;
   const previousPat = quarterRows[1]?.patCr;
   const patGrowth = latestPat != null && previousPat != null && previousPat !== 0
@@ -511,12 +515,14 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     [C.gold, C.green, C.navy]);
   r.paragraph("A quarter-on-quarter direction is deliberately not shown unless both current and prior dated shareholding filings are present and comparable.", { size: 8, color: C.slate });
 
-  r.title("Financial performance", "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
+  r.title("Financial performance", usesOperatingProfit
+    ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
+    : "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
   r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
-  r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", "EBITDA Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
+  r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
   r.y += 9;
-  r.marginAndEpsTrend(financialRows.map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct ?? null, eps: quarter.eps ?? null })));
+  r.marginAndEpsTrend(financialRows.map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct ?? null, eps: quarter.eps ?? null })), marginLabel);
   r.newPage(true);
   r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
     peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));

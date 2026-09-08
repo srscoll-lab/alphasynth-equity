@@ -11,6 +11,7 @@ const baseUrl = (process.argv.find((arg) => arg.startsWith("--base-url="))
   ?.slice("--base-url=".length) || "https://dossier-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app").replace(/\/$/, "");
 const cutoff = process.argv.find((arg) => arg.startsWith("--cutoff="))?.slice("--cutoff=".length)
   || new Date().toISOString().slice(0, 10);
+const requestedTicker = process.argv.find((arg) => arg.startsWith("--ticker="))?.slice("--ticker=".length).toUpperCase();
 const outputDirectory = path.resolve("output/pdf/template-validation");
 const manifest = JSON.parse(await fs.readFile(path.resolve("scripts/dossier-pilot-companies.json"), "utf8")) as PilotCompany[];
 
@@ -41,7 +42,7 @@ const lifecycle = await fetchJson("/api/bms/lifecycle", undefined, 60_000);
 const bmsCompanies = Array.isArray(lifecycle?.companies) ? lifecycle.companies : [];
 const results: Array<Record<string, unknown>> = [];
 
-for (const company of manifest.slice(0, 5)) {
+for (const company of manifest.slice(0, 5).filter((item) => !requestedTicker || item.ticker === requestedTicker)) {
   const started = Date.now();
   try {
     const bmsCompany = bmsCompanies.find((item: any) => String(item.symbol).toUpperCase() === company.ticker);
