@@ -7,6 +7,7 @@ import Firecrawl from "@mendable/firecrawl-js";
 import { isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
+import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -647,7 +648,7 @@ const DOSSIER_RATE_LIMIT = 5;
 
 
 async function startServer() {
-  app.use(express.json());
+  app.use(express.json({ limit: "2mb" }));
 
   app.get("/api/health", (req, res) => {
     res.json({
@@ -2507,6 +2508,26 @@ ${rawText}` }] }],
     } catch (error: any) {
       console.error("[dossier] generation failed:", error?.message || error);
       return res.status(502).json({ error: "Research Dossier generation failed." });
+    }
+  });
+
+  app.post("/api/dossier/pdf", async (req, res) => {
+    const payload = req.body as DossierPdfPayload;
+    if (!payload?.dossier || !isResearchDossier(payload.dossier)) {
+      return res.status(400).json({ error: "A valid completed dossier is required." });
+    }
+    try {
+      const pdf = await renderDossierPdf(payload);
+      const symbol = payload.dossier.company.symbol.replace(/[^A-Z0-9&.-]/gi, "");
+      const date = payload.dossier.generatedAt.slice(0, 10);
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", `attachment; filename="${symbol}-Research-Dossier-${date}.pdf"`);
+      res.setHeader("Content-Length", String(pdf.length));
+      res.setHeader("Cache-Control", "no-store");
+      return res.send(pdf);
+    } catch (error: any) {
+      console.error("[dossier] PDF generation failed:", error?.message || error);
+      return res.status(500).json({ error: "The dossier PDF could not be generated." });
     }
   });
 

@@ -485,7 +485,42 @@ export default function BusinessMomentum({
   const downloadDossierPdf = async () => {
     if (!dossier) return;
     try {
-      const { jsPDF } = await import("jspdf");
+      const response = await fetch("/api/dossier/pdf", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dossier,
+          peers: dossierPeers,
+          enrichment: dossierEnrichment,
+          market: dossierMarket,
+          bms: {
+            score: selected?.bms ?? null,
+            stage: selected?.lifecycle_stage ?? null,
+            period: selected?.period ?? null,
+            components: selected ? [
+              { label: "Earnings", score: score100(selected.earnings) },
+              { label: "Economics", score: score100(selected.economics) },
+              { label: "Execution", score: score100(selected.execution) },
+              { label: "Balance sheet", score: score100(selected.balance_sheet) },
+              { label: "Management", score: score100(selected.management_delivery) },
+            ] : [],
+          },
+        }),
+      });
+      if (!response.ok) throw new Error(`PDF service returned HTTP ${response.status}`);
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = `${dossier.company.symbol}-Research-Dossier-${dossier.generatedAt.slice(0, 10)}.pdf`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      return;
+      // Legacy browser renderer retained temporarily for rollback reference;
+      // production downloads return before this point and use the server PDF.
+      const jsPDF: any = null;
       const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
       const margin = 16;
       const pageWidth = pdf.internal.pageSize.getWidth();
