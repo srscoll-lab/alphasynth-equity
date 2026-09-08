@@ -104,6 +104,18 @@ type DossierMarketContext = {
   priceHistory?: Array<{ date: string; close: number }>;
 };
 
+type DossierFinancialRow = {
+  period: string;
+  basis: "consolidated" | "standalone" | "unknown";
+  revenueCr?: number | null;
+  ebitdaCr?: number | null;
+  ebitdaMarginPct?: number | null;
+  patCr?: number | null;
+  eps?: number | null;
+  sourceUrl?: string | null;
+  sourceLabel?: string | null;
+};
+
 type BmsResponse = {
   name: string;
   company_count: number;
@@ -487,6 +499,7 @@ export default function BusinessMomentum({
   const [dossierPeers, setDossierPeers] = useState<DossierPeerRow[]>([]);
   const [dossierEnrichment, setDossierEnrichment] = useState<DossierEnrichment | null>(null);
   const [dossierMarket, setDossierMarket] = useState<DossierMarketContext | null>(null);
+  const [dossierFinancials, setDossierFinancials] = useState<DossierFinancialRow[]>([]);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
@@ -498,6 +511,7 @@ export default function BusinessMomentum({
         body: JSON.stringify({
           dossier,
           peers: dossierPeers,
+          financials: dossierFinancials,
           enrichment: dossierEnrichment,
           market: dossierMarket,
           bms: {
@@ -858,9 +872,10 @@ export default function BusinessMomentum({
     setDossierPeers([]);
     setDossierEnrichment(null);
     setDossierMarket(null);
+    setDossierFinancials([]);
     try {
       const requestBody = JSON.stringify({ ticker: selected.symbol });
-      const [response, peerPayload, enrichmentPayload, marketPayload] = await Promise.all([
+      const [response, peerPayload, financialPayload, enrichmentPayload, marketPayload] = await Promise.all([
         fetch("/api/dossier/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -875,6 +890,11 @@ export default function BusinessMomentum({
           headers: { "Content-Type": "application/json" },
           body: requestBody,
         }).then(async peerResponse => peerResponse.ok ? peerResponse.json() : null).catch(() => null),
+        fetch("/api/pipeline/quarterly-performance", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        }).then(async financialResponse => financialResponse.ok ? financialResponse.json() : null).catch(() => null),
         fetch("/api/pipeline/report-extras", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -891,6 +911,7 @@ export default function BusinessMomentum({
       if (requestId === dossierRequestId.current) {
         setDossier(payload);
         setDossierPeers(Array.isArray(peerPayload?.rows) ? peerPayload.rows : []);
+        setDossierFinancials(Array.isArray(financialPayload?.rows) ? financialPayload.rows : []);
         setDossierEnrichment(enrichmentPayload || null);
         setDossierMarket(marketPayload || null);
       }
@@ -978,6 +999,7 @@ export default function BusinessMomentum({
     setDossierPeers([]);
     setDossierEnrichment(null);
     setDossierMarket(null);
+    setDossierFinancials([]);
     setDossierLoading(false);
   }, [selected?.symbol, selected?.period]);
 

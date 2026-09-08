@@ -19,9 +19,23 @@ export type DossierPdfPeer = {
   week52Return?: number | null;
 };
 
+export type DossierPdfFinancialRow = {
+  period: string;
+  basis: "consolidated" | "standalone" | "unknown";
+  revenueCr?: number | null;
+  ebitdaCr?: number | null;
+  ebitdaMarginPct?: number | null;
+  patCr?: number | null;
+  eps?: number | null;
+  sourceIds?: string[];
+  sourceUrl?: string | null;
+  sourceLabel?: string | null;
+};
+
 export type DossierPdfPayload = {
   dossier: ResearchDossier;
   peers?: DossierPdfPeer[];
+  financials?: DossierPdfFinancialRow[];
   enrichment?: {
     executiveSummary?: {
       companyLine?: string | null;
@@ -404,6 +418,9 @@ class Report {
 
 export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buffer> {
   const { dossier, peers = [], enrichment, market, bms } = payload;
+  const financialRows: DossierPdfFinancialRow[] = payload.financials?.length
+    ? payload.financials
+    : (dossier.quarterlyPerformance || []).map((row) => ({ ...row }));
   const doc = new PDFDocument({ size: "A4", margin: 0, bufferPages: true, info: {
     Title: `${dossier.company.name} Research Dossier`,
     Author: "AlphaSynth Intelligence",
@@ -449,7 +466,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   dossier.sections.snapshot.filter((claim) => claim.status === "supported").slice(0, 4)
     .forEach((claim) => r.paragraph(claim.text, { indent: 8 }));
   r.heading("Research snapshot");
-  const quarterRows = dossier.quarterlyPerformance || [];
+  const quarterRows = financialRows;
   const latestPat = quarterRows[0]?.patCr;
   const previousPat = quarterRows[1]?.patCr;
   const patGrowth = latestPat != null && previousPat != null && previousPat !== 0
@@ -495,11 +512,11 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.paragraph("A quarter-on-quarter direction is deliberately not shown unless both current and prior dated shareholding filings are present and comparable.", { size: 8, color: C.slate });
 
   r.title("Financial performance", "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
-  r.financialTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr, pat: quarter.patCr })));
+  r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", "EBITDA Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
-    (dossier.quarterlyPerformance || []).map((q) => [`${q.period} [${q.sourceIds.join(", ")}]`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
+    financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
   r.y += 9;
-  r.marginAndEpsTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct, eps: quarter.eps })));
+  r.marginAndEpsTrend(financialRows.map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct ?? null, eps: quarter.eps ?? null })));
   r.newPage(true);
   r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
     peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));
@@ -591,6 +608,15 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     if (coverage.length) r.paragraph(`Used for: ${coverage.join(", ")}.`, { size: 7, color: C.slate, indent: 8 });
     r.paragraph(source.url, { size: 7, color: C.navy, indent: 8 });
   });
+  const supplementalFinancialSources = [...new Map(financialRows
+    .filter((row) => row.sourceUrl)
+    .map((row) => [row.sourceUrl, row])).values()];
+  if (supplementalFinancialSources.length) {
+    r.heading("Supplemental financial-series sources");
+    supplementalFinancialSources.forEach((row) => {
+      r.paragraph(`${row.sourceLabel || "Quarterly financial history"} - ${row.sourceUrl}`, { size: 7, color: C.navy });
+    });
+  }
   if (publicCommentary?.viewpoints?.length) {
     r.heading("Public-commentary sources");
     publicCommentary.viewpoints.slice(0, 5).forEach((viewpoint, index) => {

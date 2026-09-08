@@ -2069,6 +2069,95 @@ ${rawText}` }] }],
     }
   });
 
+  // ── Quarterly financial history ───────────────────────────────────────────────
+  // Dossier claim extraction is deliberately strict and may admit only the latest
+  // quarter. Charts need a comparable series, so retrieve a separately labelled,
+  // source-traced history rather than inventing prior periods or leaving blank art.
+  app.post("/api/pipeline/quarterly-performance", async (req, res) => {
+    const ticker = String(req.body?.ticker || "").toUpperCase().replace(".NS", "").replace(".BO", "").trim();
+    if (!ticker) return res.status(400).json({ error: "Missing ticker" });
+
+    const cacheKey = `QUARTERLY_${ticker}`;
+    const cached = reportCache.get(cacheKey);
+    if (cached && (Date.now() - cached.timestamp) < EXTRAS_CACHE_TTL_MS) {
+      return res.json({ ...cached.data, cached: true });
+    }
+
+    const finiteOrNull = (value: unknown): number | null => {
+      if (value === null || value === undefined || value === "") return null;
+      const parsed = typeof value === "string" ? Number(value.replace(/[,₹%]/g, "").trim()) : Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    };
+
+    try {
+      const ai = getGenAI();
+      const subjectInfo = await verifyNseBse(ticker);
+      const companyName = subjectInfo?.name || ticker;
+      const cutoff = new Date().toISOString().slice(0, 10);
+      const research = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: `Research the latest four to eight REPORTED quarters for ${companyName} (${ticker}), using information published on or before ${cutoff}. Prefer consolidated results and use a consistent basis. For each quarter return period, revenue from operations in INR crore, EBITDA in INR crore, EBITDA margin percent, PAT in INR crore and diluted or basic EPS in INR. Use the company's official results, NSE/BSE filings or investor presentations as primary evidence; Screener.in or Moneycontrol may only fill a missing historical row. Never estimate, annualise or convert a year-to-date number into a quarter. Give a direct source URL for every row and clearly identify the source. If two sources disagree, retain the official filing value and note the official source.` }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+      });
+
+      const structured = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: `Convert the following sourced research into JSON. Keep only explicitly reported quarterly figures. Omit unavailable fields; never use zero as a missing value. Use INR crore and percentages as plain numbers. Preserve the direct source URL for every row.\n\n${research.text || ""}` }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT",
+            properties: {
+              rows: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    period: { type: "STRING" },
+                    basis: { type: "STRING", enum: ["consolidated", "standalone", "unknown"] },
+                    revenueCr: { type: "NUMBER" },
+                    ebitdaCr: { type: "NUMBER" },
+                    ebitdaMarginPct: { type: "NUMBER" },
+                    patCr: { type: "NUMBER" },
+                    eps: { type: "NUMBER" },
+                    sourceUrl: { type: "STRING" },
+                    sourceLabel: { type: "STRING" },
+                  },
+                  required: ["period", "basis", "sourceUrl", "sourceLabel"],
+                },
+              },
+            },
+            required: ["rows"],
+          },
+        },
+      });
+
+      const parsed = JSON.parse(sanitizeGroundingJson(structured.text || "{}"));
+      const seen = new Set<string>();
+      const rows = (Array.isArray(parsed.rows) ? parsed.rows : []).map((row: any) => ({
+        period: String(row.period || "").trim(),
+        basis: ["consolidated", "standalone"].includes(row.basis) ? row.basis : "unknown",
+        revenueCr: finiteOrNull(row.revenueCr),
+        ebitdaCr: finiteOrNull(row.ebitdaCr),
+        ebitdaMarginPct: finiteOrNull(row.ebitdaMarginPct),
+        patCr: finiteOrNull(row.patCr),
+        eps: finiteOrNull(row.eps),
+        sourceUrl: /^https?:\/\//i.test(String(row.sourceUrl || "")) ? String(row.sourceUrl) : null,
+        sourceLabel: String(row.sourceLabel || "Quarterly financial result").slice(0, 120),
+      })).filter((row: any) => row.period && row.sourceUrl
+        && [row.revenueCr, row.ebitdaCr, row.ebitdaMarginPct, row.patCr, row.eps].filter((value) => value !== null).length >= 2
+        && !seen.has(row.period.toUpperCase()) && seen.add(row.period.toUpperCase())).slice(0, 8);
+
+      const payload = { ticker, companyName, rows, complete: rows.length >= 2 };
+      reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
+      return res.status(rows.length >= 2 ? 200 : 422).json(payload);
+    } catch (error: any) {
+      console.error(`[quarterly-performance/${ticker}]`, error?.message || error);
+      return res.status(502).json({ error: "Quarterly financial history could not be verified.", ticker, rows: [] });
+    }
+  });
+
   // ── Report extras ─────────────────────────────────────────────────────────────
   // One grounded Gemini call that returns the data behind three UI features:
   //  • Executive Summary card (company one-liner + key defining number)
@@ -2560,7 +2649,7 @@ ${rawText}` }] }],
     if (!payload?.dossier || !isResearchDossier(payload.dossier)) {
       return res.status(400).json({ error: "A valid completed dossier is required." });
     }
-    const quarterlyRows = payload.dossier.quarterlyPerformance?.filter((row) =>
+    const quarterlyRows = (payload.financials?.length ? payload.financials : payload.dossier.quarterlyPerformance)?.filter((row) =>
       [row.revenueCr, row.ebitdaCr, row.ebitdaMarginPct, row.patCr, row.eps]
         .some((value) => value !== null && value !== undefined)) || [];
     const pricePoints = payload.market?.priceHistory?.filter((point) =>

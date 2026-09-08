@@ -46,7 +46,7 @@ for (const company of manifest.slice(0, 5)) {
   try {
     const bmsCompany = bmsCompanies.find((item: any) => String(item.symbol).toUpperCase() === company.ticker);
     const sharedBody = { ticker: company.ticker };
-    const [dossier, peerPayload, enrichment, market] = await Promise.all([
+    const [dossier, peerPayload, financialPayload, enrichment, market] = await Promise.all([
       fetchJson("/api/dossier/generate", {
         ticker: company.ticker,
         company_name: company.company_name,
@@ -54,6 +54,7 @@ for (const company of manifest.slice(0, 5)) {
         information_cutoff: cutoff,
       }),
       fetchJson("/api/pipeline/peer-comparison", sharedBody).catch(() => ({ rows: [] })),
+      fetchJson("/api/pipeline/quarterly-performance", sharedBody).catch(() => ({ rows: [] })),
       fetchJson("/api/pipeline/report-extras", {
         ticker: company.ticker,
         signal: bmsCompany?.momentum_state || bmsCompany?.lifecycle_stage,
@@ -63,6 +64,7 @@ for (const company of manifest.slice(0, 5)) {
     const pdfPayload: DossierPdfPayload = {
       dossier,
       peers: Array.isArray(peerPayload?.rows) ? peerPayload.rows : [],
+      financials: Array.isArray(financialPayload?.rows) ? financialPayload.rows : [],
       enrichment,
       market,
       bms: {
@@ -78,7 +80,7 @@ for (const company of manifest.slice(0, 5)) {
         ] : [],
       },
     };
-    const quarterCount = dossier.quarterlyPerformance?.length || 0;
+    const quarterCount = pdfPayload.financials?.length || dossier.quarterlyPerformance?.length || 0;
     const pricePointCount = market?.priceHistory?.length || 0;
     if (quarterCount < 2 || pricePointCount < 2) {
       throw new Error(`Incomplete chart data: ${quarterCount} quarterly rows and ${pricePointCount} price points. PDF not generated.`);
