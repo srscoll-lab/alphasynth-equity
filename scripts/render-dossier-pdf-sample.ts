@@ -47,7 +47,7 @@ const payload: DossierPdfPayload = {
     qualityControl: { unsupportedClaims: 0, conflicts: 0, humanReviewRequired: true },
   },
   peers: [
-    { ticker: "RADICO", name: "Radico Khaitan Limited", epsTtm: 54.2, pe: 48.1, pb: 9.4, roe: 20.1, roce: 24.7, debtEquity: 0.15, revenueGrowthYoY: 11.8, operatingMargin: 20.7, marketCapCr: 60212, week52Return: 61 },
+    { ticker: "RADICO", name: "Radico Khaitan Limited", isTarget: true, epsTtm: 54.2, epsGrowthYoY: 42, peg: 1.15, pe: 48.1, pb: 9.4, roe: 20.1, roce: 24.7, debtEquity: 0.15, revenueGrowthYoY: 11.8, operatingMargin: 20.7, marketCapCr: 60212, week52Return: 61 },
     { ticker: "UNSP", name: "United Spirits Limited", epsTtm: 32.8, pe: 44.2, pb: 8.1, roe: 18.6, roce: 22.4, debtEquity: 0.08, revenueGrowthYoY: 7.7, operatingMargin: 18.9, marketCapCr: 104375, week52Return: 12.4 },
     { ticker: "TI", name: "Tilaknagar Industries Limited", epsTtm: 9.7, pe: 69.0, pb: 4.53, roe: 9.1, roce: 11.6, revenueGrowthYoY: 15.4, operatingMargin: 9.3, marketCapCr: 13242, week52Return: 16.5 },
     { ticker: "GLOBUSSPR", name: "Globus Spirits Limited", epsTtm: 33.03, pe: 28.6, pb: 2.2, roe: 9.1, roce: 11.6, debtEquity: 0.5, revenueGrowthYoY: 13, operatingMargin: 9.8, marketCapCr: 2877, week52Return: -15.8 },

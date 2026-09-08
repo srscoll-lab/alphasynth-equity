@@ -1954,6 +1954,8 @@ Return the independent BMS validation as JSON.`;
           - exact NSE ticker symbol (no exchange suffix)
           - short company name
           - EPS (trailing twelve months), plain INR number
+          - EPS growth YoY %, plain number
+          - PEG ratio, if directly published; otherwise omit it
           - P/E ratio (trailing twelve months), plain number
           - Price-to-Book ratio, plain number
           - ROE % (return on equity), plain number
@@ -1975,7 +1977,7 @@ Return the independent BMS validation as JSON.`;
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text:
 `Convert the peer data below into JSON for subject "${cleanTicker}" (${subjectName}).
-Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; epsTtm/pe/pb/roe/roce/debtEquity/revenueGrowthYoY/operatingMargin/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
+Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; epsTtm/epsGrowthYoY/peg/pe/pb/roe/roce/debtEquity/revenueGrowthYoY/operatingMargin/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
 
 Source data:
 ${rawText}` }] }],
@@ -1993,6 +1995,8 @@ ${rawText}` }] }],
                     ticker: { type: "STRING" },
                     name: { type: "STRING" },
                     epsTtm: { type: "NUMBER" },
+                    epsGrowthYoY: { type: "NUMBER" },
+                    peg: { type: "NUMBER" },
                     pe: { type: "NUMBER" },
                     pb: { type: "NUMBER" },
                     roe: { type: "NUMBER" },
@@ -2019,6 +2023,8 @@ ${rawText}` }] }],
           ticker: String(c.ticker || c.symbol || "").toUpperCase().replace(/[^A-Z0-9&-]/g, ""),
           name: c.name || String(c.ticker || "").toUpperCase(),
           epsTtm: num(c.epsTtm ?? c.eps),
+          epsGrowthYoY: pctNorm(c.epsGrowthYoY ?? c.epsGrowth),
+          peg: positiveNum(c.peg ?? c.pegRatio),
           pe: positiveNum(c.pe ?? c.peRatio),
           pb: positiveNum(c.pb ?? c.priceToBook),
           roe: pctNorm(c.roe ?? c.returnOnEquity),
@@ -2033,7 +2039,7 @@ ${rawText}` }] }],
 
       // Force the subject to be present and first, flagged as the target.
       let target = companies.find((c: any) => c.ticker === cleanTicker);
-      if (!target) { target = { ticker: cleanTicker, name: subjectName, epsTtm: null, pe: null, pb: null, roe: null, roce: null, debtEquity: null, revenueGrowthYoY: null, operatingMargin: null, marketCapCr: null, isTarget: true }; }
+      if (!target) { target = { ticker: cleanTicker, name: subjectName, epsTtm: null, epsGrowthYoY: null, peg: null, pe: null, pb: null, roe: null, roce: null, debtEquity: null, revenueGrowthYoY: null, operatingMargin: null, marketCapCr: null, isTarget: true }; }
       target.isTarget = true;
       if (target.name === cleanTicker) target.name = subjectName;
       const ordered = [target, ...companies.filter((c: any) => c.ticker !== cleanTicker)].slice(0, 5);

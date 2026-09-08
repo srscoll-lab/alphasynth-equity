@@ -4,7 +4,10 @@ import type { ResearchDossier } from "./dossier";
 export type DossierPdfPeer = {
   ticker: string;
   name?: string | null;
+  isTarget?: boolean;
   epsTtm?: number | null;
+  epsGrowthYoY?: number | null;
+  peg?: number | null;
   pe?: number | null;
   pb?: number | null;
   roe?: number | null;
@@ -268,7 +271,7 @@ class Report {
   }
 
   marginAndEpsTrend(rows: Array<{ period: string; margin: number | null; eps: number | null }>) {
-    this.ensure(155);
+    this.ensure(185);
     this.heading("Margin and earnings-per-share trend");
     const valid = rows.slice().reverse();
     const panels = [
@@ -281,12 +284,12 @@ class Report {
       const x = this.margin + panelIndex * (panelWidth + 18);
       const numbers = panel.values.filter((value): value is number => value != null && Number.isFinite(value));
       const maximum = Math.max(1, ...numbers) * 1.12;
-      this.doc.roundedRect(x, top, panelWidth, 92, 5).fill(C.pale);
+      this.doc.roundedRect(x, top, panelWidth, 118, 5).fill(C.pale);
       this.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text(panel.label, x + 10, top + 9);
       const chartX = x + 12;
       const chartY = top + 26;
       const chartWidth = panelWidth - 24;
-      const chartHeight = 43;
+      const chartHeight = 67;
       this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(chartX, chartY + chartHeight).lineTo(chartX + chartWidth, chartY + chartHeight).stroke();
       panel.values.forEach((value, index) => {
         if (value == null) return;
@@ -298,7 +301,7 @@ class Report {
         this.doc.font("Helvetica").fontSize(5.6).fillColor(C.slate).text(clean(valid[index].period), center - 28, chartY + chartHeight + 6, { width: 56, align: "center" });
       });
     });
-    this.y = top + 112;
+    this.y = top + 138;
   }
 
   peerPositionChart(peers: DossierPdfPeer[]) {
@@ -440,8 +443,20 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     : "Verified promoter names were not available in the supplemental record.", { size: 8.5, color: C.slate });
   r.heading("Company snapshot");
   dossier.sections.snapshot.filter((claim) => claim.status === "supported").slice(0, 4)
-    .forEach((claim) => r.paragraph(`${claim.text} [${claim.sourceIds.join(", ")}]`, { indent: 8 }));
+    .forEach((claim) => r.paragraph(claim.text, { indent: 8 }));
   r.heading("Research snapshot");
+  const quarterRows = dossier.quarterlyPerformance || [];
+  const latestPat = quarterRows[0]?.patCr;
+  const previousPat = quarterRows[1]?.patCr;
+  const patGrowth = latestPat != null && previousPat != null && previousPat !== 0
+    ? (latestPat - previousPat) / Math.abs(previousPat) * 100
+    : null;
+  const targetPeer = peers.find((peer) => peer.isTarget) || peers[0];
+  const calculatedPeg = targetPeer?.peg != null
+    ? targetPeer.peg
+    : targetPeer?.pe != null && targetPeer?.epsGrowthYoY != null && targetPeer.epsGrowthYoY > 0
+      ? targetPeer.pe / targetPeer.epsGrowthYoY
+      : null;
   const panelY = r.y;
   const panelWidth = (r.width - 12) / 2;
   r.doc.roundedRect(r.margin, panelY, panelWidth, 68, 5).fill(C.greenPale);
@@ -450,7 +465,14 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.green).text(clean(enrichment?.executiveSummary?.keyNumber || "Verified figure unavailable"), r.margin + 12, panelY + 29, { width: panelWidth - 24 });
   r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PRINCIPAL WATCH ITEM", r.margin + panelWidth + 24, panelY + 12);
   r.doc.font("Helvetica-Bold").fontSize(10).fillColor(C.navy).text(clean(enrichment?.executiveSummary?.biggestRisk || "No supplemental risk summary available"), r.margin + panelWidth + 24, panelY + 28, { width: panelWidth - 24, height: 31, ellipsis: true });
-  r.y = panelY + 82;
+  const metricY = panelY + 78;
+  r.doc.roundedRect(r.margin, metricY, panelWidth, 54, 5).fill(C.pale);
+  r.doc.roundedRect(r.margin + panelWidth + 12, metricY, panelWidth, 54, 5).fill(C.greenPale);
+  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PAT GROWTH - LATEST VS PRIOR QUARTER", r.margin + 12, metricY + 10);
+  r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.navy).text(patGrowth == null ? "N/A" : `${fmt(patGrowth)}%`, r.margin + 12, metricY + 27);
+  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PEG - P/E DIVIDED BY EPS YOY GROWTH", r.margin + panelWidth + 24, metricY + 10);
+  r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.green).text(calculatedPeg == null ? "N/A" : fmt(calculatedPeg), r.margin + panelWidth + 24, metricY + 27);
+  r.y = metricY + 66;
   r.paragraph("The snapshot is intentionally concise. Detailed evidence, financial comparisons and source records follow on the subsequent pages.", { size: 8, color: C.slate });
 
   r.title("Momentum anatomy", "The five bars are normalized change scores. Fifty is the neutral reference point; these are not portfolio weights.");
@@ -472,8 +494,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.financialTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr, pat: quarter.patCr })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", "EBITDA Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     (dossier.quarterlyPerformance || []).map((q) => [`${q.period} [${q.sourceIds.join(", ")}]`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
+  r.y += 9;
   r.marginAndEpsTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct, eps: quarter.eps })));
-  r.paragraph("Peer figures are supplemental market comparisons and may use a different reporting basis or update time from the company's official quarterly figures.", { size: 8, color: C.slate });
   r.newPage(true);
   r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
     peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));

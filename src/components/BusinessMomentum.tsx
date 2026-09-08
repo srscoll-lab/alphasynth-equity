@@ -65,6 +65,8 @@ type DossierPeerRow = {
   name: string;
   isTarget: boolean;
   epsTtm: number | null;
+  epsGrowthYoY?: number | null;
+  peg?: number | null;
   pe: number | null;
   pb: number | null;
   roe: number | null;
