@@ -87,7 +87,7 @@ type DossierEnrichment = {
   publicCommentary?: {
     asOf?: string | null;
     summary?: string | null;
-    viewpoints?: Array<{ sourceName: string; publishedAt?: string | null; stance: "positive" | "cautious" | "mixed" | "negative"; summary: string; url: string }>;
+    viewpoints?: Array<{ sourceName: string; sourceType?: "publication" | "analyst" | "investor_forum" | "social_media"; publishedAt?: string | null; stance: "positive" | "cautious" | "mixed" | "negative"; summary: string; url: string }>;
   } | null;
   shareholdingAsOf?: string | null;
   shareholding?: Record<string, { value: number | null; trend: "up" | "down" | "stable" | null }>;

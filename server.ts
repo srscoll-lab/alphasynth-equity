@@ -2116,7 +2116,7 @@ ${rawText}` }] }],
         7. shareholdingAsOf: the latest disclosed quarter/date for the ownership figures.
         8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
         9. sourceUrls: up to five direct URLs actually used for company history, promoter identity or shareholding.
-        10. publicCommentary: a balanced summary of current, dated PUBLIC MARKET OPINION from up to five traceable sources such as ValuePickr, reputable financial publications, analyst commentary or named investment newsletters. For every viewpoint return sourceName, publishedAt, stance (positive/cautious/mixed/negative), a neutral paraphrase of at most 45 words, and the direct URL. Do not treat these opinions as company facts. Exclude anonymous claims that cannot be traced to a dated page.
+        10. publicCommentary: a balanced summary of current, dated PUBLIC MARKET OPINION from up to five traceable sources. Include up to two professional publication/analyst views and up to two clearly separated investor-forum or social-media views (for example ValuePickr, Reddit or Stocktwits) when traceable. For every viewpoint return sourceName, sourceType (publication/analyst/investor_forum/social_media), publishedAt, stance (positive/cautious/mixed/negative), a neutral paraphrase of at most 45 words, and the direct URL. Do not treat opinions as company facts. Do not repeat allegations or present user-generated claims as verified. Exclude posts without a stable, dated page.
         Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -2168,6 +2168,7 @@ ${rawText}` }] }],
                       type: "OBJECT",
                       properties: {
                         sourceName: { type: "STRING" },
+                        sourceType: { type: "STRING" },
                         publishedAt: { type: "STRING" },
                         stance: { type: "STRING" },
                         summary: { type: "STRING" },
@@ -2225,6 +2226,7 @@ ${rawText}` }] }],
               viewpoints: Array.isArray(parsed.publicCommentary.viewpoints)
                 ? parsed.publicCommentary.viewpoints.filter((item: any) => item && typeof item.url === "string" && /^https:\/\//i.test(item.url) && typeof item.summary === "string").slice(0, 5).map((item: any) => ({
                     sourceName: String(item.sourceName || "Public commentary").slice(0, 80),
+                    sourceType: ["publication", "analyst", "investor_forum", "social_media"].includes(String(item.sourceType).toLowerCase()) ? String(item.sourceType).toLowerCase() : "publication",
                     publishedAt: typeof item.publishedAt === "string" ? item.publishedAt.slice(0, 40) : null,
                     stance: ["positive", "cautious", "mixed", "negative"].includes(String(item.stance).toLowerCase()) ? String(item.stance).toLowerCase() : "mixed",
                     summary: item.summary.slice(0, 320),

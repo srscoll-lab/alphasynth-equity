@@ -3,6 +3,7 @@ import type { ResearchDossier } from "./dossier";
 
 export type DossierPdfPeer = {
   ticker: string;
+  name?: string | null;
   epsTtm?: number | null;
   pe?: number | null;
   pb?: number | null;
@@ -31,6 +32,7 @@ export type DossierPdfPayload = {
       summary?: string | null;
       viewpoints?: Array<{
         sourceName: string;
+        sourceType?: "publication" | "analyst" | "investor_forum" | "social_media";
         publishedAt?: string | null;
         stance: "positive" | "cautious" | "mixed" | "negative";
         summary: string;
@@ -307,7 +309,7 @@ class Report {
     const chartX = this.margin + 46;
     const chartY = this.y + 9;
     const chartWidth = this.width - 58;
-    const chartHeight = 118;
+    const chartHeight = 105;
     const xs = valid.map((peer) => Number(peer.revenueGrowthYoY));
     const ys = valid.map((peer) => Number(peer.operatingMargin));
     const xMin = Math.min(...xs) - 2;
@@ -319,6 +321,9 @@ class Report {
       const gy = chartY + chartHeight * i / 4;
       this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(gx, chartY).lineTo(gx, chartY + chartHeight).stroke();
       this.doc.moveTo(chartX, gy).lineTo(chartX + chartWidth, gy).stroke();
+      this.doc.font("Helvetica").fontSize(5.8).fillColor(C.slate)
+        .text(`${(xMin + (xMax - xMin) * i / 4).toFixed(1)}%`, gx - 20, chartY + chartHeight + 4, { width: 40, align: "center", lineBreak: false })
+        .text(`${(yMax - (yMax - yMin) * i / 4).toFixed(1)}%`, this.margin + 4, gy - 3, { width: 36, align: "right", lineBreak: false });
     }
     valid.forEach((peer, index) => {
       const x = chartX + (Number(peer.revenueGrowthYoY) - xMin) / Math.max(1, xMax - xMin) * chartWidth;
@@ -329,10 +334,21 @@ class Report {
         .text(clean(peer.ticker), x + 6, y - 4, { width: 70, lineBreak: false });
     });
     this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate)
-      .text("REVENUE GROWTH (YOY) ->", chartX, chartY + chartHeight + 14, { width: chartWidth, align: "center" });
+      .text("REVENUE GROWTH (YOY) ->", chartX, chartY + chartHeight + 18, { width: chartWidth, align: "center" });
     this.doc.save().rotate(-90, { origin: [this.margin + 9, chartY + chartHeight / 2] })
       .text("OPERATING MARGIN ->", this.margin - 48, chartY + chartHeight / 2 - 4, { width: 118, align: "center", lineBreak: false }).restore();
-    this.y = chartY + chartHeight + 38;
+    const legendY = chartY + chartHeight + 37;
+    this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate).text("PEER KEY", this.margin, legendY);
+    peers.slice(0, 6).forEach((peer, index) => {
+      const column = index % 2;
+      const row = Math.floor(index / 2);
+      const x = this.margin + column * (this.width / 2);
+      this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.navy)
+        .text(clean(peer.ticker), x, legendY + 13 + row * 13, { width: 62, lineBreak: false });
+      this.doc.font("Helvetica").fontSize(6.5).fillColor(C.ink)
+        .text(clean(peer.name || "Company name unavailable"), x + 58, legendY + 13 + row * 13, { width: this.width / 2 - 62, lineBreak: false, ellipsis: true });
+    });
+    this.y = legendY + 58;
   }
 
   table(title: string, headers: string[], widths: number[], rows: string[][]) {
@@ -483,19 +499,40 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   if (publicCommentary?.viewpoints?.length) {
     r.heading("Public market commentary");
     if (publicCommentary.summary) r.paragraph(publicCommentary.summary, { size: 8.5, color: C.slate });
-    publicCommentary.viewpoints.slice(0, 3).forEach((viewpoint, index) => {
-      r.ensure(67);
-      const top = r.y + 3;
+    const professionalViews = publicCommentary.viewpoints.filter((viewpoint) => !["investor_forum", "social_media"].includes(viewpoint.sourceType || "publication")).slice(0, 2);
+    const opinionGap = 10;
+    const opinionWidth = (r.width - opinionGap) / 2;
+    r.ensure(83);
+    const professionalTop = r.y + 3;
+    professionalViews.forEach((viewpoint, index) => {
+      const top = professionalTop;
+      const x = r.margin + index * (opinionWidth + opinionGap);
       const accent = viewpoint.stance === "positive" ? C.green : viewpoint.stance === "negative" ? C.navy : C.gold;
-      r.doc.roundedRect(r.margin, top, r.width, 56, 5).fill(C.pale);
-      r.doc.rect(r.margin, top, 4, 56).fill(accent);
-      r.doc.font("Helvetica-Bold").fontSize(7).fillColor(accent)
-        .text(`${index + 1}. ${clean(viewpoint.sourceName).toUpperCase()}  /  ${clean(viewpoint.stance).toUpperCase()}${viewpoint.publishedAt ? `  /  ${clean(viewpoint.publishedAt)}` : ""}`, r.margin + 13, top + 9, { width: r.width - 26 });
-      r.doc.font("Helvetica").fontSize(8).fillColor(C.ink)
-        .text(clean(viewpoint.summary), r.margin + 13, top + 24, { width: r.width - 26, height: 25, ellipsis: true, lineGap: 1 });
-      r.y = top + 64;
+      r.doc.roundedRect(x, top, opinionWidth, 70, 5).fill(C.pale);
+      r.doc.rect(x, top, 4, 70).fill(accent);
+      r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(accent)
+        .text(`${clean(viewpoint.sourceName).toUpperCase()} / ${clean(viewpoint.stance).toUpperCase()}${viewpoint.publishedAt ? ` / ${clean(viewpoint.publishedAt)}` : ""}`, x + 12, top + 9, { width: opinionWidth - 22, height: 16, ellipsis: true });
+      r.doc.font("Helvetica").fontSize(7.2).fillColor(C.ink)
+        .text(clean(viewpoint.summary), x + 12, top + 27, { width: opinionWidth - 22, height: 35, ellipsis: true, lineGap: 1 });
     });
-    r.paragraph("These are dated, paraphrased external opinions. Full links appear in the source register.", { size: 7.5, color: C.slate });
+    r.y = professionalTop + 77;
+    const socialViews = publicCommentary.viewpoints.filter((viewpoint) => ["investor_forum", "social_media"].includes(viewpoint.sourceType || "")).slice(0, 2);
+    if (socialViews.length) {
+      r.heading("Investor-forum and social-media pulse");
+      r.ensure(75);
+      const socialTop = r.y + 2;
+      socialViews.forEach((viewpoint, index) => {
+        const x = r.margin + index * (opinionWidth + opinionGap);
+        r.doc.roundedRect(x, socialTop, opinionWidth, 62, 5).fill(C.greenPale);
+        r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.navy)
+          .text(`${clean(viewpoint.sourceName).toUpperCase()}${viewpoint.publishedAt ? ` / ${clean(viewpoint.publishedAt)}` : ""}`, x + 11, socialTop + 8, { width: opinionWidth - 22, height: 15, ellipsis: true });
+        r.doc.font("Helvetica").fontSize(7).fillColor(C.ink)
+          .text(clean(viewpoint.summary), x + 11, socialTop + 24, { width: opinionWidth - 22, height: 31, ellipsis: true, lineGap: 1 });
+      });
+      r.y = socialTop + 68;
+      r.paragraph("CAUTION: Social-media and investor-forum posts are user-generated opinion. Identity, holdings, expertise and factual accuracy may be unknown. Treat them only as sentiment leads and independently verify every material assertion.", { size: 7.3, color: C.slate });
+    }
+    r.paragraph("All commentary is dated and paraphrased. Full links appear in the source register.", { size: 7.5, color: C.slate });
   }
 
   r.title("Sources and quality control");
@@ -532,7 +569,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     r.heading("Public-commentary sources");
     publicCommentary.viewpoints.slice(0, 5).forEach((viewpoint, index) => {
       r.paragraph(`${index + 1}. ${viewpoint.sourceName}${viewpoint.publishedAt ? ` - ${viewpoint.publishedAt}` : ""}`, { size: 8, bold: true });
-      r.paragraph(`${viewpoint.stance.toUpperCase()} viewpoint - ${viewpoint.url}`, { size: 7, color: C.navy, indent: 8 });
+      r.paragraph(`${clean(viewpoint.sourceType || "publication").replaceAll("_", " ").toUpperCase()} / ${viewpoint.stance.toUpperCase()} viewpoint - ${viewpoint.url}`, { size: 7, color: C.navy, indent: 8 });
     });
   }
   r.heading("Quality-control summary");

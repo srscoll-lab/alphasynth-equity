@@ -47,11 +47,11 @@ const payload: DossierPdfPayload = {
     qualityControl: { unsupportedClaims: 0, conflicts: 0, humanReviewRequired: true },
   },
   peers: [
-    { ticker: "RADICO", epsTtm: 54.2, pe: 48.1, pb: 9.4, roe: 20.1, roce: 24.7, debtEquity: 0.15, revenueGrowthYoY: 11.8, operatingMargin: 20.7, marketCapCr: 60212, week52Return: 61 },
-    { ticker: "UNSP", epsTtm: 32.8, pe: 44.2, pb: 8.1, roe: 18.6, roce: 22.4, debtEquity: 0.08, revenueGrowthYoY: 7.7, operatingMargin: 18.9, marketCapCr: 104375, week52Return: 12.4 },
-    { ticker: "TI", epsTtm: 9.7, pe: 69.0, pb: 4.53, roe: 9.1, roce: 11.6, revenueGrowthYoY: 15.4, operatingMargin: 9.3, marketCapCr: 13242, week52Return: 16.5 },
-    { ticker: "GLOBUSSPR", epsTtm: 33.03, pe: 28.6, pb: 2.2, roe: 9.1, roce: 11.6, debtEquity: 0.5, revenueGrowthYoY: 13, operatingMargin: 9.8, marketCapCr: 2877, week52Return: -15.8 },
-    { ticker: "ABDL", epsTtm: 7.9, pe: 75.2, pb: 10.1, roe: 14.3, roce: 18.4, marketCapCr: 16783, week52Return: 17.6 },
+    { ticker: "RADICO", name: "Radico Khaitan Limited", epsTtm: 54.2, pe: 48.1, pb: 9.4, roe: 20.1, roce: 24.7, debtEquity: 0.15, revenueGrowthYoY: 11.8, operatingMargin: 20.7, marketCapCr: 60212, week52Return: 61 },
+    { ticker: "UNSP", name: "United Spirits Limited", epsTtm: 32.8, pe: 44.2, pb: 8.1, roe: 18.6, roce: 22.4, debtEquity: 0.08, revenueGrowthYoY: 7.7, operatingMargin: 18.9, marketCapCr: 104375, week52Return: 12.4 },
+    { ticker: "TI", name: "Tilaknagar Industries Limited", epsTtm: 9.7, pe: 69.0, pb: 4.53, roe: 9.1, roce: 11.6, revenueGrowthYoY: 15.4, operatingMargin: 9.3, marketCapCr: 13242, week52Return: 16.5 },
+    { ticker: "GLOBUSSPR", name: "Globus Spirits Limited", epsTtm: 33.03, pe: 28.6, pb: 2.2, roe: 9.1, roce: 11.6, debtEquity: 0.5, revenueGrowthYoY: 13, operatingMargin: 9.8, marketCapCr: 2877, week52Return: -15.8 },
+    { ticker: "ABDL", name: "Allied Blenders and Distillers Limited", epsTtm: 7.9, pe: 75.2, pb: 10.1, roe: 14.3, roce: 18.4, marketCapCr: 16783, week52Return: 17.6 },
   ],
   enrichment: {
     executiveSummary: {
@@ -65,9 +65,10 @@ const payload: DossierPdfPayload = {
       asOf: "7 September 2026",
       summary: "Recent public analysis broadly recognises the strength of premiumisation and deleveraging, while repeatedly questioning whether the valuation already discounts much of that improvement.",
       viewpoints: [
-        { sourceName: "MarketSmith India", publishedAt: "7 July 2026", stance: "mixed", summary: "The investment newsletter describes simultaneous momentum in premium volumes, luxury growth and deleveraging, but notes that the elevated valuation requires sustained execution.", url: "https://marketsmithin.substack.com/p/radico-khaitan-the-compounding-thesis" },
-        { sourceName: "Business Standard / Jefferies", publishedAt: "29 June 2026", stance: "positive", summary: "Reported analyst commentary highlights a long premiumisation runway and strong brand execution, while acknowledging that the shares command a premium valuation.", url: "https://www.business-standard.com/markets/news/jefferies-sees-premium-tailwind-intact-in-alcobev-prefers-radico-abdl-126062900329_1.html" },
-        { sourceName: "QuarterMark Research", publishedAt: "29 July 2026", stance: "cautious", summary: "The quarterly review credits premium mix for stronger growth and margins, but says new investment must still convert into repeat consumption and profitable scale.", url: "https://quartermark.in/companies/RADICO/earnings-calls/Q1-FY27/earnings" },
+        { sourceName: "MarketSmith India", sourceType: "publication", publishedAt: "7 July 2026", stance: "mixed", summary: "The investment newsletter describes simultaneous momentum in premium volumes, luxury growth and deleveraging, but notes that the elevated valuation requires sustained execution.", url: "https://marketsmithin.substack.com/p/radico-khaitan-the-compounding-thesis" },
+        { sourceName: "Business Standard / Jefferies", sourceType: "analyst", publishedAt: "29 June 2026", stance: "positive", summary: "Reported analyst commentary highlights a long premiumisation runway and strong brand execution, while acknowledging that the shares command a premium valuation.", url: "https://www.business-standard.com/markets/news/jefferies-sees-premium-tailwind-intact-in-alcobev-prefers-radico-abdl-126062900329_1.html" },
+        { sourceName: "ValuePickr forum", sourceType: "investor_forum", publishedAt: "12 May 2026", stance: "positive", summary: "A forum contributor focused on management's margin-expansion guidance and improving regional market share, reflecting optimism that still requires verification against official filings.", url: "https://forum.valuepickr.com/t/radico-khaitan-alcoholic-child/3062?page=7" },
+        { sourceName: "Reddit / IndiaStockMarket", sourceType: "social_media", publishedAt: "4 September 2026", stance: "cautious", summary: "A retail discussion characterised the prior share-price run as strong but urged investors to reassess risk-reward and avoid chasing momentum or concentrating exposure.", url: "https://www.reddit.com/r/indiaStockMarket/comments/1w6y0lh/thoughts_on_this_stock/" },
       ],
     },
     shareholdingAsOf: "30 June 2026",
