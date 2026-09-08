@@ -59,6 +59,11 @@ const payload: DossierPdfPayload = {
       companyHistory: "The business traces its roots to Rampur Distillery, established in 1943. It evolved from a bulk-spirits producer into a branded portfolio company and adopted the Radico Khaitan name in 1999. Its current strategy emphasises premium Indian spirits, brand-led growth and selective capacity expansion.",
     },
     promoterNames: ["Lalit Khaitan", "Abhishek Khaitan", "Amar Sinha"],
+    companyImage: {
+      url: "https://radicokhaitan.com/wp-content/uploads/2019/05/manufacturing.jpg",
+      caption: "Manufacturing at Radico Khaitan. Official company image; source: radicokhaitan.com/key-verticals/manufacturing/.",
+      sourceUrl: "https://radicokhaitan.com/key-verticals/manufacturing/",
+    },
     shareholdingAsOf: "30 June 2026",
     shareholding: { promoter: { value: 40.25 }, fii: { value: 18.1 }, dii: { value: 9.8 }, mutualFund: { value: 7.4 }, retail: { value: 24.45 } },
   },
@@ -70,6 +75,13 @@ const payload: DossierPdfPayload = {
     { label: "Earnings", score: 87 }, { label: "Economics", score: 76 }, { label: "Execution", score: 81 }, { label: "Balance sheet", score: 72 }, { label: "Management", score: 79 },
   ] },
 };
+
+try {
+  const imageResponse = await fetch(payload.enrichment?.companyImage?.url || "");
+  if (imageResponse.ok) payload.companyImageData = Buffer.from(await imageResponse.arrayBuffer());
+} catch {
+  payload.companyImageData = null;
+}
 
 const output = path.resolve("output/pdf/AlphaSynth-Professional-Dossier-Sample.pdf");
 await fs.mkdir(path.dirname(output), { recursive: true });

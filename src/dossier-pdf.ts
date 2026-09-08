@@ -26,10 +26,12 @@ export type DossierPdfPayload = {
       biggestRisk?: string | null;
     };
     promoterNames?: string[];
+    companyImage?: { url?: string | null; caption?: string | null; sourceUrl?: string | null } | null;
     shareholdingAsOf?: string | null;
     shareholding?: Record<string, { value?: number | null; trend?: string | null }>;
     sourceUrls?: string[];
   } | null;
+  companyImageData?: Buffer | null;
   market?: {
     price?: number | null;
     asOf?: string | null;
@@ -300,6 +302,41 @@ class Report {
         .text(`AlphaSynth Intelligence  |  ${clean(symbol)}  |  Page ${page + 1} of ${pages.count}`, this.margin, this.doc.page.height - 29, { width: this.width, align: "center", lineBreak: false });
     }
   }
+
+  companyVisual(imageData: Buffer | null | undefined, caption: string | null | undefined, dossier: ResearchDossier) {
+    this.ensure(190);
+    this.heading("Company visual");
+    const boxY = this.y;
+    const boxHeight = 142;
+    this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).fill(C.pale);
+    if (imageData?.length) {
+      try {
+        this.doc.save();
+        this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).clip();
+        this.doc.image(imageData, this.margin, boxY, { cover: [this.width, boxHeight], align: "center", valign: "center" });
+        this.doc.restore();
+      } catch {
+        this.doc.restore();
+        this.identityFallback(boxY, boxHeight, dossier);
+      }
+    } else {
+      this.identityFallback(boxY, boxHeight, dossier);
+    }
+    this.y = boxY + boxHeight + 7;
+    this.paragraph(caption || `Official company identity panel for ${dossier.company.name}.`, { size: 7, color: C.slate });
+  }
+
+  identityFallback(boxY: number, boxHeight: number, dossier: ResearchDossier) {
+    this.doc.roundedRect(this.margin, boxY, this.width, boxHeight, 6).fill(C.navy);
+    this.doc.font("Helvetica-Bold").fontSize(8).fillColor(C.gold)
+      .text("COMPANY IDENTITY", this.margin + 18, boxY + 24);
+    this.doc.font("Helvetica-Bold").fontSize(24).fillColor(C.white)
+      .text(clean(dossier.company.symbol), this.margin + 18, boxY + 44);
+    this.doc.font("Helvetica").fontSize(10).fillColor("#C8D0DF")
+      .text(`${clean(dossier.company.sector)}  /  ${clean(dossier.company.exchange)}`, this.margin + 18, boxY + 78);
+    this.doc.font("Helvetica").fontSize(8).fillColor("#C8D0DF")
+      .text(`Official domains: ${dossier.company.officialDomains.join(", ")}`, this.margin + 18, boxY + 102, { width: this.width - 36 });
+  }
 }
 
 export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buffer> {
@@ -344,6 +381,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.heading("Company snapshot");
   dossier.sections.snapshot.filter((claim) => claim.status === "supported").slice(0, 4)
     .forEach((claim) => r.paragraph(`${claim.text} [${claim.sourceIds.join(", ")}]`, { indent: 8 }));
+  r.companyVisual(payload.companyImageData, enrichment?.companyImage?.caption, dossier);
 
   r.title("Momentum anatomy", "The five bars are normalized change scores. Fifty is the neutral reference point; these are not portfolio weights.");
   r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,

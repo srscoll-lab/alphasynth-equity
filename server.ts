@@ -2116,6 +2116,7 @@ ${rawText}` }] }],
         7. shareholdingAsOf: the latest disclosed quarter/date for the ownership figures.
         8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
         9. sourceUrls: up to five direct URLs actually used for company history, promoter identity or shareholding.
+        10. companyImage: if available, one direct HTTPS URL for a landscape factory, facility or representative product-portfolio image hosted on the company's OFFICIAL domain, plus a factual caption and the official webpage URL containing it. Never use a search-result or third-party image.
         Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
       const searchResult = await ai.models.generateContent({
         model: "gemini-2.5-flash",
@@ -2156,6 +2157,14 @@ ${rawText}` }] }],
               },
               shareholdingAsOf: { type: "STRING" },
               sourceUrls: { type: "ARRAY", items: { type: "STRING" } },
+              companyImage: {
+                type: "OBJECT",
+                properties: {
+                  url: { type: "STRING" },
+                  caption: { type: "STRING" },
+                  sourceUrl: { type: "STRING" },
+                },
+              },
             },
           },
         },
@@ -2197,6 +2206,13 @@ ${rawText}` }] }],
         sourceUrls: Array.isArray(parsed.sourceUrls)
           ? parsed.sourceUrls.filter((url: any) => typeof url === "string" && /^https:\/\//i.test(url)).slice(0, 5)
           : [],
+        companyImage: parsed.companyImage && typeof parsed.companyImage === "object"
+          ? {
+              url: typeof parsed.companyImage.url === "string" ? parsed.companyImage.url : null,
+              caption: typeof parsed.companyImage.caption === "string" ? parsed.companyImage.caption.slice(0, 180) : null,
+              sourceUrl: typeof parsed.companyImage.sourceUrl === "string" ? parsed.companyImage.sourceUrl : null,
+            }
+          : null,
       };
       reportCache.set(cacheKey, { data: payload, timestamp: Date.now() });
       console.log(`[CACHE] EXTRAS WRITTEN — ${cleanTicker}`);
@@ -2517,7 +2533,29 @@ ${rawText}` }] }],
       return res.status(400).json({ error: "A valid completed dossier is required." });
     }
     try {
-      const pdf = await renderDossierPdf(payload);
+      let companyImageData: Buffer | null = null;
+      const imageUrl = payload.enrichment?.companyImage?.url;
+      if (imageUrl) {
+        try {
+          const parsed = new URL(imageUrl);
+          const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+          const official = payload.dossier.company.officialDomains.some((domain) => {
+            const allowed = domain.toLowerCase().replace(/^www\./, "");
+            return host === allowed || host.endsWith(`.${allowed}`);
+          });
+          if (parsed.protocol === "https:" && official) {
+            const imageResponse = await fetch(parsed, { signal: AbortSignal.timeout(8000) });
+            const contentType = imageResponse.headers.get("content-type") || "";
+            if (imageResponse.ok && /^image\/(jpeg|png)/i.test(contentType)) {
+              const bytes = Buffer.from(await imageResponse.arrayBuffer());
+              if (bytes.length <= 4 * 1024 * 1024) companyImageData = bytes;
+            }
+          }
+        } catch (error: any) {
+          console.warn("[dossier] official image unavailable; using identity panel:", error?.message || error);
+        }
+      }
+      const pdf = await renderDossierPdf({ ...payload, companyImageData });
       const symbol = payload.dossier.company.symbol.replace(/[^A-Z0-9&.-]/gi, "");
       const date = payload.dossier.generatedAt.slice(0, 10);
       res.setHeader("Content-Type", "application/pdf");

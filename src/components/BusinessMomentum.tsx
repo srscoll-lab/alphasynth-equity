@@ -84,6 +84,7 @@ type DossierEnrichment = {
     biggestRisk?: string | null;
   };
   promoterNames?: string[];
+  companyImage?: { url?: string | null; caption?: string | null; sourceUrl?: string | null } | null;
   shareholdingAsOf?: string | null;
   shareholding?: Record<string, { value: number | null; trend: "up" | "down" | "stable" | null }>;
   sourceUrls?: string[];
