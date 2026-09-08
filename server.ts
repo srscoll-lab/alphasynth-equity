@@ -14,6 +14,40 @@ dotenv.config();
 
 const app = express();
 const PORT: number = Number(process.env.PORT) || 3005;
+const SIGNAL_TRACKER_BUCKET = process.env.SIGNAL_TRACKER_BUCKET || "";
+const SIGNAL_TRACKER_OBJECT = process.env.SIGNAL_TRACKER_OBJECT || "cohort-001/current.json";
+const SIGNAL_TRACKER_CACHE_MS = 60_000;
+let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
+
+async function readCloudForwardValidation(): Promise<any> {
+  if (!SIGNAL_TRACKER_BUCKET) throw new Error("SIGNAL_TRACKER_BUCKET is not configured");
+  if (signalTrackerCache && signalTrackerCache.expiresAt > Date.now()) {
+    return signalTrackerCache.payload;
+  }
+
+  const tokenResponse = await fetch(
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+    { headers: { "Metadata-Flavor": "Google" } },
+  );
+  if (!tokenResponse.ok) throw new Error(`Metadata token request failed: ${tokenResponse.status}`);
+  const tokenPayload = await tokenResponse.json() as { access_token?: string };
+  if (!tokenPayload.access_token) throw new Error("Metadata token response did not contain an access token");
+
+  const objectName = encodeURIComponent(SIGNAL_TRACKER_OBJECT);
+  const objectResponse = await fetch(
+    `https://storage.googleapis.com/download/storage/v1/b/${encodeURIComponent(SIGNAL_TRACKER_BUCKET)}/o/${objectName}?alt=media`,
+    { headers: { Authorization: `Bearer ${tokenPayload.access_token}` } },
+  );
+  if (!objectResponse.ok) throw new Error(`Forward-validation object request failed: ${objectResponse.status}`);
+  const payload = await objectResponse.json();
+  signalTrackerCache = { expiresAt: Date.now() + SIGNAL_TRACKER_CACHE_MS, payload };
+  return payload;
+}
+
+function readFrozenForwardValidation(): any {
+  const trackerPath = path.join(process.cwd(), "src", "data", "signalTrackerCohort001.json");
+  return JSON.parse(fs.readFileSync(trackerPath, "utf-8"));
+}
 
 let resend: Resend | null = null;
 let firecrawl: Firecrawl | null = null;
@@ -623,6 +657,23 @@ async function startServer() {
       genaiConfigured: !!process.env.GOOGLE_APPLICATION_CREDENTIALS,
       mailerConfigured: !!process.env.RESEND_API_KEY
     });
+  });
+
+  // The neutral path avoids browser privacy filters that block URLs containing
+  // "tracker", while preserving the frozen cohort and cloud-backed update flow.
+  app.get("/api/forward-validation", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const payload = await readCloudForwardValidation();
+      res.json({ ...payload, deliverySource: "cloud" });
+    } catch (error: any) {
+      console.error("forward-validation cloud read failed; serving frozen safety copy:", error?.message || error);
+      try {
+        res.json({ ...readFrozenForwardValidation(), deliverySource: "frozen-fallback" });
+      } catch {
+        res.status(503).json({ error: "Forward-validation data is temporarily unavailable" });
+      }
+    }
   });
 
   app.post("/api/explain-metric", async (req, res) => {

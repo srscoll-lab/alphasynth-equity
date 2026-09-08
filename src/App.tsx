@@ -79,6 +79,7 @@ import {
   YAxis
 } from 'recharts';
 import BusinessMomentum from "./components/BusinessMomentum";
+import SignalTracker from "./components/SignalTracker";
 
 // Inject spinner keyframe
 if (typeof document !== 'undefined') {
@@ -530,7 +531,7 @@ export default function App() {
   // AlphaSynth V1 navigation:
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
-  const [appView, setAppView] = useState<'discovery' | 'research'>('discovery');
+  const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>('discovery');
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
@@ -4247,6 +4248,17 @@ ${list}
                 ← BMS Discovery
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => {
+                setAppView('tracker');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-black uppercase tracking-[0.14em] transition-all ${appView === 'tracker' ? 'border-teal-400/40 bg-teal-400/[0.12] text-teal-200' : 'border-teal-400/20 bg-teal-400/[0.05] text-teal-300 hover:bg-teal-400/[0.10] hover:border-teal-400/35'}`}
+              title="Open the frozen BMS forward-validation tracker"
+            >
+              <BarChart3 className="w-3.5 h-3.5" /> Signal Tracker
+            </button>
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                <button onClick={() => { setAppView('research'); setActiveTab('news'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
                <button onClick={() => { setAppView('research'); setActiveTab('equity'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
@@ -4325,6 +4337,15 @@ ${list}
         researchLoading={bmsResearchLoading}
         researchError={bmsResearchError}
       />
+      )}
+
+      {appView === 'tracker' && (
+        <SignalTracker
+          onBack={() => {
+            setAppView('discovery');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+        />
       )}
 
       {/* Legacy AlphaSynth Hero — retained temporarily during BMS redesign */}
@@ -6234,6 +6255,8 @@ ${list}
       </section>
       )}
 
+      {appView !== 'tracker' && (
+      <>
       {/* Beta Access Section */}
       <section className="py-24 px-6 border-t border-app-border bg-app-bg">
         <div className="max-w-2xl mx-auto text-center">
@@ -6398,6 +6421,8 @@ ${list}
           </button>
         </div>
       </footer>
+      </>
+      )}
 
       {/* Trade execution Modals — disabled during beta, broker integration coming later */}
       <AnimatePresence>
