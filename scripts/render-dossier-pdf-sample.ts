@@ -63,7 +63,7 @@ const payload: DossierPdfPayload = {
     shareholding: { promoter: { value: 40.25 }, fii: { value: 18.1 }, dii: { value: 9.8 }, mutualFund: { value: 7.4 }, retail: { value: 24.45 } },
   },
   market: {
-    price: 2978.4, asOf: "2026-09-07", delayed: true,
+    price: 2669.6, asOf: "2026-09-07", delayed: true,
     priceHistory: Array.from({ length: 52 }, (_, index) => ({ date: new Date(Date.UTC(2025, 8, 8 + index * 7)).toISOString().slice(0, 10), close: 1840 + index * 19 + Math.sin(index / 3) * 145 })),
   },
   bms: { score: 84, stage: "ESTABLISHED", period: "Q1 FY2027", components: [

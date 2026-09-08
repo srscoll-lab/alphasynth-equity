@@ -140,20 +140,21 @@ class Report {
     this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate).text(clean(label).toUpperCase(), x + 8, this.y + 28, { width: width - 16, align: "center" });
   }
 
-  bars(title: string, values: Array<{ label: string; value: number }>, neutralMarker = false) {
+  bars(title: string, values: Array<{ label: string; value: number }>, neutralMarker = false, palette: string[] = [C.green]) {
+    const chartHeight = 112;
+    this.ensure(67 + chartHeight);
+    this.y += 12;
     this.heading(title);
     if (!values.length) return this.paragraph("Verified data was not available.", { color: C.slate });
     const gap = 10;
     const barWidth = (this.width - gap * (values.length - 1)) / values.length;
-    const chartHeight = 105;
-    this.ensure(chartHeight + 22);
     const top = this.y;
     values.forEach((item, index) => {
       const value = Math.max(0, Math.min(100, item.value));
       const x = this.margin + index * (barWidth + gap);
       const h = chartHeight * value / 100;
       this.doc.roundedRect(x, top, barWidth, chartHeight, 3).fill(C.pale);
-      this.doc.roundedRect(x, top + chartHeight - h, barWidth, Math.max(2, h), 3).fill(C.green);
+      this.doc.roundedRect(x, top + chartHeight - h, barWidth, Math.max(2, h), 3).fill(palette[index % palette.length]);
       if (neutralMarker) {
         this.doc.strokeColor(C.gold).lineWidth(1).dash(2, { space: 2 })
           .moveTo(x, top + chartHeight / 2).lineTo(x + barWidth, top + chartHeight / 2).stroke().undash();
@@ -163,18 +164,18 @@ class Report {
       this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate)
         .text(clean(item.label).toUpperCase(), x - 2, top + chartHeight + 7, { width: barWidth + 4, align: "center" });
     });
-    this.y = top + chartHeight + 27;
+    this.y = top + chartHeight + 38;
   }
 
   priceChart(points: Array<{ date: string; close: number }>) {
+    this.ensure(210);
     this.heading("Twelve-month share-price movement");
     const valid = points.filter((point) => Number.isFinite(point.close));
     if (valid.length < 2) return this.paragraph("Verified price history was not available.", { color: C.slate });
-    this.ensure(145);
     const chartX = this.margin + 42;
-    const chartY = this.y + 4;
+    const chartY = this.y + 8;
     const chartWidth = this.width - 50;
-    const chartHeight = 105;
+    const chartHeight = 142;
     const values = valid.map((point) => point.close);
     const low = Math.min(...values);
     const high = Math.max(...values);
@@ -192,13 +193,70 @@ class Report {
       if (index === 0) this.doc.moveTo(x, y); else this.doc.lineTo(x, y);
     });
     this.doc.stroke();
+    const extrema = [
+      { index: values.indexOf(Math.min(...values)), color: C.red, label: "LOW" },
+      { index: values.indexOf(Math.max(...values)), color: C.gold, label: "HIGH" },
+      { index: valid.length - 1, color: "#2878B5", label: "LATEST" },
+    ].filter((marker, index, list) => list.findIndex((candidate) => candidate.index === marker.index) === index);
+    extrema.forEach((marker) => {
+      const point = valid[marker.index];
+      const x = chartX + marker.index / (valid.length - 1) * chartWidth;
+      const py = chartY + chartHeight - (point.close - low) / range * chartHeight;
+      this.doc.strokeColor(marker.color).lineWidth(0.8).dash(3, { space: 2 })
+        .moveTo(x, chartY).lineTo(x, chartY + chartHeight).stroke().undash();
+      this.doc.circle(x, py, 2.8).fill(marker.color);
+      const labelX = Math.max(chartX, Math.min(chartX + chartWidth - 77, x - 38));
+      const nearLaterMarker = extrema.some((candidate) => candidate.index > marker.index && Math.abs(candidate.index - marker.index) < Math.max(3, valid.length * 0.12));
+      const desiredY = nearLaterMarker ? py - 34 : marker.label === "LATEST" ? py + 9 : py - 28;
+      const labelY = Math.max(chartY + 3, Math.min(chartY + chartHeight - 26, desiredY));
+      this.doc.roundedRect(labelX, labelY, 77, 22, 3).fillAndStroke(C.white, marker.color);
+      this.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(marker.color)
+        .text(`${marker.label}  RS. ${fmt(point.close)}`, labelX + 4, labelY + 4, { width: 69, align: "center", lineBreak: false });
+      this.doc.font("Helvetica").fontSize(5.8).fillColor(C.slate)
+        .text(clean(point.date), labelX + 4, labelY + 12, { width: 69, align: "center", lineBreak: false });
+    });
     this.doc.font("Helvetica").fontSize(7).fillColor(C.slate)
       .text(clean(valid[0].date), chartX, chartY + chartHeight + 7)
       .text(clean(valid.at(-1)?.date), chartX + chartWidth - 85, chartY + chartHeight + 7, { width: 85, align: "right" });
-    this.y = chartY + chartHeight + 24;
+    this.y = chartY + chartHeight + 36;
+  }
+
+  financialTrend(rows: Array<{ period: string; revenue: number | null; pat: number | null }>) {
+    this.ensure(170);
+    this.heading("Revenue and profit progression");
+    const valid = rows.filter((row) => row.revenue != null || row.pat != null).slice().reverse();
+    if (!valid.length) return this.paragraph("Comparable quarterly trend data was not available.", { color: C.slate });
+    const chartX = this.margin + 38;
+    const chartY = this.y + 7;
+    const chartWidth = this.width - 45;
+    const chartHeight = 96;
+    const maximum = Math.max(1, ...valid.flatMap((row) => [row.revenue || 0, row.pat || 0]));
+    const groupWidth = chartWidth / valid.length;
+    for (let i = 0; i <= 4; i += 1) {
+      const gy = chartY + chartHeight * i / 4;
+      this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(chartX, gy).lineTo(chartX + chartWidth, gy).stroke();
+      this.doc.font("Helvetica").fontSize(6).fillColor(C.slate)
+        .text(fmt(maximum - maximum * i / 4), this.margin, gy - 3, { width: 32, align: "right" });
+    }
+    valid.forEach((row, index) => {
+      const baseX = chartX + index * groupWidth + groupWidth * 0.21;
+      const barWidth = Math.min(24, groupWidth * 0.23);
+      const revenueHeight = chartHeight * (row.revenue || 0) / maximum;
+      const patHeight = chartHeight * (row.pat || 0) / maximum;
+      this.doc.rect(baseX, chartY + chartHeight - revenueHeight, barWidth, revenueHeight).fill("#2878B5");
+      this.doc.rect(baseX + barWidth + 4, chartY + chartHeight - patHeight, barWidth, patHeight).fill(C.gold);
+      this.doc.font("Helvetica-Bold").fontSize(6).fillColor(C.slate)
+        .text(clean(row.period), chartX + index * groupWidth, chartY + chartHeight + 7, { width: groupWidth, align: "center" });
+    });
+    this.doc.rect(chartX, chartY + chartHeight + 25, 8, 8).fill("#2878B5");
+    this.doc.font("Helvetica").fontSize(7).fillColor(C.slate).text("Revenue", chartX + 12, chartY + chartHeight + 25);
+    this.doc.rect(chartX + 75, chartY + chartHeight + 25, 8, 8).fill(C.gold);
+    this.doc.text("PAT", chartX + 87, chartY + chartHeight + 25);
+    this.y = chartY + chartHeight + 48;
   }
 
   table(title: string, headers: string[], widths: number[], rows: string[][]) {
+    this.ensure(58 + rows.length * 24);
     this.heading(title);
     if (!rows.length) return this.paragraph("Comparable structured figures were not available.", { color: C.slate });
     const total = widths.reduce((sum, width) => sum + width, 0);
@@ -288,7 +346,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     .forEach((claim) => r.paragraph(`${claim.text} [${claim.sourceIds.join(", ")}]`, { indent: 8 }));
 
   r.title("Momentum anatomy", "The five bars are normalized change scores. Fifty is the neutral reference point; these are not portfolio weights.");
-  r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true);
+  r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,
+    [C.green, "#2878B5", C.gold, "#7C63A8", "#D46B4C"]);
   r.paragraph("How to read the chart: scores above 50 indicate improving evidence relative to the model's comparison basis; scores below 50 indicate deterioration. The components explain the overall signal, but none is an allocation recommendation.", { size: 8, color: C.slate });
   if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
   r.paragraph(`Latest available close: Rs. ${fmt(market?.price)}${market?.asOf ? ` as of ${clean(market.asOf).slice(0, 10)}` : ""}${market?.delayed ? " (delayed market data)" : ""}.`, { size: 8, color: C.slate });
@@ -297,17 +356,20 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   const ownership = Object.entries(enrichment?.shareholding || {})
     .filter(([, item]) => item?.value != null)
     .map(([key, item]) => ({ label: labels[key] || key, value: Number(item.value) }));
-  r.bars(`Latest disclosed shareholding${enrichment?.shareholdingAsOf ? ` - ${enrichment.shareholdingAsOf}` : ""}`, ownership);
+  r.bars(`Latest disclosed shareholding${enrichment?.shareholdingAsOf ? ` - ${enrichment.shareholdingAsOf}` : ""}`, ownership, false,
+    [C.gold, "#2878B5", C.green, "#7C63A8", "#D46B4C"]);
   r.paragraph("A quarter-on-quarter direction is deliberately not shown unless both current and prior dated shareholding filings are present and comparable.", { size: 8, color: C.slate });
 
   r.title("Financial performance", "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
+  r.financialTrend((dossier.quarterlyPerformance || []).map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr, pat: quarter.patCr })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", "EBITDA Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     (dossier.quarterlyPerformance || []).map((q) => [`${q.period} [${q.sourceIds.join(", ")}]`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
+  r.paragraph("Peer figures are supplemental market comparisons and may use a different reporting basis or update time from the company's official quarterly figures.", { size: 8, color: C.slate });
+  r.newPage(true);
   r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
     peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));
   r.table("Peer comparison - growth and position", ["Company", "D/E", "Revenue YoY", "Op. margin", "Mkt cap Rs.Cr", "52W return"], [28, 14, 20, 19, 24, 18],
     peers.map((p) => [p.ticker, fmt(p.debtEquity), fmt(p.revenueGrowthYoY, "%"), fmt(p.operatingMargin, "%"), fmt(p.marketCapCr), fmt(p.week52Return, "%")]));
-  r.paragraph("Peer figures are supplemental market comparisons and may use a different reporting basis or update time from the company's official quarterly figures.", { size: 8, color: C.slate });
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");
   const sections: Array<[keyof ResearchDossier["sections"], string]> = [
