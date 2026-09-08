@@ -419,9 +419,13 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
 
   doc.rect(0, 0, doc.page.width, 125).fill(C.navy);
   doc.font("Helvetica-Bold").fontSize(8).fillColor(C.gold).text("ALPHASYNTH INTELLIGENCE", r.margin, 39);
-  doc.font("Helvetica-Bold").fontSize(25).fillColor(C.white).text(clean(dossier.company.name), r.margin, 58, { width: r.width });
+  const companyName = clean(dossier.company.name);
+  const titleSize = companyName.length > 42 ? 19 : companyName.length > 32 ? 22 : 25;
+  doc.font("Helvetica-Bold").fontSize(titleSize).fillColor(C.white)
+    .text(companyName, r.margin, 55, { width: r.width, lineGap: 0 });
+  const companyMetaY = Math.max(98, Math.min(110, doc.y + 4));
   doc.font("Helvetica").fontSize(9).fillColor("#C8D0DF")
-    .text(`${clean(dossier.company.symbol)}  /  ${clean(dossier.company.exchange)}  /  ${clean(dossier.company.sector)}`, r.margin, 98);
+    .text(`${clean(dossier.company.symbol)}  /  ${clean(dossier.company.exchange)}  /  ${clean(dossier.company.sector)}`, r.margin, companyMetaY);
   r.y = 148;
   if (enrichment?.executiveSummary?.companyLine) r.paragraph(enrichment.executiveSummary.companyLine, { size: 12, bold: true, color: C.navy });
   const cardGap = 9;
