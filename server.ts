@@ -13,6 +13,13 @@ import {
   factorAnalysisFromResearchContext,
   normalizeBmsFactorAnalysis,
 } from "./src/bms-factor-schema";
+import {
+  assessExpectationDelivery,
+  expectationDeliveryInputErrors,
+  EXPECTATION_DELIVERY_RULES,
+  EXPECTATION_DELIVERY_SCHEMA_VERSION,
+  type ExpectationDeliveryInput,
+} from "./src/expectation-delivery";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -3230,6 +3237,26 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
 
   app.get("/api/bms/factor-schema", (_req, res) => {
     return res.json(BMS_FACTOR_SCHEMA_DESCRIPTION);
+  });
+
+  app.get("/api/bms/expectation-delivery/schema", (_req, res) => {
+    return res.json({
+      schemaVersion: EXPECTATION_DELIVERY_SCHEMA_VERSION,
+      rules: EXPECTATION_DELIVERY_RULES,
+      source: "alphasynth-deterministic-overlay",
+    });
+  });
+
+  app.post("/api/bms/expectation-delivery/assess", (req, res) => {
+    const errors = expectationDeliveryInputErrors(req.body);
+    if (errors.length) return res.status(400).json({ error: "Invalid expectations–delivery input.", details: errors });
+    try {
+      const assessment = assessExpectationDelivery(req.body as ExpectationDeliveryInput);
+      return res.json({ assessment, source: "alphasynth-deterministic-overlay" });
+    } catch (error: any) {
+      console.error("[bms] expectation-delivery assessment failed:", error?.message || error);
+      return res.status(500).json({ error: "The expectations–delivery assessment could not be calculated." });
+    }
   });
 
   app.get("/api/bms/factor-analysis/:symbol", async (req, res) => {
