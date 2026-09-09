@@ -12,6 +12,7 @@
     "verify:ai-transition": "node --import tsx scripts/verify-ai-transition-schema.ts && node --import tsx scripts/verify-ai-transition-sources.ts && node --import tsx scripts/verify-ai-transition-history.ts && node --import tsx scripts/verify-ai-transition-outcomes.ts",
     "render:ai-transition": "node --import tsx scripts/render-ai-transition-history.ts",
     "build:ai-transition-outcomes": "node --import tsx scripts/build-ai-transition-outcomes.ts",
+    "generate:ai-transition-pdf": "python scripts/generate_ai_transition_pilot_pdf.py",
     "collect:ai-transition": "node --import tsx scripts/collect-ai-transition-sources.ts"
   },
   "dependencies": {

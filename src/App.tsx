@@ -80,6 +80,7 @@ import {
 } from 'recharts';
 import BusinessMomentum from "./components/BusinessMomentum";
 import SignalTracker from "./components/SignalTracker";
+import AiTransitionObservatory from "./components/AiTransitionObservatory";
 
 // Inject spinner keyframe
 if (typeof document !== 'undefined') {
@@ -532,7 +533,7 @@ export default function App() {
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
   const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>('discovery');
-  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community'>('equity');
+  const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
   const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
@@ -4266,6 +4267,7 @@ ${list}
                <button onClick={() => { setAppView('research'); setActiveTab('portfolio'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'portfolio' ? 'text-gold' : ''}`}>Audit</button>
                <button onClick={() => { setAppView('research'); setActiveTab('marketing'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
                <button onClick={() => { setAppView('research'); setActiveTab('community'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
+               <button onClick={() => { setAppView('research'); setActiveTab('aiTransition'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'aiTransition' ? 'text-gold' : ''}`}>AI Transition</button>
             </div>
             {user ? (
               <div className="flex items-center gap-3">
@@ -4598,7 +4600,7 @@ ${list}
       <section id="workflow" className="py-20 px-6 border-t border-app-border bg-app-surface/10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-wrap gap-4 justify-center mb-16">
-            {(['news', 'equity', 'filings', 'portfolio', 'marketing', 'community'] as const).map((tab) => (
+            {(['news', 'equity', 'filings', 'portfolio', 'marketing', 'community', 'aiTransition'] as const).map((tab) => (
               <button
                 key={tab}
                 onClick={() => { setActiveTab(tab); scrollToWorkflow(); }}
@@ -4610,9 +4612,9 @@ ${list}
               >
                 <div className="flex items-center gap-2">
                   <span className="opacity-40">
-                    {tab === 'news' ? '01' : tab === 'equity' ? '02' : tab === 'filings' ? '03' : tab === 'portfolio' ? '04' : tab === 'marketing' ? '05' : '06'}
+                    {tab === 'news' ? '01' : tab === 'equity' ? '02' : tab === 'filings' ? '03' : tab === 'portfolio' ? '04' : tab === 'marketing' ? '05' : tab === 'community' ? '06' : '07'}
                   </span>
-                  <span>{tab.toUpperCase()}</span>
+                  <span>{tab === 'aiTransition' ? 'AI TRANSITION' : tab.toUpperCase()}</span>
                 </div>
                 {activeTab !== tab && (
                   <div className="absolute inset-0 bg-white/5 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
@@ -4623,6 +4625,11 @@ ${list}
 
           <div className="grid md:grid-cols-2 gap-12 items-center min-h-[400px]">
             <AnimatePresence mode="wait">
+              {activeTab === 'aiTransition' && (
+                <motion.div key="aiTransition" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="col-span-2 w-full">
+                  <AiTransitionObservatory />
+                </motion.div>
+              )}
               {activeTab === 'news' && (
                 <motion.div
                   key="news"
