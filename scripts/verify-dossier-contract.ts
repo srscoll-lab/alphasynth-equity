@@ -1,12 +1,15 @@
 import assert from "node:assert/strict";
-import { isOfficialDossierSource, isResearchDossier } from "../src/dossier";
-import { dossierCompanyProfile } from "../src/dossier-companies";
+import { isOfficialDossierSource, isResearchDossier } from "../src/dossier.ts";
+import { dossierCompanyProfile } from "../src/dossier-companies.ts";
 
 assert.equal(isOfficialDossierSource("https://www.nseindia.com/test.pdf", []), true);
 assert.equal(isOfficialDossierSource("https://investors.example.com/report.pdf", ["example.com"]), true);
 assert.equal(isOfficialDossierSource("https://example.com.evil.test/report.pdf", ["example.com"]), false);
 assert.equal(isOfficialDossierSource("http://example.com/report.pdf", ["example.com"]), false);
 assert.deepEqual(dossierCompanyProfile(" infy ")?.officialDomains, ["infosys.com"]);
+assert.deepEqual(dossierCompanyProfile("RELIANCE")?.officialDomains, ["ril.com"]);
+assert.deepEqual(dossierCompanyProfile("BAJAJ-AUTO")?.officialDomains, ["bajajauto.com"]);
+assert.deepEqual(dossierCompanyProfile("TITAN")?.officialDomains, ["titancompany.in"]);
 assert.equal(dossierCompanyProfile("UNKNOWN"), null);
 
 const dossier = {

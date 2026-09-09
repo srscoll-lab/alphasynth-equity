@@ -7,6 +7,13 @@ export interface DossierCompanyProfile {
 }
 
 const PILOT_COMPANIES: Record<string, DossierCompanyProfile> = {
+  RELIANCE: {
+    ticker: "RELIANCE",
+    companyName: "Reliance Industries Limited",
+    officialDomains: ["ril.com"],
+    exchange: "NSE",
+    sector: "Diversified Conglomerate",
+  },
   RADICO: {
     ticker: "RADICO",
     companyName: "Radico Khaitan Limited",
@@ -28,6 +35,20 @@ const PILOT_COMPANIES: Record<string, DossierCompanyProfile> = {
     exchange: "NSE",
     sector: "Automobiles",
   },
+  "BAJAJ-AUTO": {
+    ticker: "BAJAJ-AUTO",
+    companyName: "Bajaj Auto Limited",
+    officialDomains: ["bajajauto.com"],
+    exchange: "NSE",
+    sector: "Automobiles",
+  },
+  TITAN: {
+    ticker: "TITAN",
+    companyName: "Titan Company Limited",
+    officialDomains: ["titancompany.in"],
+    exchange: "NSE",
+    sector: "Consumer Durables",
+  },
   SUNPHARMA: {
     ticker: "SUNPHARMA",
     companyName: "Sun Pharmaceutical Industries Limited",
@@ -47,4 +68,3 @@ const PILOT_COMPANIES: Record<string, DossierCompanyProfile> = {
 export function dossierCompanyProfile(ticker: string): DossierCompanyProfile | null {
   return PILOT_COMPANIES[ticker.trim().toUpperCase()] || null;
 }
-
