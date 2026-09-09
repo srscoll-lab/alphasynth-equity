@@ -35,6 +35,8 @@ The first study window begins with FY2023 disclosures. Each quarterly assessment
 
 Market performance is an outcome, not proof that AI caused the outcome.
 
+The market-outcome harness uses adjusted closing prices and the Nifty IT index at 3, 6 and 12 calendar months. It selects the first trading session on or after each boundary, leaves unelapsed windows pending, and reports relative return separately from the operating evidence. Nifty IT is a practical common benchmark for this pilot, not a perfect business-model peer set for product companies.
+
 ## Expansion rule
 
 The complete IT universe will be catalogued after the pilot is calibrated. Companies without adequate disclosure remain visible as `insufficient_evidence`; they are not assigned artificial zeroes or low-confidence rankings.
