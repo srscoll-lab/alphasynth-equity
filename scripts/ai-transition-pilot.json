@@ -1,0 +1,15 @@
+[
+  { "ticker": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "INFY", "companyName": "Infosys", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "HCLTECH", "companyName": "HCL Technologies", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "WIPRO", "companyName": "Wipro", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "TECHM", "companyName": "Tech Mahindra", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "LTIM", "companyName": "LTIMindtree", "businessModel": "it_services", "cohort": "large_services" },
+  { "ticker": "PERSISTENT", "companyName": "Persistent Systems", "businessModel": "mixed", "cohort": "digital_specialists" },
+  { "ticker": "COFORGE", "companyName": "Coforge", "businessModel": "it_services", "cohort": "digital_specialists" },
+  { "ticker": "TATAELXSI", "companyName": "Tata Elxsi", "businessModel": "engineering_rd", "cohort": "engineering_rd" },
+  { "ticker": "KPITTECH", "companyName": "KPIT Technologies", "businessModel": "engineering_rd", "cohort": "engineering_rd" },
+  { "ticker": "LTTS", "companyName": "L&T Technology Services", "businessModel": "engineering_rd", "cohort": "engineering_rd" },
+  { "ticker": "INTELLECT", "companyName": "Intellect Design Arena", "businessModel": "vertical_software", "cohort": "product_platform" }
+]
+
