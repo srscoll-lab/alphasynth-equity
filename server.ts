@@ -3248,6 +3248,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
   });
 
   app.post("/api/bms/expectation-delivery/assess", (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (expectedToken && req.header("x-dossier-token") !== expectedToken) {
+      return res.status(401).json({ error: "Unauthorized." });
+    }
     const errors = expectationDeliveryInputErrors(req.body);
     if (errors.length) return res.status(400).json({ error: "Invalid expectations–delivery input.", details: errors });
     try {

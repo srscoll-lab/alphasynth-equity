@@ -1,0 +1,39 @@
+{
+  "id": "alphasynthExpectationDeliveryV1",
+  "name": "AlphaSynth Expectation Delivery Pilot v1",
+  "nodes": [
+    {
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-expectation-delivery-v1", "responseMode": "responseNode", "options": {} },
+      "id": "webhook", "name": "Assessment Request", "type": "n8n-nodes-base.webhook", "typeVersion": 2, "position": [-420, 0],
+      "webhookId": "alphasynth-expectation-delivery-v1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const b=$json.body??$json;const symbol=String(b.symbol??'').trim().toUpperCase();if(!/^[A-Z0-9&.-]{1,24}$/.test(symbol))throw new Error('Valid symbol required');if(!Array.isArray(b.qualityGates)||!Array.isArray(b.deliveryMetrics)||!Array.isArray(b.evidence))throw new Error('qualityGates, deliveryMetrics and evidence arrays required');return[{json:{...b,symbol}}];"
+      },
+      "id": "validate", "name": "Validate Assessment Input", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-180, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "={{ $env.ALPHASYNTH_INTERNAL_URL + '/api/bms/expectation-delivery/assess' }}",
+        "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "x-dossier-token", "value": "={{ $env.DOSSIER_INTERNAL_TOKEN }}" }] },
+        "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}",
+        "options": { "timeout": 30000, "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "assess", "name": "Apply Deterministic Overlay", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [70, 0], "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json.body ?? { error: 'Assessment backend request failed.' } }}", "options": { "responseCode": "={{ $json.statusCode ?? 502 }}" } },
+      "id": "respond", "name": "Return Assessment", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4, "position": [320, 0]
+    }
+  ],
+  "connections": {
+    "Assessment Request": { "main": [[{ "node": "Validate Assessment Input", "type": "main", "index": 0 }]] },
+    "Validate Assessment Input": { "main": [[{ "node": "Apply Deterministic Overlay", "type": "main", "index": 0 }]] },
+    "Apply Deterministic Overlay": { "main": [[{ "node": "Return Assessment", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "settings": { "executionOrder": "v1", "saveManualExecutions": true, "saveExecutionProgress": true },
+  "active": false,
+  "versionId": "alphasynth-expectation-delivery-pilot-v1"
+}

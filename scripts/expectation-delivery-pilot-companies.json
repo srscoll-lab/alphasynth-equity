@@ -1,0 +1,13 @@
+{
+  "pilotId": "EXPECTATION-DELIVERY-P001-20260909",
+  "lifecycleFreezeDate": "2026-08-25",
+  "expectationFreezeDate": "2026-09-09",
+  "assessmentMode": "prospective",
+  "companies": [
+    { "symbol": "RELIANCE", "companyName": "Reliance Industries Ltd.", "lifecycle": "Watch", "period": "Q3 FY26" },
+    { "symbol": "SUNPHARMA", "companyName": "Sun Pharmaceutical Industries Ltd.", "lifecycle": "Emerging", "period": "Q3 FY26" },
+    { "symbol": "BAJAJ-AUTO", "companyName": "Bajaj Auto Ltd.", "lifecycle": "Building", "period": "Q3 FY26" },
+    { "symbol": "TITAN", "companyName": "Titan Company Ltd.", "lifecycle": "Established", "period": "Q3 FY26" },
+    { "symbol": "MARUTI", "companyName": "Maruti Suzuki India Ltd.", "lifecycle": "Fading", "period": "Q3 FY26" }
+  ]
+}

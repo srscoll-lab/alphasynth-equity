@@ -10,6 +10,14 @@ Required n8n environment variables:
 - `ALPHASYNTH_INTERNAL_URL`: network-reachable AlphaSynth service origin
 - `DOSSIER_INTERNAL_TOKEN`: shared secret also configured on AlphaSynth
 
+`expectation-delivery-pilot-v1.json` is a separate inactive pilot connector for the deterministic
+quality, expectations and delivery overlay. It calls `/api/bms/expectation-delivery/assess` with
+the same environment-backed URL and token. It does not modify the BMS score or lifecycle and must
+not replace the dossier webhook. The initial five-company manifest covers one company per frozen
+lifecycle. Generate evidence-empty assessment records with
+`npm run build:expectation-delivery-pilot`; they correctly return `insufficient_evidence` until
+reviewed official observations are supplied. Activate only after those five records pass review.
+
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.
 The public application route resolves official domains from the reviewed registry in
