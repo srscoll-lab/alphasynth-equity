@@ -22,7 +22,7 @@
   {
     "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
     "assessmentAsOf": "2024-04-12", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
-    "operatingMetrics": { "operatingMarginPct": 24.6, "employees": 601546, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY24 revenue was USD 29.08 billion; AI revenue remained unsegmented."] },
+    "operatingMetrics": { "revenueUsdBn": 29.08, "operatingMarginPct": 24.6, "employees": 601546, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY24 revenue was USD 29.08 billion; AI revenue remained unsegmented."] },
     "exposure": { "dimensions": [
       { "id": "task_automability", "score": 72, "explanation": "GenAI moved into live use cases across the services portfolio.", "evidenceIds": ["TCS-FY24-R"] },
       { "id": "effort_billing_dependence", "score": 82, "explanation": "The large services workforce remained central to delivery.", "evidenceIds": ["TCS-FY24-R"] },
@@ -42,7 +42,7 @@
   {
     "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
     "assessmentAsOf": "2025-04-10", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
-    "operatingMetrics": { "operatingMarginPct": 24.3, "employees": 607979, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY25 revenue was USD 30.18 billion; AI revenue remained unsegmented."] },
+    "operatingMetrics": { "revenueUsdBn": 30.18, "operatingMarginPct": 24.3, "employees": 607979, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY25 revenue was USD 30.18 billion; AI revenue remained unsegmented."] },
     "exposure": { "dimensions": [
       { "id": "task_automability", "score": 75, "explanation": "Over one-third of engagements used AI/GenAI to accelerate project outcomes.", "evidenceIds": ["TCS-FY25-R"] },
       { "id": "effort_billing_dependence", "score": 78, "explanation": "Services delivery remained people-intensive despite accelerating automation.", "evidenceIds": ["TCS-FY25-R"] },
@@ -62,7 +62,7 @@
   {
     "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
     "assessmentAsOf": "2026-04-09", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
-    "operatingMetrics": { "revenue": 267021, "operatingMarginPct": 25, "employees": 584519, "aiAnnualizedRevenueUsdBn": 2.3, "aiSkilledEmployees": 270000, "aiRevenue": null, "notes": ["USD 2.3 billion is annualized AI revenue, not audited full-year segment revenue."] },
+    "operatingMetrics": { "revenue": 267021, "revenueUsdBn": 30.017, "operatingMarginPct": 25, "employees": 584519, "aiAnnualizedRevenueUsdBn": 2.3, "aiSkilledEmployees": 270000, "aiRevenue": null, "notes": ["USD 2.3 billion is annualized AI revenue, not audited full-year segment revenue."] },
     "exposure": { "dimensions": [
       { "id": "task_automability", "score": 76, "explanation": "AI deployment increasingly automates delivery tasks across service lines.", "evidenceIds": ["TCS-FY26-R"] },
       { "id": "effort_billing_dependence", "score": 75, "explanation": "People-led services remain material despite an AI-first operating shift.", "evidenceIds": ["TCS-FY26-R"] },

@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { calculateMarketOutcome, type PricePoint } from "../src/ai-transition-outcomes";
+import { calculateMarketOutcome, calculateOperatingOutcome, type PricePoint } from "../src/ai-transition-outcomes";
 
 const observedThrough = new Date().toISOString().slice(0, 10);
 const benchmark = "^CNXIT";
@@ -31,12 +31,16 @@ const histories = inputs.map((input) => ({
 const earliest = histories.flatMap((item) => item.history.map((record: any) => record.assessmentAsOf)).sort()[0];
 const benchmarkPoints = await prices(benchmark, earliest);
 const outcomes = [];
+const operatingOutcomes = [];
 for (const input of histories) {
   const companyPoints = await prices(input.yahoo, earliest);
   for (const assessment of input.history) {
     for (const horizonMonths of [3, 6, 12] as const) {
       outcomes.push(calculateMarketOutcome({ symbol: assessment.symbol, benchmark, assessmentAsOf: assessment.assessmentAsOf, horizonMonths, observedThrough, companyPoints, benchmarkPoints }));
     }
+  }
+  for (let index = 1; index < input.history.length; index += 1) {
+    operatingOutcomes.push(calculateOperatingOutcome(input.history[index - 1], input.history[index]));
   }
 }
 const result = {
@@ -46,8 +50,9 @@ const result = {
   benchmark,
   caveat: "Exploratory reconstructed outcome study. Relative return is not evidence that AI caused the result.",
   outcomes,
+  operatingOutcomes,
 };
 const directory = new URL("../output/ai-transition/", import.meta.url);
 fs.mkdirSync(directory, { recursive: true });
 fs.writeFileSync(new URL("market-outcomes.json", directory), JSON.stringify(result, null, 2));
-console.log(JSON.stringify({ observations: outcomes.length, complete: outcomes.filter((item) => item.status === "complete").length, pending: outcomes.filter((item) => item.status === "pending").length }, null, 2));
+console.log(JSON.stringify({ marketObservations: outcomes.length, complete: outcomes.filter((item) => item.status === "complete").length, pending: outcomes.filter((item) => item.status === "pending").length, operatingBridges: operatingOutcomes.length }, null, 2));

@@ -15,6 +15,18 @@ export type AiTransitionMarketOutcome = {
   interpretation: "outperformed" | "matched" | "underperformed" | "pending";
 };
 
+export type AiTransitionOperatingOutcome = {
+  symbol: string;
+  fromAssessment: string;
+  toAssessment: string;
+  revenueBasis: "INR_crore" | "USD_billion" | null;
+  revenueGrowthPct: number | null;
+  marginBasis: "operating_margin" | "ebitda_margin" | null;
+  marginChangePp: number | null;
+  employeeGrowthPct: number | null;
+  platformRevenueGrowthPct: number | null;
+};
+
 export function addUtcMonths(date: string, months: number) {
   const value = new Date(`${date}T00:00:00Z`);
   value.setUTCMonth(value.getUTCMonth() + months);
@@ -70,5 +82,34 @@ export function calculateMarketOutcome(input: {
     benchmarkReturnPct,
     relativeReturnPct,
     interpretation: relativeReturnPct > 2 ? "outperformed" : relativeReturnPct < -2 ? "underperformed" : "matched",
+  };
+}
+
+const changePct = (start: unknown, end: unknown) => {
+  const a = Number(start);
+  const b = Number(end);
+  return Number.isFinite(a) && Number.isFinite(b) && a !== 0 ? Math.round(((b / a) - 1) * 1000) / 10 : null;
+};
+
+export function calculateOperatingOutcome(from: any, to: any): AiTransitionOperatingOutcome {
+  const a = from.operatingMetrics || {};
+  const b = to.operatingMetrics || {};
+  const hasInrRevenue = Number.isFinite(a.revenue) && Number.isFinite(b.revenue);
+  const hasInrIncome = Number.isFinite(a.totalIncome) && Number.isFinite(b.totalIncome);
+  const hasUsdRevenue = Number.isFinite(a.revenueUsdBn) && Number.isFinite(b.revenueUsdBn);
+  const hasOperatingMargin = Number.isFinite(a.operatingMarginPct) && Number.isFinite(b.operatingMarginPct);
+  const hasEbitdaMargin = Number.isFinite(a.ebitdaMarginPct) && Number.isFinite(b.ebitdaMarginPct);
+  const marginA = hasOperatingMargin ? a.operatingMarginPct : hasEbitdaMargin ? a.ebitdaMarginPct : null;
+  const marginB = hasOperatingMargin ? b.operatingMarginPct : hasEbitdaMargin ? b.ebitdaMarginPct : null;
+  return {
+    symbol: String(from.symbol),
+    fromAssessment: String(from.assessmentAsOf),
+    toAssessment: String(to.assessmentAsOf),
+    revenueBasis: hasInrRevenue || hasInrIncome ? "INR_crore" : hasUsdRevenue ? "USD_billion" : null,
+    revenueGrowthPct: hasInrRevenue ? changePct(a.revenue, b.revenue) : hasInrIncome ? changePct(a.totalIncome, b.totalIncome) : hasUsdRevenue ? changePct(a.revenueUsdBn, b.revenueUsdBn) : null,
+    marginBasis: hasOperatingMargin ? "operating_margin" : hasEbitdaMargin ? "ebitda_margin" : null,
+    marginChangePp: marginA === null || marginB === null ? null : Math.round((marginB - marginA) * 10) / 10,
+    employeeGrowthPct: changePct(a.employees, b.employees),
+    platformRevenueGrowthPct: changePct(a.platformRevenue, b.platformRevenue),
   };
 }

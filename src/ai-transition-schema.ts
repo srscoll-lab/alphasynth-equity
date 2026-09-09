@@ -35,6 +35,7 @@ export type AiTransitionOperatingMetrics = {
   currency: "INR";
   unit: "crore";
   revenue: number | null;
+  revenueUsdBn: number | null;
   operatingMarginPct: number | null;
   employees: number | null;
   aiAnnualizedRevenueUsdBn: number | null;
@@ -131,6 +132,7 @@ export function normalizeAiTransitionAssessment(input: any): AiTransitionAssessm
     currency: "INR" as const,
     unit: "crore" as const,
     revenue: metric(suppliedMetrics.revenue),
+    revenueUsdBn: metric(suppliedMetrics.revenueUsdBn),
     operatingMarginPct: metric(suppliedMetrics.operatingMarginPct),
     employees: metric(suppliedMetrics.employees),
     aiAnnualizedRevenueUsdBn: metric(suppliedMetrics.aiAnnualizedRevenueUsdBn),
