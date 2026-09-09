@@ -1,4 +1,4 @@
-import { isOfficialDossierSource, type DossierSource } from "./dossier";
+import { isOfficialDossierSource, type DossierSource } from "./dossier.ts";
 
 type Candidate = { url: string; title?: string; publishedDate?: string; date?: string; dateBasis?: string; depth?: number };
 type Scraped = { markdown?: string; rawHtml?: string; metadata?: Record<string, any> };
@@ -167,6 +167,14 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
     const compactNumericDate = filename.match(/(?:^|\D)(20\d{2})(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(?:\D|$)/);
     if (compactNumericDate) {
       const date = exactEvidenceDate(`${compactNumericDate[1]}-${compactNumericDate[2]}-${compactNumericDate[3]}`);
+      if (date) return { date, basis: "document_filename" };
+    }
+    // DDMMYYYY is common in Indian issuer filenames. Accept it only when the
+    // first component is 13-31, making day/month order unambiguous. Values such
+    // as 07102026 remain rejected because they could mean 7 Oct or 10 Jul.
+    const unambiguousDayFirstDate = filename.match(/(?:^|\D)(1[3-9]|2\d|3[01])(0[1-9]|1[0-2])(20\d{2})(?:\D|$)/);
+    if (unambiguousDayFirstDate) {
+      const date = exactEvidenceDate(`${unambiguousDayFirstDate[1]}-${unambiguousDayFirstDate[2]}-${unambiguousDayFirstDate[3]}`);
       if (date) return { date, basis: "document_filename" };
     }
     const cover = String(scraped.markdown || "").slice(0, 1800);

@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence";
+import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence.ts";
 
 const base = "https://radicokhaitan.com/investor-relations/";
 const domains = ["radicokhaitan.com"];
@@ -61,6 +61,20 @@ assert.equal(
 assert.equal(
   documentPublicationDate({ markdown: "Official results. ".repeat(20) }, { url: "https://issuer.example/results_20260423.pdf" }).date,
   "2026-04-23",
+);
+assert.deepEqual(
+  documentPublicationDate(
+    { markdown: "Official analyst presentation. ".repeat(20) },
+    { url: "https://issuer.example/Presentation_for_Analyst_Meeting_v17072026.pdf" },
+  ),
+  { date: "2026-07-17", basis: "document_filename" },
+);
+assert.equal(
+  documentPublicationDate(
+    { markdown: "Official analyst presentation. ".repeat(20) },
+    { url: "https://issuer.example/Presentation_v07102026.pdf" },
+  ).date,
+  null,
 );
 assert.deepEqual(
   documentPublicationDate(
