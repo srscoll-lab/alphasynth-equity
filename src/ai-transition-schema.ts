@@ -31,6 +31,23 @@ export type AiTransitionDimension = {
   evidenceIds: string[];
 };
 
+export type AiTransitionOperatingMetrics = {
+  currency: "INR";
+  unit: "crore";
+  totalIncome: number | null;
+  licenseRevenue: number | null;
+  platformRevenue: number | null;
+  amcRevenue: number | null;
+  licenseLinkedRevenue: number | null;
+  ebitda: number | null;
+  ebitdaMarginPct: number | null;
+  pat: number | null;
+  dealWins: number | null;
+  digitalTransformations: number | null;
+  aiRevenue: number | null;
+  notes: string[];
+};
+
 export type AiTransitionAssessment = {
   schemaVersion: typeof AI_TRANSITION_SCHEMA_VERSION;
   symbol: string;
@@ -50,11 +67,13 @@ export type AiTransitionAssessment = {
     dimensions: AiTransitionDimension[];
   };
   classification: "resilient" | "credible_transition" | "business_model_risk" | "low_exposure_unproven" | "insufficient_evidence";
+  operatingMetrics: AiTransitionOperatingMetrics | null;
   evidence: AiTransitionEvidence[];
   eligibleForBacktest: boolean;
 };
 
 const boundedScore = (value: unknown) => {
+  if (value === null || value === undefined || value === "") return null;
   const score = Number(value);
   return Number.isFinite(score) && score >= 0 && score <= 100 ? score : null;
 };
@@ -99,6 +118,28 @@ export function normalizeAiTransitionAssessment(input: any): AiTransitionAssessm
   const evidence = Array.isArray(input?.evidence) ? input.evidence : [];
   const assessmentAsOf = String(input?.assessmentAsOf || "");
   const hasFutureSource = evidence.some((item: any) => String(item?.publishedAt || "") > assessmentAsOf);
+  const metric = (value: unknown) => value === null || value === undefined || value === ""
+    ? null
+    : Number.isFinite(Number(value)) ? Number(value) : null;
+  const suppliedMetrics = input?.operatingMetrics;
+  const operatingMetrics = suppliedMetrics ? {
+    currency: "INR" as const,
+    unit: "crore" as const,
+    totalIncome: metric(suppliedMetrics.totalIncome),
+    licenseRevenue: metric(suppliedMetrics.licenseRevenue),
+    platformRevenue: metric(suppliedMetrics.platformRevenue),
+    amcRevenue: metric(suppliedMetrics.amcRevenue),
+    licenseLinkedRevenue: metric(suppliedMetrics.licenseLinkedRevenue),
+    ebitda: metric(suppliedMetrics.ebitda),
+    ebitdaMarginPct: metric(suppliedMetrics.ebitdaMarginPct),
+    pat: metric(suppliedMetrics.pat),
+    dealWins: metric(suppliedMetrics.dealWins),
+    digitalTransformations: metric(suppliedMetrics.digitalTransformations),
+    aiRevenue: metric(suppliedMetrics.aiRevenue),
+    notes: Array.isArray(suppliedMetrics.notes)
+      ? suppliedMetrics.notes.filter((note: unknown) => typeof note === "string" && note.trim())
+      : [],
+  } : null;
 
   return {
     schemaVersion: AI_TRANSITION_SCHEMA_VERSION,
@@ -111,8 +152,8 @@ export function normalizeAiTransitionAssessment(input: any): AiTransitionAssessm
     exposure,
     readiness,
     classification,
+    operatingMetrics,
     evidence,
     eligibleForBacktest: assessmentMode === "point_in_time" && adequate && !hasFutureSource,
   };
 }
-

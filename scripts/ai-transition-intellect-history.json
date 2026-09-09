@@ -1,0 +1,92 @@
+[
+  {
+    "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "businessModel": "vertical_software",
+    "assessmentAsOf": "2023-05-19", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "ebitdaMarginPct": 20, "aiRevenue": null, "notes": ["Product/platform model; AI-linked revenue was not separately quantified."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 35, "explanation": "Software work is automatable, moderated by regulated banking complexity.", "evidenceIds": ["FY23-T1"] },
+      { "id": "effort_billing_dependence", "score": 15, "explanation": "Management explicitly described a product/technology, not services, model.", "evidenceIds": ["FY23-T1"] },
+      { "id": "pricing_deflation", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "insourcing_risk", "score": 40, "explanation": "Banks' own IT teams can use the composable platform.", "evidenceIds": ["FY23-T1"] },
+      { "id": "concentration_risk", "score": 30, "explanation": "Broad geography offsets, but does not remove, banking-vertical concentration.", "evidenceIds": ["FY23-T1"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 10, "explanation": "Embedded AI was described without separate AI revenue.", "evidenceIds": ["FY23-T1"] },
+      { "id": "outcome_platform_migration", "score": 60, "explanation": "eMACH.ai, iTurmeric and pay-as-you-grow delivery supplied platform evidence.", "evidenceIds": ["FY23-T1"] },
+      { "id": "domain_moat", "score": 70, "explanation": "Banking-domain breadth and regulation support a moat.", "evidenceIds": ["FY23-T1"] },
+      { "id": "productivity_conversion", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "management_delivery", "score": null, "explanation": null, "evidenceIds": [] }
+    ]},
+    "evidence": [{ "evidenceId": "FY23-T1", "sourceType": "earnings_transcript", "publishedAt": "2023-05-19", "url": "https://www.intellectdesign.com/investor/intimations/Earnings-call-transcript_may-19-2023.pdf", "excerpt": "eMACH.ai composability, embedded AI, own-IT-team use and product-company model." }]
+  },
+  {
+    "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "businessModel": "vertical_software",
+    "assessmentAsOf": "2024-05-09", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "totalIncome": 2513, "licenseRevenue": 445, "platformRevenue": 455, "amcRevenue": 448, "licenseLinkedRevenue": 1349, "ebitda": 549, "ebitdaMarginPct": 22, "pat": 334, "dealWins": 52, "digitalTransformations": 54, "aiRevenue": null, "notes": ["Platform revenue is not treated as AI revenue."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 35, "explanation": "Regulated product engineering is less directly exposed than effort-led services.", "evidenceIds": ["FY24-D1"] },
+      { "id": "effort_billing_dependence", "score": 15, "explanation": "License, platform and AMC revenue demonstrate a product-led model.", "evidenceIds": ["FY24-D1"] },
+      { "id": "pricing_deflation", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "insourcing_risk", "score": 35, "explanation": "Composable delivery can empower customer teams.", "evidenceIds": ["FY23-T1"] },
+      { "id": "concentration_risk", "score": 30, "explanation": "Financial-services specialization remains a vertical concentration.", "evidenceIds": ["FY23-T1"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 20, "explanation": "Platform revenue was disclosed, but AI revenue was not identified.", "evidenceIds": ["FY24-D1"] },
+      { "id": "outcome_platform_migration", "score": 72, "explanation": "Platform revenue, ARR, deals and transformations provide measurable evidence.", "evidenceIds": ["FY24-D1"] },
+      { "id": "domain_moat", "score": 75, "explanation": "Vertical banking products and composable architecture support a moat.", "evidenceIds": ["FY24-D1"] },
+      { "id": "productivity_conversion", "score": 45, "explanation": "The margin was measurable; AI-specific economics were not isolated.", "evidenceIds": ["FY24-D1"] },
+      { "id": "management_delivery", "score": 55, "explanation": "Platform revenue and transformations show partial delivery.", "evidenceIds": ["FY23-T1", "FY24-D1"] }
+    ]},
+    "evidence": [
+      { "evidenceId": "FY23-T1", "sourceType": "earnings_transcript", "publishedAt": "2023-05-19", "url": "https://www.intellectdesign.com/investor/intimations/Earnings-call-transcript_may-19-2023.pdf" },
+      { "evidenceId": "FY24-D1", "sourceType": "investor_presentation", "publishedAt": "2024-05-09", "url": "https://www.intellectdesign.com/investor/presentations/Intellect-Q4-FY-24-Investor-Deck.pdf", "excerpt": "FY24: INR 455 crore platform revenue, 52 deals and 54 transformations." }
+    ]
+  },
+  {
+    "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "businessModel": "vertical_software",
+    "assessmentAsOf": "2025-05-09", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "totalIncome": 2577, "licenseRevenue": 503, "platformRevenue": 241, "amcRevenue": 503, "licenseLinkedRevenue": 1247, "ebitda": 608, "ebitdaMarginPct": 24, "pat": 333, "dealWins": 43, "digitalTransformations": 53, "aiRevenue": null, "notes": ["The reported platform-revenue series fell from INR 455 crore to INR 241 crore; definition consistency needs review.", "Platform revenue is not treated as AI revenue."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 35, "explanation": "Product engineering remains exposed, moderated by regulated integration.", "evidenceIds": ["FY25-D1"] },
+      { "id": "effort_billing_dependence", "score": 15, "explanation": "The disclosed mix remained product-led.", "evidenceIds": ["FY25-D1"] },
+      { "id": "pricing_deflation", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "insourcing_risk", "score": 35, "explanation": "Customer self-composition remains a two-sided risk and distribution feature.", "evidenceIds": ["FY23-T1"] },
+      { "id": "concentration_risk", "score": 30, "explanation": "Financial-services specialization remains the principal concentration.", "evidenceIds": ["FY25-D1"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 28, "explanation": "Purple Fabric supplied product evidence, but no isolated AI revenue.", "evidenceIds": ["FY25-D1"] },
+      { "id": "outcome_platform_migration", "score": 66, "explanation": "Delivery remained material, but reported platform revenue declined.", "evidenceIds": ["FY24-D1", "FY25-D1"] },
+      { "id": "domain_moat", "score": 78, "explanation": "Purple Fabric targeted governed AI in regulated industries.", "evidenceIds": ["FY25-D1"] },
+      { "id": "productivity_conversion", "score": 52, "explanation": "EBITDA margin improved without an isolated AI bridge.", "evidenceIds": ["FY25-D1"] },
+      { "id": "management_delivery", "score": 48, "explanation": "Launches progressed, but the platform-revenue decline tempers confidence.", "evidenceIds": ["FY24-D1", "FY25-D1"] }
+    ]},
+    "evidence": [
+      { "evidenceId": "FY23-T1", "sourceType": "earnings_transcript", "publishedAt": "2023-05-19", "url": "https://www.intellectdesign.com/investor/intimations/Earnings-call-transcript_may-19-2023.pdf" },
+      { "evidenceId": "FY24-D1", "sourceType": "investor_presentation", "publishedAt": "2024-05-09", "url": "https://www.intellectdesign.com/investor/presentations/Intellect-Q4-FY-24-Investor-Deck.pdf" },
+      { "evidenceId": "FY25-D1", "sourceType": "investor_presentation", "publishedAt": "2025-05-09", "url": "https://www.intellectdesign.com/investor/presentations/Intellect-Q4-FY-25-Investor-Deck.pdf", "excerpt": "FY25: INR 241 crore platform revenue, 43 deals and 53 transformations." }
+    ]
+  },
+  {
+    "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "businessModel": "vertical_software",
+    "assessmentAsOf": "2026-05-08", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "totalIncome": 3161, "licenseRevenue": 517, "platformRevenue": 580, "amcRevenue": 570, "licenseLinkedRevenue": 1667, "ebitda": 703, "ebitdaMarginPct": 22.2, "pat": 369, "dealWins": 59, "digitalTransformations": 91, "aiRevenue": null, "notes": ["Platform revenue rose 141% YoY but is not synonymous with AI revenue.", "PAT is before exceptional items; after exceptional items it was INR 345 crore."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 35, "explanation": "Management acknowledged IT automation while core banking remains harder to automate safely.", "evidenceIds": ["FY26-D1"] },
+      { "id": "effort_billing_dependence", "score": 12, "explanation": "The mix is increasingly license-, platform- and AMC-linked.", "evidenceIds": ["FY26-D1"] },
+      { "id": "pricing_deflation", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "insourcing_risk", "score": 30, "explanation": "Composability enables customer teams but anchors a common platform.", "evidenceIds": ["FY23-T1", "FY26-D1"] },
+      { "id": "concentration_risk", "score": 25, "explanation": "Banking focus is offset by 500-plus institutions across 62 countries.", "evidenceIds": ["FY26-D1"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 48, "explanation": "Enterprise-AI platform deals were disclosed, but AI revenue remained unsegmented.", "evidenceIds": ["FY26-D1"] },
+      { "id": "outcome_platform_migration", "score": 85, "explanation": "Platform revenue reached INR 580 crore with 91 transformations.", "evidenceIds": ["FY26-D1"] },
+      { "id": "domain_moat", "score": 86, "explanation": "Domain specialization, patents and governed AI provide substantive evidence.", "evidenceIds": ["FY26-D1"] },
+      { "id": "productivity_conversion", "score": 65, "explanation": "Revenue and license-linked revenue grew strongly; AI causality is not isolated.", "evidenceIds": ["FY26-D1"] },
+      { "id": "management_delivery", "score": 75, "explanation": "The earlier platform thesis now has stronger revenue, deal and delivery evidence.", "evidenceIds": ["FY23-T1", "FY26-D1"] }
+    ]},
+    "evidence": [
+      { "evidenceId": "FY23-T1", "sourceType": "earnings_transcript", "publishedAt": "2023-05-19", "url": "https://www.intellectdesign.com/investor/intimations/Earnings-call-transcript_may-19-2023.pdf" },
+      { "evidenceId": "FY26-D1", "sourceType": "investor_presentation", "publishedAt": "2026-05-08", "url": "https://www.intellectdesign.com/investor/intimations/InvestorEarningsCallPresentationQ4FY26signed.pdf", "excerpt": "FY26: platform revenue INR 580 crore versus INR 241 crore; enterprise-AI platform deals disclosed." }
+    ]
+  }
+]

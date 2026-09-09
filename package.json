@@ -9,7 +9,8 @@
     "start": "NODE_ENV=production tsx server.ts",
     "lint": "tsc --noEmit",
     "verify:bms-schema": "node --import tsx scripts/verify-bms-factor-schema.ts",
-    "verify:ai-transition": "node --import tsx scripts/verify-ai-transition-schema.ts && node --import tsx scripts/verify-ai-transition-sources.ts",
+    "verify:ai-transition": "node --import tsx scripts/verify-ai-transition-schema.ts && node --import tsx scripts/verify-ai-transition-sources.ts && node --import tsx scripts/verify-ai-transition-history.ts",
+    "render:ai-transition": "node --import tsx scripts/render-ai-transition-history.ts",
     "collect:ai-transition": "node --import tsx scripts/collect-ai-transition-sources.ts"
   },
   "dependencies": {

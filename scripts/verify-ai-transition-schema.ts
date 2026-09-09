@@ -32,6 +32,7 @@ assert.equal(pointInTime.eligibleForBacktest, true);
 
 const reconstructed = normalizeAiTransitionAssessment({ ...pointInTime, assessmentMode: "reconstructed_today" });
 assert.equal(reconstructed.eligibleForBacktest, false);
+assert.equal(reconstructed.operatingMetrics, null);
 
 const sparse = normalizeAiTransitionAssessment({
   symbol: "SMALLIT",
@@ -43,5 +44,14 @@ const sparse = normalizeAiTransitionAssessment({
 assert.equal(sparse.exposure.score, null);
 assert.equal(sparse.classification, "insufficient_evidence");
 
-console.log("AI transition schema verification passed.");
+const explicitMissing = normalizeAiTransitionAssessment({
+  symbol: "MISSING",
+  companyName: "Explicit Missing Test",
+  assessmentAsOf: "2025-03-31",
+  exposure: { dimensions: AI_EXPOSURE_DIMENSIONS.map((item) => ({ id: item.id, score: null })) },
+  readiness: { dimensions: AI_READINESS_DIMENSIONS.map((item) => ({ id: item.id, score: null })) },
+});
+assert.equal(explicitMissing.exposure.coverage, 0);
+assert.equal(explicitMissing.readiness.coverage, 0);
 
+console.log("AI transition schema verification passed.");

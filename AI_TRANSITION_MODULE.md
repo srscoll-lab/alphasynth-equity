@@ -42,3 +42,7 @@ The complete IT universe will be catalogued after the pilot is calibrated. Compa
 ## First calibration set
 
 TCS, Tata Elxsi and Intellect Design Arena are the first three-company set. They represent scaled IT services, engineering R&D and vertical product/platform software respectively. The disclosure collector is locked to each company's official domain and admits quarterly results, earnings transcripts, investor presentations and annual reports from FY2023 onward. Archives that expose fewer than eight quarterly documents are routed to rendered discovery rather than treated as complete.
+
+## First historical calibration
+
+The first worked history covers Intellect Design Arena from FY2023 through FY2026. It is labelled `reconstructed_today` and cannot enter the unbiased backtest. Reported platform revenue is retained as an operating metric but is never relabelled as AI revenue. AI readiness can therefore improve on product, deal and delivery evidence while separately disclosed AI revenue remains unavailable.
