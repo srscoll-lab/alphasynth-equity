@@ -1,0 +1,82 @@
+[
+  {
+    "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
+    "assessmentAsOf": "2023-06-07", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 225458, "operatingMarginPct": 24.1, "employees": 614795, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["AI revenue was not separately disclosed."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 75, "explanation": "TCS identified software development and testing as directly disruptable by GenAI.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "effort_billing_dependence", "score": 85, "explanation": "The scaled IT-services model remained substantially linked to delivery effort and people.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "pricing_deflation", "score": 55, "explanation": "Management identified distorted customer expectations as a near-term GenAI risk.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "insourcing_risk", "score": 45, "explanation": "Client-accessible GenAI creates some insourcing risk, moderated by transformation complexity.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "concentration_risk", "score": 35, "explanation": "Scale across industries and geographies reduces concentration risk.", "evidenceIds": ["TCS-FY23-AR"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 10, "explanation": "No separate AI revenue was disclosed.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "outcome_platform_migration", "score": 40, "explanation": "AI tools and services were planned, but commercial outcome evidence was early.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "domain_moat", "score": 85, "explanation": "Deep client context, vertical breadth and scale supplied substantial implementation protection.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "productivity_conversion", "score": 30, "explanation": "Software productivity investment was disclosed without quantified AI economics.", "evidenceIds": ["TCS-FY23-AR"] },
+      { "id": "management_delivery", "score": 35, "explanation": "Training and controlled pilots were commitments rather than demonstrated monetisation.", "evidenceIds": ["TCS-FY23-AR"] }
+    ]},
+    "evidence": [{ "evidenceId": "TCS-FY23-AR", "sourceType": "annual_report", "publishedAt": "2023-06-07", "url": "https://www.tcs.com/content/dam/tcs/investor-relations/financial-statements/2022-23/ar/annual-report-2022-2023.pdf", "excerpt": "GenAI could disrupt development/testing; TCS planned large-scale skilling and productivity research." }]
+  },
+  {
+    "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
+    "assessmentAsOf": "2024-04-12", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "operatingMarginPct": 24.6, "employees": 601546, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY24 revenue was USD 29.08 billion; AI revenue remained unsegmented."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 72, "explanation": "GenAI moved into live use cases across the services portfolio.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "effort_billing_dependence", "score": 82, "explanation": "The large services workforce remained central to delivery.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "pricing_deflation", "score": 60, "explanation": "Client focus on cost reduction and automation increased pricing pressure.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "insourcing_risk", "score": 50, "explanation": "Broader client access to GenAI raises insourcing potential.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "concentration_risk", "score": 35, "explanation": "Industry and geographic diversification remained strong.", "evidenceIds": ["TCS-FY24-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 20, "explanation": "AI demand and use cases were disclosed without separate revenue.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "outcome_platform_migration", "score": 55, "explanation": "AI.Cloud and live GenAI use cases supplied early scaled-delivery evidence.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "domain_moat", "score": 87, "explanation": "Contextual knowledge, hyperscaler partnerships and vertical reach remained differentiators.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "productivity_conversion", "score": 45, "explanation": "Training and internal platforms advanced, but AI economics were not isolated.", "evidenceIds": ["TCS-FY24-R"] },
+      { "id": "management_delivery", "score": 55, "explanation": "Live use cases and workforce reskilling showed progress against FY23 intentions.", "evidenceIds": ["TCS-FY24-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TCS-FY24-R", "sourceType": "results", "publishedAt": "2024-04-12", "url": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2024", "excerpt": "FY24 operating margin was 24.6%; AI.Cloud led growth and clients moved GenAI use cases live." }]
+  },
+  {
+    "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
+    "assessmentAsOf": "2025-04-10", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "operatingMarginPct": 24.3, "employees": 607979, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["FY25 revenue was USD 30.18 billion; AI revenue remained unsegmented."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 75, "explanation": "Over one-third of engagements used AI/GenAI to accelerate project outcomes.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "effort_billing_dependence", "score": 78, "explanation": "Services delivery remained people-intensive despite accelerating automation.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "pricing_deflation", "score": 65, "explanation": "AI-led delivery creates an increasing requirement to share productivity value with clients.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "insourcing_risk", "score": 55, "explanation": "Enterprise AI tools broaden client self-service, moderated by legacy complexity.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "concentration_risk", "score": 35, "explanation": "The portfolio remained diversified.", "evidenceIds": ["TCS-FY25-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 35, "explanation": "AI engagement traction was material, but revenue was still not separately disclosed.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "outcome_platform_migration", "score": 67, "explanation": "AI-enabled engineering and agentic offerings expanded across service lines.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "domain_moat", "score": 88, "explanation": "Customer context and industry knowledge supported scaled AI implementation.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "productivity_conversion", "score": 65, "explanation": "AI was used in over a third of engagements while full-year margin remained 24.3%.", "evidenceIds": ["TCS-FY25-R"] },
+      { "id": "management_delivery", "score": 70, "explanation": "Prior skilling and platform investments progressed into broad engagement use.", "evidenceIds": ["TCS-FY25-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TCS-FY25-R", "sourceType": "results", "publishedAt": "2025-04-10", "url": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2025", "excerpt": "Over one-third of engagements used AI/GenAI; FY25 operating margin was 24.3%." }]
+  },
+  {
+    "symbol": "TCS", "companyName": "Tata Consultancy Services", "businessModel": "it_services",
+    "assessmentAsOf": "2026-04-09", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 267021, "operatingMarginPct": 25, "employees": 584519, "aiAnnualizedRevenueUsdBn": 2.3, "aiSkilledEmployees": 270000, "aiRevenue": null, "notes": ["USD 2.3 billion is annualized AI revenue, not audited full-year segment revenue."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 76, "explanation": "AI deployment increasingly automates delivery tasks across service lines.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "effort_billing_dependence", "score": 75, "explanation": "People-led services remain material despite an AI-first operating shift.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "pricing_deflation", "score": 65, "explanation": "Scaled automation sustains pressure on conventional effort pricing.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "insourcing_risk", "score": 55, "explanation": "Client AI capability is rising, while complex transformations preserve integrator demand.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "concentration_risk", "score": 30, "explanation": "Broad markets and industries reduce concentration.", "evidenceIds": ["TCS-FY26-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 82, "explanation": "Annualized AI revenue exceeded USD 2.3 billion, with the annualized limitation retained.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "outcome_platform_migration", "score": 78, "explanation": "AI solutions, infrastructure partnerships and platform-led delivery reached scale.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "domain_moat", "score": 90, "explanation": "Industry context, client relationships and a large trained workforce support implementation depth.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "productivity_conversion", "score": 75, "explanation": "Operating margin rose to 25% alongside AI investment and workforce reduction.", "evidenceIds": ["TCS-FY26-R"] },
+      { "id": "management_delivery", "score": 82, "explanation": "AI revenue, skills and deployment evidence materially advanced prior commitments.", "evidenceIds": ["TCS-FY26-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TCS-FY26-R", "sourceType": "results", "publishedAt": "2026-04-09", "url": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2026", "excerpt": "Annualized AI revenue exceeded USD 2.3 billion; FY26 operating margin was 25%; 270,000-plus employees had higher AI/ML proficiency." }]
+  }
+]

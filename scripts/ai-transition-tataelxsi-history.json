@@ -1,0 +1,82 @@
+[
+  {
+    "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "businessModel": "engineering_rd",
+    "assessmentAsOf": "2023-05-18", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 3144.7, "ebitdaMarginPct": 30.6, "pat": 755.2, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["AI revenue was not separately disclosed."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 65, "explanation": "Design and software-engineering tasks face automation, moderated by physical-product integration.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "effort_billing_dependence", "score": 72, "explanation": "Engineering services remained substantially people- and project-delivery led.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "pricing_deflation", "score": null, "explanation": null, "evidenceIds": [] },
+      { "id": "insourcing_risk", "score": 45, "explanation": "OEM engineering teams can internalize tools, while specialist design work limits substitution.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "concentration_risk", "score": 55, "explanation": "Three core verticals create meaningful sector concentration despite strong growth.", "evidenceIds": ["TELX-FY23-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 8, "explanation": "No separate AI revenue was disclosed.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "outcome_platform_migration", "score": 35, "explanation": "Design-digital contract growth provided only early transition evidence.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "domain_moat", "score": 78, "explanation": "Automotive, healthcare and media engineering expertise supplied a strong domain moat.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "productivity_conversion", "score": 35, "explanation": "High margin was visible, but no AI productivity bridge was disclosed.", "evidenceIds": ["TELX-FY23-R"] },
+      { "id": "management_delivery", "score": 35, "explanation": "AI adaptation evidence remained preliminary.", "evidenceIds": ["TELX-FY23-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TELX-FY23-R", "sourceType": "results", "publishedAt": "2023-05-18", "url": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-delivers-strong-performance-for-fy23-with-full-year-revenue-growing-by-273-and-profit-after-tax-growing-by-374", "excerpt": "FY23 revenue was INR 3,144.7 crore and EBITDA margin 30.6%, with growth across engineering verticals." }]
+  },
+  {
+    "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "businessModel": "engineering_rd",
+    "assessmentAsOf": "2024-04-23", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 3552.1, "ebitdaMarginPct": 29.5, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["AI revenue was not separately disclosed."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 70, "explanation": "Software-defined engineering increases both AI exposure and opportunity.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "effort_billing_dependence", "score": 70, "explanation": "Engineering delivery remained services-led.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "pricing_deflation", "score": 45, "explanation": "Discretionary R&D reductions in media supplied early pricing and demand pressure evidence.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "insourcing_risk", "score": 48, "explanation": "OEM capability creates some insourcing risk, moderated by embedded program relationships.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "concentration_risk", "score": 62, "explanation": "Transportation reached 49.9% of SDS revenue, increasing vertical concentration.", "evidenceIds": ["TELX-FY24-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 15, "explanation": "AI investment was disclosed without separate revenue.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "outcome_platform_migration", "score": 45, "explanation": "Design-digital integration and platforms expanded the proposition.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "domain_moat", "score": 82, "explanation": "Embedded SDV programs and design-led engineering strengthened domain depth.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "productivity_conversion", "score": 42, "explanation": "Margin remained 29.5%, but AI-specific productivity was not isolated.", "evidenceIds": ["TELX-FY24-R"] },
+      { "id": "management_delivery", "score": 48, "explanation": "Integrated design-digital execution advanced, while AI proof remained limited.", "evidenceIds": ["TELX-FY24-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TELX-FY24-R", "sourceType": "results", "publishedAt": "2024-04-23", "url": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-delivers-13-revenue-growth-in-fy24-ebitda-margin-at-29-5", "excerpt": "FY24 revenue was INR 3,552.1 crore; transportation was 49.9% of SDS revenue; investments included platforms and AI." }]
+  },
+  {
+    "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "businessModel": "engineering_rd",
+    "assessmentAsOf": "2025-04-17", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 3729, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": 500, "aiRevenue": null, "notes": ["The 500 figure is an AI specialist pool; management separately said over 70% of talent was AI-ready."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 70, "explanation": "AI increasingly affects product engineering, testing and design workflows.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "effort_billing_dependence", "score": 68, "explanation": "The business remained engineering-services led despite large consolidation deals.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "pricing_deflation", "score": 52, "explanation": "Paused automotive programs and cautious R&D spending showed commercial pressure.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "insourcing_risk", "score": 50, "explanation": "AI tooling can empower OEM teams, while specialist programs retain integration demand.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "concentration_risk", "score": 62, "explanation": "Automotive and media customer conditions remained material to results.", "evidenceIds": ["TELX-FY25-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 25, "explanation": "AI-enabled solutions and deal use cases were disclosed without separate revenue.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "outcome_platform_migration", "score": 55, "explanation": "AI-powered diagnostics, therapies and design solutions supplied commercial use cases.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "domain_moat", "score": 84, "explanation": "SDV, healthcare and media expertise remained difficult to commoditize fully.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "productivity_conversion", "score": 48, "explanation": "AI targeted quality and efficiency, but quantified conversion was absent.", "evidenceIds": ["TELX-FY25-R"] },
+      { "id": "management_delivery", "score": 60, "explanation": "Over 70% AI-ready talent and 500 specialists demonstrated material capability building.", "evidenceIds": ["TELX-FY25-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TELX-FY25-R", "sourceType": "results", "publishedAt": "2025-04-17", "url": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-3729-crores-for-fy25-with-full-year-pbt-at-263", "excerpt": "FY25 revenue was INR 3,729 crore; over 70% of talent was AI-ready with more than 500 specialists." }]
+  },
+  {
+    "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "businessModel": "engineering_rd",
+    "assessmentAsOf": "2026-04-21", "assessmentMode": "reconstructed_today", "reconstructedAt": "2026-09-09T00:00:00.000Z",
+    "operatingMetrics": { "revenue": 3757.4, "aiAnnualizedRevenueUsdBn": null, "aiSkilledEmployees": null, "aiRevenue": null, "notes": ["Q4 EBITDA margin was 24.6%; a comparable full-year EBITDA margin was not stated in this release."] },
+    "exposure": { "dimensions": [
+      { "id": "task_automability", "score": 72, "explanation": "Enterprise GenAI was embedded across engineering, design and delivery.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "effort_billing_dependence", "score": 62, "explanation": "A transition toward fixed-bid project ownership reduced, but did not remove, effort exposure.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "pricing_deflation", "score": 52, "explanation": "AI efficiencies increase pricing pressure even as the delivery model adapts.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "insourcing_risk", "score": 50, "explanation": "Client AI capability rises, while multidisciplinary domain work preserves specialist demand.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "concentration_risk", "score": 65, "explanation": "OEMs represented 77% of transportation revenue, leaving meaningful customer-model concentration.", "evidenceIds": ["TELX-FY26-R"] }
+    ]},
+    "readiness": { "dimensions": [
+      { "id": "ai_revenue_evidence", "score": 38, "explanation": "Scaled AI use was disclosed, but AI revenue remained unsegmented.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "outcome_platform_migration", "score": 68, "explanation": "DevStudio.ai, platform accelerators and fixed-bid ownership showed business-model movement.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "domain_moat", "score": 86, "explanation": "Domain-led AI across SDV, medtech and media retained strong integration depth.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "productivity_conversion", "score": 68, "explanation": "Management reported measurable productivity and margin benefits, though no isolated amount.", "evidenceIds": ["TELX-FY26-R"] },
+      { "id": "management_delivery", "score": 72, "explanation": "Enterprise-wide adoption moved beyond pilots into delivery and customer outcomes.", "evidenceIds": ["TELX-FY26-R"] }
+    ]},
+    "evidence": [{ "evidenceId": "TELX-FY26-R", "sourceType": "results", "publishedAt": "2026-04-21", "url": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-9938-cr-registers-healthy-growth-of-42-qoq", "excerpt": "FY26 revenue was INR 3,757.4 crore; GenAI adoption moved beyond pilots with measurable productivity and a fixed-bid transition." }]
+  }
+]

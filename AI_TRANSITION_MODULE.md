@@ -45,4 +45,4 @@ TCS, Tata Elxsi and Intellect Design Arena are the first three-company set. They
 
 ## First historical calibration
 
-The first worked history covers Intellect Design Arena from FY2023 through FY2026. It is labelled `reconstructed_today` and cannot enter the unbiased backtest. Reported platform revenue is retained as an operating metric but is never relabelled as AI revenue. AI readiness can therefore improve on product, deal and delivery evidence while separately disclosed AI revenue remains unavailable.
+The first worked histories cover TCS, Tata Elxsi and Intellect Design Arena from FY2023 through FY2026. They are labelled `reconstructed_today` and cannot enter the unbiased backtest. Reported platform revenue, AI-enabled engagements and trained-person counts are never relabelled as AI revenue. TCS's FY2026 annualized AI revenue is retained with its annualized—not audited segment-revenue—qualification.
