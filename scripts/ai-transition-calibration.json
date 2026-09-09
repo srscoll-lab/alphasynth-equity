@@ -1,0 +1,24 @@
+[
+  {
+    "ticker": "TCS",
+    "companyName": "Tata Consultancy Services",
+    "businessModel": "it_services",
+    "officialDomains": ["tcs.com"],
+    "archiveUrls": ["https://www.tcs.com/investor-relations"]
+  },
+  {
+    "ticker": "TATAELXSI",
+    "companyName": "Tata Elxsi",
+    "businessModel": "engineering_rd",
+    "officialDomains": ["tataelxsi.com"],
+    "archiveUrls": ["https://www.tataelxsi.com/investors"]
+  },
+  {
+    "ticker": "INTELLECT",
+    "companyName": "Intellect Design Arena",
+    "businessModel": "vertical_software",
+    "officialDomains": ["intellectdesign.com"],
+    "archiveUrls": ["https://www.intellectdesign.com/investor-relations/"]
+  }
+]
+

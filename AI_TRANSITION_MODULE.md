@@ -39,3 +39,6 @@ Market performance is an outcome, not proof that AI caused the outcome.
 
 The complete IT universe will be catalogued after the pilot is calibrated. Companies without adequate disclosure remain visible as `insufficient_evidence`; they are not assigned artificial zeroes or low-confidence rankings.
 
+## First calibration set
+
+TCS, Tata Elxsi and Intellect Design Arena are the first three-company set. They represent scaled IT services, engineering R&D and vertical product/platform software respectively. The disclosure collector is locked to each company's official domain and admits quarterly results, earnings transcripts, investor presentations and annual reports from FY2023 onward. Archives that expose fewer than eight quarterly documents are routed to rendered discovery rather than treated as complete.
