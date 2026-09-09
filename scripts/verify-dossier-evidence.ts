@@ -97,6 +97,26 @@ assert.equal(
   ).date,
   null,
 );
+assert.deepEqual(
+  documentPublicationDate(
+    {
+      markdown: "BAJAJ AUTO LTD.\nAGM NOTICE\nNotice is hereby given that the Annual General Meeting will be held on 21 July 2026.\n" +
+        "The financial year ended 31 March 2026.\nBy order of the Board of Directors\nFor Bajaj Auto Ltd.\nRajiv Gandhi\nCompany Secretary\nPune: 06 May 2026\n" +
+        "Shareholder information. ".repeat(30),
+    },
+    { url: "https://investors.bajajauto.com/ar26/Annual-Report-NoticeProxyAS.pdf" },
+  ),
+  { date: "2026-05-06", basis: "signed_company_notice" },
+);
+assert.equal(
+  documentPublicationDate(
+    {
+      markdown: "AGM NOTICE\nThe Annual General Meeting will be held on 21 July 2026.\n" + "Shareholder information. ".repeat(30),
+    },
+    { url: "https://issuer.example/undated-agm-notice.pdf" },
+  ).date,
+  null,
+);
 
 const calls: string[] = [];
 const result = await collectOfficialEvidence([{ url: base }, { url: "https://evil.example/report.pdf" }], domains, "2026-09-05", async url => {

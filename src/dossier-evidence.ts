@@ -188,6 +188,20 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
       const date = exactEvidenceDate(cover.slice(0, Math.min(recipient, 500)));
       if (date) return { date, basis: "exchange_cover_letter" };
     }
+    // Formal company notices commonly put the document date beside the place
+    // immediately after the authorised "By order of the Board" signature.
+    // Read only that signature block so an AGM date or reporting-period date
+    // elsewhere in the notice cannot be mistaken for the document date.
+    const noticeFront = String(scraped.markdown || "").slice(0, 6000);
+    if (/\b(?:AGM|annual general meeting)\s+notice\b|\bnotice\s+(?:of|is hereby given)\b/i.test(noticeFront)) {
+      const byOrder = noticeFront.search(/\bby order of the board(?: of directors)?\b/i);
+      if (byOrder >= 0) {
+        const signatureBlock = noticeFront.slice(byOrder, byOrder + 1000);
+        const placeDate = signatureBlock.match(/\b(?:Pune|Mumbai|New Delhi|Delhi|Bengaluru|Bangalore|Chennai|Hyderabad|Kolkata|Ahmedabad)\s*:\s*(.{0,40})/i);
+        const date = exactEvidenceDate(placeDate?.[1]);
+        if (date) return { date, basis: "signed_company_notice" };
+      }
+    }
   }
   return { date: null, basis: "none" };
 }
