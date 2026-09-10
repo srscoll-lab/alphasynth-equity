@@ -1,7 +1,7 @@
 import { isOfficialDossierSource, type DossierSource } from "./dossier.ts";
 
 type Candidate = { url: string; title?: string; publishedDate?: string; date?: string; dateBasis?: string; depth?: number };
-type Scraped = { markdown?: string; rawHtml?: string; metadata?: Record<string, any> };
+type Scraped = { success?: boolean; error?: string; markdown?: string; rawHtml?: string; metadata?: Record<string, any> };
 type Scrape = (url: string, options: any) => Promise<Scraped>;
 
 // A publication date must be an actual day, not an upload folder or fiscal year.
@@ -231,15 +231,33 @@ export async function collectOfficialEvidence(candidates: Candidate[], domains: 
     seen.add(url);
     if (isPdf(url)) { if (++documentAttempts > 4) break; }
     else if (++discoveryPages > 2) continue;
-    let scraped: Scraped;
-    try {
-      scraped = await scrape(url, {
+    const scrapeOptions = {
         formats: isPdf(url) ? ["markdown"] : ["markdown", "rawHtml"],
         onlyMainContent: true,
         timeout: 45000,
         ...(isPdf(url) ? { parsers: [{ type: "pdf", mode: "fast", maxPages: pdfMaxPages }] } : {}),
-      });
-    } catch { reject(url, "scrape_failed"); continue; }
+    };
+    let scraped: Scraped | undefined;
+    let scrapeFailure = "";
+    // Firecrawl can return { success: false, error } without throwing. Retry a
+    // transient proxy/tunnel failure once through the basic proxy, then expose
+    // the transport failure instead of misclassifying it as an undated source.
+    for (let attempt = 0; attempt < 2 && !scraped; attempt++) {
+      try {
+        const result = await scrape(url, { ...scrapeOptions, ...(attempt ? { proxy: "basic" } : {}) });
+        if (result?.success === false || result?.error) {
+          scrapeFailure = String(result.error || "Firecrawl returned an unsuccessful response");
+          continue;
+        }
+        scraped = result;
+      } catch (error) {
+        scrapeFailure = error instanceof Error ? error.message : String(error || "scrape failed");
+      }
+    }
+    if (!scraped) {
+      reject(url, /\b(?:proxy|tunnel)\b/i.test(scrapeFailure) ? "scrape_proxy_failed" : "scrape_failed");
+      continue;
+    }
     const finalUrl = scraped.metadata?.url || scraped.metadata?.sourceURL || url;
     if (!isOfficialDossierSource(finalUrl, domains)) { reject(url, "unverified_redirect"); continue; }
     if (Number(scraped.metadata?.statusCode || 200) >= 400) { reject(url, "source_http_error"); continue; }

@@ -141,4 +141,20 @@ assert.equal(redirect.rejectionReasons.unverified_redirect, 1);
 const missing = await collectOfficialEvidence([{ url: pdf }], domains, "2026-09-05", async () => ({ markdown: "Undated official content. ".repeat(30) }));
 assert.equal(missing.sources.length, 0);
 assert.equal(missing.rejectionReasons.missing_publication_date, 1);
+let transientAttempts = 0;
+const transientProxy = await collectOfficialEvidence([{ url: pdf }], domains, "2026-09-05", async (_url, options) => {
+  transientAttempts++;
+  if (transientAttempts === 1) return { success: false, error: "ERR_TUNNEL_CONNECTION_FAILED internal proxy error" };
+  assert.equal(options.proxy, "basic");
+  return { markdown: cover };
+});
+assert.equal(transientAttempts, 2);
+assert.equal(transientProxy.sources.length, 1);
+const persistentProxy = await collectOfficialEvidence([{ url: pdf }], domains, "2026-09-05", async () => ({
+  success: false,
+  error: "Firecrawl internal proxy tunnel failed",
+}));
+assert.equal(persistentProxy.sources.length, 0);
+assert.equal(persistentProxy.rejectionReasons.scrape_proxy_failed, 1);
+assert.equal(persistentProxy.rejectionReasons.missing_publication_date, undefined);
 console.log("PASS: icon-only official PDF discovery, exact filing date, cutoff, undated and untrusted-source rejection.");
