@@ -157,4 +157,18 @@ const persistentProxy = await collectOfficialEvidence([{ url: pdf }], domains, "
 assert.equal(persistentProxy.sources.length, 0);
 assert.equal(persistentProxy.rejectionReasons.scrape_proxy_failed, 1);
 assert.equal(persistentProxy.rejectionReasons.missing_publication_date, undefined);
+let directParseAttempts = 0;
+const directParseFallback = await collectOfficialEvidence(
+  [{ url: pdf }],
+  domains,
+  "2026-09-05",
+  async () => ({ success: false, error: "ERR_TUNNEL_CONNECTION_FAILED" }),
+  async (_url, options) => {
+    directParseAttempts++;
+    assert.equal(options.parsers[0].type, "pdf");
+    return { markdown: cover };
+  },
+);
+assert.equal(directParseAttempts, 1);
+assert.equal(directParseFallback.sources.length, 1);
 console.log("PASS: icon-only official PDF discovery, exact filing date, cutoff, undated and untrusted-source rejection.");

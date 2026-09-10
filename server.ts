@@ -4,7 +4,7 @@ import fs from "fs";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
-import { isResearchDossier } from "./src/dossier";
+import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
@@ -2984,6 +2984,31 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const scraper = getFirecrawl();
     if (!scraper) return res.status(503).json({ error: "The official-source scraper is not configured." });
 
+    const parseOfficialPdfDirectly = async (url: string, options: any) => {
+      const response = await fetch(url, {
+        redirect: "follow",
+        signal: AbortSignal.timeout(45_000),
+        headers: { "user-agent": "AlphaSynth-Research/1.0" },
+      });
+      if (!response.ok) throw new Error(`Official PDF returned HTTP ${response.status}`);
+      if (!isOfficialDossierSource(response.url || url, officialDomains)) throw new Error("Official PDF redirected to an unverified domain");
+      const maximumBytes = 25 * 1024 * 1024;
+      const declaredBytes = Number(response.headers.get("content-length") || 0);
+      if (declaredBytes > maximumBytes) throw new Error("Official PDF exceeds the direct-parse size limit");
+      const bytes = Buffer.from(await response.arrayBuffer());
+      if (!bytes.length || bytes.length > maximumBytes) throw new Error("Official PDF has an invalid size");
+      const filename = decodeURIComponent(new URL(response.url || url).pathname.split("/").pop() || "official-document.pdf");
+      return scraper.parse(
+        { data: bytes, filename, contentType: "application/pdf" },
+        {
+          formats: ["markdown"],
+          onlyMainContent: true,
+          timeout: options.timeout,
+          parsers: options.parsers,
+        },
+      );
+    };
+
     try {
       const siteScope = `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
       const query = `${companyName} ${ticker} annual report quarterly results investor presentation ${siteScope}`;
@@ -2994,7 +3019,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const search: any = await scraper.search(query, { limit: searchLimit });
       const candidates = [...(search?.web || []), ...(search?.news || [])];
       let admission = await collectOfficialEvidence(
-        candidates, officialDomains, cutoff, (url, options) => scraper.scrape(url, options),
+        candidates,
+        officialDomains,
+        cutoff,
+        (url, options) => scraper.scrape(url, options),
+        parseOfficialPdfDirectly,
       );
       let candidateCount = candidates.length;
 
@@ -3012,7 +3041,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           .filter((candidate: any) => candidate?.url && !initialUrls.has(String(candidate.url)));
         candidateCount += fallbackCandidates.length;
         const fallbackAdmission = await collectOfficialEvidence(
-          fallbackCandidates, officialDomains, cutoff, (url, options) => scraper.scrape(url, options),
+          fallbackCandidates,
+          officialDomains,
+          cutoff,
+          (url, options) => scraper.scrape(url, options),
+          parseOfficialPdfDirectly,
         );
         const combinedRejectionReasons = { ...admission.rejectionReasons };
         for (const [reason, count] of Object.entries(fallbackAdmission.rejectionReasons)) {

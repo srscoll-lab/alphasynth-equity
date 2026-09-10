@@ -3,6 +3,7 @@ import { isOfficialDossierSource, type DossierSource } from "./dossier.ts";
 type Candidate = { url: string; title?: string; publishedDate?: string; date?: string; dateBasis?: string; depth?: number };
 type Scraped = { success?: boolean; error?: string; markdown?: string; rawHtml?: string; metadata?: Record<string, any> };
 type Scrape = (url: string, options: any) => Promise<Scraped>;
+type ParsePdfFallback = (url: string, options: any) => Promise<Scraped>;
 
 // A publication date must be an actual day, not an upload folder or fiscal year.
 export function exactEvidenceDate(value: unknown): string | null {
@@ -208,7 +209,13 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
   return { date: null, basis: "none" };
 }
 
-export async function collectOfficialEvidence(candidates: Candidate[], domains: string[], cutoff: string, scrape: Scrape) {
+export async function collectOfficialEvidence(
+  candidates: Candidate[],
+  domains: string[],
+  cutoff: string,
+  scrape: Scrape,
+  parsePdfFallback?: ParsePdfFallback,
+) {
   const queue: Candidate[] = candidates.map(c => ({ ...c, url: unwrapOfficialPdfViewerUrl(c.url), depth: 0 }));
   const seen = new Set<string>();
   const sources: DossierSource[] = [];
@@ -252,6 +259,16 @@ export async function collectOfficialEvidence(candidates: Candidate[], domains: 
         scraped = result;
       } catch (error) {
         scrapeFailure = error instanceof Error ? error.message : String(error || "scrape failed");
+      }
+    }
+    if (!scraped && isPdf(url) && parsePdfFallback) {
+      try {
+        const result = await parsePdfFallback(url, scrapeOptions);
+        if (result?.success === false || result?.error) throw new Error(String(result.error || "PDF parse failed"));
+        scraped = result;
+      } catch {
+        reject(url, "pdf_direct_parse_failed");
+        continue;
       }
     }
     if (!scraped) {
