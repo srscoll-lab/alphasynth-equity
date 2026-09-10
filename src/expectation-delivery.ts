@@ -1,17 +1,18 @@
-export const EXPECTATION_DELIVERY_SCHEMA_VERSION = "1.0.0" as const;
+export const EXPECTATION_DELIVERY_SCHEMA_VERSION = "1.1.0" as const;
 
 export type AssessmentMode = "prospective" | "reconstructed_today";
 export type GateSeverity = "hard" | "soft";
 export type GateResult = "pass" | "fail" | "unknown";
 export type QualityStatus = "pass" | "watch" | "fail" | "insufficient_evidence";
 export type ExpectationLevel = "low" | "balanced" | "high" | "unknown";
-export type DeliveryDirection = "ahead" | "in_line" | "behind" | "unknown";
+export type DeliveryDirection = "ahead" | "in_line" | "behind" | "mixed" | "unknown";
 export type GapClassification =
   | "under_recognised_delivery"
   | "expectations_confirmed"
   | "turnaround_unconfirmed"
   | "derating_risk"
   | "delivery_ahead"
+  | "mixed_delivery"
   | "balanced"
   | "delivery_behind"
   | "not_eligible"
@@ -72,6 +73,17 @@ export type ExpectationDeliveryAssessment = {
   deliveryDirection: DeliveryDirection;
   deliveryScore: number | null;
   deliveryCoverage: number;
+  deliveryComponents: Array<{
+    id: string;
+    label: string;
+    baselineLabel: "Expected" | "Previous reading";
+    outcomeLabel: "Actual" | "Current reading";
+    baseline: number;
+    outcome: number;
+    change: number;
+    unit: string;
+    direction: "positive" | "neutral" | "negative";
+  }>;
   gapClassification: GapClassification;
   hardGateFailures: string[];
   softWarnings: string[];
@@ -126,17 +138,21 @@ function evaluateDelivery(metrics: DeliveryMetric[]) {
   const availableWeight = available.reduce((sum, metric) => sum + metric.weight, 0);
   const deliveryCoverage = totalConfiguredWeight > 0 ? availableWeight / totalConfiguredWeight : 0;
   if (!available.length || deliveryCoverage < 0.6) {
-    return { deliveryScore: null, deliveryCoverage, deliveryDirection: "unknown" as const };
+    return { deliveryScore: null, deliveryCoverage, deliveryDirection: "unknown" as const, normalizedComponents: [] as number[] };
   }
-  const weighted = available.reduce((sum, metric) => {
+  const normalizedComponents = available.map(metric => {
     const rawDifference = (metric.actual as number) - (metric.expected as number);
     const directionalDifference = metric.higherIsBetter ? rawDifference : -rawDifference;
-    const normalized = clamp(directionalDifference / metric.tolerance, -1, 1);
-    return sum + normalized * metric.weight;
-  }, 0);
+    return clamp(directionalDifference / metric.tolerance, -1, 1);
+  });
+  const weighted = available.reduce((sum, metric, index) => sum + normalizedComponents[index] * metric.weight, 0);
   const deliveryScore = Math.round((weighted / availableWeight) * 1000) / 10;
-  const deliveryDirection: DeliveryDirection = deliveryScore >= 10 ? "ahead" : deliveryScore <= -10 ? "behind" : "in_line";
-  return { deliveryScore, deliveryCoverage, deliveryDirection };
+  const materiallyPositive = normalizedComponents.some(value => value >= 0.5);
+  const materiallyNegative = normalizedComponents.some(value => value <= -0.5);
+  const deliveryDirection: DeliveryDirection = materiallyPositive && materiallyNegative
+    ? "mixed"
+    : deliveryScore >= 10 ? "ahead" : deliveryScore <= -10 ? "behind" : "in_line";
+  return { deliveryScore, deliveryCoverage, deliveryDirection, normalizedComponents };
 }
 
 function expectationLevel(percentile: number | null): ExpectationLevel {
@@ -155,6 +171,7 @@ function classifyGap(quality: QualityStatus, expectation: ExpectationLevel, deli
   if (expectation === "high" && delivery === "behind") return "derating_risk";
   if (delivery === "ahead") return "delivery_ahead";
   if (delivery === "behind") return "delivery_behind";
+  if (delivery === "mixed") return "mixed_delivery";
   return "balanced";
 }
 
@@ -165,6 +182,27 @@ export function assessExpectationDelivery(input: ExpectationDeliveryInput): Expe
   const delivery = evaluateDelivery(input.deliveryMetrics);
   const expectation = expectationLevel(input.sectorValuationPercentile);
   const gapClassification = classifyGap(quality.qualityStatus, expectation, delivery.deliveryDirection);
+  const deliveryComponents = input.deliveryMetrics.flatMap(metric => {
+    if (metric.expected === null || metric.actual === null) return [];
+    const rawChange = metric.actual - metric.expected;
+    const directionalChange = metric.higherIsBetter ? rawChange : -rawChange;
+    const direction = directionalChange >= metric.tolerance * 0.5
+      ? "positive" as const
+      : directionalChange <= -metric.tolerance * 0.5
+        ? "negative" as const
+        : "neutral" as const;
+    return [{
+      id: metric.id,
+      label: metric.label,
+      baselineLabel: input.assessmentMode === "reconstructed_today" ? "Previous reading" as const : "Expected" as const,
+      outcomeLabel: input.assessmentMode === "reconstructed_today" ? "Current reading" as const : "Actual" as const,
+      baseline: metric.expected,
+      outcome: metric.actual,
+      change: Math.round(rawChange * 10) / 10,
+      unit: metric.unit,
+      direction,
+    }];
+  });
   const explanation = gapClassification === "insufficient_evidence"
     ? "The available evidence does not yet support a complete expectations–delivery classification. Missing observations remain unknown."
     : gapClassification === "not_eligible"
@@ -182,6 +220,7 @@ export function assessExpectationDelivery(input: ExpectationDeliveryInput): Expe
     deliveryDirection: delivery.deliveryDirection,
     deliveryScore: delivery.deliveryScore,
     deliveryCoverage: Math.round(delivery.deliveryCoverage * 100),
+    deliveryComponents,
     gapClassification,
     hardGateFailures: quality.hardGateFailures,
     softWarnings: quality.softWarnings,
@@ -194,6 +233,6 @@ export const EXPECTATION_DELIVERY_RULES = {
   qualityPolicy: "Any failed hard gate excludes a company from the refined shortlist; unknown hard gates produce insufficient evidence.",
   evidencePolicy: "Missing values remain unknown and are never converted to zero or estimated by a language model.",
   historyPolicy: "Reconstructed history must be labelled reconstructed_today and cannot be represented as a prospectively frozen signal.",
-  deliveryPolicy: "A delivery classification requires at least 60 percent of configured metric weight to have comparable expected and actual values.",
+  deliveryPolicy: "A delivery classification requires at least 60 percent of configured metric weight to have comparable values; materially opposing components are labelled mixed instead of being hidden by net-score cancellation.",
   valuationPolicy: "Expectation level uses a sector-appropriate valuation percentile, not a universal P/E threshold.",
 } as const;

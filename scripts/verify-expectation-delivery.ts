@@ -51,6 +51,27 @@ assert.equal(incomplete.deliveryScore, null);
 assert.equal(incomplete.gapClassification, "insufficient_evidence");
 assert.ok(expectationDeliveryInputErrors({ ...base, sectorValuationPercentile: 120 }).length > 0);
 
+const mixed = assessExpectationDelivery({
+  ...base,
+  assessmentMode: "reconstructed_today",
+  deliveryMetrics: [
+    { ...base.deliveryMetrics[0], expected: 80.5, actual: 29.3 },
+    { ...base.deliveryMetrics[1], expected: 7, actual: 14 },
+    { ...base.deliveryMetrics[2], expected: null, actual: null },
+  ],
+});
+assert.equal(mixed.deliveryDirection, "mixed");
+assert.equal(mixed.deliveryScore, -14.3);
+assert.equal(mixed.gapClassification, "mixed_delivery");
+assert.deepEqual(mixed.deliveryComponents.map(component => ({
+  baselineLabel: component.baselineLabel,
+  outcomeLabel: component.outcomeLabel,
+  direction: component.direction,
+})), [
+  { baselineLabel: "Previous reading", outcomeLabel: "Current reading", direction: "negative" },
+  { baselineLabel: "Previous reading", outcomeLabel: "Current reading", direction: "positive" },
+]);
+
 assert.match(EXPECTATION_DELIVERY_RULES.lifecyclePolicy, /never changes/);
 assert.match(EXPECTATION_DELIVERY_RULES.evidencePolicy, /never converted to zero/);
 console.log("Expectations–delivery overlay verification passed.");

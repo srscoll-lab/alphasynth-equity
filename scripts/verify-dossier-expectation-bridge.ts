@@ -52,4 +52,12 @@ assert.equal(reconstructedFromSupplement.deliveryMetrics[0].expected, 15);
 assert.equal(reconstructedFromSupplement.deliveryMetrics[0].actual, 20);
 assert.deepEqual(reconstructedFromSupplement.deliveryMetrics[0].evidenceRefs, ["supplemental-financial-001"]);
 assert.match(reconstructedFromSupplement.evidence.at(-1)?.label || "", /reconstructed_today/);
+const mixedAssessment = assessExpectationDelivery({
+  ...reconstructedFromSupplement,
+  deliveryMetrics: reconstructedFromSupplement.deliveryMetrics.map(metric => metric.id === "revenue_growth"
+    ? { ...metric, expected: 80.5, actual: 29.3 }
+    : metric.id === "operating_margin" ? { ...metric, expected: 7, actual: 14 } : metric),
+});
+assert.equal(mixedAssessment.deliveryDirection, "mixed");
+assert.equal(mixedAssessment.deliveryScore, 0);
 console.log("PASS: cited dossier evidence builds a conservative reconstructed expectation-delivery input.");
