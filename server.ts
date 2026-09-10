@@ -8,6 +8,7 @@ import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
+import { extractPdfTextLocally } from "./src/pdf-text";
 import {
   BMS_FACTOR_SCHEMA_DESCRIPTION,
   factorAnalysisFromResearchContext,
@@ -2998,15 +2999,25 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const bytes = Buffer.from(await response.arrayBuffer());
       if (!bytes.length || bytes.length > maximumBytes) throw new Error("Official PDF has an invalid size");
       const filename = decodeURIComponent(new URL(response.url || url).pathname.split("/").pop() || "official-document.pdf");
-      return scraper.parse(
-        { data: bytes, filename, contentType: "application/pdf" },
-        {
-          formats: ["markdown"],
-          onlyMainContent: true,
-          timeout: options.timeout,
-          parsers: options.parsers,
-        },
-      );
+      try {
+        const parsed: any = await scraper.parse(
+          { data: bytes, filename, contentType: "application/pdf" },
+          {
+            formats: ["markdown"],
+            onlyMainContent: true,
+            timeout: options.timeout,
+            parsers: options.parsers,
+          },
+        );
+        if (parsed?.success === false || parsed?.error) throw new Error(String(parsed.error || "Firecrawl PDF parse failed"));
+        return parsed;
+      } catch (error) {
+        console.warn("[dossier] Firecrawl file parse failed; using local PDF text fallback:", error instanceof Error ? error.message : error);
+        const maximumPages = Number(options.parsers?.[0]?.maxPages || 20);
+        const markdown = await extractPdfTextLocally(bytes, maximumPages);
+        if (markdown.trim().length < 200) throw new Error("Local PDF text extraction returned insufficient content");
+        return { markdown, metadata: { url: response.url || url } };
+      }
     };
 
     try {
