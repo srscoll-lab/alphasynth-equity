@@ -11,12 +11,14 @@ Required n8n environment variables:
 - `DOSSIER_INTERNAL_TOKEN`: shared secret also configured on AlphaSynth
 
 `expectation-delivery-pilot-v1.json` is a separate inactive pilot connector for the deterministic
-quality, expectations and delivery overlay. It calls `/api/bms/expectation-delivery/assess` with
-the same environment-backed URL and token. It does not modify the BMS score or lifecycle and must
-not replace the dossier webhook. The initial five-company manifest covers one company per frozen
-lifecycle. Generate evidence-empty assessment records with
-`npm run build:expectation-delivery-pilot`; they correctly return `insufficient_evidence` until
-reviewed official observations are supplied. Activate only after those five records pass review.
+quality, expectations and delivery overlay. It accepts a completed cited dossier plus the frozen
+lifecycle and freeze dates, then calls `/api/bms/expectation-delivery/from-dossier` with the same
+environment-backed URL and token. The backend reconstructs only supported observations: explicit
+quality-gate statements, successive year-on-year revenue growth where enough comparable quarters
+exist, and current versus prior-quarter EBITDA margin. Missing cash-conversion, management-target
+and valuation observations remain unknown. The output is labelled `reconstructed_today`; it is not
+analyst consensus and does not modify the BMS score or lifecycle. The initial five-company manifest
+covers one company per frozen lifecycle. Activate only after those five records pass review.
 
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.

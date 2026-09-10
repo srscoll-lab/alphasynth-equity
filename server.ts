@@ -9,6 +9,7 @@ import { collectOfficialEvidence } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import { extractPdfTextLocally } from "./src/pdf-text";
+import { buildExpectationDeliveryInputFromDossier } from "./src/dossier-expectation-bridge";
 import {
   BMS_FACTOR_SCHEMA_DESCRIPTION,
   factorAnalysisFromResearchContext,
@@ -3305,6 +3306,28 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       console.error("[bms] expectation-delivery assessment failed:", error?.message || error);
       return res.status(500).json({ error: "The expectations–delivery assessment could not be calculated." });
     }
+  });
+
+  app.post("/api/bms/expectation-delivery/from-dossier", (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (expectedToken && req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+    const dossier = req.body?.dossier;
+    if (!isResearchDossier(dossier)) return res.status(400).json({ error: "A valid research dossier is required." });
+    const lifecycle = String(req.body?.lifecycle || "").trim();
+    const lifecycleFreezeDate = String(req.body?.lifecycleFreezeDate || "");
+    const expectationFreezeDate = String(req.body?.expectationFreezeDate || "");
+    if (!lifecycle || !/^\d{4}-\d{2}-\d{2}$/.test(lifecycleFreezeDate) || !/^\d{4}-\d{2}-\d{2}$/.test(expectationFreezeDate)) {
+      return res.status(400).json({ error: "Lifecycle and valid lifecycle/expectation freeze dates are required." });
+    }
+    const percentile = req.body?.sectorValuationPercentile;
+    if (percentile !== null && percentile !== undefined
+      && (typeof percentile !== "number" || percentile < 0 || percentile > 100)) {
+      return res.status(400).json({ error: "sectorValuationPercentile must be null or between 0 and 100." });
+    }
+    const input = buildExpectationDeliveryInputFromDossier(dossier, {
+      lifecycle, lifecycleFreezeDate, expectationFreezeDate, sectorValuationPercentile: percentile ?? null,
+    });
+    return res.json({ input, assessment: assessExpectationDelivery(input) });
   });
 
   app.get("/api/bms/factor-analysis/:symbol", async (req, res) => {

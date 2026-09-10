@@ -8,9 +8,11 @@ const http = workflow.nodes.find(node => node.name === "Apply Deterministic Over
 assert.equal(workflow.active, false, "Pilot workflow must remain inactive in source control.");
 assert.ok(http, "Deterministic overlay HTTP node is required.");
 assert.match(http.parameters.url, /ALPHASYNTH_INTERNAL_URL/);
-assert.match(http.parameters.url, /expectation-delivery\/assess/);
+assert.match(http.parameters.url, /expectation-delivery\/from-dossier/);
 assert.equal(http.parameters.specifyBody, "json");
 assert.equal(http.parameters.jsonBody, "={{ $json }}");
+assert.match(workflow.nodes.find(node => node.name === "Validate Assessment Input").parameters.jsCode, /dossier/);
+assert.match(workflow.nodes.find(node => node.name === "Validate Assessment Input").parameters.jsCode, /lifecycleFreezeDate/);
 assert.ok(JSON.stringify(http).includes("DOSSIER_INTERNAL_TOKEN"));
 assert.ok(!JSON.stringify(workflow).match(/fc-[A-Za-z0-9_-]+/), "Workflow must not contain a Firecrawl key.");
 assert.equal(manifest.companies.length, 5);
