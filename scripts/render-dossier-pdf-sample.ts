@@ -91,6 +91,26 @@ const payload: DossierPdfPayload = {
   }), components: [
     { label: "Earnings", score: 87 }, { label: "Economics", score: 76 }, { label: "Execution", score: 81 }, { label: "Balance sheet", score: 72 }, { label: "Management", score: 79 },
   ] },
+  deliveryCheck: {
+    input: {
+      symbol: "RADICO", companyName: "Radico Khaitan Limited", lifecycle: "ESTABLISHED",
+      lifecycleFreezeDate: "2026-08-25", assessmentMode: "reconstructed_today",
+      expectationFreezeDate: "2026-09-08", outcomeDate: "2026-06-30",
+      sectorValuationPercentile: null, qualityGates: [], deliveryMetrics: [], evidence: [],
+    },
+    assessment: {
+      schemaVersion: "1.1.0", symbol: "RADICO", companyName: "Radico Khaitan Limited",
+      lifecycle: "ESTABLISHED", lifecycleUnchanged: true, assessmentMode: "reconstructed_today",
+      qualityStatus: "insufficient_evidence", expectationLevel: "unknown", deliveryDirection: "ahead",
+      deliveryScore: 50, deliveryCoverage: 60, gapClassification: "insufficient_evidence",
+      hardGateFailures: [], softWarnings: [],
+      explanation: "Published quarterly history indicates improving delivery, while the frozen lifecycle remains unchanged.",
+      deliveryComponents: [
+        { id: "revenue_growth", label: "Revenue growth versus prior YoY baseline", baselineLabel: "Previous reading", outcomeLabel: "Current reading", baseline: 12.5, outcome: 18.1, change: 5.6, unit: "%", direction: "positive" },
+        { id: "operating_margin", label: "EBITDA margin versus prior-quarter baseline", baselineLabel: "Previous reading", outcomeLabel: "Current reading", baseline: 19.3, outcome: 20.7, change: 1.4, unit: "%", direction: "positive" },
+      ],
+    },
+  },
 };
 
 const output = path.resolve("output/pdf/AlphaSynth-Professional-Dossier-Sample.pdf");

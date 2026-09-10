@@ -31,6 +31,7 @@ const app = express();
 const PORT: number = Number(process.env.PORT) || 3005;
 const SIGNAL_TRACKER_BUCKET = process.env.SIGNAL_TRACKER_BUCKET || "";
 const SIGNAL_TRACKER_OBJECT = process.env.SIGNAL_TRACKER_OBJECT || "cohort-001/current.json";
+const BMS_LIFECYCLE_FREEZE_DATE = process.env.BMS_LIFECYCLE_FREEZE_DATE || "2026-08-25";
 const SIGNAL_TRACKER_CACHE_MS = 60_000;
 let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
 
@@ -3341,6 +3342,32 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       console.error("[bms] expectation-delivery assessment failed:", error?.message || error);
       return res.status(500).json({ error: "The expectations–delivery assessment could not be calculated." });
     }
+  });
+
+  app.post("/api/bms/delivery-check", async (req, res) => {
+    const dossier = req.body?.dossier;
+    if (!isResearchDossier(dossier)) return res.status(400).json({ error: "A valid research dossier is required." });
+    const lifecycle = String(req.body?.lifecycle || "").trim();
+    if (!lifecycle) return res.status(400).json({ error: "A lifecycle classification is required." });
+    const expectationFreezeDate = dossier.generatedAt.slice(0, 10);
+    let financials = Array.isArray(req.body?.financials) ? req.body.financials : [];
+    if (financials.length < 6) {
+      try {
+        const reconstructed = await parseScreenerQuarterlyHistory(dossier.company.symbol, expectationFreezeDate);
+        financials = reconstructed?.rows || financials;
+      } catch (financialError) {
+        console.warn("[bms] public delivery-check reconstruction failed; retaining dossier-only assessment:",
+          financialError instanceof Error ? financialError.message : financialError);
+      }
+    }
+    const input = buildExpectationDeliveryInputFromDossier(dossier, {
+      lifecycle,
+      lifecycleFreezeDate: BMS_LIFECYCLE_FREEZE_DATE,
+      expectationFreezeDate,
+      sectorValuationPercentile: null,
+      financials,
+    });
+    return res.json({ input, assessment: assessExpectationDelivery(input) });
   });
 
   app.post("/api/bms/expectation-delivery/from-dossier", async (req, res) => {

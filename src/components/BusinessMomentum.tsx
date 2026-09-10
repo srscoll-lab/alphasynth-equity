@@ -17,6 +17,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ResearchDossier } from "../dossier";
 import type { BmsFactorAnalysis } from "../bms-factor-schema";
+import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "../expectation-delivery";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -116,6 +117,11 @@ type DossierFinancialRow = {
   eps?: number | null;
   sourceUrl?: string | null;
   sourceLabel?: string | null;
+};
+
+type DossierDeliveryCheck = {
+  input: ExpectationDeliveryInput;
+  assessment: ExpectationDeliveryAssessment;
 };
 
 type BmsResponse = {
@@ -502,6 +508,7 @@ export default function BusinessMomentum({
   const [dossierEnrichment, setDossierEnrichment] = useState<DossierEnrichment | null>(null);
   const [dossierMarket, setDossierMarket] = useState<DossierMarketContext | null>(null);
   const [dossierFinancials, setDossierFinancials] = useState<DossierFinancialRow[]>([]);
+  const [dossierDeliveryCheck, setDossierDeliveryCheck] = useState<DossierDeliveryCheck | null>(null);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
@@ -534,6 +541,7 @@ export default function BusinessMomentum({
               { label: "Management", score: score100(selected.management_delivery) },
             ] : [],
           },
+          deliveryCheck: dossierDeliveryCheck,
         }),
       });
       if (!response.ok) {
@@ -881,6 +889,7 @@ export default function BusinessMomentum({
     setDossierEnrichment(null);
     setDossierMarket(null);
     setDossierFinancials([]);
+    setDossierDeliveryCheck(null);
     try {
       const requestBody = JSON.stringify({ ticker: selected.symbol });
       const [response, peerPayload, financialPayload, enrichmentPayload, marketPayload] = await Promise.all([
@@ -916,10 +925,21 @@ export default function BusinessMomentum({
       ]);
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
+      const financialRows = Array.isArray(financialPayload?.rows) ? financialPayload.rows : [];
+      const deliveryCheck = await fetch("/api/bms/delivery-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          dossier: payload,
+          lifecycle: momentumStageLabel(selected),
+          financials: financialRows,
+        }),
+      }).then(async deliveryResponse => deliveryResponse.ok ? deliveryResponse.json() : null).catch(() => null);
       if (requestId === dossierRequestId.current) {
         setDossier(payload);
         setDossierPeers(Array.isArray(peerPayload?.rows) ? peerPayload.rows : []);
-        setDossierFinancials(Array.isArray(financialPayload?.rows) ? financialPayload.rows : []);
+        setDossierFinancials(financialRows);
+        setDossierDeliveryCheck(deliveryCheck?.assessment ? deliveryCheck : null);
         setDossierEnrichment(enrichmentPayload || null);
         setDossierMarket(marketPayload || null);
       }
@@ -2036,6 +2056,33 @@ export default function BusinessMomentum({
                               </div>
                             ))}
                           </div>
+                          {dossierDeliveryCheck?.assessment && (
+                            <section className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.035] p-3">
+                              <div className="flex items-start justify-between gap-3">
+                                <div>
+                                  <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Delivery check · reconstructed</h4>
+                                  <p className="mt-1 text-[10px] text-zinc-500">Secondary overlay; the frozen BMS lifecycle remains unchanged.</p>
+                                </div>
+                                <div className="text-right">
+                                  <p className="text-sm font-black uppercase text-zinc-100">{dossierDeliveryCheck.assessment.deliveryDirection.replaceAll("_", " ")}</p>
+                                  <p className="text-[8px] uppercase tracking-wider text-zinc-600">{dossierDeliveryCheck.assessment.deliveryCoverage}% coverage</p>
+                                </div>
+                              </div>
+                              <div className="mt-3 space-y-2">
+                                {dossierDeliveryCheck.assessment.deliveryComponents.slice(0, 3).map((component) => (
+                                  <div key={component.id} className="grid grid-cols-[1fr_auto] items-center gap-3 text-[10px]">
+                                    <span className="text-zinc-400">{component.label}</span>
+                                    <span className={component.direction === "positive" ? "text-emerald-300" : component.direction === "negative" ? "text-amber-300" : "text-zinc-300"}>
+                                      {component.baseline}{component.unit} → {component.outcome}{component.unit} ({component.change > 0 ? "+" : ""}{component.change}{component.unit})
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="mt-3 text-[8px] leading-relaxed text-zinc-600">
+                                Reconstructed today from published quarterly history. It is not a prospectively frozen signal and is not an entry recommendation.
+                              </p>
+                            </section>
+                          )}
                           <section>
                             <h4 className="text-[9px] font-black uppercase tracking-widest text-zinc-400">Key developments</h4>
                             {dossierHighlights.length ? (

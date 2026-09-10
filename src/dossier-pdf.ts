@@ -1,6 +1,7 @@
 import PDFDocument from "pdfkit";
 import type { ResearchDossier } from "./dossier";
 import type { BmsFactorAnalysis } from "./bms-factor-schema";
+import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "./expectation-delivery";
 
 export type DossierPdfPeer = {
   ticker: string;
@@ -74,6 +75,10 @@ export type DossierPdfPayload = {
     period?: string | null;
     factorAnalysis?: BmsFactorAnalysis | null;
     components?: Array<{ label: string; score: number }>;
+  } | null;
+  deliveryCheck?: {
+    input: ExpectationDeliveryInput;
+    assessment: ExpectationDeliveryAssessment;
   } | null;
 };
 
@@ -288,7 +293,7 @@ class Report {
   }
 
   marginAndEpsTrend(rows: Array<{ period: string; margin: number | null; eps: number | null }>, marginLabel = "EBITDA MARGIN (%)") {
-    this.ensure(185);
+    this.ensure(160);
     this.heading("Margin and earnings-per-share trend");
     const valid = rows.slice().reverse();
     const panels = [
@@ -301,12 +306,12 @@ class Report {
       const x = this.margin + panelIndex * (panelWidth + 18);
       const numbers = panel.values.filter((value): value is number => value != null && Number.isFinite(value));
       const maximum = Math.max(1, ...numbers) * 1.12;
-      this.doc.roundedRect(x, top, panelWidth, 118, 5).fill(C.pale);
+      this.doc.roundedRect(x, top, panelWidth, 102, 5).fill(C.pale);
       this.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text(panel.label, x + 10, top + 9);
       const chartX = x + 12;
       const chartY = top + 26;
       const chartWidth = panelWidth - 24;
-      const chartHeight = 67;
+      const chartHeight = 52;
       this.doc.strokeColor(C.line).lineWidth(0.5).moveTo(chartX, chartY + chartHeight).lineTo(chartX + chartWidth, chartY + chartHeight).stroke();
       panel.values.forEach((value, index) => {
         if (value == null) return;
@@ -318,7 +323,7 @@ class Report {
         this.doc.font("Helvetica").fontSize(5.6).fillColor(C.slate).text(clean(valid[index].period), center - 28, chartY + chartHeight + 6, { width: 56, align: "center" });
       });
     });
-    this.y = top + 138;
+    this.y = top + 121;
   }
 
   peerPositionChart(peers: DossierPdfPeer[]) {
@@ -420,7 +425,7 @@ class Report {
 }
 
 export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buffer> {
-  const { dossier, peers = [], enrichment, market, bms } = payload;
+  const { dossier, peers = [], enrichment, market, bms, deliveryCheck } = payload;
   const financialRows: DossierPdfFinancialRow[] = payload.financials?.length
     ? payload.financials
     : (dossier.quarterlyPerformance || []).map((row) => ({ ...row }));
@@ -536,6 +541,26 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.title("Financial performance", usesOperatingProfit
     ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
     : "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
+  if (deliveryCheck?.assessment) {
+    const assessment = deliveryCheck.assessment;
+    const direction = assessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
+    const rows = assessment.deliveryComponents.slice(0, 3).map((component) => [
+      component.label,
+      `${fmt(component.baseline)}${component.unit}`,
+      `${fmt(component.outcome)}${component.unit}`,
+      `${component.change > 0 ? "+" : ""}${fmt(component.change)}${component.unit}`,
+      component.direction.toUpperCase(),
+    ]);
+    r.table("Delivery check - reconstructed today", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17], rows);
+    r.paragraph(
+      `Frozen BMS lifecycle: ${assessment.lifecycle}. Delivery reading: ${direction}. Coverage: ${fmt(assessment.deliveryCoverage)}%. Net directional index: ${fmt(assessment.deliveryScore)}.`,
+      { size: 8, bold: true },
+    );
+    r.paragraph(
+      `This is a present-day reconstruction from published quarterly history dated ${deliveryCheck.input.expectationFreezeDate}. It is a secondary research overlay and does not change the frozen BMS score or lifecycle classification.`,
+      { size: 7.5, color: C.slate },
+    );
+  }
   r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
