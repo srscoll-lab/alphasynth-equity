@@ -192,17 +192,16 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
     // immediately after the authorised "By order of the Board" signature.
     // Read only that signature block so an AGM date or reporting-period date
     // elsewhere in the notice cannot be mistaken for the document date.
-    const noticeFront = String(scraped.markdown || "").slice(0, 20_000);
+    const noticeFront = String(scraped.markdown || "").slice(0, 100_000);
     if (/\b(?:AGM|annual general meeting)\s+notice\b|\bnotice\s+(?:of|is hereby given)\b/i.test(noticeFront)) {
       const byOrder = noticeFront.search(/\bby order of the board(?: of directors)?\b/i);
       if (byOrder >= 0) {
-        const signatureBlock = noticeFront.slice(byOrder, byOrder + 2000);
-        // Do not maintain a company/city allow-list. Inspect labelled lines in
-        // the signature block and accept the first one containing an exact day.
-        for (const labelledLine of signatureBlock.matchAll(/(?:^|\n)\s*(?:place\s*:\s*)?[A-Za-z][A-Za-z .'-]{1,60}\s*:\s*([^\n]{0,60})/gim)) {
-          const date = exactEvidenceDate(labelledLine[1]);
-          if (date) return { date, basis: "signed_company_notice" };
-        }
+        // PDF extractors do not preserve line breaks consistently. Consider
+        // only the short authorised-signature block after the marker, and only
+        // when it contains one unambiguous exact date. Meeting and period dates
+        // occur before the marker and therefore cannot be selected.
+        const signatureDates = uniqueExactEvidenceDates(noticeFront.slice(byOrder, byOrder + 1000));
+        if (signatureDates.length === 1) return { date: signatureDates[0], basis: "signed_company_notice" };
       }
     }
   }

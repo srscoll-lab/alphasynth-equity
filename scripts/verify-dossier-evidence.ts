@@ -101,8 +101,8 @@ assert.deepEqual(
   documentPublicationDate(
     {
       markdown: "BAJAJ AUTO LTD.\nAGM NOTICE\nNotice is hereby given that the Annual General Meeting will be held on 21 July 2026.\n" +
-        "Legal notice text without a publication date. ".repeat(180) +
-        "The financial year ended 31 March 2026.\nBy order of the Board of Directors\nFor Bajaj Auto Ltd.\nRajiv Gandhi\nCompany Secretary\nPune: 06 May 2026\n" +
+        "Legal notice text without a publication date. ".repeat(700) +
+        "The financial year ended 31 March 2026. By order of the Board of Directors For Bajaj Auto Ltd. Rajiv Gandhi Company Secretary Pune: 06 May 2026 " +
         "Shareholder information. ".repeat(30),
     },
     { url: "https://investors.bajajauto.com/ar26/Annual-Report-NoticeProxyAS.pdf" },
