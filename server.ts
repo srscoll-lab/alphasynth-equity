@@ -3360,7 +3360,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       return res.status(400).json({ error: "sectorValuationPercentile must be null or between 0 and 100." });
     }
     let financials = Array.isArray(req.body?.financials) ? req.body.financials : [];
-    if ((dossier.quarterlyPerformance || []).length < 6 && financials.length < 6) {
+    if (financials.length < 6) {
       try {
         const reconstructed = await parseScreenerQuarterlyHistory(dossier.company.symbol, expectationFreezeDate);
         financials = reconstructed?.rows || financials;

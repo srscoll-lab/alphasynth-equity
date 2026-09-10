@@ -77,9 +77,12 @@ function gateObservation(definition: [string, string, "hard" | "soft"], claims: 
 }
 
 function fiscalQuarterKey(period: string): number | null {
-  const match = period.match(/\bQ([1-4])\b[\s_-]*(?:FY|FISCAL YEAR)?[\s_-]*(20\d{2}|\d{2})\b/i);
+  const match = period.match(/\bQ([1-4])\b[\s_-]*(?:FY|FISCAL YEAR)?[\s_-]*(20\d{2}|\d{2})(?:\s*-\s*(20\d{2}|\d{2}))?\b/i);
   if (match) {
-    const year = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+    const firstYear = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+    const year = match[3]
+      ? Number(match[3].length === 2 ? `${String(firstYear).slice(0, 2)}${match[3]}` : match[3])
+      : firstYear;
     return year * 4 + Number(match[1]);
   }
   const calendar = period.match(/\b(Mar|Jun|Sep|Dec)[a-z]*[\s_-]+(20\d{2})\b/i);
@@ -136,9 +139,18 @@ export function buildExpectationDeliveryInputFromDossier(
       ebitdaMarginPct: row.ebitdaMarginPct, patCr: row.patCr, eps: row.eps, sourceIds: [reference.id],
     }];
   });
-  // Official rows are last so they win when a supplemental table contains the
-  // same period. Supplemental history fills only the missing historical span.
-  const quarters = orderedComparableQuarters([...supplementalQuarters, ...(dossier.quarterlyPerformance || [])]);
+  const officialQuarters = orderedComparableQuarters(dossier.quarterlyPerformance || []);
+  const orderedSupplementalQuarters = orderedComparableQuarters(supplementalQuarters);
+  const supportsBridge = (rows: DossierQuarterPerformance[]) =>
+    rows.filter(row => row.revenueCr !== null).length >= 6
+    && rows.filter(row => row.ebitdaMarginPct !== null).length >= 2;
+  // Use one internally consistent quantitative series. For a present-day
+  // reconstruction, a complete deterministic published table is preferred to
+  // AI-extracted rows that may contain unit-conversion gaps. Official dossier
+  // rows remain the fallback when no complete supplemental series is available.
+  const quarters = supportsBridge(orderedSupplementalQuarters)
+    ? orderedSupplementalQuarters
+    : officialQuarters;
   const latest = quarters.at(-1);
   const prior = quarters.at(-2);
   const currentYearAgo = quarters.at(-5);

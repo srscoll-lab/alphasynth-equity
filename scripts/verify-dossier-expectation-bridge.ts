@@ -60,4 +60,26 @@ const mixedAssessment = assessExpectationDelivery({
 });
 assert.equal(mixedAssessment.deliveryDirection, "mixed");
 assert.equal(mixedAssessment.deliveryScore, 0);
+const longFiscalYearDossier: ResearchDossier = {
+  ...dossier,
+  quarterlyPerformance: quarters.map((quarter, index) => ({
+    ...quarter,
+    period: ["Q4 FY2024-25", "Q1 FY2025-26", "Q2 FY2025-26", "Q3 FY2025-26", "Q4 FY2025-26", "Q1 FY2026-27"][index],
+    revenueCr: quarter.revenueCr === null ? null : quarter.revenueCr / 10,
+    ebitdaMarginPct: null,
+  })),
+};
+const consistentSupplement = buildExpectationDeliveryInputFromDossier(longFiscalYearDossier, {
+  lifecycle: "Building", lifecycleFreezeDate: "2026-08-25", expectationFreezeDate: "2026-09-10",
+  financials: quarters.map(quarter => ({
+    ...quarter,
+    sourceUrl: "https://www.screener.in/company/TEST/consolidated/",
+    sourceLabel: "Supplemental published quarterly table",
+  })),
+});
+assert.equal(consistentSupplement.deliveryMetrics[0].expected, 15);
+assert.equal(consistentSupplement.deliveryMetrics[0].actual, 20);
+assert.equal(consistentSupplement.deliveryMetrics[1].expected, 20);
+assert.equal(consistentSupplement.deliveryMetrics[1].actual, 21);
+assert.deepEqual(consistentSupplement.deliveryMetrics[0].evidenceRefs, ["supplemental-financial-001"]);
 console.log("PASS: cited dossier evidence builds a conservative reconstructed expectation-delivery input.");
