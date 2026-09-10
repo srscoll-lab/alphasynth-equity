@@ -3343,7 +3343,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
   });
 
-  app.post("/api/bms/expectation-delivery/from-dossier", (req, res) => {
+  app.post("/api/bms/expectation-delivery/from-dossier", async (req, res) => {
     const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
     if (expectedToken && req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
     const dossier = req.body?.dossier;
@@ -3359,8 +3359,19 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       && (typeof percentile !== "number" || percentile < 0 || percentile > 100)) {
       return res.status(400).json({ error: "sectorValuationPercentile must be null or between 0 and 100." });
     }
+    let financials = Array.isArray(req.body?.financials) ? req.body.financials : [];
+    if ((dossier.quarterlyPerformance || []).length < 6 && financials.length < 6) {
+      try {
+        const reconstructed = await parseScreenerQuarterlyHistory(dossier.company.symbol, expectationFreezeDate);
+        financials = reconstructed?.rows || financials;
+      } catch (financialError) {
+        console.warn("[bms] supplemental quarterly reconstruction failed; retaining dossier-only assessment:",
+          financialError instanceof Error ? financialError.message : financialError);
+      }
+    }
     const input = buildExpectationDeliveryInputFromDossier(dossier, {
       lifecycle, lifecycleFreezeDate, expectationFreezeDate, sectorValuationPercentile: percentile ?? null,
+      financials,
     });
     return res.json({ input, assessment: assessExpectationDelivery(input) });
   });

@@ -37,4 +37,19 @@ assert.equal(assessment.deliveryCoverage, 60);
 assert.equal(assessment.deliveryDirection, "ahead");
 assert.equal(assessment.qualityStatus, "insufficient_evidence");
 assert.equal(assessment.gapClassification, "insufficient_evidence");
+const reconstructedFromSupplement = buildExpectationDeliveryInputFromDossier(
+  { ...dossier, quarterlyPerformance: [] },
+  {
+    lifecycle: "Building", lifecycleFreezeDate: "2026-08-25", expectationFreezeDate: "2026-09-10",
+    financials: quarters.map(quarter => ({
+      ...quarter,
+      sourceUrl: "https://www.screener.in/company/TEST/consolidated/",
+      sourceLabel: "Supplemental published quarterly table",
+    })),
+  },
+);
+assert.equal(reconstructedFromSupplement.deliveryMetrics[0].expected, 15);
+assert.equal(reconstructedFromSupplement.deliveryMetrics[0].actual, 20);
+assert.deepEqual(reconstructedFromSupplement.deliveryMetrics[0].evidenceRefs, ["supplemental-financial-001"]);
+assert.match(reconstructedFromSupplement.evidence.at(-1)?.label || "", /reconstructed_today/);
 console.log("PASS: cited dossier evidence builds a conservative reconstructed expectation-delivery input.");

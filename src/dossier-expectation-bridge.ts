@@ -6,6 +6,19 @@ export type DossierExpectationBridgeContext = {
   lifecycleFreezeDate: string;
   expectationFreezeDate: string;
   sectorValuationPercentile?: number | null;
+  financials?: SupplementalQuarterPerformance[];
+};
+
+export type SupplementalQuarterPerformance = {
+  period: string;
+  basis: "consolidated" | "standalone" | "unknown";
+  revenueCr: number | null;
+  ebitdaCr: number | null;
+  ebitdaMarginPct: number | null;
+  patCr: number | null;
+  eps: number | null;
+  sourceUrl: string;
+  sourceLabel?: string | null;
 };
 
 const gateDefinitions: Array<[string, string, "hard" | "soft"]> = [
@@ -65,9 +78,17 @@ function gateObservation(definition: [string, string, "hard" | "soft"], claims: 
 
 function fiscalQuarterKey(period: string): number | null {
   const match = period.match(/\bQ([1-4])\b[\s_-]*(?:FY|FISCAL YEAR)?[\s_-]*(20\d{2}|\d{2})\b/i);
-  if (!match) return null;
-  const year = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
-  return year * 4 + Number(match[1]);
+  if (match) {
+    const year = Number(match[2].length === 2 ? `20${match[2]}` : match[2]);
+    return year * 4 + Number(match[1]);
+  }
+  const calendar = period.match(/\b(Mar|Jun|Sep|Dec)[a-z]*[\s_-]+(20\d{2})\b/i);
+  if (!calendar) return null;
+  const calendarYear = Number(calendar[2]);
+  const month = calendar[1].slice(0, 3).toLowerCase();
+  const fiscalQuarter = ({ jun: 1, sep: 2, dec: 3, mar: 4 } as const)[month as "jun" | "sep" | "dec" | "mar"];
+  const fiscalYear = month === "mar" ? calendarYear : calendarYear + 1;
+  return fiscalYear * 4 + fiscalQuarter;
 }
 
 function orderedComparableQuarters(rows: DossierQuarterPerformance[]): DossierQuarterPerformance[] {
@@ -99,7 +120,25 @@ export function buildExpectationDeliveryInputFromDossier(
   context: DossierExpectationBridgeContext,
 ): ExpectationDeliveryInput {
   const claims = supportedClaims(dossier);
-  const quarters = orderedComparableQuarters(dossier.quarterlyPerformance || []);
+  const supplementalEvidence = new Map<string, { id: string; label: string | null }>();
+  const supplementalQuarters: DossierQuarterPerformance[] = (context.financials || []).flatMap(row => {
+    if (!/^https:\/\//i.test(row.sourceUrl || "")) return [];
+    let reference = supplementalEvidence.get(row.sourceUrl);
+    if (!reference) {
+      reference = {
+        id: `supplemental-financial-${String(supplementalEvidence.size + 1).padStart(3, "0")}`,
+        label: row.sourceLabel || "Supplemental quarterly table retrieved during reconstructed assessment",
+      };
+      supplementalEvidence.set(row.sourceUrl, reference);
+    }
+    return [{
+      period: row.period, basis: row.basis, revenueCr: row.revenueCr, ebitdaCr: row.ebitdaCr,
+      ebitdaMarginPct: row.ebitdaMarginPct, patCr: row.patCr, eps: row.eps, sourceIds: [reference.id],
+    }];
+  });
+  // Official rows are last so they win when a supplemental table contains the
+  // same period. Supplemental history fills only the missing historical span.
+  const quarters = orderedComparableQuarters([...supplementalQuarters, ...(dossier.quarterlyPerformance || [])]);
   const latest = quarters.at(-1);
   const prior = quarters.at(-2);
   const currentYearAgo = quarters.at(-5);
@@ -129,9 +168,19 @@ export function buildExpectationDeliveryInputFromDossier(
       metric("cash_conversion", "Operating cash conversion", "%", 10, 20, null, null, []),
       metric("management_target_delivery", "Management target delivery", "%", 10, 20, null, null, []),
     ],
-    evidence: dossier.sources.filter(source => source.publishedAt).map(source => ({
-      id: source.sourceId, url: source.url, publishedAt: source.publishedAt as string,
-      label: source.sourceClass,
-    })),
+    evidence: [
+      ...dossier.sources.filter(source => source.publishedAt).map(source => ({
+        id: source.sourceId, url: source.url, publishedAt: source.publishedAt as string,
+        label: source.sourceClass,
+      })),
+      ...[...supplementalEvidence.entries()].map(([url, reference]) => ({
+        id: reference.id,
+        url,
+        // This is deliberately the reconstruction/retrieval date, not a claim
+        // that the dynamic table was prospectively frozen on an earlier date.
+        publishedAt: dossier.generatedAt.slice(0, 10),
+        label: `${reference.label || "Supplemental quarterly table"}; retrieved for reconstructed_today assessment`,
+      })),
+    ],
   };
 }
