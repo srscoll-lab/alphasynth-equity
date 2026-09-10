@@ -182,7 +182,7 @@ class Report {
     this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate).text(clean(label).toUpperCase(), x + 8, this.y + 28, { width: width - 16, align: "center" });
   }
 
-  bars(title: string, values: Array<{ label: string; value: number }>, neutralMarker = false, palette: string[] = [C.green]) {
+  bars(title: string, values: Array<{ label: string; value: number | null; available?: boolean }>, neutralMarker = false, palette: string[] = [C.green]) {
     const chartHeight = 100;
     this.ensure(67 + chartHeight);
     this.y += 12;
@@ -192,17 +192,20 @@ class Report {
     const barWidth = (this.width - gap * (values.length - 1)) / values.length;
     const top = this.y;
     values.forEach((item, index) => {
-      const value = Math.max(0, Math.min(100, item.value));
+      const available = item.available !== false && item.value !== null && Number.isFinite(item.value);
+      const value = available ? Math.max(0, Math.min(100, item.value as number)) : null;
       const x = this.margin + index * (barWidth + gap);
-      const h = chartHeight * value / 100;
+      const h = value === null ? 0 : chartHeight * value / 100;
       this.doc.roundedRect(x, top, barWidth, chartHeight, 3).fill(C.pale);
-      this.doc.roundedRect(x, top + chartHeight - h, barWidth, Math.max(2, h), 3).fill(palette[index % palette.length]);
-      if (neutralMarker) {
+      if (available) this.doc.roundedRect(x, top + chartHeight - h, barWidth, Math.max(2, h), 3).fill(palette[index % palette.length]);
+      if (neutralMarker && available) {
         this.doc.strokeColor(C.gold).lineWidth(1).dash(2, { space: 2 })
           .moveTo(x, top + chartHeight / 2).lineTo(x + barWidth, top + chartHeight / 2).stroke().undash();
       }
-      this.doc.font("Helvetica-Bold").fontSize(9).fillColor(value > 15 ? C.white : C.navy)
-        .text(fmt(value), x, top + chartHeight - Math.max(15, h) + 4, { width: barWidth, align: "center" });
+      this.doc.font("Helvetica-Bold").fontSize(available ? 9 : 11).fillColor(available && (value as number) > 15 ? C.white : C.slate)
+        .text(available ? fmt(value) : "N/A", x, available ? top + chartHeight - Math.max(15, h) + 4 : top + chartHeight / 2 - 7, { width: barWidth, align: "center" });
+      if (!available) this.doc.font("Helvetica-Bold").fontSize(5.8).fillColor(C.slate)
+        .text("NO COMPARABLE DATA", x + 4, top + chartHeight / 2 + 9, { width: barWidth - 8, align: "center" });
       this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate)
         .text(clean(item.label).toUpperCase(), x - 2, top + chartHeight + 7, { width: barWidth + 4, align: "center" });
     });
@@ -507,14 +510,30 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.y = metricY + 66;
   r.paragraph("The snapshot is intentionally concise. Detailed evidence, financial comparisons and source records follow on the subsequent pages.", { size: 8, color: C.slate });
 
-  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. The five bars are normalized change scores; fifty is the neutral reference point, not a portfolio weight.`);
-  r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,
-    [C.green]);
-  r.paragraph("How to read the chart: scores above 50 indicate improving evidence relative to the model's comparison basis; scores below 50 indicate deterioration. The components explain the overall signal, but none is an allocation recommendation.", { size: 8, color: C.slate });
   const factorAnalysis = bms?.factorAnalysis;
-  const scoreAsPoints = (value: number | null | undefined) => value == null
+  const hasStructuredComparison = (factor: BmsFactorAnalysis["factors"][number]) =>
+    factor.previous.metrics.length > 0 && factor.current.metrics.length > 0;
+  const directionalScoreToDisplay = (value: number | null | undefined) => value == null
     ? "N/A"
-    : fmt(Math.abs(value) <= 1 ? value * 100 : value);
+    : fmt(Math.max(0, Math.min(100, Math.round(50 + (value / 0.75) * 50))));
+  const measuredFactors = factorAnalysis?.factors?.filter(hasStructuredComparison) || [];
+  const totalFactorWeight = factorAnalysis?.factors?.reduce((sum, factor) => sum + factor.weight, 0) || 0;
+  const measuredFactorWeight = measuredFactors.reduce((sum, factor) => sum + factor.weight, 0);
+  const weightCoverage = totalFactorWeight > 0 ? measuredFactorWeight / totalFactorWeight * 100 : 0;
+  const componentBars = factorAnalysis?.factors?.length
+    ? factorAnalysis.factors.map((factor) => ({
+        label: factor.label,
+        value: Number(directionalScoreToDisplay(factor.current.factorScore)),
+        available: hasStructuredComparison(factor),
+      }))
+    : (bms?.components || []).map((item) => ({ label: item.label, value: item.score, available: true }));
+
+  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Available bars are normalized change scores; fifty is the neutral reference point, not a portfolio weight.`);
+  r.bars("Business Momentum components", componentBars, true, [C.green]);
+  const coverageText = factorAnalysis?.factors?.length
+    ? `Structured factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of model weight. N/A means no comparable structured measurement; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
+    : "Structured factor coverage was not supplied. No component-level confirmation should be inferred.";
+  r.paragraph(coverageText, { size: 8, color: C.slate, bold: weightCoverage < 100 });
   const measurementText = (measurement: BmsFactorAnalysis["factors"][number]["current"]) => {
     const metrics = measurement.metrics.slice(0, 2).map((metric) => {
       const value = metric.value == null
@@ -535,14 +554,16 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       const top = r.y + 3;
       r.doc.roundedRect(r.margin, top, r.width, height, 5).fill(index % 2 ? C.pale : C.greenPale);
       const leftWidth = 112;
+      const structuredComparison = hasStructuredComparison(factor);
       const wrapsFactorLabel = factor.label.length > 15;
       r.doc.font("Helvetica-Bold").fontSize(wrapsFactorLabel ? 9 : 10).fillColor(C.navy)
         .text(factor.label, r.margin + 10, top + 8, { width: leftWidth - 18, height: 23, ellipsis: true });
       const scoreY = wrapsFactorLabel ? top + 32 : top + 27;
-      r.doc.font("Helvetica-Bold").fontSize(15).fillColor(C.green).text(scoreAsPoints(factor.current.factorScore), r.margin + 10, scoreY, { width: 42 });
+      r.doc.font("Helvetica-Bold").fontSize(15).fillColor(structuredComparison ? C.green : C.slate)
+        .text(structuredComparison ? directionalScoreToDisplay(factor.current.factorScore) : "N/A", r.margin + 10, scoreY, { width: 42 });
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
         .text(`${fmt(factor.weight * 100)}% WEIGHT`, r.margin + 52, scoreY + 4, { width: 56 })
-        .text(`${factor.confidence.toUpperCase()} CONFIDENCE`, r.margin + 10, wrapsFactorLabel ? top + 52 : top + 49, { width: 96 });
+        .text(structuredComparison ? `${factor.confidence.toUpperCase()} CONFIDENCE` : "NO COMPARABLE EVIDENCE", r.margin + 10, wrapsFactorLabel ? top + 52 : top + 49, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
       r.doc.font("Helvetica-Bold").fontSize(7.2).fillColor(C.ink)
@@ -558,7 +579,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         .text(measurementText(factor.current), detailX + evidenceWidth + 10, top + 45, { width: evidenceWidth, height: 17, ellipsis: true });
       r.y = top + height + 3;
     });
-    r.paragraph("A factor score is fully explained only when structured previous and current measurements are supplied. Period-only rows are labelled as missing structured measurements rather than being retrospectively justified. Weighted contribution equals the recorded factor score multiplied by the BMS V1 weight.", { size: 7, color: C.slate });
+    r.paragraph("Only factors with structured previous and current measurements receive a displayed factor reading. Missing factors are not treated as zero or neutral evidence, and are not retrospectively justified.", { size: 7, color: C.slate });
   } else {
     r.paragraph("The BMS service did not supply a structured five-factor evidence bridge. No factor explanation has been reconstructed after the assessment.", { color: C.slate });
   }
