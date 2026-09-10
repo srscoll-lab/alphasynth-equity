@@ -192,14 +192,17 @@ export function documentPublicationDate(scraped: Scraped, candidate: Candidate):
     // immediately after the authorised "By order of the Board" signature.
     // Read only that signature block so an AGM date or reporting-period date
     // elsewhere in the notice cannot be mistaken for the document date.
-    const noticeFront = String(scraped.markdown || "").slice(0, 6000);
+    const noticeFront = String(scraped.markdown || "").slice(0, 20_000);
     if (/\b(?:AGM|annual general meeting)\s+notice\b|\bnotice\s+(?:of|is hereby given)\b/i.test(noticeFront)) {
       const byOrder = noticeFront.search(/\bby order of the board(?: of directors)?\b/i);
       if (byOrder >= 0) {
-        const signatureBlock = noticeFront.slice(byOrder, byOrder + 1000);
-        const placeDate = signatureBlock.match(/\b(?:Pune|Mumbai|New Delhi|Delhi|Bengaluru|Bangalore|Chennai|Hyderabad|Kolkata|Ahmedabad)\s*:\s*(.{0,40})/i);
-        const date = exactEvidenceDate(placeDate?.[1]);
-        if (date) return { date, basis: "signed_company_notice" };
+        const signatureBlock = noticeFront.slice(byOrder, byOrder + 2000);
+        // Do not maintain a company/city allow-list. Inspect labelled lines in
+        // the signature block and accept the first one containing an exact day.
+        for (const labelledLine of signatureBlock.matchAll(/(?:^|\n)\s*(?:place\s*:\s*)?[A-Za-z][A-Za-z .'-]{1,60}\s*:\s*([^\n]{0,60})/gim)) {
+          const date = exactEvidenceDate(labelledLine[1]);
+          if (date) return { date, basis: "signed_company_notice" };
+        }
       }
     }
   }
