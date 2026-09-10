@@ -524,7 +524,6 @@ export default function BusinessMomentum({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           dossier,
-          peers: dossierPeers,
           financials: dossierFinancials,
           enrichment: dossierEnrichment,
           market: dossierMarket,
@@ -892,7 +891,7 @@ export default function BusinessMomentum({
     setDossierDeliveryCheck(null);
     try {
       const requestBody = JSON.stringify({ ticker: selected.symbol });
-      const [response, peerPayload, financialPayload, enrichmentPayload, marketPayload] = await Promise.all([
+      const [response, financialPayload, enrichmentPayload, marketPayload] = await Promise.all([
         fetch("/api/dossier/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -902,11 +901,6 @@ export default function BusinessMomentum({
             reporting_period: selected.period,
           }),
         }),
-        fetch("/api/pipeline/peer-comparison", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: requestBody,
-        }).then(async peerResponse => peerResponse.ok ? peerResponse.json() : null).catch(() => null),
         fetch("/api/pipeline/quarterly-performance", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -937,7 +931,7 @@ export default function BusinessMomentum({
       }).then(async deliveryResponse => deliveryResponse.ok ? deliveryResponse.json() : null).catch(() => null);
       if (requestId === dossierRequestId.current) {
         setDossier(payload);
-        setDossierPeers(Array.isArray(peerPayload?.rows) ? peerPayload.rows : []);
+        setDossierPeers([]);
         setDossierFinancials(financialRows);
         setDossierDeliveryCheck(deliveryCheck?.assessment ? deliveryCheck : null);
         setDossierEnrichment(enrichmentPayload || null);
@@ -2028,7 +2022,7 @@ export default function BusinessMomentum({
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Research Dossier · PDF</p>
-                          <p className="mt-1 text-[9px] text-zinc-600">Full tables, charts, peer comparison and cited evidence</p>
+                          <p className="mt-1 text-[9px] text-zinc-600">BMS methodology, lifecycle confirmation, financial evidence and cited sources</p>
                         </div>
                         {dossier && (
                           <button
@@ -2092,7 +2086,7 @@ export default function BusinessMomentum({
                             ) : <p className="mt-2 text-xs text-zinc-600">No verified developments available.</p>}
                           </section>
                           <p className="text-[9px] leading-relaxed text-zinc-600">
-                            The PDF contains the complete cited dossier{dossier.quarterlyPerformance?.length ? ", quarter-wise performance" : ""}{dossierPeers.length ? ", peer ratios" : ""} and quality-control appendix.
+                            The PDF contains the complete cited dossier{dossier.quarterlyPerformance?.length ? ", quarter-wise performance" : ""}, the lifecycle-confirmation methodology and quality-control record.
                           </p>
                         </div>
                       )}

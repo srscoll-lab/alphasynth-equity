@@ -2896,15 +2896,12 @@ ${rawText}` }] }],
         .some((value) => value !== null && value !== undefined)) || [];
     const pricePoints = payload.market?.priceHistory?.filter((point) =>
       point.date && Number.isFinite(point.close)) || [];
-    const plottablePeers = (payload.peers || []).filter((peer) =>
-      peer.revenueGrowthYoY != null && peer.operatingMargin != null);
-    if (quarterlyRows.length < 2 || pricePoints.length < 2 || plottablePeers.length < 2) {
+    if (quarterlyRows.length < 2 || pricePoints.length < 2) {
       return res.status(422).json({
-        error: "The dossier is missing sufficient financial, price or peer history for its charts. No incomplete PDF was generated.",
+        error: "The dossier is missing sufficient financial or price history for its charts. No incomplete PDF was generated.",
         code: "DOSSIER_CHART_DATA_INCOMPLETE",
         quarterlyRows: quarterlyRows.length,
         pricePoints: pricePoints.length,
-        plottablePeers: plottablePeers.length,
       });
     }
     try {

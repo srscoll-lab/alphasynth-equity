@@ -47,13 +47,6 @@ const payload: DossierPdfPayload = {
     marketConversation: { status: "available", affectsBms: false, sampleSize: 42, sentiment: { positive: 0.52, neutral: 0.31, negative: 0.17 }, themes: [] },
     qualityControl: { unsupportedClaims: 0, conflicts: 0, humanReviewRequired: true },
   },
-  peers: [
-    { ticker: "RADICO", name: "Radico Khaitan Limited", isTarget: true, epsTtm: 54.2, epsGrowthYoY: 42, peg: 1.15, pe: 48.1, pb: 9.4, roe: 20.1, roce: 24.7, debtEquity: 0.15, revenueGrowthYoY: 11.8, operatingMargin: 20.7, marketCapCr: 60212, week52Return: 61 },
-    { ticker: "UNSP", name: "United Spirits Limited", epsTtm: 32.8, pe: 44.2, pb: 8.1, roe: 18.6, roce: 22.4, debtEquity: 0.08, revenueGrowthYoY: 7.7, operatingMargin: 18.9, marketCapCr: 104375, week52Return: 12.4 },
-    { ticker: "TI", name: "Tilaknagar Industries Limited", epsTtm: 9.7, pe: 69.0, pb: 4.53, roe: 9.1, roce: 11.6, revenueGrowthYoY: 15.4, operatingMargin: 9.3, marketCapCr: 13242, week52Return: 16.5 },
-    { ticker: "GLOBUSSPR", name: "Globus Spirits Limited", epsTtm: 33.03, pe: 28.6, pb: 2.2, roe: 9.1, roce: 11.6, debtEquity: 0.5, revenueGrowthYoY: 13, operatingMargin: 9.8, marketCapCr: 2877, week52Return: -15.8 },
-    { ticker: "ABDL", name: "Allied Blenders and Distillers Limited", epsTtm: 7.9, pe: 75.2, pb: 10.1, roe: 14.3, roce: 18.4, marketCapCr: 16783, week52Return: 17.6 },
-  ],
   enrichment: {
     executiveSummary: {
       companyLine: "A premiumisation-led alcoholic beverages company with strengthening earnings momentum and improving balance-sheet flexibility.",
@@ -96,7 +89,15 @@ const payload: DossierPdfPayload = {
       symbol: "RADICO", companyName: "Radico Khaitan Limited", lifecycle: "ESTABLISHED",
       lifecycleFreezeDate: "2026-08-25", assessmentMode: "reconstructed_today",
       expectationFreezeDate: "2026-09-08", outcomeDate: "2026-06-30",
-      sectorValuationPercentile: null, qualityGates: [], deliveryMetrics: [], evidence: [],
+      sectorValuationPercentile: null,
+      qualityGates: [
+        { id: "cash_conversion", label: "Cash conversion", severity: "hard", result: "unknown", explanation: null, evidenceRefs: [] },
+        { id: "leverage_coverage", label: "Leverage and coverage", severity: "hard", result: "pass", explanation: "Net debt declined during the period.", evidenceRefs: ["official-002"] },
+        { id: "promoter_pledge", label: "Promoter pledge", severity: "hard", result: "unknown", explanation: null, evidenceRefs: [] },
+        { id: "auditor_integrity", label: "Auditor integrity", severity: "hard", result: "unknown", explanation: null, evidenceRefs: [] },
+        { id: "management_delivery_history", label: "Management delivery history", severity: "soft", result: "unknown", explanation: null, evidenceRefs: [] },
+      ],
+      deliveryMetrics: [], evidence: [],
     },
     assessment: {
       schemaVersion: "1.1.0", symbol: "RADICO", companyName: "Radico Khaitan Limited",

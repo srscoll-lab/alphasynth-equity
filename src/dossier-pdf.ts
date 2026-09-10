@@ -425,7 +425,8 @@ class Report {
 }
 
 export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buffer> {
-  const { dossier, peers = [], enrichment, market, bms, deliveryCheck } = payload;
+  const { dossier, enrichment, market, bms, deliveryCheck } = payload;
+  const deliveryAssessment = deliveryCheck?.assessment;
   const financialRows: DossierPdfFinancialRow[] = payload.financials?.length
     ? payload.financials
     : (dossier.quarterlyPerformance || []).map((row) => ({ ...row }));
@@ -483,12 +484,6 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   const patGrowth = latestPat != null && previousPat != null && previousPat !== 0
     ? (latestPat - previousPat) / Math.abs(previousPat) * 100
     : null;
-  const targetPeer = peers.find((peer) => peer.isTarget) || peers[0];
-  const calculatedPeg = targetPeer?.peg != null
-    ? targetPeer.peg
-    : targetPeer?.pe != null && targetPeer?.epsGrowthYoY != null && targetPeer.epsGrowthYoY > 0
-      ? targetPeer.pe / targetPeer.epsGrowthYoY
-      : null;
   const panelY = r.y;
   const panelWidth = (r.width - 12) / 2;
   r.doc.roundedRect(r.margin, panelY, panelWidth, 68, 5).fill(C.greenPale);
@@ -502,8 +497,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.doc.roundedRect(r.margin + panelWidth + 12, metricY, panelWidth, 54, 5).fill(C.greenPale);
   r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PAT GROWTH - LATEST VS PRIOR QUARTER", r.margin + 12, metricY + 10);
   r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.navy).text(patGrowth == null ? "N/A" : `${fmt(patGrowth)}%`, r.margin + 12, metricY + 27);
-  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("PEG - P/E DIVIDED BY EPS YOY GROWTH", r.margin + panelWidth + 24, metricY + 10);
-  r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.green).text(calculatedPeg == null ? "N/A" : fmt(calculatedPeg), r.margin + panelWidth + 24, metricY + 27);
+  r.doc.font("Helvetica-Bold").fontSize(7).fillColor(C.slate).text("DELIVERY EVIDENCE COVERAGE", r.margin + panelWidth + 24, metricY + 10);
+  r.doc.font("Helvetica-Bold").fontSize(13).fillColor(C.green).text(deliveryAssessment ? `${fmt(deliveryAssessment.deliveryCoverage)}%` : "N/A", r.margin + panelWidth + 24, metricY + 27);
   r.y = metricY + 66;
   r.paragraph("The snapshot is intentionally concise. Detailed evidence, financial comparisons and source records follow on the subsequent pages.", { size: 8, color: C.slate });
 
@@ -541,37 +536,56 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.title("Financial performance", usesOperatingProfit
     ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
     : "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
-  if (deliveryCheck?.assessment) {
-    const assessment = deliveryCheck.assessment;
-    const direction = assessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
-    const rows = assessment.deliveryComponents.slice(0, 3).map((component) => [
-      component.label,
-      `${fmt(component.baseline)}${component.unit}`,
-      `${fmt(component.outcome)}${component.unit}`,
-      `${component.change > 0 ? "+" : ""}${fmt(component.change)}${component.unit}`,
-      component.direction.toUpperCase(),
-    ]);
-    r.table("Delivery check - reconstructed today", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17], rows);
-    r.paragraph(
-      `Frozen BMS lifecycle: ${assessment.lifecycle}. Delivery reading: ${direction}. Coverage: ${fmt(assessment.deliveryCoverage)}%. Net directional index: ${fmt(assessment.deliveryScore)}.`,
-      { size: 8, bold: true },
-    );
-    r.paragraph(
-      `This is a present-day reconstruction from published quarterly history dated ${deliveryCheck.input.expectationFreezeDate}. It is a secondary research overlay and does not change the frozen BMS score or lifecycle classification.`,
-      { size: 7.5, color: C.slate },
-    );
-  }
   r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
   r.y += 9;
   r.marginAndEpsTrend(financialRows.map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct ?? null, eps: quarter.eps ?? null })), marginLabel);
-  r.newPage(true);
-  r.table("Peer comparison - valuation and quality", ["Company", "EPS TTM", "P/E", "P/B", "ROE %", "ROCE %"], [30, 17, 14, 14, 16, 16],
-    peers.map((p) => [p.ticker, fmt(p.epsTtm), fmt(p.pe), fmt(p.pb), fmt(p.roe), fmt(p.roce)]));
-  r.table("Peer comparison - growth and position", ["Company", "D/E", "Revenue YoY", "Op. margin", "Mkt cap Rs.Cr", "52W return"], [28, 14, 20, 19, 24, 18],
-    peers.map((p) => [p.ticker, fmt(p.debtEquity), fmt(p.revenueGrowthYoY, "%"), fmt(p.operatingMargin, "%"), fmt(p.marketCapCr), fmt(p.week52Return, "%")]));
-  r.peerPositionChart(peers);
+
+  r.title("Lifecycle confirmation layer", "This secondary layer asks whether subsequent delivery and minimum quality evidence support further investigation within the frozen lifecycle. It is not a second BMS score.");
+  if (deliveryAssessment && deliveryCheck) {
+    const direction = deliveryAssessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
+    const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result !== "unknown").length;
+    const confirmationY = r.y;
+    const confirmationGap = 8;
+    const confirmationWidth = (r.width - confirmationGap * 3) / 4;
+    [
+      ["FROZEN LIFECYCLE", deliveryAssessment.lifecycle],
+      ["DELIVERY READING", direction],
+      ["EVIDENCE COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
+      ["OBSERVED GATES", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
+    ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (confirmationWidth + confirmationGap), confirmationWidth));
+    r.y = confirmationY + 54;
+    r.heading("Why this check exists");
+    r.paragraph("The BMS lifecycle records where business momentum stood at the freeze date. The confirmation layer then compares later published delivery with an earlier comparable reading and checks whether basic financial, governance and operating-quality conditions are sufficiently evidenced. Its purpose is to prioritise research inside a lifecycle cohort without rewriting history.", { size: 8.5 });
+    r.table("Published delivery bridge", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
+      deliveryAssessment.deliveryComponents.slice(0, 3).map((component) => [
+        component.label,
+        `${fmt(component.baseline)}${component.unit}`,
+        `${fmt(component.outcome)}${component.unit}`,
+        `${component.change > 0 ? "+" : ""}${fmt(component.change)}${component.unit}`,
+        component.direction.toUpperCase(),
+      ]));
+    r.heading("What the result means");
+    r.paragraph(`The frozen lifecycle remains ${deliveryAssessment.lifecycle}. The reconstructed delivery reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% metric coverage. Quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot move the company into another lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
+    r.table("Interpretation rules", ["Observed combination", "Research interpretation"], [36, 64], [
+      ["Ahead delivery + no hard-gate failure", "Higher priority within the same frozen lifecycle; investigate durability."],
+      ["Mixed delivery", "Evidence points in opposing directions; retain for monitoring."],
+      ["Behind delivery", "The momentum thesis may be weakening; require stronger subsequent evidence."],
+      ["Any hard-gate failure", "Exclude from the refined shortlist while preserving the original lifecycle record."],
+      ["Low coverage / unknown gates", "Do not infer confirmation. Collect evidence and reassess after the next result."],
+    ]);
+    r.table("What the quality gates test", ["Gate family", "Purpose"], [30, 70], [
+      ["Financial resilience", "Cash conversion, leverage and the ability to support growth without financial strain."],
+      ["Governance integrity", "Promoter pledging, auditor signals and material governance or regulatory concerns."],
+      ["Operating discipline", "Working-capital behaviour and customer or product concentration."],
+      ["Capital allocation", "Incremental returns on capital and dependence on acquisitions."],
+      ["Management reliability", "Whether reported delivery remains consistent with prior commitments."],
+    ]);
+    r.paragraph(`Reconstructed today as of ${deliveryCheck.input.expectationFreezeDate}. This was not a signal prospectively frozen on that historical comparison date.`, { size: 7.5, color: C.slate });
+  } else {
+    r.paragraph("A comparable reconstructed delivery assessment was not available. The frozen BMS lifecycle remains the only classification shown, and no confirmation conclusion should be inferred.", { color: C.slate });
+  }
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");
   const sections: Array<[keyof ResearchDossier["sections"], string]> = [
