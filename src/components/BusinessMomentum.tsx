@@ -18,6 +18,7 @@ import remarkGfm from "remark-gfm";
 import type { ResearchDossier } from "../dossier";
 import type { BmsFactorAnalysis } from "../bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "../expectation-delivery";
+import { assessDossierReadiness } from "../dossier-readiness";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -509,16 +510,12 @@ export default function BusinessMomentum({
   const [dossierMarket, setDossierMarket] = useState<DossierMarketContext | null>(null);
   const [dossierFinancials, setDossierFinancials] = useState<DossierFinancialRow[]>([]);
   const [dossierDeliveryCheck, setDossierDeliveryCheck] = useState<DossierDeliveryCheck | null>(null);
+  const [dossierFactorAnalysis, setDossierFactorAnalysis] = useState<BmsFactorAnalysis | null>(null);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
     if (!dossier) return;
     try {
-      const factorPayload = selected?.symbol
-        ? await fetch(`/api/bms/factor-analysis/${encodeURIComponent(selected.symbol)}`)
-          .then((factorResponse) => factorResponse.ok ? factorResponse.json() : null)
-          .catch(() => null)
-        : null;
       const response = await fetch("/api/dossier/pdf", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -528,10 +525,10 @@ export default function BusinessMomentum({
           enrichment: dossierEnrichment,
           market: dossierMarket,
           bms: {
-            score: selected?.bms ?? null,
+            score: selected ? score100(selected.bms) : null,
             stage: selected?.lifecycle_stage ?? null,
             period: selected?.period ?? null,
-            factorAnalysis: factorPayload?.factor_analysis ?? selected?.factor_analysis ?? null,
+            factorAnalysis: dossierFactorAnalysis,
             components: selected ? [
               { label: "Earnings", score: score100(selected.earnings) },
               { label: "Economics", score: score100(selected.economics) },
@@ -545,7 +542,10 @@ export default function BusinessMomentum({
       });
       if (!response.ok) {
         const failure = await response.json().catch(() => null);
-        throw new Error(failure?.error || `PDF service returned HTTP ${response.status}`);
+        const explanation = Array.isArray(failure?.reasons) && failure.reasons.length
+          ? `${failure.error}\n\n${failure.reasons.map((reason: string) => `- ${reason}`).join("\n")}`
+          : failure?.error;
+        throw new Error(explanation || `PDF service returned HTTP ${response.status}`);
       }
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
@@ -872,9 +872,9 @@ export default function BusinessMomentum({
         pdf.text(`AlphaSynth Intelligence | ${dossier.company.symbol} | Page ${page} of ${pages}`, margin, pageHeight - 8);
       }
       pdf.save(`${dossier.company.symbol}-Research-Dossier-${dossier.generatedAt.slice(0, 10)}.pdf`);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Dossier PDF download failed", error);
-      window.alert("The PDF could not be generated. Please try again.");
+      window.alert(error?.message || "The PDF could not be generated. Please try again.");
     }
   };
 
@@ -889,9 +889,10 @@ export default function BusinessMomentum({
     setDossierMarket(null);
     setDossierFinancials([]);
     setDossierDeliveryCheck(null);
+    setDossierFactorAnalysis(null);
     try {
       const requestBody = JSON.stringify({ ticker: selected.symbol });
-      const [response, financialPayload, enrichmentPayload, marketPayload] = await Promise.all([
+      const [response, financialPayload, enrichmentPayload, marketPayload, factorPayload] = await Promise.all([
         fetch("/api/dossier/generate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -916,6 +917,8 @@ export default function BusinessMomentum({
           headers: { "Content-Type": "application/json" },
           body: requestBody,
         }).then(async marketResponse => marketResponse.ok ? marketResponse.json() : null).catch(() => null),
+        fetch(`/api/bms/factor-analysis/${encodeURIComponent(selected.symbol)}`)
+          .then(async factorResponse => factorResponse.ok ? factorResponse.json() : null).catch(() => null),
       ]);
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Dossier generation failed");
@@ -936,6 +939,7 @@ export default function BusinessMomentum({
         setDossierDeliveryCheck(deliveryCheck?.assessment ? deliveryCheck : null);
         setDossierEnrichment(enrichmentPayload || null);
         setDossierMarket(marketPayload || null);
+        setDossierFactorAnalysis(factorPayload?.factor_analysis ?? selected.factor_analysis ?? null);
       }
     } catch (error: any) {
       if (requestId === dossierRequestId.current) {
@@ -1189,6 +1193,19 @@ export default function BusinessMomentum({
   const dossierHighlights = dossier
     ? (dossier.sections.developments.length ? dossier.sections.developments : dossier.sections.snapshot).slice(0, 3)
     : [];
+  const dossierReadiness = dossier ? assessDossierReadiness({
+    dossier,
+    financials: dossierFinancials,
+    enrichment: dossierEnrichment,
+    market: dossierMarket,
+    bms: {
+      score: selected ? score100(selected.bms) : null,
+      stage: selected?.lifecycle_stage ?? null,
+      period: selected?.period ?? null,
+      factorAnalysis: dossierFactorAnalysis,
+    },
+    deliveryCheck: dossierDeliveryCheck,
+  }) : null;
 
   const investorStageCounts = {
     WATCH: companies.filter(
@@ -2028,14 +2045,23 @@ export default function BusinessMomentum({
                           <button
                             type="button"
                             onClick={downloadDossierPdf}
-                            className="flex items-center gap-1.5 rounded-lg border border-blue-400/25 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-blue-300 transition-colors hover:bg-blue-400/10"
+                            disabled={!dossierReadiness?.ready}
+                            className="flex items-center gap-1.5 rounded-lg border border-blue-400/25 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-blue-300 transition-colors hover:bg-blue-400/10 disabled:cursor-not-allowed disabled:border-zinc-700 disabled:text-zinc-600 disabled:hover:bg-transparent"
                           >
-                            <Download className="h-3.5 w-3.5" /> Download PDF
+                            <Download className="h-3.5 w-3.5" /> {dossierReadiness?.ready ? "Download PDF" : "PDF not ready"}
                           </button>
                         )}
                       </div>
                       {dossierLoading && <p className="mt-3 text-sm text-zinc-400">Collecting and validating cited company evidence…</p>}
                       {dossierError && <p className="mt-3 text-sm text-red-300">{dossierError}</p>}
+                      {dossier && dossierReadiness && !dossierReadiness.ready && (
+                        <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.04] p-3">
+                          <p className="text-[10px] font-bold text-amber-200">The evidence is not complete enough for a defensible PDF.</p>
+                          <ul className="mt-2 space-y-1 text-[9px] text-zinc-500">
+                            {dossierReadiness.reasons.slice(0, 5).map((reason) => <li key={reason}>- {reason}</li>)}
+                          </ul>
+                        </div>
+                      )}
                       {dossier && (
                         <div className="mt-4 space-y-4">
                           <div className="grid grid-cols-3 gap-2">

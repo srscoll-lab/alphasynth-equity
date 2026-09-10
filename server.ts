@@ -8,6 +8,7 @@ import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
 import { collectOfficialEvidence, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
+import { assessDossierReadiness } from "./src/dossier-readiness";
 import { extractPdfTextLocally } from "./src/pdf-text";
 import { buildExpectationDeliveryInputFromDossier } from "./src/dossier-expectation-bridge";
 import {
@@ -2891,17 +2892,13 @@ ${rawText}` }] }],
     if (!payload?.dossier || !isResearchDossier(payload.dossier)) {
       return res.status(400).json({ error: "A valid completed dossier is required." });
     }
-    const quarterlyRows = (payload.financials?.length ? payload.financials : payload.dossier.quarterlyPerformance)?.filter((row) =>
-      [row.revenueCr, row.ebitdaCr, row.ebitdaMarginPct, row.patCr, row.eps]
-        .some((value) => value !== null && value !== undefined)) || [];
-    const pricePoints = payload.market?.priceHistory?.filter((point) =>
-      point.date && Number.isFinite(point.close)) || [];
-    if (quarterlyRows.length < 2 || pricePoints.length < 2) {
+    const readiness = assessDossierReadiness(payload);
+    if (!readiness.ready) {
       return res.status(422).json({
-        error: "The dossier is missing sufficient financial or price history for its charts. No incomplete PDF was generated.",
-        code: "DOSSIER_CHART_DATA_INCOMPLETE",
-        quarterlyRows: quarterlyRows.length,
-        pricePoints: pricePoints.length,
+        error: "The research evidence is not complete enough for a defensible PDF. No report was generated.",
+        code: readiness.code,
+        reasons: readiness.reasons,
+        coverage: readiness.coverage,
       });
     }
     try {
