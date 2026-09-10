@@ -2,11 +2,11 @@ export const BMS_FACTOR_SCHEMA_VERSION = "1.0.0" as const;
 export const BMS_METHODOLOGY_VERSION = "BMS_V1" as const;
 
 export const BMS_FACTOR_DEFINITIONS = [
-  { id: "earnings", label: "Earnings", weight: 0.25 },
-  { id: "economics", label: "Economics", weight: 0.25 },
-  { id: "execution", label: "Execution", weight: 0.25 },
-  { id: "balance_sheet", label: "Balance sheet", weight: 0.15 },
-  { id: "management_delivery", label: "Management delivery", weight: 0.10 },
+  { id: "earnings", label: "Earnings", weight: 0.25, purpose: "Whether reported earnings momentum is accelerating or weakening.", evidenceSignals: "Revenue, PAT, EPS and margins" },
+  { id: "economics", label: "Economics", weight: 0.25, purpose: "Whether the underlying business and industry economics are becoming more or less favourable.", evidenceSignals: "Demand, pricing, input costs, mix and industry capacity" },
+  { id: "execution", label: "Execution", weight: 0.25, purpose: "Whether operating plans are converting into measurable business outputs.", evidenceSignals: "Volumes, utilisation, order conversion, launches and milestones" },
+  { id: "balance_sheet", label: "Balance sheet", weight: 0.15, purpose: "Whether growth is supported by financial resilience rather than balance-sheet strain.", evidenceSignals: "Net debt, cash flow, working capital, coverage and capex" },
+  { id: "management_delivery", label: "Management delivery", weight: 0.10, purpose: "Whether management delivers against earlier stated commitments.", evidenceSignals: "Guidance, dated milestones, capital allocation and reported outcomes" },
 ] as const;
 
 export type BmsFactorId = typeof BMS_FACTOR_DEFINITIONS[number]["id"];

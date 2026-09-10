@@ -1,6 +1,6 @@
 import PDFDocument from "pdfkit";
 import type { ResearchDossier } from "./dossier";
-import type { BmsFactorAnalysis } from "./bms-factor-schema";
+import { BMS_FACTOR_DEFINITIONS, type BmsFactorAnalysis } from "./bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "./expectation-delivery";
 
 export type DossierPdfPeer = {
@@ -103,6 +103,11 @@ const fmt = (value: number | null | undefined, suffix = "") => value == null || 
   ? "N/A"
   : `${Number(value).toLocaleString("en-IN", { maximumFractionDigits: 2 })}${suffix}`;
 
+const sourceHost = (url: string) => {
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch { return "source link"; }
+};
+
 class Report {
   doc: PDFKit.PDFDocument;
   margin = 42;
@@ -178,7 +183,7 @@ class Report {
   }
 
   bars(title: string, values: Array<{ label: string; value: number }>, neutralMarker = false, palette: string[] = [C.green]) {
-    const chartHeight = 112;
+    const chartHeight = 100;
     this.ensure(67 + chartHeight);
     this.y += 12;
     this.heading(title);
@@ -465,7 +470,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   cards.forEach(([label, value], index) => r.callout(label, value, r.margin + index * (cardWidth + cardGap), cardWidth));
   r.y += 58;
   r.heading("Investment-research orientation");
-  r.paragraph(`This dossier separates the frozen Business Momentum Signal from the supporting company research. The BMS remains an evidence-based change signal; this report adds context, financial tables, peers and cited developments without changing that score.`, { size: 9 });
+  r.paragraph(`This dossier separates the BMS V1 assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated assessment date"} from subsequent company research. The BMS remains an evidence-based change signal; later evidence is evaluated without rewriting the recorded score or lifecycle.`, { size: 9 });
   r.heading("Company history and identity");
   r.paragraph(enrichment?.executiveSummary?.companyHistory || "A concise verified company history was not available from the supplemental sources.", { color: enrichment?.executiveSummary?.companyHistory ? C.ink : C.slate });
   r.paragraph(enrichment?.promoterNames?.length
@@ -502,7 +507,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.y = metricY + 66;
   r.paragraph("The snapshot is intentionally concise. Detailed evidence, financial comparisons and source records follow on the subsequent pages.", { size: 8, color: C.slate });
 
-  r.title("Momentum anatomy", "The five bars are normalized change scores. Fifty is the neutral reference point; these are not portfolio weights.");
+  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. The five bars are normalized change scores; fifty is the neutral reference point, not a portfolio weight.`);
   r.bars("Business Momentum components", (bms?.components || []).map((item) => ({ label: item.label, value: item.score })), true,
     [C.green]);
   r.paragraph("How to read the chart: scores above 50 indicate improving evidence relative to the model's comparison basis; scores below 50 indicate deterioration. The components explain the overall signal, but none is an allocation recommendation.", { size: 8, color: C.slate });
@@ -515,34 +520,58 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       const value = metric.value == null
         ? "N/A"
         : typeof metric.value === "number" ? fmt(metric.value) : clean(metric.value);
-      return `${metric.label}: ${value}${metric.unit ? ` ${metric.unit}` : ""}${metric.displayValue ? ` (${metric.displayValue})` : ""}`;
+      return `${metric.label}: ${metric.displayValue || `${value}${metric.unit ? ` ${metric.unit}` : ""}`}`;
     });
-    return [measurement.period, ...metrics].filter(Boolean).join("\n") || "Not available";
+    return metrics.length
+      ? `${measurement.period || "Period unavailable"}: ${metrics.join("; ")}`
+      : `${measurement.period || "Period unavailable"}: structured measurements not supplied`;
   };
   if (factorAnalysis?.factors?.length) {
-    r.table("BMS measurement bridge", ["Factor", "Weight", "Previous evidence", "Current evidence", "Score", "Weighted score"], [18, 9, 25, 27, 9, 12],
-      factorAnalysis.factors.map((factor) => [
-        factor.label,
-        `${fmt(factor.weight * 100)}%`,
-        measurementText(factor.previous),
-        measurementText(factor.current),
-        scoreAsPoints(factor.current.factorScore),
-        scoreAsPoints(factor.weightedScoreContribution),
-      ]));
-    r.paragraph("Weighted score is the current factor score multiplied by its frozen BMS V1 weight. A score-change contribution is shown only when the engine supplies a stored prior factor score; it is never reconstructed.", { size: 7.5, color: C.slate });
+    r.heading("Five-factor evidence bridge");
+    factorAnalysis.factors.forEach((factor, index) => {
+      const definition = BMS_FACTOR_DEFINITIONS.find((item) => item.id === factor.id)!;
+      const height = 68;
+      r.ensure(height + 5);
+      const top = r.y + 3;
+      r.doc.roundedRect(r.margin, top, r.width, height, 5).fill(index % 2 ? C.pale : C.greenPale);
+      const leftWidth = 112;
+      const wrapsFactorLabel = factor.label.length > 15;
+      r.doc.font("Helvetica-Bold").fontSize(wrapsFactorLabel ? 9 : 10).fillColor(C.navy)
+        .text(factor.label, r.margin + 10, top + 8, { width: leftWidth - 18, height: 23, ellipsis: true });
+      const scoreY = wrapsFactorLabel ? top + 32 : top + 27;
+      r.doc.font("Helvetica-Bold").fontSize(15).fillColor(C.green).text(scoreAsPoints(factor.current.factorScore), r.margin + 10, scoreY, { width: 42 });
+      r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
+        .text(`${fmt(factor.weight * 100)}% WEIGHT`, r.margin + 52, scoreY + 4, { width: 56 })
+        .text(`${factor.confidence.toUpperCase()} CONFIDENCE`, r.margin + 10, wrapsFactorLabel ? top + 52 : top + 49, { width: 96 });
+      const detailX = r.margin + leftWidth;
+      const detailWidth = r.width - leftWidth - 10;
+      r.doc.font("Helvetica-Bold").fontSize(7.2).fillColor(C.ink)
+        .text(definition.purpose, detailX, top + 7, { width: detailWidth, height: 17, ellipsis: true });
+      r.doc.font("Helvetica").fontSize(6.5).fillColor(C.slate)
+        .text(`Evidence considered: ${definition.evidenceSignals}.`, detailX, top + 23, { width: detailWidth, height: 11, ellipsis: true });
+      const evidenceWidth = (detailWidth - 10) / 2;
+      r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.navy).text("PREVIOUS", detailX, top + 36);
+      r.doc.font("Helvetica").fontSize(6.3).fillColor(C.ink)
+        .text(measurementText(factor.previous), detailX, top + 45, { width: evidenceWidth, height: 17, ellipsis: true });
+      r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.navy).text("CURRENT", detailX + evidenceWidth + 10, top + 36);
+      r.doc.font("Helvetica").fontSize(6.3).fillColor(C.ink)
+        .text(measurementText(factor.current), detailX + evidenceWidth + 10, top + 45, { width: evidenceWidth, height: 17, ellipsis: true });
+      r.y = top + height + 3;
+    });
+    r.paragraph("A factor score is fully explained only when structured previous and current measurements are supplied. Period-only rows are labelled as missing structured measurements rather than being retrospectively justified. Weighted contribution equals the recorded factor score multiplied by the BMS V1 weight.", { size: 7, color: C.slate });
+  } else {
+    r.paragraph("The BMS service did not supply a structured five-factor evidence bridge. No factor explanation has been reconstructed after the assessment.", { color: C.slate });
   }
-  if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
 
-  r.title("Financial performance", usesOperatingProfit
+  r.title("Market and financial evidence", usesOperatingProfit
     ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
     : "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
+  if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
   r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
-  r.y += 9;
-  r.marginAndEpsTrend(financialRows.map((quarter) => ({ period: quarter.period, margin: quarter.ebitdaMarginPct ?? null, eps: quarter.eps ?? null })), marginLabel);
 
-  r.title("Lifecycle confirmation layer", "This secondary layer asks whether subsequent delivery and minimum quality evidence support further investigation within the frozen lifecycle. It is not a second BMS score.");
+  r.title("Lifecycle confirmation layer", "This secondary layer asks whether subsequent delivery and minimum quality evidence support further investigation within the recorded BMS V1 lifecycle. It is not a second BMS score.");
   if (deliveryAssessment && deliveryCheck) {
     const direction = deliveryAssessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
     const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result !== "unknown").length;
@@ -550,14 +579,14 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     const confirmationGap = 8;
     const confirmationWidth = (r.width - confirmationGap * 3) / 4;
     [
-      ["FROZEN LIFECYCLE", deliveryAssessment.lifecycle],
+      ["BMS V1 LIFECYCLE", deliveryAssessment.lifecycle],
       ["DELIVERY READING", direction],
       ["EVIDENCE COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
       ["OBSERVED GATES", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
     ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (confirmationWidth + confirmationGap), confirmationWidth));
     r.y = confirmationY + 54;
     r.heading("Why this check exists");
-    r.paragraph("The BMS lifecycle records where business momentum stood at the freeze date. The confirmation layer then compares later published delivery with an earlier comparable reading and checks whether basic financial, governance and operating-quality conditions are sufficiently evidenced. Its purpose is to prioritise research inside a lifecycle cohort without rewriting history.", { size: 8.5 });
+    r.paragraph(`The BMS V1 lifecycle records where business momentum stood as of ${deliveryCheck.input.lifecycleFreezeDate}. The confirmation layer then compares later published delivery with an earlier comparable reading and checks whether basic financial, governance and operating-quality conditions are sufficiently evidenced. Its purpose is to prioritise research inside a lifecycle cohort without rewriting history.`, { size: 8.5 });
     r.table("Published delivery bridge", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
       deliveryAssessment.deliveryComponents.slice(0, 3).map((component) => [
         component.label,
@@ -567,12 +596,12 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         component.direction.toUpperCase(),
       ]));
     r.heading("What the result means");
-    r.paragraph(`The frozen lifecycle remains ${deliveryAssessment.lifecycle}. The reconstructed delivery reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% metric coverage. Quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot move the company into another lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
+    r.paragraph(`The BMS V1 lifecycle recorded as of ${deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The reconstructed delivery reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% metric coverage. Quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
     r.table("Interpretation rules", ["Observed combination", "Research interpretation"], [36, 64], [
-      ["Ahead delivery + no hard-gate failure", "Higher priority within the same frozen lifecycle; investigate durability."],
+      ["Ahead delivery + no hard-gate failure", "Higher priority within the same recorded lifecycle; investigate durability."],
       ["Mixed delivery", "Evidence points in opposing directions; retain for monitoring."],
       ["Behind delivery", "The momentum thesis may be weakening; require stronger subsequent evidence."],
-      ["Any hard-gate failure", "Exclude from the refined shortlist while preserving the original lifecycle record."],
+      ["Any hard-gate failure", "Exclude from the refined shortlist while preserving the BMS V1 lifecycle record."],
       ["Low coverage / unknown gates", "Do not infer confirmation. Collect evidence and reassess after the next result."],
     ]);
     r.table("What the quality gates test", ["Gate family", "Purpose"], [30, 70], [
@@ -582,9 +611,9 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       ["Capital allocation", "Incremental returns on capital and dependence on acquisitions."],
       ["Management reliability", "Whether reported delivery remains consistent with prior commitments."],
     ]);
-    r.paragraph(`Reconstructed today as of ${deliveryCheck.input.expectationFreezeDate}. This was not a signal prospectively frozen on that historical comparison date.`, { size: 7.5, color: C.slate });
+    r.paragraph(`Reconstructed today as of ${deliveryCheck.input.expectationFreezeDate}. This comparison was not recorded prospectively on that historical date.`, { size: 7.5, color: C.slate });
   } else {
-    r.paragraph("A comparable reconstructed delivery assessment was not available. The frozen BMS lifecycle remains the only classification shown, and no confirmation conclusion should be inferred.", { color: C.slate });
+    r.paragraph("A comparable reconstructed delivery assessment was not available. The BMS V1 lifecycle recorded as of the stated date remains the only classification shown, and no confirmation conclusion should be inferred.", { color: C.slate });
   }
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");
@@ -641,7 +670,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     r.paragraph("All commentary is dated and paraphrased. Full links appear in the source register.", { size: 7.5, color: C.slate });
   }
 
-  r.title("Sources and quality control");
+  r.title("Method and source register");
   const sectionLabels: Record<string, string> = {
     snapshot: "Snapshot", developments: "Developments", operatingEvidence: "Operating evidence",
     managementCommitments: "Commitments", risks: "Risks",
@@ -664,27 +693,28 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (coverageWidth + 9), coverageWidth));
   r.y = coverageY + 55;
   r.paragraph(`Report generated: ${clean(dossier.generatedAt).slice(0, 10)}. Every factual claim must trace to an admitted, dated official record. Public commentary is kept separate and is never treated as company evidence.`, { size: 8, color: C.slate });
-  r.heading("Admitted official sources");
-  dossier.sources.forEach((source) => {
-    r.paragraph(`${source.sourceId}  /  ${source.sourceClass}  /  Published ${source.publishedAt || "date unavailable"}`, { size: 8, bold: true });
+  r.heading("Concise official-source register");
+  dossier.sources.slice(0, 6).forEach((source) => {
     const coverage = [...(sourceCoverage.get(source.sourceId) || [])];
-    if (coverage.length) r.paragraph(`Used for: ${coverage.join(", ")}.`, { size: 7, color: C.slate, indent: 8 });
-    r.paragraph(source.url, { size: 7, color: C.navy, indent: 8 });
+    const sourceLine = `${source.sourceId} / ${source.sourceClass.replaceAll("_", " ")} / ${source.publishedAt || "date unavailable"} / ${sourceHost(source.url)}${coverage.length ? ` / Used for: ${coverage.join(", ")}` : ""}`;
+    r.doc.font("Helvetica-Bold").fontSize(7.3).fillColor(C.ink).text(clean(sourceLine), r.margin, r.y, { width: r.width - 76, height: 13, ellipsis: true });
+    r.doc.font("Helvetica-Bold").fontSize(7.3).fillColor(C.green).text("Open source", r.margin + r.width - 70, r.y, { width: 70, align: "right", link: source.url, underline: true });
+    r.y = r.doc.y + 5;
   });
+  if (dossier.sources.length > 6) r.paragraph(`${dossier.sources.length - 6} additional admitted records are retained in the digital dossier.`, { size: 7, color: C.slate });
   const supplementalFinancialSources = [...new Map(financialRows
     .filter((row) => row.sourceUrl)
     .map((row) => [row.sourceUrl, row])).values()];
   if (supplementalFinancialSources.length) {
     r.heading("Supplemental financial-series sources");
     supplementalFinancialSources.forEach((row) => {
-      r.paragraph(`${row.sourceLabel || "Quarterly financial history"} - ${row.sourceUrl}`, { size: 7, color: C.navy });
+      r.paragraph(`${row.sourceLabel || "Quarterly financial history"} / ${sourceHost(row.sourceUrl || "")}`, { size: 7, color: C.navy });
     });
   }
   if (publicCommentary?.viewpoints?.length) {
     r.heading("Public-commentary sources");
-    publicCommentary.viewpoints.slice(0, 5).forEach((viewpoint, index) => {
-      r.paragraph(`${index + 1}. ${viewpoint.sourceName}${viewpoint.publishedAt ? ` - ${viewpoint.publishedAt}` : ""}`, { size: 8, bold: true });
-      r.paragraph(`${clean(viewpoint.sourceType || "publication").replaceAll("_", " ").toUpperCase()} / ${viewpoint.stance.toUpperCase()} viewpoint - ${viewpoint.url}`, { size: 7, color: C.navy, indent: 8 });
+    publicCommentary.viewpoints.slice(0, 4).forEach((viewpoint, index) => {
+      r.paragraph(`${index + 1}. ${viewpoint.sourceName} / ${viewpoint.publishedAt || "date unavailable"} / ${clean(viewpoint.sourceType || "publication").replaceAll("_", " ")} / ${sourceHost(viewpoint.url)}`, { size: 7.2, color: C.navy });
     });
   }
   r.heading("Quality-control summary");

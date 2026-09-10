@@ -2055,7 +2055,7 @@ export default function BusinessMomentum({
                               <div className="flex items-start justify-between gap-3">
                                 <div>
                                   <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Delivery check · reconstructed</h4>
-                                  <p className="mt-1 text-[10px] text-zinc-500">Secondary overlay; the frozen BMS lifecycle remains unchanged.</p>
+                                  <p className="mt-1 text-[10px] text-zinc-500">Secondary overlay; the recorded BMS V1 lifecycle remains unchanged.</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-sm font-black uppercase text-zinc-100">{dossierDeliveryCheck.assessment.deliveryDirection.replaceAll("_", " ")}</p>
@@ -2073,7 +2073,7 @@ export default function BusinessMomentum({
                                 ))}
                               </div>
                               <p className="mt-3 text-[8px] leading-relaxed text-zinc-600">
-                                Reconstructed today from published quarterly history. It is not a prospectively frozen signal and is not an entry recommendation.
+                                Reconstructed today from published quarterly history. It was not recorded prospectively on that historical comparison date and is not an entry recommendation.
                               </p>
                             </section>
                           )}
