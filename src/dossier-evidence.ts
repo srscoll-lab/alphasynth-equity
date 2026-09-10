@@ -5,6 +5,15 @@ type Scraped = { success?: boolean; error?: string; markdown?: string; rawHtml?:
 type Scrape = (url: string, options: any) => Promise<Scraped>;
 type ParsePdfFallback = (url: string, options: any) => Promise<Scraped>;
 
+export type OfficialEvidenceAdmission = {
+  sources: DossierSource[];
+  evidence: Array<{ sourceId: string; text: string }>;
+  diagnostics: Array<{ url: string; outcome: string; date?: string; dateBasis?: string }>;
+  rejectionReasons: Record<string, number>;
+  candidateCount: number;
+  discoveredCount: number;
+};
+
 // A publication date must be an actual day, not an upload folder or fiscal year.
 export function exactEvidenceDate(value: unknown): string | null {
   const text = String(value || "").replace(/<[^>]*>/g, " ").replace(/[*_]/g, "");
@@ -43,6 +52,59 @@ function uniqueExactEvidenceDates(value: unknown): string[] {
 
 const plain = (html: string) => html.replace(/<[^>]*>/g, " ").replace(/&(?:nbsp|amp);/g, " ").replace(/\s+/g, " ").trim();
 const isPdf = (url: string) => /\.pdf(?:[?#]|$)/i.test(url);
+
+// Count distinct reported quarters visible in admitted evidence. This is a
+// discovery-sufficiency check, not a financial parser: it only decides whether
+// one additional bounded search for official quarterly material is warranted.
+export function financialReportingPeriodCount(evidence: Array<{ text: string }>): number {
+  const periods = new Set<string>();
+  const combined = evidence.map(item => item.text).join("\n");
+  for (const match of combined.matchAll(/\bQ([1-4])\s*(?:FY)?\s*(20\d{2}|\d{2})\b/gi)) {
+    periods.add(`Q${match[1]}-FY${match[2].slice(-2)}`);
+  }
+  for (const match of combined.matchAll(/(?=\b(?:quarter|three months)\s+ended\s+(.{0,45}))/gi)) {
+    const date = exactEvidenceDate(match[1]);
+    if (date) periods.add(`ENDED-${date}`);
+  }
+  return periods.size;
+}
+
+// Combine independently admitted batches while assigning fresh source IDs.
+// Put the finance-specific batch first so an AGM notice cannot crowd quarterly
+// results out of the bounded evidence set; the general batch can still supply
+// annual-report or governance context.
+export function mergeOfficialEvidenceAdmissions(
+  admissions: OfficialEvidenceAdmission[],
+  maximumSources = 4,
+): OfficialEvidenceAdmission {
+  const sources: DossierSource[] = [];
+  const evidence: Array<{ sourceId: string; text: string }> = [];
+  const seenUrls = new Set<string>();
+  const diagnostics = admissions.flatMap(item => item.diagnostics);
+  const rejectionReasons: Record<string, number> = {};
+  for (const admission of admissions) {
+    for (const [reason, count] of Object.entries(admission.rejectionReasons)) {
+      rejectionReasons[reason] = (rejectionReasons[reason] || 0) + count;
+    }
+    for (const source of admission.sources) {
+      if (sources.length >= maximumSources || seenUrls.has(source.url)) continue;
+      const matchingEvidence = admission.evidence.find(item => item.sourceId === source.sourceId);
+      if (!matchingEvidence) continue;
+      seenUrls.add(source.url);
+      const sourceId = `official-${String(sources.length + 1).padStart(3, "0")}`;
+      sources.push({ ...source, sourceId });
+      evidence.push({ sourceId, text: matchingEvidence.text });
+    }
+  }
+  return {
+    sources,
+    evidence,
+    diagnostics,
+    rejectionReasons,
+    candidateCount: admissions.reduce((sum, item) => sum + item.candidateCount, 0),
+    discoveredCount: admissions.reduce((sum, item) => sum + item.discoveredCount, 0),
+  };
+}
 
 // Some issuer sites expose PDFs through a same-origin viewer URL. Scrape the
 // underlying document, but never follow a viewer parameter to another origin.
@@ -215,7 +277,7 @@ export async function collectOfficialEvidence(
   cutoff: string,
   scrape: Scrape,
   parsePdfFallback?: ParsePdfFallback,
-) {
+): Promise<OfficialEvidenceAdmission> {
   const queue: Candidate[] = candidates.map(c => ({ ...c, url: unwrapOfficialPdfViewerUrl(c.url), depth: 0 }));
   const seen = new Set<string>();
   const sources: DossierSource[] = [];

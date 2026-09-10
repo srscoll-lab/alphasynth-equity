@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence.ts";
+import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence.ts";
 
 const base = "https://radicokhaitan.com/investor-relations/";
 const domains = ["radicokhaitan.com"];
@@ -171,4 +171,23 @@ const directParseFallback = await collectOfficialEvidence(
 );
 assert.equal(directParseAttempts, 1);
 assert.equal(directParseFallback.sources.length, 1);
+assert.equal(financialReportingPeriodCount([{ text:
+  "Q4 FY25 revenue. Q1 FY26 revenue. Quarter ended 30 June 2026. Three months ended 30 September 2026."
+}]), 4);
+const merged = mergeOfficialEvidenceAdmissions([
+  {
+    sources: [{ sourceId: "official-001", url: "https://radicokhaitan.com/q1.pdf", sourceClass: "company_official", publishedAt: "2026-07-28", retrievedAt: "2026-09-10T00:00:00Z" }],
+    evidence: [{ sourceId: "official-001", text: "Q1 FY27 financial results" }],
+    diagnostics: [], rejectionReasons: {}, candidateCount: 1, discoveredCount: 0,
+  },
+  {
+    sources: [{ sourceId: "official-001", url: "https://radicokhaitan.com/annual.pdf", sourceClass: "company_official", publishedAt: "2026-05-06", retrievedAt: "2026-09-10T00:00:00Z" }],
+    evidence: [{ sourceId: "official-001", text: "Annual report governance evidence" }],
+    diagnostics: [], rejectionReasons: { thin_content: 1 }, candidateCount: 2, discoveredCount: 1,
+  },
+]);
+assert.deepEqual(merged.sources.map(source => source.sourceId), ["official-001", "official-002"]);
+assert.deepEqual(merged.evidence.map(item => item.sourceId), ["official-001", "official-002"]);
+assert.equal(merged.sources[0].url, "https://radicokhaitan.com/q1.pdf");
+assert.equal(merged.rejectionReasons.thin_content, 1);
 console.log("PASS: icon-only official PDF discovery, exact filing date, cutoff, undated and untrusted-source rejection.");

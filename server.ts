@@ -5,7 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
 import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
-import { collectOfficialEvidence } from "./src/dossier-evidence";
+import { collectOfficialEvidence, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import { extractPdfTextLocally } from "./src/pdf-text";
@@ -3076,6 +3076,41 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           admission.diagnostics.push(...fallbackAdmission.diagnostics);
           admission.discoveredCount += fallbackAdmission.discoveredCount;
           admission.candidateCount = candidateCount;
+        }
+      }
+
+      // A dated notice or annual-report cover is admissible, but it is not a
+      // substitute for the historical quarterly series used by the delivery
+      // bridge. When the first bounded pass has fewer than four identifiable
+      // reporting periods, make one finance-specific search and prefer its
+      // admitted documents in the final four-source evidence set.
+      if (financialReportingPeriodCount(admission.evidence) < 4) {
+        try {
+          const cutoffYear = Number(cutoff.slice(0, 4));
+          const historyQuery = `${companyName} ${ticker} quarterly financial results investor presentation quarter ended `
+            + `${cutoffYear} ${cutoffYear - 1} filetype:pdf ${siteScope}`;
+          const historyLimit = Math.min(10, Math.max(6, searchLimit * 2));
+          const historySearch: any = await scraper.search(historyQuery, { limit: historyLimit });
+          const admittedUrls = new Set([
+            ...candidates.map((candidate: any) => String(candidate?.url || "")),
+            ...admission.sources.map(source => source.url),
+          ]);
+          const historyCandidates = [...(historySearch?.web || []), ...(historySearch?.news || [])]
+            .filter((candidate: any) => candidate?.url && !admittedUrls.has(String(candidate.url)));
+          if (historyCandidates.length) {
+            const historyAdmission = await collectOfficialEvidence(
+              historyCandidates,
+              officialDomains,
+              cutoff,
+              (url, options) => scraper.scrape(url, options),
+              parseOfficialPdfDirectly,
+            );
+            admission = mergeOfficialEvidenceAdmissions([historyAdmission, admission], 4);
+            candidateCount += historyCandidates.length;
+          }
+        } catch (historyError) {
+          console.warn("[dossier] supplementary financial-history search failed; retaining primary evidence:",
+            historyError instanceof Error ? historyError.message : historyError);
         }
       }
 
