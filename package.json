@@ -12,6 +12,7 @@
     "verify:expectation-delivery": "node --import tsx scripts/verify-expectation-delivery.ts && node --import tsx scripts/verify-management-guidance-delivery.ts && node scripts/verify-expectation-delivery-workflow.mjs",
     "verify:management-guidance": "node --import tsx scripts/verify-management-guidance-delivery.ts && node --import tsx scripts/management-guidance-ledger-verify.ts && node --import tsx scripts/management-guidance-extraction-verify.ts && node --import tsx scripts/validate-management-guidance-pilot.ts",
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",
+    "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
     "verify:dossier-readiness": "node --import tsx scripts/verify-dossier-readiness.ts",
     "build:expectation-delivery-pilot": "node --import tsx scripts/build-expectation-delivery-pilot.ts",
     "verify:ai-transition": "node --import tsx scripts/verify-ai-transition-schema.ts && node --import tsx scripts/verify-ai-transition-sources.ts && node --import tsx scripts/verify-ai-transition-history.ts && node --import tsx scripts/verify-ai-transition-outcomes.ts",

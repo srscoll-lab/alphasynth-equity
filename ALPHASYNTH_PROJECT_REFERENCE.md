@@ -508,7 +508,7 @@ The current application build should be declared complete when the following con
 5. **Management extraction:** commitments, revisions and outcomes remain cited and pass deterministic validation.
 6. **Shortlist behaviour:** All signals preserves the universe; Qualified shortlist applies the overlay without rewriting lifecycle classifications.
 7. **Dossier readiness:** incomplete reports are blocked and adequate reports explain BMS, delivery, gates and management history coherently.
-8. **Pilot breadth:** the complete path is tested on the five-company cross-sector cohort, including missing-data cases.
+8. **Pilot breadth:** the complete path is tested on the stratified 25-company stop-line cohort (five companies per BMS V1 lifecycle), including missing-data cases. The original five-company pilot remains the engineering smoke test.
 9. **Forward tracker:** the 25-stock cohort is updated and lifecycle-versus-price monitoring can continue without changing the original readings.
 10. **Operational safety:** the chosen candidate is explicitly promoted only after review; old zero-traffic revisions are not mistaken for production.
 
@@ -518,7 +518,7 @@ After these ten conditions pass, **no further methodology or architecture additi
 
 ### Immediate engineering work
 
-1. Re-run the five-company pilot and review unavailable, partial and contradictory cases.
+1. Run the fixed 25-company stop-line audit and review unavailable, partial and contradictory cases. The cohort, thresholds and commands are recorded in [STOP_LINE_UNIVERSE_VALIDATION.md](STOP_LINE_UNIVERSE_VALIDATION.md).
 2. Confirm that the n8n expectation workflow preserves a management `unavailable` result rather than inventing a pass.
 3. Confirm the UI and PDF explain score versus confidence, the effect of qualification, and insufficient-history states.
 4. ~~Validate at least one reconstructed company history containing three matured, verifiable commitments, without contaminating prospective records.~~ **Completed for TITAN on 11 September 2026.**

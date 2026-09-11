@@ -1,0 +1,36 @@
+{
+  "cohortId": "BMS-STOP-LINE-25-20260911",
+  "purpose": "Stratified final acceptance audit; five companies from each recorded BMS V1 lifecycle.",
+  "lifecycleFreezeDate": "2026-08-25",
+  "companies": [
+    { "ticker": "RELIANCE", "company_name": "Reliance Industries Limited", "lifecycle": "Watch", "official_domains": ["ril.com"], "exchange": "NSE", "sector": "Diversified Conglomerate" },
+    { "ticker": "BHARTIARTL", "company_name": "Bharti Airtel Limited", "lifecycle": "Watch", "official_domains": ["airtel.in"], "exchange": "NSE", "sector": "Telecommunications" },
+    { "ticker": "TCS", "company_name": "Tata Consultancy Services Limited", "lifecycle": "Watch", "official_domains": ["tcs.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "LT", "company_name": "Larsen & Toubro Limited", "lifecycle": "Watch", "official_domains": ["larsentoubro.com"], "exchange": "NSE", "sector": "Engineering and Construction" },
+    { "ticker": "HINDUNILVR", "company_name": "Hindustan Unilever Limited", "lifecycle": "Watch", "official_domains": ["hul.co.in"], "exchange": "NSE", "sector": "Consumer Staples" },
+
+    { "ticker": "SUNPHARMA", "company_name": "Sun Pharmaceutical Industries Limited", "lifecycle": "Emerging", "official_domains": ["sunpharma.com"], "exchange": "NSE", "sector": "Pharmaceuticals" },
+    { "ticker": "ADANIENT", "company_name": "Adani Enterprises Limited", "lifecycle": "Emerging", "official_domains": ["adanienterprises.com"], "exchange": "NSE", "sector": "Diversified Conglomerate" },
+    { "ticker": "ADANIENSOL", "company_name": "Adani Energy Solutions Limited", "lifecycle": "Emerging", "official_domains": ["adani.com"], "exchange": "NSE", "sector": "Power Transmission" },
+    { "ticker": "PIDILITIND", "company_name": "Pidilite Industries Limited", "lifecycle": "Emerging", "official_domains": ["pidilite.com"], "exchange": "NSE", "sector": "Specialty Chemicals" },
+    { "ticker": "ICICIAMC", "company_name": "ICICI Prudential Asset Management Company Limited", "lifecycle": "Emerging", "official_domains": ["icicipruamc.com"], "exchange": "NSE", "sector": "Asset Management" },
+
+    { "ticker": "BAJAJ-AUTO", "company_name": "Bajaj Auto Limited", "lifecycle": "Building", "official_domains": ["bajajauto.com"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "HAL", "company_name": "Hindustan Aeronautics Limited", "lifecycle": "Building", "official_domains": ["hal-india.co.in"], "exchange": "NSE", "sector": "Aerospace and Defence" },
+    { "ticker": "HINDZINC", "company_name": "Hindustan Zinc Limited", "lifecycle": "Building", "official_domains": ["hzlindia.com"], "exchange": "NSE", "sector": "Metals and Mining" },
+    { "ticker": "TATASTEEL", "company_name": "Tata Steel Limited", "lifecycle": "Building", "official_domains": ["tatasteel.com"], "exchange": "NSE", "sector": "Steel" },
+    { "ticker": "TRENT", "company_name": "Trent Limited", "lifecycle": "Building", "official_domains": ["trentlimited.com"], "exchange": "NSE", "sector": "Retail" },
+
+    { "ticker": "TITAN", "company_name": "Titan Company Limited", "lifecycle": "Established", "official_domains": ["titancompany.in"], "exchange": "NSE", "sector": "Consumer Durables" },
+    { "ticker": "ULTRACEMCO", "company_name": "UltraTech Cement Limited", "lifecycle": "Established", "official_domains": ["ultratechcement.com"], "exchange": "NSE", "sector": "Cement" },
+    { "ticker": "JSWSTEEL", "company_name": "JSW Steel Limited", "lifecycle": "Established", "official_domains": ["jsw.in"], "exchange": "NSE", "sector": "Steel" },
+    { "ticker": "BEL", "company_name": "Bharat Electronics Limited", "lifecycle": "Established", "official_domains": ["bel-india.in"], "exchange": "NSE", "sector": "Defence Electronics" },
+    { "ticker": "GRASIM", "company_name": "Grasim Industries Limited", "lifecycle": "Established", "official_domains": ["grasim.com"], "exchange": "NSE", "sector": "Diversified Materials" },
+
+    { "ticker": "BAJFINANCE", "company_name": "Bajaj Finance Limited", "lifecycle": "Fading", "official_domains": ["bajajfinserv.in"], "exchange": "NSE", "sector": "Non-Banking Financial Services" },
+    { "ticker": "MARUTI", "company_name": "Maruti Suzuki India Limited", "lifecycle": "Fading", "official_domains": ["marutisuzuki.com"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "HCLTECH", "company_name": "HCL Technologies Limited", "lifecycle": "Fading", "official_domains": ["hcltech.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "BAJAJFINSV", "company_name": "Bajaj Finserv Limited", "lifecycle": "Fading", "official_domains": ["aboutbajajfinserv.com"], "exchange": "NSE", "sector": "Financial Services" },
+    { "ticker": "NESTLEIND", "company_name": "Nestle India Limited", "lifecycle": "Fading", "official_domains": ["nestle.in"], "exchange": "NSE", "sector": "Consumer Staples" }
+  ]
+}
