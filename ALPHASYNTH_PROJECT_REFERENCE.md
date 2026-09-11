@@ -340,6 +340,19 @@ The six-page target remains a useful discipline, but completeness and readabilit
 
 Peer-ratio tables and generic screeners are no longer central. Sources should be consolidated into a readable source section rather than appended to every sentence. Public-market or social commentary, if retained, must be clearly labelled, anonymised where appropriate, separately sourced, and structurally prohibited from changing BMS.
 
+### On-screen evidence workspace
+
+Detailed methodology is available independently of PDF readiness. The compact tracker shows the recorded BMS lifecycle, evidence-qualification state and a **View evidence report** action. That action opens a full-width workspace rather than adding more cards to the already dense tracker layout.
+
+The workspace has four progressively disclosed views:
+
+1. **BMS methodology** — five factor definitions, weights, evidence cadence, previous/current measurements, directional readings and confidence;
+2. **Delivery check** — comparable previous/current outcomes, direction, coverage and the effect on research priority;
+3. **Quality and management** — pass, fail, unknown and not-due gates plus the read-only durable management-delivery record; and
+4. **Sources and limits** — admitted sources, coverage measures, missing-evidence explanations and PDF-readiness reasons.
+
+The screen and server-side PDF use the same dossier, factor-analysis, delivery-check, market and readiness payload. The screen may transparently display incomplete evidence, while the PDF download remains disabled until every dossier-readiness condition passes. The on-screen layer does not create a second BMS calculation or modify the recorded lifecycle.
+
 ## 8. Signal Tracker and forward validation
 
 The tracker has two views:

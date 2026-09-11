@@ -99,6 +99,30 @@ function getGenAI(): GoogleGenAI {
   return genAI;
 }
 
+function lifecycleQualification(
+  input: ExpectationDeliveryInput,
+  assessment: ReturnType<typeof assessExpectationDelivery>,
+  managementAssessment: ManagementGuidanceDeliveryAssessment | null,
+) {
+  const hardUnknown = input.qualityGates.some(gate => gate.severity === "hard" && gate.result === "unknown");
+  const status = assessment.qualityStatus === "fail"
+    ? "not_qualified"
+    : hardUnknown || !managementAssessment || managementAssessment.score === null || assessment.deliveryCoverage < 60
+      ? "insufficient_evidence"
+      : assessment.qualityStatus === "watch" || managementAssessment.band === "mixed_delivery"
+        ? "qualified_with_caution"
+        : "qualified";
+  const reasons = [
+    ...assessment.hardGateFailures.map(label => `Failed hard gate: ${label}.`),
+    ...assessment.softWarnings.map(label => `Quality warning: ${label}.`),
+    ...(managementAssessment?.reasons || []),
+    ...(hardUnknown ? ["One or more hard quality gates remain unobserved."] : []),
+    ...(!managementAssessment ? ["Management delivery history is unavailable."] : []),
+    ...(assessment.deliveryCoverage < 60 ? ["Comparable measurable-delivery coverage is below 60%."] : []),
+  ];
+  return { status, reasons: [...new Set(reasons)] };
+}
+
 function getResend() {
   if (!resend && process.env.RESEND_API_KEY) {
     resend = new Resend(process.env.RESEND_API_KEY);
@@ -3662,14 +3686,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           financialError instanceof Error ? financialError.message : financialError);
       }
     }
+    const storedManagement = await managementGuidanceLedger.read(dossier.company.symbol);
+    const managementAssessment = storedManagement.status === "available" && storedManagement.history
+      ? assessManagementGuidanceDelivery(storedManagement.history)
+      : null;
     const input = buildExpectationDeliveryInputFromDossier(dossier, {
       lifecycle,
       lifecycleFreezeDate: BMS_LIFECYCLE_FREEZE_DATE,
       expectationFreezeDate,
       sectorValuationPercentile: null,
       financials,
+      managementGuidance: managementAssessment,
     });
-    return res.json({ input, assessment: assessExpectationDelivery(input) });
+    const assessment = assessExpectationDelivery(input);
+    const qualification = lifecycleQualification(input, assessment, managementAssessment);
+    return res.json({
+      input,
+      assessment,
+      managementGuidance: {
+        status: managementAssessment?.score === null ? "insufficient_history" : managementAssessment ? "available" : "unavailable",
+        assessment: managementAssessment,
+        reason: managementAssessment?.reasons.join(" ") || (storedManagement.status === "unavailable" ? storedManagement.reason : null),
+        storage: storedManagement.status,
+      },
+      qualification: {
+        ...qualification,
+        asOf: expectationFreezeDate,
+        lifecycleUnchanged: true,
+      },
+    });
   });
 
   app.post("/api/bms/expectation-delivery/from-dossier", async (req, res) => {
@@ -3710,29 +3755,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       financials, managementGuidance: usableManagementAssessment,
     });
     const assessment = assessExpectationDelivery(input);
-    const hardUnknown = input.qualityGates.some(gate => gate.severity === "hard" && gate.result === "unknown");
-    const qualificationStatus = assessment.qualityStatus === "fail"
-      ? "not_qualified"
-      : hardUnknown || !usableManagementAssessment || usableManagementAssessment.score === null || assessment.deliveryCoverage < 60
-        ? "insufficient_evidence"
-        : assessment.qualityStatus === "watch" || usableManagementAssessment.band === "mixed_delivery"
-          ? "qualified_with_caution"
-          : "qualified";
-    const qualificationReasons = [
-      ...assessment.hardGateFailures.map(label => `Failed hard gate: ${label}.`),
-      ...assessment.softWarnings.map(label => `Quality warning: ${label}.`),
-      ...(usableManagementAssessment?.reasons || []),
-      ...(hardUnknown ? ["One or more hard quality gates remain unobserved."] : []),
-      ...(assessment.deliveryCoverage < 60 ? ["Comparable measurable-delivery coverage is below 60%."] : []),
-    ];
+    const qualification = lifecycleQualification(input, assessment, usableManagementAssessment);
     return res.json({
       input,
       assessment,
       managementGuidance: req.body?.managementGuidance ?? { status: "unavailable", assessment: null },
       qualification: {
-        status: qualificationStatus,
+        ...qualification,
         asOf: expectationFreezeDate,
-        reasons: [...new Set(qualificationReasons)],
         lifecycleUnchanged: true,
       },
     });

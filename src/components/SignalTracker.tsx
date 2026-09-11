@@ -32,6 +32,7 @@ import {
   YAxis,
 } from "recharts";
 import frozenCohortData from "../data/signalTrackerCohort001.json";
+import SignalEvidenceLayer from "./SignalEvidenceLayer";
 
 type Lifecycle =
   | "Watch"
@@ -238,6 +239,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
   const [priceMode, setPriceMode] = useState<"indexed" | "actual">("indexed");
   const [activeSection, setActiveSection] = useState<TrackerSection>("overview");
   const [trackerView, setTrackerView] = useState<TrackerView>("all");
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -327,6 +329,16 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
     ...(selected.qualificationReasons ?? []),
     ...(selected.qualityGateReasons ?? []),
   ].filter((reason, index, reasons) => reason && reasons.indexOf(reason) === index);
+
+  if (evidenceOpen) {
+    return (
+      <SignalEvidenceLayer
+        company={selected}
+        signalDate={cohortData.signalDate}
+        onClose={() => setEvidenceOpen(false)}
+      />
+    );
+  }
 
   return (
     <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
@@ -512,59 +524,24 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
               </div>
 
               <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Quality qualification · separate from BMS</div>
-                    <div className={`inline-flex mt-2 px-3 py-1.5 rounded-full border text-[10px] uppercase tracking-[0.12em] font-black ${selectedQualificationCopy.style}`}>
-                      {selectedQualificationCopy.label}
+                <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Evidence qualification · separate from BMS V1</div>
+                    <div className="mt-2 flex flex-wrap items-center gap-3">
+                      <span className={`inline-flex rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${selectedQualificationCopy.style}`}>{selectedQualificationCopy.label}</span>
+                      <span className="text-xs text-zinc-500">
+                        Delivery {selected.measurableDeliveryDirection ? deliveryDirectionLabel[selected.measurableDeliveryDirection].toLowerCase() : "not yet assessed"}
+                        {selected.qualityGatesObserved !== undefined ? ` · ${selected.qualityGatesObserved}${selected.qualityGatesTotal ? `/${selected.qualityGatesTotal}` : ""} gates observed` : ""}
+                      </span>
                     </div>
+                    <p className="mt-2 truncate text-xs text-zinc-500">
+                      {selectedReasons[0] || "Open the evidence workspace to inspect methodology, delivery checks, quality gates and sources."}
+                    </p>
                   </div>
-                  {selected.qualificationAsOf && (
-                    <div className="text-[10px] uppercase tracking-[0.1em] text-zinc-500">As of {formatDate(selected.qualificationAsOf)}</div>
-                  )}
+                  <button type="button" onClick={() => setEvidenceOpen(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/30 bg-teal-400/10 px-4 py-3 text-[10px] font-black uppercase tracking-wider text-teal-200 transition-colors hover:bg-teal-400/15">
+                    <FileCheck2 className="h-4 w-4" /> View evidence report
+                  </button>
                 </div>
-
-                <div className="mt-4 grid sm:grid-cols-3 gap-3">
-                  <div className="rounded-xl border border-white/10 bg-black/15 px-3 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">Management delivery</div>
-                    <div className="mt-1 text-sm font-semibold text-white">{selected.managementDeliveryLabel ?? "Insufficient evidence"}</div>
-                    <div className="mt-1 text-[10px] text-zinc-500">
-                      {selected.managementDeliveryScore === undefined ? "Score unavailable" : `${selected.managementDeliveryScore}/100`}
-                      {selected.managementDeliveryConfidence ? ` · ${selected.managementDeliveryConfidence} confidence` : ""}
-                    </div>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-black/15 px-3 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">Measurable delivery</div>
-                    <div className="mt-1 text-sm font-semibold text-white">
-                      {selected.measurableDeliveryDirection
-                        ? deliveryDirectionLabel[selected.measurableDeliveryDirection]
-                        : "Insufficient evidence"}
-                    </div>
-                    <div className="mt-1 text-[10px] text-zinc-500">Compared with previously recorded evidence</div>
-                  </div>
-                  <div className="rounded-xl border border-white/10 bg-black/15 px-3 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">Quality gates observed</div>
-                    <div className="mt-1 text-sm font-semibold text-white">
-                      {selected.qualityGatesObserved === undefined
-                        ? "Insufficient evidence"
-                        : `${selected.qualityGatesObserved}${selected.qualityGatesTotal ? ` of ${selected.qualityGatesTotal}` : ""}`}
-                    </div>
-                    <div className="mt-1 text-[10px] text-zinc-500">Unknown is never treated as a pass</div>
-                  </div>
-                </div>
-
-                {selectedReasons.length > 0 ? (
-                  <div className="mt-3 rounded-xl border border-amber-400/15 bg-amber-400/[0.035] px-3 py-3">
-                    <div className="text-[9px] font-black uppercase tracking-[0.12em] text-amber-200">Qualification notes</div>
-                    <ul className="mt-2 space-y-1 text-xs leading-relaxed text-zinc-400">
-                      {selectedReasons.slice(0, 3).map((reason) => <li key={reason}>• {reason}</li>)}
-                    </ul>
-                  </div>
-                ) : selectedQualification === "insufficient_evidence" ? (
-                  <p className="mt-3 text-xs leading-relaxed text-zinc-500">
-                    No qualification payload is available for this signal. The original lifecycle remains visible, but the company is not assumed to have passed the quality review.
-                  </p>
-                ) : null}
               </div>
 
               <div className="mt-7 rounded-2xl border border-white/10 bg-black/15 p-4 md:p-5">
