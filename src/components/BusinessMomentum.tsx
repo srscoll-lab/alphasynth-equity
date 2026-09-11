@@ -1271,6 +1271,7 @@ export default function BusinessMomentum({
           period: selected.period,
           evidenceStrength: selected.evidence_strength || "Unavailable",
           evidenceCount: selected.evidence_count,
+          factorAnalysis: selected.factor_analysis ?? null,
         }}
         lifecycleAsOf={data?.lifecycle_as_of || "2026-08-25"}
         onClose={() => setEvidenceOpen(false)}

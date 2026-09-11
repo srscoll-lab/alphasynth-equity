@@ -30,6 +30,7 @@ export type SignalEvidenceCompany = {
   period: string;
   evidenceStrength: string;
   evidenceCount: number;
+  factorAnalysis?: BmsFactorAnalysis | null;
 };
 
 type DeliveryCheck = {
@@ -50,6 +51,8 @@ type DeliveryCheck = {
 
 type LayerData = {
   dossier: ResearchDossier;
+  dossierAvailable: boolean;
+  dossierIssue: string | null;
   financials: DossierPdfPayload["financials"];
   enrichment: DossierPdfPayload["enrichment"];
   market: DossierPdfPayload["market"];
@@ -57,6 +60,44 @@ type LayerData = {
   deliveryCheck: DeliveryCheck | null;
   readiness: DossierReadinessCheck;
 };
+
+const emptyEvidenceDossier = (
+  company: SignalEvidenceCompany,
+  evidenceCutoff: string,
+): ResearchDossier => ({
+  schemaVersion: "1.0.0",
+  reportId: `ONSCREEN-${company.symbol}-${evidenceCutoff}`,
+  generatedAt: `${evidenceCutoff}T00:00:00.000Z`,
+  company: {
+    symbol: company.symbol,
+    name: company.name,
+    exchange: "NSE",
+    sector: "Unavailable",
+    officialDomains: [],
+  },
+  sections: {
+    snapshot: [],
+    developments: [],
+    operatingEvidence: [],
+    managementCommitments: [],
+    risks: [],
+  },
+  quarterlyPerformance: [],
+  qualityEvidence: [],
+  sources: [],
+  marketConversation: {
+    status: "insufficient_data",
+    affectsBms: false,
+    sampleSize: 0,
+    sentiment: { positive: 0, neutral: 1, negative: 0 },
+    themes: [],
+  },
+  qualityControl: {
+    unsupportedClaims: 0,
+    conflicts: 0,
+    humanReviewRequired: true,
+  },
+});
 
 const qualificationStyle = {
   qualified: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
@@ -144,8 +185,14 @@ export default function SignalEvidenceLayer({
           fetch(`/api/bms/factor-analysis/${encodeURIComponent(company.symbol)}`, { signal: controller.signal })
             .then(response => response.ok ? response.json() : null).catch(() => null),
         ]);
-        const dossierPayload = await dossierResponse.json();
-        if (!dossierResponse.ok) throw new Error(dossierPayload?.error || "The evidence report could not be prepared.");
+        const dossierResult = await dossierResponse.json().catch(() => null);
+        const dossierAvailable = dossierResponse.ok;
+        const dossierPayload: ResearchDossier = dossierAvailable
+          ? dossierResult
+          : emptyEvidenceDossier(company, effectiveEvidenceCutoff);
+        const dossierIssue = dossierAvailable
+          ? null
+          : dossierResult?.error || "Official dossier evidence is not currently available for this company.";
         const financials = Array.isArray(financialPayload?.rows) ? financialPayload.rows : [];
         const deliveryResponse = await post("/api/bms/delivery-check", {
           dossier: dossierPayload,
@@ -154,7 +201,7 @@ export default function SignalEvidenceLayer({
         });
         const deliveryPayload = deliveryResponse.ok ? await deliveryResponse.json() as DeliveryCheck : null;
         const factorAnalysis = augmentFactorAnalysisWithDeliveryEvidence(
-          factorPayload?.factor_analysis ?? null,
+          factorPayload?.factor_analysis ?? company.factorAnalysis ?? null,
           deliveryPayload,
         );
         const readinessPayload: DossierPdfPayload = {
@@ -173,6 +220,8 @@ export default function SignalEvidenceLayer({
         if (!active) return;
         setData({
           dossier: dossierPayload,
+          dossierAvailable,
+          dossierIssue,
           financials,
           enrichment: enrichmentPayload || null,
           market: marketPayload || null,
@@ -327,6 +376,7 @@ export default function SignalEvidenceLayer({
                       <p className="mt-3 text-sm leading-relaxed text-zinc-400">A score and confidence answer different questions. The score describes measured direction; confidence describes the completeness and comparability of the evidence supporting it.</p>
                     </div>
                     <div className="mt-7 space-y-4">
+                      {!factors.length && <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5 text-sm leading-relaxed text-zinc-400">The five-factor definitions remain part of BMS V1, but structured previous/current measurements are not available for this company.</div>}
                       {factors.map(factor => {
                         const definition = BMS_FACTOR_DEFINITIONS.find(item => item.id === factor.id);
                         const score = displayScore(factor.current.factorScore);
@@ -441,6 +491,7 @@ export default function SignalEvidenceLayer({
                       ["Comparable factors", `${data.readiness.coverage.completeBmsFactors}/5`],
                       ["Observed gates", data.readiness.coverage.observedQualityGates],
                     ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-2xl font-bold text-white">{value}</div><div className="mt-1 text-[9px] font-black uppercase tracking-wider text-zinc-500">{label}</div></div>)}</div>
+                    {!data.dossierAvailable && <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5"><div className="text-sm font-semibold text-sky-200">Official dossier evidence unavailable</div><p className="mt-2 text-sm leading-relaxed text-zinc-400">{data.dossierIssue} The methodology and available comparison layers remain visible, but this absence counts as zero official sources and keeps the PDF disabled.</p></div>}
                     {!data.readiness.ready && <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5"><div className="text-sm font-semibold text-amber-200">Why the PDF is not yet available</div><ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-400">{data.readiness.reasons.map(reason => <li key={reason}>• {reason}</li>)}</ul></div>}
                     <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
                       {data.dossier.sources.map((source, index) => (
