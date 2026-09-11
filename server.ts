@@ -3169,15 +3169,48 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           },
         },
       };
-      const response = await ai.models.generateContent({
+      const extractionPrompt = (evidenceRows: Array<{ sourceId: string; text: string }>) =>
+        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim and every quarterly row must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
+      const requestDossierSections = (evidenceRows: Array<{ sourceId: string; text: string }>) => ai.models.generateContent({
         model,
-        contents: [{ role: "user", parts: [{ text: `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim and every quarterly row must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. Return JSON only. Evidence: ${JSON.stringify(evidence)}` }] }],
+        contents: [{ role: "user", parts: [{ text: extractionPrompt(evidenceRows) }] }],
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
           responseSchema,
         },
       });
+      const compactEvidenceText = (value: string, maximumCharacters = 8_000) => {
+        if (value.length <= maximumCharacters) return value;
+        const passages: string[] = [value.slice(0, 2_400)];
+        const highSignal = /\b(?:guidance|outlook|target|capacity|volume|utili[sz]ation|margin|revenue|sales|profit|ebitda|pat|cash flow|debt|working capital|capital expenditure|capex|launch|milestone|management)\b/gi;
+        const seenRanges: Array<[number, number]> = [[0, 2_400]];
+        for (const match of value.matchAll(highSignal)) {
+          if (passages.join("\n").length >= maximumCharacters - 1_800) break;
+          const start = Math.max(0, (match.index ?? 0) - 450);
+          const end = Math.min(value.length, start + 1_100);
+          if (seenRanges.some(([left, right]) => start < right && end > left)) continue;
+          seenRanges.push([start, end]);
+          passages.push(value.slice(start, end));
+        }
+        passages.push(value.slice(-1_200));
+        return passages.join("\n[… evidence compacted for one bounded model retry …]\n").slice(0, maximumCharacters);
+      };
+      let response;
+      try {
+        response = await requestDossierSections(evidence);
+      } catch (modelError) {
+        const detail = modelError instanceof Error ? modelError.message : String(modelError);
+        if (!/INVALID_ARGUMENT|invalid argument/i.test(detail)) throw modelError;
+        const compactEvidence = evidence.map(row => ({ ...row, text: compactEvidenceText(row.text) }));
+        console.warn("[dossier] Gemini rejected full evidence; retrying one compact evidence request", JSON.stringify({
+          ticker,
+          sourceCount: evidence.length,
+          originalCharacters: evidence.reduce((sum, row) => sum + row.text.length, 0),
+          compactCharacters: compactEvidence.reduce((sum, row) => sum + row.text.length, 0),
+        }));
+        response = await requestDossierSections(compactEvidence);
+      }
       let rawSections: any;
       try {
         rawSections = JSON.parse(sanitizeJsonShell(response.text || "{}"));

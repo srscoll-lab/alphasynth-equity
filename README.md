@@ -4,6 +4,10 @@
 
 # Run and deploy your AI Studio app
 
+## Project reference
+
+For the product purpose, BMS methodology, qualification overlay, management-history architecture, deployment status, limitations and agreed completion boundary, see [ALPHASYNTH_PROJECT_REFERENCE.md](ALPHASYNTH_PROJECT_REFERENCE.md).
+
 This contains everything you need to run your app locally.
 
 View your app in AI Studio: https://ai.studio/apps/5af2c9c0-73bb-4814-965f-742836b3c812

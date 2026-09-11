@@ -268,7 +268,10 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
   const disclosureQualityScore = mean(disclosureScores);
 
   const reasons: string[] = [];
-  if (scorableDelivery.length < 3) reasons.push(`At least 3 matured, verifiable commitments are required; ${scorableDelivery.length} available.`);
+  if (scorableDelivery.length < 3) reasons.push(
+    `At least 3 matured commitments with verifiable outcomes are required; ${maturedKeys.size} commitment${maturedKeys.size === 1 ? "" : "s"} `
+    + `have reached their target date and ${scorableDelivery.length} currently have scorable outcomes.`,
+  );
   if (conflictingDeliveryKeys.size) reasons.push(`Conflicting same-date delivery outcomes require review for ${conflictingDeliveryKeys.size} commitment${conflictingDeliveryKeys.size === 1 ? "" : "s"}.`);
   if (revisionDisciplineScore === null) reasons.push("Revision-discipline evidence is unavailable.");
   if (disclosureQualityScore === null) reasons.push("Disclosure-quality evidence is unavailable.");
