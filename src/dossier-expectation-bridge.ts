@@ -94,6 +94,24 @@ function gateObservation(definition: [string, string, "hard" | "soft"], claims: 
   };
 }
 
+function structuredGateObservation(
+  definition: [string, string, "hard" | "soft"],
+  dossier: ResearchDossier,
+  claims: DossierClaim[],
+): QualityGateObservation {
+  const [id, label, severity] = definition;
+  const observation = dossier.qualityEvidence?.find(row => row.id === id);
+  if (!observation) return gateObservation(definition, claims);
+  return {
+    id,
+    label,
+    severity,
+    result: observation.result,
+    explanation: observation.explanation,
+    evidenceRefs: [...new Set(observation.sourceIds)],
+  };
+}
+
 function managementDeliveryGate(assessment: ManagementGuidanceDeliveryAssessment | null | undefined): QualityGateObservation {
   const definition = gateDefinitions.find(([id]) => id === "management_delivery_history")!;
   const [id, label, severity] = definition;
@@ -221,7 +239,7 @@ export function buildExpectationDeliveryInputFromDossier(
     sectorValuationPercentile: context.sectorValuationPercentile ?? null,
     qualityGates: gateDefinitions.map(definition => definition[0] === "management_delivery_history"
       ? managementDeliveryGate(managementAssessment)
-      : gateObservation(definition, claims)),
+      : structuredGateObservation(definition, dossier, claims)),
     deliveryMetrics: [
       metric("revenue_growth", "Revenue growth versus prior YoY baseline", "%", 3, 30, priorRevenueGrowth, currentRevenueGrowth, revenueRefs),
       metric("operating_margin", "EBITDA margin versus prior-quarter baseline", "%", 2, 30,

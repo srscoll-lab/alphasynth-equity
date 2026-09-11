@@ -22,6 +22,11 @@ const dossier: ResearchDossier = {
     developments: [], operatingEvidence: [], managementCommitments: [], risks: [],
   },
   quarterlyPerformance: quarters,
+  qualityEvidence: [
+    { id: "leverage_coverage", result: "pass", explanation: "Net debt was zero.", sourceIds: ["official-001"] },
+    { id: "cash_conversion", result: "pass", explanation: "Free cash flow was positive.", sourceIds: ["official-001"] },
+    { id: "working_capital", result: "pass", explanation: "Working-capital days reduced.", sourceIds: ["official-001"] },
+  ],
   sources: [{ sourceId: "official-001", url: "https://example.com/report.pdf", sourceClass: "company_official", publishedAt: "2026-07-01", retrievedAt: "2026-09-10T00:00:00Z" }],
   marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
   qualityControl: { unsupportedClaims: 0, conflicts: 0, humanReviewRequired: true },

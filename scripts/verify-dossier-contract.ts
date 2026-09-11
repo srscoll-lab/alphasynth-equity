@@ -25,6 +25,9 @@ const dossier = {
     period: "Q1 FY27", basis: "consolidated", revenueCr: 100, ebitdaCr: 20,
     ebitdaMarginPct: 20, patCr: 12, eps: 2.4, sourceIds: ["s1"],
   }],
+  qualityEvidence: [{
+    id: "leverage_coverage", result: "pass", explanation: "The company reported zero net debt.", sourceIds: ["s1"],
+  }],
   sources: [{ sourceId: "s1", url: "https://example.com/report.pdf", sourceClass: "company_official", publishedAt: "2026-09-01", retrievedAt: "2026-09-04T00:00:00Z" }],
   marketConversation: { status: "available", affectsBms: false, sampleSize: 3, sentiment: { positive: 0.34, neutral: 0.33, negative: 0.33 }, themes: [] },
   qualityControl: { unsupportedClaims: 0, conflicts: 0, humanReviewRequired: true },
@@ -36,5 +39,9 @@ assert.equal(isResearchDossier({ ...dossier, sources: [] }), false);
 assert.equal(isResearchDossier({
   ...dossier,
   quarterlyPerformance: [{ ...dossier.quarterlyPerformance[0], sourceIds: ["missing"] }],
+}), false);
+assert.equal(isResearchDossier({
+  ...dossier,
+  qualityEvidence: [{ ...dossier.qualityEvidence[0], sourceIds: ["missing"] }],
 }), false);
 console.log("PASS: dossier trust and integrity controls");

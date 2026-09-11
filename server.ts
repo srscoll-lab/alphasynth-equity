@@ -5,7 +5,7 @@ import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
 import { isOfficialDossierSource, isResearchDossier } from "./src/dossier";
-import { collectOfficialEvidence, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions } from "./src/dossier-evidence";
+import { collectOfficialEvidence, exactEvidenceDate, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions } from "./src/dossier-evidence";
 import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import { assessDossierReadiness } from "./src/dossier-readiness";
@@ -2998,6 +2998,17 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
       return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
     }
+    const officialSeedSources = Array.isArray(req.body?.official_seed_sources)
+      ? req.body.official_seed_sources.slice(0, 4).flatMap((value: any) => {
+          const url = String(value?.url || "").trim();
+          const publishedDate = exactEvidenceDate(value?.published_at);
+          if (value?.status !== "official_primary"
+            || !isOfficialDossierSource(url, officialDomains)
+            || !publishedDate
+            || publishedDate > cutoff) return [];
+          return [{ url, publishedDate, dateBasis: "prior_bms_official_evidence" }];
+        })
+      : [];
 
     const scraper = getFirecrawl();
     if (!scraper) return res.status(503).json({ error: "The official-source scraper is not configured." });
@@ -3048,10 +3059,16 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       // Reuse dated official evidence already attached to the immutable BMS signal.
       // This is a general source hand-off, not a company-specific parser exception;
       // every URL is revalidated against the same official-domain admission policy.
-      const seedCandidates = officialSeedUrls.map((url: string) => ({
-        url,
-        title: `${ticker} prior BMS official evidence source`,
-      }));
+      const seedCandidates = [
+        ...officialSeedSources.map((source: { url: string; publishedDate: string; dateBasis: string }) => ({
+          ...source,
+          title: `${ticker} dated prior BMS official evidence source`,
+        })),
+        ...officialSeedUrls.map((url: string) => ({
+          url,
+          title: `${ticker} prior BMS official evidence source`,
+        })),
+      ];
       const searchCandidates = [...(search?.web || []), ...(search?.news || [])];
       const candidateUrls = new Set<string>();
       const candidates = [...seedCandidates, ...searchCandidates].filter((candidate: any) => {
@@ -3159,7 +3176,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const responseSchema = {
         type: "OBJECT",
-        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks", "quarterlyPerformance"],
+        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks", "quarterlyPerformance", "qualityEvidence"],
         properties: {
           ...Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
             type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
@@ -3185,10 +3202,31 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
               },
             },
           },
+          qualityEvidence: {
+            type: "ARRAY",
+            maxItems: 9,
+            items: {
+              type: "OBJECT",
+              required: ["id", "result", "explanation", "sourceIds"],
+              properties: {
+                id: {
+                  type: "STRING",
+                  enum: [
+                    "cash_conversion", "leverage_coverage", "promoter_pledge", "auditor_integrity",
+                    "material_governance", "working_capital", "concentration", "incremental_roce",
+                    "acquisition_dependence",
+                  ],
+                },
+                result: { type: "STRING", enum: ["pass", "fail"] },
+                explanation: { type: "STRING" },
+                sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+              },
+            },
+          },
         },
       };
       const extractionPrompt = (evidenceRows: Array<{ sourceId: string; text: string }>) =>
-        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim and every quarterly row must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
+        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim, quarterly row, and qualityEvidence observation must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. For qualityEvidence, emit an observation only when the evidence explicitly supports the result; never treat silence or absence as a pass. Use cash_conversion for explicit positive/improving versus negative/deteriorating operating or free cash flow; leverage_coverage for explicit debt-free/net-cash/reducing leverage versus defaults or rising/stretched leverage; promoter_pledge for explicit zero pledge versus a stated non-zero pledge; auditor_integrity for an explicit unmodified/unqualified opinion versus qualified/adverse/disclaimer/resignation; material_governance for an explicit clean statement versus a stated material fraud, regulatory or governance issue; working_capital for explicit improvement versus deterioration; concentration for explicit diversification/reduction versus material customer or product concentration; incremental_roce for explicit improvement versus decline; and acquisition_dependence for explicit organic growth versus growth mainly driven by acquisitions. Omit every unobserved gate. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
       const requestDossierSections = (evidenceRows: Array<{ sourceId: string; text: string }>) => ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text: extractionPrompt(evidenceRows) }] }],
@@ -3274,10 +3312,31 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }))
         .filter((quarter: any) => quarter.period && quarter.sourceIds.length
           && [quarter.revenueCr, quarter.ebitdaCr, quarter.ebitdaMarginPct, quarter.patCr, quarter.eps].some((value) => value !== null));
+      const qualityEvidenceIds = new Set([
+        "cash_conversion", "leverage_coverage", "promoter_pledge", "auditor_integrity",
+        "material_governance", "working_capital", "concentration", "incremental_roce",
+        "acquisition_dependence",
+      ]);
+      const qualityEvidenceById = new Map<string, any>();
+      for (const observation of Array.isArray(rawSections.qualityEvidence) ? rawSections.qualityEvidence : []) {
+        const id = String(observation?.id || "");
+        const result = observation?.result === "fail" ? "fail" : observation?.result === "pass" ? "pass" : null;
+        const explanation = String(observation?.explanation || "").trim();
+        const observationSourceIds = [...new Set(
+          (Array.isArray(observation?.sourceIds) ? observation.sourceIds : [])
+            .filter((sourceId: string) => sourceIds.has(sourceId)),
+        )];
+        if (!qualityEvidenceIds.has(id) || !result || !explanation || !observationSourceIds.length) continue;
+        const existing = qualityEvidenceById.get(id);
+        if (!existing || result === "fail") {
+          qualityEvidenceById.set(id, { id, result, explanation, sourceIds: observationSourceIds });
+        }
+      }
+      const qualityEvidence = [...qualityEvidenceById.values()];
       const dossier: any = {
         schemaVersion: "1.0.0", reportId: `${ticker}-${Date.now()}`, generatedAt: new Date().toISOString(),
         company: { symbol: ticker, name: companyName, exchange: req.body?.exchange || "NSE", sector: req.body?.sector || "Unclassified", officialDomains },
-        sections, quarterlyPerformance, sources,
+        sections, quarterlyPerformance, qualityEvidence, sources,
         marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
         qualityControl: { unsupportedClaims: 0, conflicts: Object.values(sections).flat().filter((claim: any) => claim.status === "conflict").length, humanReviewRequired: true },
       };

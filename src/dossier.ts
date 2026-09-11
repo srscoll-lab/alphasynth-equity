@@ -26,6 +26,24 @@ export interface DossierQuarterPerformance {
   sourceIds: string[];
 }
 
+export type DossierQualityEvidenceId =
+  | "cash_conversion"
+  | "leverage_coverage"
+  | "promoter_pledge"
+  | "auditor_integrity"
+  | "material_governance"
+  | "working_capital"
+  | "concentration"
+  | "incremental_roce"
+  | "acquisition_dependence";
+
+export interface DossierQualityEvidence {
+  id: DossierQualityEvidenceId;
+  result: "pass" | "fail";
+  explanation: string;
+  sourceIds: string[];
+}
+
 export interface ResearchDossier {
   schemaVersion: "1.0.0";
   reportId: string;
@@ -45,6 +63,7 @@ export interface ResearchDossier {
     risks: DossierClaim[];
   };
   quarterlyPerformance?: DossierQuarterPerformance[];
+  qualityEvidence?: DossierQualityEvidence[];
   sources: DossierSource[];
   marketConversation: {
     status: "available" | "insufficient_data" | "disabled";
@@ -113,6 +132,21 @@ export function isResearchDossier(value: unknown): value is ResearchDossier {
       || !Array.isArray(quarter.sourceIds)
       || !quarter.sourceIds.length
       || quarter.sourceIds.some((id) => !sourceIds.has(id)))) return false;
+  }
+
+  if (dossier.qualityEvidence !== undefined) {
+    const qualityEvidenceIds = new Set([
+      "cash_conversion", "leverage_coverage", "promoter_pledge", "auditor_integrity",
+      "material_governance", "working_capital", "concentration", "incremental_roce",
+      "acquisition_dependence",
+    ]);
+    if (!Array.isArray(dossier.qualityEvidence)) return false;
+    if (dossier.qualityEvidence.some((observation) => !qualityEvidenceIds.has(observation.id)
+      || !["pass", "fail"].includes(observation.result)
+      || !observation.explanation
+      || !Array.isArray(observation.sourceIds)
+      || !observation.sourceIds.length
+      || observation.sourceIds.some((id) => !sourceIds.has(id)))) return false;
   }
 
   const officialClasses = new Set(["exchange", "company_official", "regulator"]);

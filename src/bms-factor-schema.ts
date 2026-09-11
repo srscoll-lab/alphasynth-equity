@@ -235,7 +235,10 @@ export function augmentFactorAnalysisWithDeliveryEvidence(
 ): BmsFactorAnalysis | null {
   if (!analysis) return null;
   const execution = analysis.factors.find(factor => factor.id === "execution");
-  if (!execution || execution.availability === "complete") return analysis;
+  const alreadyHasComparableExecution = Boolean(
+    execution?.previous.metrics.length && execution?.current.metrics.length,
+  );
+  if (!execution || alreadyHasComparableExecution) return analysis;
   const metric = deliveryCheck?.input?.deliveryMetrics?.find((row: any) => row?.id === "revenue_growth");
   if (!metric || !Number.isFinite(metric.expected) || !Number.isFinite(metric.actual)) return analysis;
   const component = deliveryCheck?.assessment?.deliveryComponents?.find((row: any) => row?.id === "revenue_growth");

@@ -104,3 +104,21 @@ The bounded repair therefore does three things without changing BMS V1:
 3. recognises a wider but still explicit set of cash-flow, leverage, working-capital, concentration, ROCE and acquisition-dependence statements for gate observations.
 
 It deliberately does **not** infer balance-sheet strength from the profit-and-loss table, convert insufficient management history into a pass, or weaken the PDF-readiness thresholds.
+
+## First repair audit — 11 September 2026
+
+A bounded rerun of the ten baseline failures plus five representative successes still did not pass:
+
+- technical dossier success: **6/15 (40%)**;
+- usable delivery overlay: **6/15 (40%)**; and
+- PDF ready: **0/15**.
+
+The Execution comparison repair worked in five of the six successful reports, but only JSWSTEEL recovered among the ten earlier technical failures. Quality gates remained the main PDF-readiness blocker: five successful reports had zero observed gates and SUNPHARMA had one.
+
+The final bounded repair therefore preserves the acceptance thresholds and adds only reusable evidence plumbing:
+
+1. the immutable tracker now hands the previously verified official source URL **and its recorded publication date** to dossier admission; both are revalidated against the company domain, exact-date and information-cutoff rules;
+2. the Execution bridge repairs a nominally complete-but-empty factor row when genuine delivery comparisons exist; and
+3. Gemini may return a structured quality-gate observation only as `pass` or `fail`, with an explanation and at least one admitted official source reference. Silence remains `unknown`, management history remains separate, and conflicting duplicate observations resolve conservatively to `fail`.
+
+This is the last architecture-level repair in the stop-line cycle. If the fixed technical and delivery thresholds still fail after deployment and a targeted rerun, the honest product outcome is restricted dossier/PDF availability for unsupported companies—not more issuer-specific scraping rules or lower evidence standards.

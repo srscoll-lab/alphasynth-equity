@@ -95,6 +95,25 @@ assert.equal(augmentedExecution?.current.factorScore, 0);
 assert.deepEqual(augmentedExecution?.evidenceRefs, ["supplemental-financial-001"]);
 assert.match(augmentedExecution?.explanation || "", /does not alter/i);
 
+const emptyCompleteExecution = {
+  ...researchContext,
+  factors: researchContext.factors.map(factor => factor.id === "execution" ? {
+    ...factor,
+    availability: "complete" as const,
+    previous: { ...factor.previous, metrics: [] },
+    current: { ...factor.current, metrics: [] },
+  } : factor),
+};
+const repairedEmptyComplete = augmentFactorAnalysisWithDeliveryEvidence(emptyCompleteExecution, {
+  input: {
+    expectationFreezeDate: "2026-09-10",
+    outcomeDate: "2026-09-10",
+    deliveryMetrics: [{ id: "revenue_growth", expected: 12.5, actual: 27, evidenceRefs: ["supplemental-financial-001"] }],
+  },
+  assessment: { deliveryComponents: [{ id: "revenue_growth", direction: "positive" }] },
+});
+assert.equal(repairedEmptyComplete?.factors.find(factor => factor.id === "execution")?.previous.metrics.length, 1);
+
 assert.equal(BMS_FACTOR_DEFINITIONS.reduce((sum, factor) => sum + factor.weight, 0), 1);
 assert.equal(BMS_FACTOR_SCHEMA_DESCRIPTION.methodologyVersion, "BMS_V1");
 console.log("BMS factor schema verification passed.");

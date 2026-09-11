@@ -118,7 +118,13 @@ for (const company of companies) {
       exchange: company.exchange,
       sector: company.sector,
       social_affects_bms: false,
-      official_seed_urls: [trackerCompany?.resultDateSourceUrl].filter(Boolean),
+      official_seed_sources: trackerCompany?.resultDateSourceUrl && trackerCompany?.resultDate
+        ? [{
+            url: trackerCompany.resultDateSourceUrl,
+            published_at: trackerCompany.resultDate,
+            status: trackerCompany.resultDateStatus,
+          }]
+        : [],
     }, true);
     const dossier = dossierResponse.payload;
     if (dossierResponse.status !== 200 || !isResearchDossier(dossier)) {
