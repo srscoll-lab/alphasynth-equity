@@ -3223,23 +3223,30 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const responseSchema = {
         type: "OBJECT",
-        required: ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks", "quarterlyPerformance", "qualityEvidence"],
+        required: ["claims", "quarterlyPerformance", "qualityEvidence"],
         properties: {
-          ...Object.fromEntries(["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"].map(name => [name, {
-            type: "ARRAY", maxItems: 8, items: { type: "OBJECT", required: ["text", "sourceIds", "status"], properties: {
-              text: { type: "STRING" }, sourceIds: { type: "ARRAY", items: { type: "STRING" } },
-              status: { type: "STRING", enum: ["supported", "conflict"] },
+          // Keep the model-facing schema deliberately small. Gemini compiles
+          // response schemas into a constrained decoder; five repeated nested
+          // claim arrays plus bounds/enums exceeded that decoder's state limit.
+          // Section names, statuses, limits, and source IDs are still enforced
+          // deterministically below before a dossier can pass its contract.
+          claims: {
+            type: "ARRAY",
+            items: { type: "OBJECT", required: ["section", "text", "sourceIds", "status"], properties: {
+              section: { type: "STRING" },
+              text: { type: "STRING" },
+              sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+              status: { type: "STRING" },
             } },
-          }])),
+          },
           quarterlyPerformance: {
             type: "ARRAY",
-            maxItems: 8,
             items: {
               type: "OBJECT",
               required: ["period", "basis", "sourceIds"],
               properties: {
                 period: { type: "STRING" },
-                basis: { type: "STRING", enum: ["consolidated", "standalone", "unknown"] },
+                basis: { type: "STRING" },
                 revenueCr: { type: "NUMBER" },
                 ebitdaCr: { type: "NUMBER" },
                 ebitdaMarginPct: { type: "NUMBER" },
@@ -3251,20 +3258,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           },
           qualityEvidence: {
             type: "ARRAY",
-            maxItems: 9,
             items: {
               type: "OBJECT",
               required: ["id", "result", "explanation", "sourceIds"],
               properties: {
-                id: {
-                  type: "STRING",
-                  enum: [
-                    "cash_conversion", "leverage_coverage", "promoter_pledge", "auditor_integrity",
-                    "material_governance", "working_capital", "concentration", "incremental_roce",
-                    "acquisition_dependence",
-                  ],
-                },
-                result: { type: "STRING", enum: ["pass", "fail"] },
+                id: { type: "STRING" },
+                result: { type: "STRING" },
                 explanation: { type: "STRING" },
                 sourceIds: { type: "ARRAY", items: { type: "STRING" } },
               },
@@ -3273,7 +3272,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         },
       };
       const extractionPrompt = (evidenceRows: Array<{ sourceId: string; text: string }>) =>
-        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Every claim, quarterly row, and qualityEvidence observation must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Put contradictory matters in risks with status conflict; omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. For qualityEvidence, emit an observation only when the evidence explicitly supports the result; never treat silence or absence as a pass. Use cash_conversion for explicit positive/improving versus negative/deteriorating operating or free cash flow; leverage_coverage for explicit debt-free/net-cash/reducing leverage versus defaults or rising/stretched leverage; promoter_pledge for explicit zero pledge versus a stated non-zero pledge; auditor_integrity for an explicit unmodified/unqualified opinion versus qualified/adverse/disclaimer/resignation; material_governance for an explicit clean statement versus a stated material fraud, regulatory or governance issue; working_capital for explicit improvement versus deterioration; concentration for explicit diversification/reduction versus material customer or product concentration; incremental_roce for explicit improvement versus decline; and acquisition_dependence for explicit organic growth versus growth mainly driven by acquisitions. Omit every unobserved gate. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
+        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Put narrative items in the claims array and set section to exactly one of snapshot, developments, operatingEvidence, managementCommitments, or risks. Set status to supported, except contradictory risk matters may use conflict. Return no more than eight claims per section. Every claim, quarterly row, and qualityEvidence observation must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. For qualityEvidence, emit an observation only when the evidence explicitly supports the result; never treat silence or absence as a pass. Use cash_conversion for explicit positive/improving versus negative/deteriorating operating or free cash flow; leverage_coverage for explicit debt-free/net-cash/reducing leverage versus defaults or rising/stretched leverage; promoter_pledge for explicit zero pledge versus a stated non-zero pledge; auditor_integrity for an explicit unmodified/unqualified opinion versus qualified/adverse/disclaimer/resignation; material_governance for an explicit clean statement versus a stated material fraud, regulatory or governance issue; working_capital for explicit improvement versus deterioration; concentration for explicit diversification/reduction versus material customer or product concentration; incremental_roce for explicit improvement versus decline; and acquisition_dependence for explicit organic growth versus growth mainly driven by acquisitions. Set every qualityEvidence result to pass or fail and omit every unobserved gate. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
       const requestDossierSections = (evidenceRows: Array<{ sourceId: string; text: string }>) => ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text: extractionPrompt(evidenceRows) }] }],
@@ -3338,15 +3337,22 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         return Number.isFinite(numeric) ? numeric : null;
       };
       const sectionNames = ["snapshot", "developments", "operatingEvidence", "managementCommitments", "risks"];
+      const rawClaims = Array.isArray(rawSections.claims)
+        ? rawSections.claims
+        : sectionNames.flatMap(section =>
+          (Array.isArray(rawSections[section]) ? rawSections[section] : [])
+            .map((claim: any) => ({ ...claim, section })),
+        );
       const sections = Object.fromEntries(sectionNames.map(name => [name,
-        (Array.isArray(rawSections[name]) ? rawSections[name] : []).map((claim: any) => ({
+        rawClaims.filter((claim: any) => claim?.section === name).slice(0, 8).map((claim: any) => ({
           claimId: `claim-${String(++claimNumber).padStart(3, "0")}`,
           text: String(claim.text || "").trim(),
           sourceIds: [...new Set((Array.isArray(claim.sourceIds) ? claim.sourceIds : []).filter((id: string) => sourceIds.has(id)))],
-          status: claim.status === "conflict" ? "conflict" : "supported",
+          status: name === "risks" && claim.status === "conflict" ? "conflict" : "supported",
         })).filter((claim: any) => claim.text && claim.sourceIds.length),
       ]));
       const quarterlyPerformance = (Array.isArray(rawSections.quarterlyPerformance) ? rawSections.quarterlyPerformance : [])
+        .slice(0, 8)
         .map((quarter: any) => ({
           period: String(quarter.period || "").trim(),
           basis: ["consolidated", "standalone"].includes(quarter.basis) ? quarter.basis : "unknown",
@@ -3365,7 +3371,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         "acquisition_dependence",
       ]);
       const qualityEvidenceById = new Map<string, any>();
-      for (const observation of Array.isArray(rawSections.qualityEvidence) ? rawSections.qualityEvidence : []) {
+      for (const observation of (Array.isArray(rawSections.qualityEvidence) ? rawSections.qualityEvidence : []).slice(0, 18)) {
         const id = String(observation?.id || "");
         const result = observation?.result === "fail" ? "fail" : observation?.result === "pass" ? "pass" : null;
         const explanation = String(observation?.explanation || "").trim();
