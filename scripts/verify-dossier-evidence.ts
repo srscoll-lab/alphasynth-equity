@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, financialReportingPeriodCount, mergeOfficialEvidenceAdmissions, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence.ts";
+import { collectOfficialEvidence, discoverOfficialDocuments, documentPublicationDate, exactEvidenceDate, financialReportingPeriodCount, isSpecificDatedEvidencePage, mergeOfficialEvidenceAdmissions, unwrapOfficialPdfViewerUrl } from "../src/dossier-evidence.ts";
 
 const base = "https://radicokhaitan.com/investor-relations/";
 const domains = ["radicokhaitan.com"];
@@ -62,6 +62,14 @@ assert.equal(
   documentPublicationDate({ markdown: "Official results. ".repeat(20) }, { url: "https://issuer.example/results_20260423.pdf" }).date,
   "2026-04-23",
 );
+assert.equal(isSpecificDatedEvidencePage(
+  { url: "https://issuer.example/news/financial-results-q3fy26", publishedDate: "2026-01-28", dateBasis: "prior_bms_official_evidence" },
+  { markdown: "Q3 FY26 financial results. Revenue and profit increased.", rawHtml: '<a href="/results.pdf">Financial results PDF</a>' },
+), true);
+assert.equal(isSpecificDatedEvidencePage(
+  { url: "https://issuer.example/investors/press-releases?page=1", publishedDate: "2026-01-28", dateBasis: "prior_bms_official_evidence" },
+  { markdown: "Q3 FY26 financial results. Revenue and profit increased.", rawHtml: '<a href="/results.pdf">Financial results PDF</a>' },
+), false);
 assert.deepEqual(
   documentPublicationDate(
     { markdown: "Official analyst presentation. ".repeat(20) },

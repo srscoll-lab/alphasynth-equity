@@ -181,6 +181,23 @@ export function discoverOfficialDocuments(html: string, base: string, domains: s
   return [...found.values()].sort((a, b) => score(b) - score(a));
 }
 
+// A previously verified BMS source may be a dated results article that also
+// links to related PDFs. Do not mistake such a specific article for a generic
+// investor-relations index merely because it contains document links.
+export function isSpecificDatedEvidencePage(candidate: Candidate, scraped: Scraped): boolean {
+  if (!candidate.publishedDate || !candidate.dateBasis) return false;
+  let parsed: URL;
+  try { parsed = new URL(candidate.url); } catch { return false; }
+  const path = parsed.pathname.toLowerCase().replace(/\/+$/, "");
+  const genericIndex = /\/(?:investors?|investor-relations|financial-results|quarterly-results|press-releases|company-updates|disclosures|announcements)$/.test(path)
+    || /[?&](?:page|tab|category|year)=/i.test(parsed.search);
+  if (genericIndex) return false;
+  const content = `${candidate.title || ""} ${decodeURIComponent(path)} ${String(scraped.markdown || "").slice(0, 4_000)}`;
+  const resultIdentity = /\b(?:q[1-4]\s*(?:fy)?\s*\d{2,4}|quarter(?:ly)?\s+(?:and\s+)?(?:nine\s+months\s+)?ended|financial results?|earnings (?:release|presentation|transcript)|analyst (?:meeting|transcript))\b/i.test(content);
+  const financialSubstance = /\b(?:revenue|sales|profit|pat|ebitda|margin|financial performance)\b/i.test(content);
+  return resultIdentity && financialSubstance;
+}
+
 export function documentPublicationDate(scraped: Scraped, candidate: Candidate): { date: string | null; basis: string } {
   for (const [value, basis] of [
     [scraped.metadata?.publishedTime, "publication_metadata"],
@@ -341,7 +358,8 @@ export async function collectOfficialEvidence(
     if (!isOfficialDossierSource(finalUrl, domains)) { reject(url, "unverified_redirect"); continue; }
     if (Number(scraped.metadata?.statusCode || 200) >= 400) { reject(url, "source_http_error"); continue; }
     const links = !candidate.depth ? discoverOfficialDocuments(scraped.rawHtml || "", url, domains) : [];
-    if (links.length) {
+    const admitSpecificDatedPage = links.length > 0 && isSpecificDatedEvidencePage(candidate, scraped);
+    if (links.length && !admitSpecificDatedPage) {
       queue.splice(index + 1, 0, ...links.slice(0, 6).map(c => ({ ...c, url: unwrapOfficialPdfViewerUrl(c.url) })));
       diagnostics.push({ url, outcome: "discovery_index" });
       continue; // An index is not the report and cannot inherit report dates.
@@ -356,7 +374,7 @@ export async function collectOfficialEvidence(
     const sourceClass = host.endsWith("sebi.gov.in") ? "regulator" : (host.endsWith("nseindia.com") || host.endsWith("bseindia.com")) ? "exchange" : "company_official";
     sources.push({ sourceId, url, sourceClass, publishedAt: date, retrievedAt: new Date().toISOString() });
     evidence.push({ sourceId, text });
-    diagnostics.push({ url, outcome: "admitted", date, dateBasis: basis });
+    diagnostics.push({ url, outcome: admitSpecificDatedPage ? "admitted_dated_evidence_page" : "admitted", date, dateBasis: basis });
   }
   return { sources, evidence, diagnostics, rejectionReasons, candidateCount: candidates.length, discoveredCount: queue.length - candidates.length };
 }

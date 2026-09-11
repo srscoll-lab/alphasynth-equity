@@ -128,7 +128,15 @@ for (const company of companies) {
     }, true);
     const dossier = dossierResponse.payload;
     if (dossierResponse.status !== 200 || !isResearchDossier(dossier)) {
-      throw new Error(dossier?.error || `Dossier evidence returned HTTP ${dossierResponse.status}`);
+      const error: any = new Error(dossier?.error || `Dossier evidence returned HTTP ${dossierResponse.status}`);
+      error.evidenceDiagnostics = {
+        status: dossierResponse.status,
+        candidateCount: dossier?.candidateCount ?? null,
+        rejectionReasons: dossier?.rejectionReasons ?? null,
+        discoveredCount: dossier?.discoveredCount ?? null,
+        diagnostics: dossier?.diagnostics ?? null,
+      };
+      throw error;
     }
 
     const [financialResponse, extrasResponse, marketResponse, factorResponse] = await Promise.all([
@@ -224,6 +232,7 @@ for (const company of companies) {
       technicalSuccess: false,
       seconds: Math.round((Date.now() - started) / 1000),
       error: error?.message || String(error),
+      evidenceDiagnostics: error?.evidenceDiagnostics || null,
     };
     fs.writeFileSync(resultPath, JSON.stringify(result, null, 2), { mode: 0o600 });
     results.push(result);

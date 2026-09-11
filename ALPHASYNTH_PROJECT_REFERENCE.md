@@ -473,6 +473,8 @@ Cross-company dossier and overlay testing has included RELIANCE, BAJAJ-AUTO, TIT
 
 Indian issuers publish documents in inconsistent formats. Some expose machine-readable tables; others provide image-heavy PDFs, unusual viewers, undated indexes or incomplete transcripts. No responsible general solution can guarantee identical data depth for every company.
 
+Publication-date resolution follows a provenance hierarchy. Exact company metadata, dated exchange context, document cover/signature dates and previously verified BMS source dates are preferred. A specific company result page may retain its verified date even when it contains related links; a generic investor index cannot. When the issuer copy is unavailable, a bounded company-and-result-matched NSE/BSE lookup may supply an exchange corroboration date. The resolver records its basis rather than silently treating every date as equivalent.
+
 ### Historical reconstruction
 
 Historical backfilling can improve the initial ledger, but it contains hindsight risk. Every reconstructed record must be labelled accordingly. The strongest management-delivery evidence will accumulate prospectively over future quarters.

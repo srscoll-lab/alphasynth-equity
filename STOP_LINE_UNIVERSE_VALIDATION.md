@@ -133,3 +133,9 @@ The stop-line audit also established that a fresh balance sheet cannot be a univ
 - missing balance-sheet evidence is never represented as zero.
 
 This correction changes presentation and evidence eligibility, not BMS V1 weights or historical lifecycle classifications.
+
+## Exchange-backed publication-date resolver
+
+The final source-admission repair distinguishes a specific dated result page from a generic investor-relations index. A specific official result article may use the exact date already verified and stored with the BMS source; a generic index still cannot lend one date to all linked documents. If the issuer copy cannot be admitted, one bounded NSE/BSE search attempts to locate a company-and-results-matched exchange copy and records the date basis as `exchange_broadcast_corroboration`.
+
+Stop-line failures now retain their candidate counts, rejection reasons and per-URL diagnostics. This prevents transport failures, thin content, generic indexes and truly unresolved dates from being collapsed into one unexplained error during the final audit.

@@ -3126,6 +3126,53 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }
       }
 
+      // If the issuer copy remains unavailable, look for the same dated result
+      // in the official NSE/BSE dissemination record. The known date is applied
+      // only to a company/result-matched exchange document, never to a generic
+      // exchange index or an unrelated filing.
+      if (!admission.sources.length && officialSeedSources.length) {
+        try {
+          const companyTokens = companyName.toLowerCase().split(/\W+/).filter((token: string) => token.length >= 4 && !["limited", "india"].includes(token));
+          const exchangeCandidates: any[] = [];
+          for (const seed of officialSeedSources.slice(0, 2)) {
+            const exchangeQuery = `${companyName} ${ticker} ${seed.publishedDate} quarterly financial results `
+              + `(site:nsearchives.nseindia.com OR site:nseindia.com OR site:bseindia.com)`;
+            const exchangeSearch: any = await scraper.search(exchangeQuery, { limit: 8 });
+            for (const candidate of [...(exchangeSearch?.web || []), ...(exchangeSearch?.news || [])]) {
+              const url = String(candidate?.url || "");
+              let host = "";
+              try { host = new URL(url).hostname.toLowerCase(); } catch { continue; }
+              if (!(host.endsWith("nseindia.com") || host.endsWith("bseindia.com"))) continue;
+              const descriptor = `${candidate?.title || ""} ${candidate?.description || candidate?.snippet || ""} ${decodeURIComponent(url)}`.toLowerCase();
+              const identityMatch = descriptor.includes(ticker.toLowerCase())
+                || companyTokens.slice(0, 2).every((token: string) => descriptor.includes(token));
+              const resultMatch = /financial results?|quarter|earnings|investor presentation|analyst transcript/i.test(descriptor);
+              if (!identityMatch || !resultMatch) continue;
+              exchangeCandidates.push({
+                ...candidate,
+                url,
+                publishedDate: seed.publishedDate,
+                dateBasis: "exchange_broadcast_corroboration",
+              });
+            }
+          }
+          if (exchangeCandidates.length) {
+            candidateCount += exchangeCandidates.length;
+            const exchangeAdmission = await collectOfficialEvidence(
+              exchangeCandidates,
+              officialDomains,
+              cutoff,
+              (url, options) => scraper.scrape(url, options),
+              parseOfficialPdfDirectly,
+            );
+            admission = mergeOfficialEvidenceAdmissions([exchangeAdmission, admission], 4);
+          }
+        } catch (exchangeError) {
+          console.warn("[dossier] exchange-date corroboration failed; retaining primary evidence result:",
+            exchangeError instanceof Error ? exchangeError.message : exchangeError);
+        }
+      }
+
       // A dated notice or annual-report cover is admissible, but it is not a
       // substitute for the historical quarterly series used by the delivery
       // bridge. When the first bounded pass has fewer than four identifiable
