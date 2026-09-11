@@ -12,11 +12,19 @@ Required n8n environment variables:
 
 `expectation-delivery-pilot-v1.json` is a separate inactive pilot connector for the deterministic
 quality, expectations and delivery overlay. It accepts a completed cited dossier plus the frozen
-lifecycle and freeze dates, then calls `/api/bms/expectation-delivery/from-dossier` with the same
-environment-backed URL and token. The backend reconstructs only supported observations: explicit
+lifecycle and freeze dates. Before applying the overlay it calls the authenticated internal
+`/api/bms/management-guidance/from-dossier` endpoint, which returns the validated assessment input
+augmented with structured `managementGuidance`, and then calls
+`/api/bms/expectation-delivery/from-dossier` with the same environment-backed URL and token. A
+non-2xx, transport failure, or successful response without a structured management-guidance result
+is converted to `{ status: "unavailable", evidenceRefs: [] }`; the workflow preserves the validated
+input and never fabricates management evidence. The backend reconstructs only supported observations: explicit
 quality-gate statements, successive year-on-year revenue growth where enough comparable quarters
-exist, and current versus prior-quarter EBITDA margin. Missing cash-conversion, management-target
-and valuation observations remain unknown. The output is labelled `reconstructed_today`; it is not
+exist, and current versus prior-quarter EBITDA margin. A caller may also supply a dated
+`managementGuidanceInput` ledger; the backend deduplicates repeated promises and scores only
+matured, verifiable outcomes. Without that ledger, current management claims are returned for
+review but the management result remains `insufficient_history`. Missing cash-conversion and
+valuation observations remain unknown. The output is labelled `reconstructed_today`; it is not
 analyst consensus and does not modify the BMS score or lifecycle. The initial five-company manifest
 covers one company per frozen lifecycle. Activate only after those five records pass review.
 

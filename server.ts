@@ -23,6 +23,14 @@ import {
   EXPECTATION_DELIVERY_SCHEMA_VERSION,
   type ExpectationDeliveryInput,
 } from "./src/expectation-delivery";
+import {
+  assessManagementGuidanceDelivery,
+  managementGuidanceDeliveryInputErrors,
+  MANAGEMENT_GUIDANCE_DELIVERY_RULES,
+  MANAGEMENT_GUIDANCE_DELIVERY_SCHEMA_VERSION,
+  type ManagementGuidanceDeliveryAssessment,
+  type ManagementGuidanceDeliveryInput,
+} from "./src/management-guidance-delivery";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -3322,6 +3330,65 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     });
   });
 
+  app.get("/api/bms/management-guidance/schema", (_req, res) => {
+    return res.json({
+      schemaVersion: MANAGEMENT_GUIDANCE_DELIVERY_SCHEMA_VERSION,
+      rules: MANAGEMENT_GUIDANCE_DELIVERY_RULES,
+      source: "alphasynth-deterministic-management-overlay",
+    });
+  });
+
+  app.post("/api/bms/management-guidance/from-dossier", (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (expectedToken && req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+    const dossier = req.body?.dossier;
+    if (!isResearchDossier(dossier)) return res.status(400).json({ error: "A valid research dossier is required." });
+
+    const supplied = req.body?.managementGuidanceInput;
+    if (supplied !== null && supplied !== undefined) {
+      const errors = managementGuidanceDeliveryInputErrors(supplied);
+      if (errors.length) return res.status(400).json({ error: "Invalid management-guidance history.", details: errors });
+      const input = supplied as ManagementGuidanceDeliveryInput;
+      if (input.symbol.trim().toUpperCase() !== dossier.company.symbol.trim().toUpperCase()) {
+        return res.status(400).json({ error: "Management-guidance history symbol does not match the dossier." });
+      }
+      try {
+        const assessment = assessManagementGuidanceDelivery(input);
+        return res.json({
+          managementGuidance: {
+            status: assessment.score === null ? "insufficient_history" : "available",
+            assessment,
+            reason: assessment.reasons.join(" ") || null,
+            evidenceRefs: [...new Set([
+              ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),
+              ...assessment.deliveryRecord.flatMap(row => row.evidenceRefs),
+            ])],
+          },
+        });
+      } catch (error: any) {
+        console.error("[bms] management-guidance assessment failed:", error?.message || error);
+        return res.status(500).json({ error: "Management guidance and delivery could not be assessed." });
+      }
+    }
+
+    const currentCommitments = dossier.sections.managementCommitments
+      .filter(claim => claim.status === "supported")
+      .map(claim => ({
+        claimId: claim.claimId,
+        text: claim.text,
+        evidenceRefs: claim.sourceIds,
+      }));
+    return res.json({
+      managementGuidance: {
+        status: "insufficient_history",
+        assessment: null,
+        reason: "Current management evidence is available, but a dated quarter-by-quarter ledger with at least three matured, verifiable commitments has not yet been supplied.",
+        evidenceRefs: [...new Set(currentCommitments.flatMap(claim => claim.evidenceRefs))],
+        currentCommitments,
+      },
+    });
+  });
+
   app.post("/api/bms/expectation-delivery/assess", (req, res) => {
     const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
     if (expectedToken && req.header("x-dossier-token") !== expectedToken) {
@@ -3390,11 +3457,44 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           financialError instanceof Error ? financialError.message : financialError);
       }
     }
+    const managementAssessment = req.body?.managementGuidance?.assessment;
+    const usableManagementAssessment = managementAssessment
+      && typeof managementAssessment === "object"
+      && managementAssessment.symbol === dossier.company.symbol
+      && (typeof managementAssessment.score === "number" || managementAssessment.score === null)
+      ? managementAssessment as ManagementGuidanceDeliveryAssessment
+      : null;
     const input = buildExpectationDeliveryInputFromDossier(dossier, {
       lifecycle, lifecycleFreezeDate, expectationFreezeDate, sectorValuationPercentile: percentile ?? null,
-      financials,
+      financials, managementGuidance: usableManagementAssessment,
     });
-    return res.json({ input, assessment: assessExpectationDelivery(input) });
+    const assessment = assessExpectationDelivery(input);
+    const hardUnknown = input.qualityGates.some(gate => gate.severity === "hard" && gate.result === "unknown");
+    const qualificationStatus = assessment.qualityStatus === "fail"
+      ? "not_qualified"
+      : hardUnknown || !usableManagementAssessment || usableManagementAssessment.score === null || assessment.deliveryCoverage < 60
+        ? "insufficient_evidence"
+        : assessment.qualityStatus === "watch" || usableManagementAssessment.band === "mixed_delivery"
+          ? "qualified_with_caution"
+          : "qualified";
+    const qualificationReasons = [
+      ...assessment.hardGateFailures.map(label => `Failed hard gate: ${label}.`),
+      ...assessment.softWarnings.map(label => `Quality warning: ${label}.`),
+      ...(usableManagementAssessment?.reasons || []),
+      ...(hardUnknown ? ["One or more hard quality gates remain unobserved."] : []),
+      ...(assessment.deliveryCoverage < 60 ? ["Comparable measurable-delivery coverage is below 60%."] : []),
+    ];
+    return res.json({
+      input,
+      assessment,
+      managementGuidance: req.body?.managementGuidance ?? { status: "unavailable", assessment: null },
+      qualification: {
+        status: qualificationStatus,
+        asOf: expectationFreezeDate,
+        reasons: [...new Set(qualificationReasons)],
+        lifecycleUnchanged: true,
+      },
+    });
   });
 
   app.get("/api/bms/factor-analysis/:symbol", async (req, res) => {

@@ -1,5 +1,6 @@
 import type { ResearchDossier, DossierClaim, DossierQuarterPerformance } from "./dossier.ts";
 import type { DeliveryMetric, ExpectationDeliveryInput, GateResult, QualityGateObservation } from "./expectation-delivery.ts";
+import type { ManagementGuidanceDeliveryAssessment } from "./management-guidance-delivery.ts";
 
 export type DossierExpectationBridgeContext = {
   lifecycle: string;
@@ -7,6 +8,7 @@ export type DossierExpectationBridgeContext = {
   expectationFreezeDate: string;
   sectorValuationPercentile?: number | null;
   financials?: SupplementalQuarterPerformance[];
+  managementGuidance?: ManagementGuidanceDeliveryAssessment | null;
 };
 
 export type SupplementalQuarterPerformance = {
@@ -73,6 +75,30 @@ function gateObservation(definition: [string, string, "hard" | "soft"], claims: 
     id, label, severity, result,
     explanation: selected?.text || null,
     evidenceRefs: selected ? [...new Set(selected.sourceIds)] : [],
+  };
+}
+
+function managementDeliveryGate(assessment: ManagementGuidanceDeliveryAssessment | null | undefined): QualityGateObservation {
+  const definition = gateDefinitions.find(([id]) => id === "management_delivery_history")!;
+  const [id, label, severity] = definition;
+  if (!assessment || assessment.score === null) {
+    return {
+      id, label, severity, result: "unknown",
+      explanation: assessment?.reasons.join(" ") || "A scored history of matured management commitments is not yet available.",
+      evidenceRefs: [],
+    };
+  }
+  const evidenceRefs = [...new Set([
+    ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),
+    ...assessment.deliveryRecord.flatMap(row => row.evidenceRefs),
+  ])];
+  return {
+    id, label, severity,
+    // The gate is a warning for a recurring weak record, not a second copy of
+    // the management score. A single lowered or postponed target does not fail it.
+    result: assessment.band === "weak_delivery" ? "fail" : "pass",
+    explanation: `Management delivery is ${assessment.band.replaceAll("_", " ")} (${assessment.score}/100; ${assessment.evidenceConfidence} confidence).`,
+    evidenceRefs,
   };
 }
 
@@ -162,6 +188,11 @@ export function buildExpectationDeliveryInputFromDossier(
     ? changePct(prior.revenueCr, priorYearAgo.revenueCr) : null;
   const revenueRefs = [latest, currentYearAgo, prior, priorYearAgo].flatMap(row => row?.sourceIds || []);
   const marginRefs = [latest, prior].flatMap(row => row?.sourceIds || []);
+  const managementAssessment = context.managementGuidance;
+  const managementRefs = managementAssessment ? [...new Set([
+    ...managementAssessment.currentCommentary.flatMap(row => row.evidenceRefs),
+    ...managementAssessment.deliveryRecord.flatMap(row => row.evidenceRefs),
+  ])] : [];
 
   return {
     symbol: dossier.company.symbol,
@@ -172,13 +203,17 @@ export function buildExpectationDeliveryInputFromDossier(
     expectationFreezeDate: context.expectationFreezeDate,
     outcomeDate: dossier.generatedAt.slice(0, 10),
     sectorValuationPercentile: context.sectorValuationPercentile ?? null,
-    qualityGates: gateDefinitions.map(definition => gateObservation(definition, claims)),
+    qualityGates: gateDefinitions.map(definition => definition[0] === "management_delivery_history"
+      ? managementDeliveryGate(managementAssessment)
+      : gateObservation(definition, claims)),
     deliveryMetrics: [
       metric("revenue_growth", "Revenue growth versus prior YoY baseline", "%", 3, 30, priorRevenueGrowth, currentRevenueGrowth, revenueRefs),
       metric("operating_margin", "EBITDA margin versus prior-quarter baseline", "%", 2, 30,
         prior?.ebitdaMarginPct ?? null, latest?.ebitdaMarginPct ?? null, marginRefs),
       metric("cash_conversion", "Operating cash conversion", "%", 10, 20, null, null, []),
-      metric("management_target_delivery", "Management target delivery", "%", 10, 20, null, null, []),
+      metric("management_target_delivery", "Management delivery versus qualification threshold", "score", 10, 20,
+        managementAssessment?.score === null || managementAssessment?.score === undefined ? null : 50,
+        managementAssessment?.score ?? null, managementRefs),
     ],
     evidence: [
       ...dossier.sources.filter(source => source.publishedAt).map(source => ({

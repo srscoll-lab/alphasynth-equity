@@ -9,9 +9,24 @@
     },
     {
       "parameters": {
-        "jsCode": "const b=$json.body??$json;const dossier=b.dossier;if(!dossier||typeof dossier!=='object')throw new Error('Valid dossier required');const lifecycle=String(b.lifecycle??'').trim();const lifecycleFreezeDate=String(b.lifecycleFreezeDate??'');const expectationFreezeDate=String(b.expectationFreezeDate??'');if(!lifecycle||!/^\\d{4}-\\d{2}-\\d{2}$/.test(lifecycleFreezeDate)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(expectationFreezeDate))throw new Error('Lifecycle and valid freeze dates required');const sectorValuationPercentile=b.sectorValuationPercentile??null;return[{json:{dossier,lifecycle,lifecycleFreezeDate,expectationFreezeDate,sectorValuationPercentile}}];"
+        "jsCode": "const b=$json.body??$json;const dossier=b.dossier;if(!dossier||typeof dossier!=='object')throw new Error('Valid dossier required');const lifecycle=String(b.lifecycle??'').trim();const lifecycleFreezeDate=String(b.lifecycleFreezeDate??'');const expectationFreezeDate=String(b.expectationFreezeDate??'');if(!lifecycle||!/^\\d{4}-\\d{2}-\\d{2}$/.test(lifecycleFreezeDate)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(expectationFreezeDate))throw new Error('Lifecycle and valid freeze dates required');const sectorValuationPercentile=b.sectorValuationPercentile??null;const managementGuidanceInput=b.managementGuidanceInput??null;return[{json:{dossier,lifecycle,lifecycleFreezeDate,expectationFreezeDate,sectorValuationPercentile,managementGuidanceInput}}];"
       },
       "id": "validate", "name": "Validate Assessment Input", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [-180, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST", "url": "={{ $env.ALPHASYNTH_INTERNAL_URL + '/api/bms/management-guidance/from-dossier' }}",
+        "sendHeaders": true, "headerParameters": { "parameters": [{ "name": "x-dossier-token", "value": "={{ $env.DOSSIER_INTERNAL_TOKEN }}" }] },
+        "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}",
+        "options": { "timeout": 30000, "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" } } }
+      },
+      "id": "management-guidance", "name": "Analyse Management Guidance", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [60, 0], "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const original=$('Validate Assessment Input').item.json;const response=$json??{};const status=Number(response.statusCode??0);const body=response.body;const validResponse=status>=200&&status<300&&body&&typeof body==='object'&&!Array.isArray(body)&&body.managementGuidance&&typeof body.managementGuidance==='object'&&!Array.isArray(body.managementGuidance);if(validResponse)return[{json:{...original,managementGuidance:body.managementGuidance}}];const reason=status?`Management-guidance service returned HTTP ${status}.`:'Management-guidance service was unavailable.';return[{json:{...original,managementGuidance:{status:'unavailable',reason,evidenceRefs:[]}}}];"
+      },
+      "id": "normalize-management-guidance", "name": "Preserve Unavailable Management Guidance", "type": "n8n-nodes-base.code", "typeVersion": 2, "position": [300, 0]
     },
     {
       "parameters": {
@@ -20,16 +35,18 @@
         "sendBody": true, "specifyBody": "json", "jsonBody": "={{ $json }}",
         "options": { "timeout": 30000, "response": { "response": { "fullResponse": true, "neverError": true, "responseFormat": "json" } } }
       },
-      "id": "assess", "name": "Apply Deterministic Overlay", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [70, 0], "onError": "continueRegularOutput"
+      "id": "assess", "name": "Apply Deterministic Overlay", "type": "n8n-nodes-base.httpRequest", "typeVersion": 4.2, "position": [540, 0], "onError": "continueRegularOutput"
     },
     {
       "parameters": { "respondWith": "json", "responseBody": "={{ $json.body ?? { error: 'Assessment backend request failed.' } }}", "options": { "responseCode": "={{ $json.statusCode ?? 502 }}" } },
-      "id": "respond", "name": "Return Assessment", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4, "position": [320, 0]
+      "id": "respond", "name": "Return Assessment", "type": "n8n-nodes-base.respondToWebhook", "typeVersion": 1.4, "position": [790, 0]
     }
   ],
   "connections": {
     "Assessment Request": { "main": [[{ "node": "Validate Assessment Input", "type": "main", "index": 0 }]] },
-    "Validate Assessment Input": { "main": [[{ "node": "Apply Deterministic Overlay", "type": "main", "index": 0 }]] },
+    "Validate Assessment Input": { "main": [[{ "node": "Analyse Management Guidance", "type": "main", "index": 0 }]] },
+    "Analyse Management Guidance": { "main": [[{ "node": "Preserve Unavailable Management Guidance", "type": "main", "index": 0 }]] },
+    "Preserve Unavailable Management Guidance": { "main": [[{ "node": "Apply Deterministic Overlay", "type": "main", "index": 0 }]] },
     "Apply Deterministic Overlay": { "main": [[{ "node": "Return Assessment", "type": "main", "index": 0 }]] }
   },
   "pinData": {},
