@@ -595,7 +595,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.title("Lifecycle confirmation layer", "This secondary layer asks whether subsequent delivery and minimum quality evidence support further investigation within the recorded BMS V1 lifecycle. It is not a second BMS score.");
   if (deliveryAssessment && deliveryCheck) {
     const direction = deliveryAssessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
-    const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result !== "unknown").length;
+    const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result === "pass" || gate.result === "fail").length;
+    const notDueGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result === "not_due").length;
     const confirmationY = r.y;
     const confirmationGap = 8;
     const confirmationWidth = (r.width - confirmationGap * 3) / 4;
@@ -608,6 +609,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     r.y = confirmationY + 54;
     r.heading("Why this check exists");
     r.paragraph(`The BMS V1 lifecycle records where business momentum stood as of ${deliveryCheck.input.lifecycleFreezeDate}. The confirmation layer then compares later published delivery with an earlier comparable reading and checks whether basic financial, governance and operating-quality conditions are sufficiently evidenced. Its purpose is to prioritise research inside a lifecycle cohort without rewriting history.`, { size: 8.5 });
+    if (notDueGates) r.paragraph(`${notDueGates} half-year-cadence quality gate${notDueGates === 1 ? " is" : "s are"} marked not due for the latest quarter. This is a disclosure-timing status, not a pass, failure or zero score. The latest verified half-year or annual balance-sheet evidence should be retained with its own as-of date.`, { size: 8, color: C.slate });
     r.table("Published delivery bridge", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
       deliveryAssessment.deliveryComponents.slice(0, 3).map((component) => [
         component.label,
@@ -624,6 +626,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       ["Behind delivery", "The momentum thesis may be weakening; require stronger subsequent evidence."],
       ["Any hard-gate failure", "Exclude from the refined shortlist while preserving the BMS V1 lifecycle record."],
       ["Low coverage / unknown gates", "Do not infer confirmation. Collect evidence and reassess after the next result."],
+      ["Balance-sheet gate not due", "Do not penalise the company. Carry the latest verified half-year or annual observation with its original date."],
     ]);
     r.table("What the quality gates test", ["Gate family", "Purpose"], [30, 70], [
       ["Financial resilience", "Cash conversion, leverage and the ability to support growth without financial strain."],

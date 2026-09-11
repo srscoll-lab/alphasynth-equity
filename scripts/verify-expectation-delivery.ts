@@ -47,6 +47,12 @@ const incomplete = assessExpectationDelivery({
   deliveryMetrics: base.deliveryMetrics.map(metric => ({ ...metric, actual: null })),
 });
 assert.equal(incomplete.qualityStatus, "insufficient_evidence");
+
+const notDue = assessExpectationDelivery({
+  ...base,
+  qualityGates: [{ id: "leverage", label: "Leverage", severity: "hard", result: "not_due", explanation: "Half-year filing not due.", evidenceRefs: [] }],
+});
+assert.equal(notDue.qualityStatus, "insufficient_evidence");
 assert.equal(incomplete.deliveryScore, null);
 assert.equal(incomplete.gapClassification, "insufficient_evidence");
 assert.ok(expectationDeliveryInputErrors({ ...base, sectorValuationPercentile: 120 }).length > 0);

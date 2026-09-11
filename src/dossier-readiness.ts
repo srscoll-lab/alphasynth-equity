@@ -50,7 +50,7 @@ export function assessDossierReadiness(payload: DossierPdfPayload): DossierReadi
       && factor.previous.metrics.length > 0
       && factor.current.metrics.length > 0).length || 0;
   const observedQualityGates = payload.deliveryCheck?.input.qualityGates.filter((gate) =>
-    gate.result !== "unknown").length || 0;
+    gate.result === "pass" || gate.result === "fail").length || 0;
   const deliveryComponents = payload.deliveryCheck?.assessment.deliveryComponents.length || 0;
 
   const reasons: string[] = [];
@@ -59,7 +59,7 @@ export function assessDossierReadiness(payload: DossierPdfPayload): DossierReadi
   if (populatedNarrativeSections < 3) reasons.push(`Only ${populatedNarrativeSections} of 4 narrative evidence sections are populated; at least 3 are required.`);
   if (!risksPopulated) reasons.push("No supported company-specific risk or watch item was found.");
   if (completeBmsFactors < 3) reasons.push(`Only ${completeBmsFactors} of 5 BMS factors have comparable previous and current evidence; at least 3 are required.`);
-  if (observedQualityGates < 3) reasons.push(`Only ${observedQualityGates} quality gates have evidence; at least 3 are required.`);
+  if (observedQualityGates < 3) reasons.push(`Only ${observedQualityGates} quality gates have current or carried-forward evidence; at least 3 are required. Gates not due this quarter are not counted as observations.`);
   if (deliveryComponents < 2 || (payload.deliveryCheck?.assessment.deliveryCoverage || 0) < 60) {
     reasons.push("The delivery check needs at least 2 comparable components and 60% evidence coverage.");
   }

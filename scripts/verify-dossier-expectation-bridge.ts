@@ -48,6 +48,19 @@ assert.equal(assessment.deliveryCoverage, 60);
 assert.equal(assessment.deliveryDirection, "ahead");
 assert.equal(assessment.qualityStatus, "insufficient_evidence");
 assert.equal(assessment.gapClassification, "insufficient_evidence");
+const firstQuarterInput = buildExpectationDeliveryInputFromDossier({
+  ...dossier,
+  qualityEvidence: [],
+  sections: { snapshot: [], developments: [], operatingEvidence: [], managementCommitments: [], risks: [] },
+  quarterlyPerformance: quarters.map((quarter, index) => ({
+    ...quarter,
+    period: ["Q4 FY25", "Q1 FY26", "Q2 FY26", "Q3 FY26", "Q4 FY26", "Q1 FY27"][index],
+  })),
+}, {
+  lifecycle: "Building", lifecycleFreezeDate: "2026-08-25", expectationFreezeDate: "2026-09-10",
+});
+assert.equal(firstQuarterInput.qualityGates.find(gate => gate.id === "leverage_coverage")?.result, "not_due");
+assert.equal(firstQuarterInput.qualityGates.find(gate => gate.id === "auditor_integrity")?.result, "unknown");
 const reconstructedFromSupplement = buildExpectationDeliveryInputFromDossier(
   { ...dossier, quarterlyPerformance: [] },
   {

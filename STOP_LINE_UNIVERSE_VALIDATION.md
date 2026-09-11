@@ -122,3 +122,14 @@ The final bounded repair therefore preserves the acceptance thresholds and adds 
 3. Gemini may return a structured quality-gate observation only as `pass` or `fail`, with an explanation and at least one admitted official source reference. Silence remains `unknown`, management history remains separate, and conflicting duplicate observations resolve conservatively to `fail`.
 
 This is the last architecture-level repair in the stop-line cycle. If the fixed technical and delivery thresholds still fail after deployment and a targeted rerun, the honest product outcome is restricted dossier/PDF availability for unsupported companies—not more issuer-specific scraping rules or lower evidence standards.
+
+## Disclosure-cadence correction
+
+The stop-line audit also established that a fresh balance sheet cannot be a universal quarterly prerequisite. Earnings and profit-and-loss evidence are normally quarterly, whereas statement-of-assets-and-liabilities and cash-flow evidence is generally half-yearly or annual. The methodology now distinguishes `not_due` from `unknown`, `pass` and `fail` for cadence-limited gates.
+
+- `not_due` never contributes a pass, failure or observed-gate count;
+- an explicitly supported observation still takes precedence even in a non-mandatory quarter;
+- the latest verified half-year or annual evidence may be carried forward only with its original period; and
+- missing balance-sheet evidence is never represented as zero.
+
+This correction changes presentation and evidence eligibility, not BMS V1 weights or historical lifecycle classifications.

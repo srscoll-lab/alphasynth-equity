@@ -112,6 +112,37 @@ function structuredGateObservation(
   };
 }
 
+const HALF_YEAR_CADENCE_GATES = new Set([
+  "cash_conversion", "leverage_coverage", "working_capital", "incremental_roce",
+]);
+
+function isHalfYearOrAnnualReportingPeriod(period: string | null | undefined): boolean | null {
+  if (!period) return null;
+  if (/\b(?:H1|H2|HALF[ -]?YEAR|ANNUAL|FULL[ -]?YEAR|FY\s*20\d{2}(?:\s*-\s*\d{2,4})?)\b/i.test(period)
+    && !/\bQ[1-3]\b/i.test(period)) return true;
+  const fiscalQuarter = period.match(/\bQ([1-4])\b/i);
+  if (fiscalQuarter) return [2, 4].includes(Number(fiscalQuarter[1]));
+  const calendarMonth = period.match(/\b(Mar|Jun|Sep|Dec)[a-z]*\b/i)?.[1]?.slice(0, 3).toLowerCase();
+  if (calendarMonth) return calendarMonth === "mar" || calendarMonth === "sep";
+  return null;
+}
+
+function cadenceAwareGateObservation(
+  definition: [string, string, "hard" | "soft"],
+  dossier: ResearchDossier,
+  claims: DossierClaim[],
+  latestPeriod: string | null | undefined,
+): QualityGateObservation {
+  const observation = structuredGateObservation(definition, dossier, claims);
+  if (observation.result !== "unknown" || !HALF_YEAR_CADENCE_GATES.has(definition[0])) return observation;
+  if (isHalfYearOrAnnualReportingPeriod(latestPeriod) !== false) return observation;
+  return {
+    ...observation,
+    result: "not_due",
+    explanation: `A fresh ${definition[1].toLowerCase()} observation is not normally due with ${latestPeriod}; retain the latest verified half-year or annual evidence when available.`,
+  };
+}
+
 function managementDeliveryGate(assessment: ManagementGuidanceDeliveryAssessment | null | undefined): QualityGateObservation {
   const definition = gateDefinitions.find(([id]) => id === "management_delivery_history")!;
   const [id, label, severity] = definition;
@@ -239,7 +270,7 @@ export function buildExpectationDeliveryInputFromDossier(
     sectorValuationPercentile: context.sectorValuationPercentile ?? null,
     qualityGates: gateDefinitions.map(definition => definition[0] === "management_delivery_history"
       ? managementDeliveryGate(managementAssessment)
-      : structuredGateObservation(definition, dossier, claims)),
+      : cadenceAwareGateObservation(definition, dossier, claims, latest?.period)),
     deliveryMetrics: [
       metric("revenue_growth", "Revenue growth versus prior YoY baseline", "%", 3, 30, priorRevenueGrowth, currentRevenueGrowth, revenueRefs),
       metric("operating_margin", "EBITDA margin versus prior-quarter baseline", "%", 2, 30,

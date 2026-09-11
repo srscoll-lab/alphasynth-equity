@@ -483,7 +483,9 @@ Management may not issue measurable targets. Vague optimism cannot be converted 
 
 ### Balance-sheet and execution evidence
 
-Profit-and-loss data is often easier to extract from quarterly tables than cash flow, debt, working capital, utilisation or project-milestone data. Missing structured balance-sheet or execution measures must remain unavailable. The system should improve source coverage, not invent proxy precision.
+Profit-and-loss data is normally available quarterly, while Indian listed-company statements of assets and liabilities and cash flows are generally mandatory at half-year and year-end rather than with every quarter. AlphaSynth therefore uses mixed evidence cadences: Earnings and Execution are refreshed quarterly where possible; Balance Sheet uses the latest verified half-year or annual comparison; Management Delivery uses a rolling commitment history.
+
+When a Q1 or Q3 pack contains no fresh balance-sheet observation, the relevant cadence-limited gate is `not_due`, not zero, pass or fail. `not_due` does not count as observed evidence and cannot make the quality layer pass. The latest verified half-year or annual observation may be carried forward only with its original period visible. Missing structured balance-sheet or execution measures must otherwise remain unavailable. The system should improve source coverage, not invent proxy precision.
 
 ### AI boundaries
 

@@ -2,7 +2,7 @@ export const EXPECTATION_DELIVERY_SCHEMA_VERSION = "1.1.0" as const;
 
 export type AssessmentMode = "prospective" | "reconstructed_today";
 export type GateSeverity = "hard" | "soft";
-export type GateResult = "pass" | "fail" | "unknown";
+export type GateResult = "pass" | "fail" | "unknown" | "not_due";
 export type QualityStatus = "pass" | "watch" | "fail" | "insufficient_evidence";
 export type ExpectationLevel = "low" | "balanced" | "high" | "unknown";
 export type DeliveryDirection = "ahead" | "in_line" | "behind" | "mixed" | "unknown";
@@ -112,6 +112,14 @@ export function expectationDeliveryInputErrors(value: unknown): string[] {
       if (typeof metric.tolerance !== "number" || metric.tolerance <= 0) errors.push(`deliveryMetrics[${index}].tolerance must be positive.`);
     });
   }
+  if (Array.isArray(input.qualityGates)) {
+    input.qualityGates.forEach((gate, index) => {
+      if (!gate || typeof gate !== "object") return errors.push(`qualityGates[${index}] must be an object.`);
+      if (!["pass", "fail", "unknown", "not_due"].includes(String(gate.result))) {
+        errors.push(`qualityGates[${index}].result is invalid.`);
+      }
+    });
+  }
   return errors;
 }
 
@@ -122,9 +130,10 @@ function evaluateQuality(gates: QualityGateObservation[]) {
   const hardGateFailures = hard.filter(gate => gate.result === "fail").map(gate => gate.label);
   const softWarnings = gates.filter(gate => gate.severity === "soft" && gate.result === "fail").map(gate => gate.label);
   const hardUnknown = hard.some(gate => gate.result === "unknown");
+  const observedHard = hard.filter(gate => gate.result === "pass" || gate.result === "fail");
   const qualityStatus: QualityStatus = hardGateFailures.length
     ? "fail"
-    : !hard.length || hardUnknown
+    : !hard.length || hardUnknown || !observedHard.length
       ? "insufficient_evidence"
       : softWarnings.length
         ? "watch"
