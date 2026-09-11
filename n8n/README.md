@@ -10,6 +10,16 @@ Required n8n environment variables:
 - `ALPHASYNTH_INTERNAL_URL`: network-reachable AlphaSynth service origin
 - `DOSSIER_INTERNAL_TOKEN`: shared secret also configured on AlphaSynth
 
+Required Cloud Run configuration for durable management history:
+
+- `MANAGEMENT_GUIDANCE_LEDGER_BUCKET`: GCS bucket used for one ledger object per symbol
+- `MANAGEMENT_GUIDANCE_LEDGER_PREFIX`: optional prefix; defaults to `management-guidance-ledger/v1`
+
+The Cloud Run service account needs object read/create/update access to that bucket; the built-in
+`roles/storage.objectUser` role is sufficient. No credentials file is used. If the bucket or its
+permissions are unavailable, management history is reported as unavailable and is never replaced
+with an inferred score.
+
 `expectation-delivery-pilot-v1.json` is a separate inactive pilot connector for the deterministic
 quality, expectations and delivery overlay. It accepts a completed cited dossier plus the frozen
 lifecycle and freeze dates. Before applying the overlay it calls the authenticated internal
@@ -27,6 +37,13 @@ review but the management result remains `insufficient_history`. Missing cash-co
 valuation observations remain unknown. The output is labelled `reconstructed_today`; it is not
 analyst consensus and does not modify the BMS score or lifecycle. The initial five-company manifest
 covers one company per frozen lifecycle. Activate only after those five records pass review.
+
+For management evidence, the backend reads the prior symbol ledger, sends only dated official
+dossier evidence and that prior ledger to Gemini using a strict JSON schema, deterministically
+rejects unknown or post-cutoff source references, and conditionally merges accepted records into
+GCS. Gemini extracts records but never calculates the score. Silence is not a miss, pending targets
+receive no delivery points, repeated promises retain one stable commitment key, and contradictory
+same-date outcomes stop scoring for review. Run `npm run verify:management-guidance` before deployment.
 
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.

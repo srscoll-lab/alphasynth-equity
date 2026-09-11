@@ -25,12 +25,20 @@ import {
 } from "./src/expectation-delivery";
 import {
   assessManagementGuidanceDelivery,
-  managementGuidanceDeliveryInputErrors,
   MANAGEMENT_GUIDANCE_DELIVERY_RULES,
   MANAGEMENT_GUIDANCE_DELIVERY_SCHEMA_VERSION,
   type ManagementGuidanceDeliveryAssessment,
   type ManagementGuidanceDeliveryInput,
 } from "./src/management-guidance-delivery";
+import {
+  createManagementGuidanceLedgerFromEnvironment,
+  managementGuidanceLedgerInputErrors,
+} from "./src/management-guidance-ledger";
+import {
+  buildManagementGuidanceExtractionRequestFromDossier,
+  buildManagementGuidanceGeminiRequest,
+  normalizeManagementGuidanceExtraction,
+} from "./src/management-guidance-extraction";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -77,6 +85,7 @@ function readFrozenForwardValidation(): any {
 let resend: Resend | null = null;
 let firecrawl: Firecrawl | null = null;
 let genAI: GoogleGenAI | null = null;
+const managementGuidanceLedger = createManagementGuidanceLedgerFromEnvironment();
 
 function getGenAI(): GoogleGenAI {
   if (!genAI) {
@@ -3338,32 +3347,46 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     });
   });
 
-  app.post("/api/bms/management-guidance/from-dossier", (req, res) => {
+  app.post("/api/bms/management-guidance/from-dossier", async (req, res) => {
     const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
     if (expectedToken && req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
     const dossier = req.body?.dossier;
     if (!isResearchDossier(dossier)) return res.status(400).json({ error: "A valid research dossier is required." });
 
+    const currentCommitments = dossier.sections.managementCommitments
+      .filter(claim => claim.status === "supported")
+      .map(claim => ({ claimId: claim.claimId, text: claim.text, evidenceRefs: claim.sourceIds }));
+    const respondWithHistory = (history: ManagementGuidanceDeliveryInput, extra: Record<string, unknown> = {}) => {
+      const assessment = assessManagementGuidanceDelivery(history);
+      return res.json({
+        managementGuidance: {
+          status: assessment.score === null ? "insufficient_history" : "available",
+          assessment,
+          reason: assessment.reasons.join(" ") || null,
+          evidenceRefs: [...new Set([
+            ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),
+            ...assessment.deliveryRecord.flatMap(row => row.evidenceRefs),
+          ])],
+          currentCommitments,
+          ...extra,
+        },
+      });
+    };
+
     const supplied = req.body?.managementGuidanceInput;
     if (supplied !== null && supplied !== undefined) {
-      const errors = managementGuidanceDeliveryInputErrors(supplied);
+      const errors = managementGuidanceLedgerInputErrors(supplied);
       if (errors.length) return res.status(400).json({ error: "Invalid management-guidance history.", details: errors });
       const input = supplied as ManagementGuidanceDeliveryInput;
       if (input.symbol.trim().toUpperCase() !== dossier.company.symbol.trim().toUpperCase()) {
         return res.status(400).json({ error: "Management-guidance history symbol does not match the dossier." });
       }
       try {
-        const assessment = assessManagementGuidanceDelivery(input);
-        return res.json({
-          managementGuidance: {
-            status: assessment.score === null ? "insufficient_history" : "available",
-            assessment,
-            reason: assessment.reasons.join(" ") || null,
-            evidenceRefs: [...new Set([
-              ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),
-              ...assessment.deliveryRecord.flatMap(row => row.evidenceRefs),
-            ])],
-          },
+        const saved = await managementGuidanceLedger.merge(input);
+        return respondWithHistory(saved.status === "saved" ? saved.history : input, {
+          storage: saved.status,
+          storageReason: saved.status === "unavailable" ? saved.reason : null,
+          extraction: "caller_supplied",
         });
       } catch (error: any) {
         console.error("[bms] management-guidance assessment failed:", error?.message || error);
@@ -3371,22 +3394,77 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
     }
 
-    const currentCommitments = dossier.sections.managementCommitments
-      .filter(claim => claim.status === "supported")
-      .map(claim => ({
-        claimId: claim.claimId,
-        text: claim.text,
-        evidenceRefs: claim.sourceIds,
-      }));
-    return res.json({
-      managementGuidance: {
-        status: "insufficient_history",
+    const asOfDate = dossier.generatedAt.slice(0, 10);
+    const stored = await managementGuidanceLedger.read(dossier.company.symbol);
+    if (stored.status === "unavailable") {
+      return res.json({ managementGuidance: {
+        status: "unavailable",
         assessment: null,
-        reason: "Current management evidence is available, but a dated quarter-by-quarter ledger with at least three matured, verifiable commitments has not yet been supplied.",
+        reason: stored.reason,
         evidenceRefs: [...new Set(currentCommitments.flatMap(claim => claim.evidenceRefs))],
         currentCommitments,
-      },
-    });
+        storage: "unavailable",
+      } });
+    }
+    const priorHistory: ManagementGuidanceDeliveryInput = stored.history ?? {
+      symbol: dossier.company.symbol,
+      asOfDate,
+      statements: [], commentary: [], delivery: [],
+    };
+    const extractionRequest = buildManagementGuidanceExtractionRequestFromDossier(dossier, priorHistory);
+    if (!extractionRequest.evidenceDocuments.length) {
+      return respondWithHistory(priorHistory, {
+        storage: "available",
+        extraction: "insufficient_official_management_evidence",
+      });
+    }
+
+    try {
+      const geminiRequest = buildManagementGuidanceGeminiRequest(extractionRequest);
+      const response = await getGenAI().models.generateContent({
+        model: process.env.DOSSIER_MODEL || "gemini-2.5-flash",
+        contents: [{ role: "user", parts: [{ text: geminiRequest.prompt }] }],
+        config: {
+          systemInstruction: geminiRequest.systemInstruction,
+          responseMimeType: geminiRequest.generationConfig.responseMimeType,
+          responseJsonSchema: geminiRequest.generationConfig.responseJsonSchema,
+          temperature: geminiRequest.generationConfig.temperature,
+          maxOutputTokens: 8192,
+        } as any,
+      });
+      const modelOutput = JSON.parse(sanitizeJsonShell(response.text || "{}"));
+      const proposal = normalizeManagementGuidanceExtraction(extractionRequest, modelOutput);
+      const accepted = proposal.statements.length + proposal.commentary.length + proposal.delivery.length;
+      if (!accepted) {
+        return respondWithHistory(priorHistory, {
+          storage: "available",
+          extraction: "no_admissible_records",
+          rejected: proposal.rejected,
+        });
+      }
+      const saved = await managementGuidanceLedger.merge(proposal.mergedLedger);
+      if (saved.status === "unavailable") {
+        return respondWithHistory(priorHistory, {
+          storage: "unavailable",
+          storageReason: saved.reason,
+          extraction: "admitted_but_not_persisted",
+          rejected: proposal.rejected,
+        });
+      }
+      return respondWithHistory(saved.history, {
+        storage: "saved",
+        extraction: "gemini_structured_official_evidence",
+        admittedRecords: accepted,
+        rejected: proposal.rejected,
+      });
+    } catch (error: any) {
+      console.error("[bms] management-guidance extraction failed:", error?.message || error);
+      return respondWithHistory(priorHistory, {
+        storage: "available",
+        extraction: "failed",
+        extractionReason: error?.message || "Unknown extraction failure.",
+      });
+    }
   });
 
   app.post("/api/bms/expectation-delivery/assess", (req, res) => {

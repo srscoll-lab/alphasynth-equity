@@ -83,6 +83,24 @@ const unverifiable = assessManagementGuidanceDelivery({
 assert.equal(unverifiable.score, null);
 assert.equal(unverifiable.components.maturedDelivery.unverifiable, 1);
 
+const unsupportedOutcome = assessManagementGuidanceDelivery({
+  ...base,
+  delivery: base.delivery.map(row => row.commitmentKey === "debt-fy26" ? { ...row, evidenceRefs: [] } : row),
+});
+assert.equal(unsupportedOutcome.score, null);
+assert.equal(unsupportedOutcome.components.maturedDelivery.scorable, 2);
+assert.equal(unsupportedOutcome.components.maturedDelivery.unverifiable, 1);
+
+const conflictingOutcome = assessManagementGuidanceDelivery({
+  ...base,
+  delivery: [
+    ...base.delivery,
+    { observationId: "d-conflict", commitmentKey: "debt-fy26", assessedAt: "2026-04-30", status: "delivered", explanation: "Conflicting record", evidenceRefs: ["result-conflict"] },
+  ],
+});
+assert.equal(conflictingOutcome.score, null);
+assert.match(conflictingOutcome.reasons.join(" "), /Conflicting same-date delivery outcomes/);
+
 assert.ok(managementGuidanceDeliveryInputErrors({ ...base, statements: [{ ...base.statements[0], specificity: 2 }] }).length > 0);
 assert.ok(managementGuidanceDeliveryInputErrors({
   ...base,

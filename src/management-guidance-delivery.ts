@@ -164,42 +164,44 @@ export function managementGuidanceDeliveryInputErrors(value: unknown): string[] 
   if (!Array.isArray(input.statements)) errors.push("statements must be an array.");
   if (!Array.isArray(input.commentary)) errors.push("commentary must be an array.");
   if (!Array.isArray(input.delivery)) errors.push("delivery must be an array.");
-
-  input.statements?.forEach((row, index) => {
-    if (!row.statementId?.trim()) errors.push(`statements[${index}].statementId is required.`);
-    if (!row.commitmentKey?.trim()) errors.push(`statements[${index}].commitmentKey is required.`);
-    if (!ISO_DATE.test(row.statedAt)) errors.push(`statements[${index}].statedAt must be YYYY-MM-DD.`);
-    if (row.targetDate !== null && !ISO_DATE.test(row.targetDate)) errors.push(`statements[${index}].targetDate must be null or YYYY-MM-DD.`);
-    if (!Array.isArray(row.evidenceRefs)) errors.push(`statements[${index}].evidenceRefs must be an array.`);
-    if (row.targetDate !== null && !ISO_DATE.test(row.targetDate)) errors.push(`statements[${index}].targetDate must be null or YYYY-MM-DD.`);
+  if (Array.isArray(input.statements)) input.statements.forEach((raw, index) => {
+    const row = raw as any;
+    if (!row || typeof row !== "object") { errors.push(`statements[${index}] must be an object.`); return; }
+    if (typeof row.statementId !== "string" || !row.statementId.trim()) errors.push(`statements[${index}].statementId is required.`);
+    if (typeof row.commitmentKey !== "string" || !row.commitmentKey.trim()) errors.push(`statements[${index}].commitmentKey is required.`);
+    if (typeof row.statement !== "string" || !row.statement.trim()) errors.push(`statements[${index}].statement is required.`);
+    if (typeof row.statedAt !== "string" || !ISO_DATE.test(row.statedAt)) errors.push(`statements[${index}].statedAt must be YYYY-MM-DD.`);
+    if (row.targetDate !== null && (typeof row.targetDate !== "string" || !ISO_DATE.test(row.targetDate))) errors.push(`statements[${index}].targetDate must be null or YYYY-MM-DD.`);
+    if (row.metric !== null && typeof row.metric !== "string") errors.push(`statements[${index}].metric must be null or a string.`);
+    if (!Array.isArray(row.evidenceRefs) || row.evidenceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim())) errors.push(`statements[${index}].evidenceRefs must be an array of non-empty strings.`);
     for (const [name, score] of [["specificity", row.specificity], ["measurability", row.measurability], ["deadlineClarity", row.deadlineClarity]] as const) {
-      if (score !== null && (!Number.isFinite(score) || score < 0 || score > 1)) errors.push(`statements[${index}].${name} must be null or between 0 and 1.`);
+      if (score !== null && (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 1)) errors.push(`statements[${index}].${name} must be null or between 0 and 1.`);
     }
   });
-  input.commentary?.forEach((row, index) => {
-    if (!row.commitmentKey?.trim()) errors.push(`commentary[${index}].commitmentKey is required.`);
-    if (!ISO_DATE.test(row.observedAt)) errors.push(`commentary[${index}].observedAt must be YYYY-MM-DD.`);
-    for (const [name, score] of [["revisionTimeliness", row.revisionTimeliness], ["explanationQuality", row.explanationQuality], ["internalConsistency", row.internalConsistency]] as const) {
-      if (score !== null && (!Number.isFinite(score) || score < 0 || score > 1)) errors.push(`commentary[${index}].${name} must be null or between 0 and 1.`);
-    }
-  });
-  input.commentary?.forEach((row, index) => {
-    if (!row.observationId?.trim()) errors.push(`commentary[${index}].observationId is required.`);
-    if (!row.commitmentKey?.trim()) errors.push(`commentary[${index}].commitmentKey is required.`);
-    if (!ISO_DATE.test(row.observedAt)) errors.push(`commentary[${index}].observedAt must be YYYY-MM-DD.`);
+  if (Array.isArray(input.commentary)) input.commentary.forEach((raw, index) => {
+    const row = raw as any;
+    if (!row || typeof row !== "object") { errors.push(`commentary[${index}] must be an object.`); return; }
+    if (typeof row.observationId !== "string" || !row.observationId.trim()) errors.push(`commentary[${index}].observationId is required.`);
+    if (typeof row.commitmentKey !== "string" || !row.commitmentKey.trim()) errors.push(`commentary[${index}].commitmentKey is required.`);
+    if (typeof row.observedAt !== "string" || !ISO_DATE.test(row.observedAt)) errors.push(`commentary[${index}].observedAt must be YYYY-MM-DD.`);
     if (!COMMENTARY_CHANGES.has(row.change)) errors.push(`commentary[${index}].change is invalid.`);
-    if (!Array.isArray(row.evidenceRefs)) errors.push(`commentary[${index}].evidenceRefs must be an array.`);
+    if (row.previousStatementId !== null && typeof row.previousStatementId !== "string") errors.push(`commentary[${index}].previousStatementId must be null or a string.`);
+    if (typeof row.currentStatementId !== "string" || !row.currentStatementId.trim()) errors.push(`commentary[${index}].currentStatementId is required.`);
+    if (!Array.isArray(row.evidenceRefs) || row.evidenceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim())) errors.push(`commentary[${index}].evidenceRefs must be an array of non-empty strings.`);
     for (const [name, score] of [["revisionTimeliness", row.revisionTimeliness], ["explanationQuality", row.explanationQuality], ["internalConsistency", row.internalConsistency]] as const) {
-      if (score !== null && (!Number.isFinite(score) || score < 0 || score > 1)) errors.push(`commentary[${index}].${name} must be null or between 0 and 1.`);
+      if (score !== null && (typeof score !== "number" || !Number.isFinite(score) || score < 0 || score > 1)) errors.push(`commentary[${index}].${name} must be null or between 0 and 1.`);
     }
   });
-  input.delivery?.forEach((row, index) => {
-    if (!row.observationId?.trim()) errors.push(`delivery[${index}].observationId is required.`);
-    if (!row.commitmentKey?.trim()) errors.push(`delivery[${index}].commitmentKey is required.`);
-    if (!ISO_DATE.test(row.assessedAt)) errors.push(`delivery[${index}].assessedAt must be YYYY-MM-DD.`);
+  if (Array.isArray(input.delivery)) input.delivery.forEach((raw, index) => {
+    const row = raw as any;
+    if (!row || typeof row !== "object") { errors.push(`delivery[${index}] must be an object.`); return; }
+    if (typeof row.observationId !== "string" || !row.observationId.trim()) errors.push(`delivery[${index}].observationId is required.`);
+    if (typeof row.commitmentKey !== "string" || !row.commitmentKey.trim()) errors.push(`delivery[${index}].commitmentKey is required.`);
+    if (typeof row.assessedAt !== "string" || !ISO_DATE.test(row.assessedAt)) errors.push(`delivery[${index}].assessedAt must be YYYY-MM-DD.`);
     if (!DELIVERY_STATUSES.has(row.status)) errors.push(`delivery[${index}].status is invalid.`);
-    if (!Array.isArray(row.evidenceRefs)) errors.push(`delivery[${index}].evidenceRefs must be an array.`);
-    if (row.materialityWeight !== undefined && (!Number.isFinite(row.materialityWeight) || row.materialityWeight <= 0)) errors.push(`delivery[${index}].materialityWeight must be positive.`);
+    if (row.explanation !== null && typeof row.explanation !== "string") errors.push(`delivery[${index}].explanation must be null or a string.`);
+    if (!Array.isArray(row.evidenceRefs) || row.evidenceRefs.some((ref: unknown) => typeof ref !== "string" || !ref.trim())) errors.push(`delivery[${index}].evidenceRefs must be an array of non-empty strings.`);
+    if (row.materialityWeight !== undefined && (typeof row.materialityWeight !== "number" || !Number.isFinite(row.materialityWeight) || row.materialityWeight <= 0)) errors.push(`delivery[${index}].materialityWeight must be positive.`);
   });
   return errors;
 }
@@ -231,14 +233,24 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
     .map(row => row.commitmentKey));
 
   const deliveryRows = [...maturedKeys].map(key => latestDelivery.get(key)).filter((row): row is ManagementDeliveryObservation => Boolean(row));
-  const scorableDelivery = deliveryRows.filter((row): row is ManagementDeliveryObservation & { status: "delivered" | "partial" | "missed" } => SCOREABLE_DELIVERY.has(row.status));
+  const conflictingDeliveryKeys = new Set<string>();
+  const outcomesByCommitmentAndDate = new Map<string, Set<CommitmentDelivery>>();
+  for (const row of asOfDelivery) {
+    const key = `${row.commitmentKey}\u0000${row.assessedAt}`;
+    const statuses = outcomesByCommitmentAndDate.get(key) ?? new Set<CommitmentDelivery>();
+    statuses.add(row.status);
+    outcomesByCommitmentAndDate.set(key, statuses);
+    if (statuses.size > 1) conflictingDeliveryKeys.add(row.commitmentKey);
+  }
+  const scorableDelivery = deliveryRows.filter((row): row is ManagementDeliveryObservation & { status: "delivered" | "partial" | "missed" } =>
+    SCOREABLE_DELIVERY.has(row.status) && row.evidenceRefs.length > 0 && !conflictingDeliveryKeys.has(row.commitmentKey));
   const deliveryWeight = scorableDelivery.reduce((sum, row) => sum + (row.materialityWeight ?? 1), 0);
   const maturedDeliveryScore = deliveryWeight
     ? scorableDelivery.reduce((sum, row) => sum + DELIVERY_POINTS[row.status] * (row.materialityWeight ?? 1), 0) / deliveryWeight
     : null;
 
   // Each commitment contributes at most one (its latest) commentary observation.
-  const revisionRows = [...latestCommentary.values()];
+  const revisionRows = [...latestCommentary.values()].filter(row => row.evidenceRefs.length > 0);
   const revisionScores = revisionRows.flatMap(row => {
     const dimensions = boundedDimensions([row.revisionTimeliness, row.explanationQuality, row.internalConsistency]);
     const score = mean(dimensions);
@@ -248,7 +260,7 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
 
   // Restatements do not increase disclosure weight: only the current effective
   // statement for each stable commitment key contributes.
-  const disclosureScores = [...latestStatements.values()].flatMap(row => {
+  const disclosureScores = [...latestStatements.values()].filter(row => row.evidenceRefs.length > 0).flatMap(row => {
     const dimensions = boundedDimensions([row.specificity, row.measurability, row.deadlineClarity]);
     const score = mean(dimensions);
     return score === null ? [] : [score * 100];
@@ -257,9 +269,11 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
 
   const reasons: string[] = [];
   if (scorableDelivery.length < 3) reasons.push(`At least 3 matured, verifiable commitments are required; ${scorableDelivery.length} available.`);
+  if (conflictingDeliveryKeys.size) reasons.push(`Conflicting same-date delivery outcomes require review for ${conflictingDeliveryKeys.size} commitment${conflictingDeliveryKeys.size === 1 ? "" : "s"}.`);
   if (revisionDisciplineScore === null) reasons.push("Revision-discipline evidence is unavailable.");
   if (disclosureQualityScore === null) reasons.push("Disclosure-quality evidence is unavailable.");
-  const canScore = scorableDelivery.length >= 3 && maturedDeliveryScore !== null && revisionDisciplineScore !== null && disclosureQualityScore !== null;
+  const canScore = scorableDelivery.length >= 3 && conflictingDeliveryKeys.size === 0
+    && maturedDeliveryScore !== null && revisionDisciplineScore !== null && disclosureQualityScore !== null;
   const score = canScore ? round1(maturedDeliveryScore * 0.7 + revisionDisciplineScore * 0.2 + disclosureQualityScore * 0.1) : null;
 
   const evidencedScorable = scorableDelivery.filter(row => row.evidenceRefs.length > 0).length;
@@ -285,7 +299,7 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
         score: maturedDeliveryScore === null ? null : round1(maturedDeliveryScore),
         weight: 70,
         scorable: scorableDelivery.length,
-        unverifiable: deliveryRows.filter(row => row.status === "unverifiable").length,
+        unverifiable: deliveryRows.filter(row => row.status === "unverifiable" || !row.evidenceRefs.length || conflictingDeliveryKeys.has(row.commitmentKey)).length,
       },
       revisionDiscipline: { score: revisionDisciplineScore === null ? null : round1(revisionDisciplineScore), weight: 20, observations: revisionScores.length },
       disclosureQuality: { score: disclosureQualityScore === null ? null : round1(disclosureQualityScore), weight: 10, commitments: disclosureScores.length },
@@ -326,7 +340,7 @@ export function assessManagementGuidanceDelivery(input: ManagementGuidanceDelive
 export const MANAGEMENT_GUIDANCE_DELIVERY_RULES = {
   separation: "Commentary direction is descriptive context; only matured delivery, revision discipline, and disclosure quality contribute to the factor score.",
   deduplication: "Every economic promise has one stable commitmentKey. Repeated or restated statements never create additional scoring weight.",
-  maturity: "Pending commitments are not scored. Matured but unsupported commitments remain unverifiable rather than becoming misses.",
+  maturity: "Pending commitments are not scored as delivery outcomes, although their disclosure clarity and revision discipline may inform those separate components. Matured but unsupported commitments remain unverifiable rather than becoming misses.",
   weighting: "The factor is 70 percent matured delivery, 20 percent revision discipline, and 10 percent disclosure quality.",
   history: "A factor score requires at least three matured, verifiable commitments plus revision-discipline and disclosure-quality evidence.",
 } as const;
