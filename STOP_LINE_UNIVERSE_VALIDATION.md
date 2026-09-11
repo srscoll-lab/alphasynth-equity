@@ -71,6 +71,8 @@ npm run test:stop-line-universe -- \
   --ticker=TITAN
 ```
 
+For a bounded comma-separated repair cohort, use `--tickers=LT,ADANIENSOL,...` together with a new `--output` directory so the baseline evidence remains untouched.
+
 Use `--skip-management` only for a non-mutating diagnostic run. The final acceptance run should include management history so that storage, insufficient-history handling and qualification are tested end to end.
 
 ## Decision rule after the run

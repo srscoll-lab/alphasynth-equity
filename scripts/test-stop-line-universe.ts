@@ -26,6 +26,7 @@ const valueAfter = (prefix: string) => process.argv.find(arg => arg.startsWith(p
 const cutoff = valueAfter("--cutoff=") || new Date().toISOString().slice(0, 10);
 const limit = Number(valueAfter("--limit=") || 0);
 const selectedTicker = valueAfter("--ticker=")?.toUpperCase();
+const selectedTickers = (valueAfter("--tickers=") || "").split(",").map(value => value.trim().toUpperCase()).filter(Boolean);
 const baseUrl = (valueAfter("--base-url=") || "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app").replace(/\/$/, "");
 const outputRoot = valueAfter("--output=") || "/tmp";
 const listOnly = process.argv.includes("--list");
@@ -39,8 +40,14 @@ const manifest = JSON.parse(fs.readFileSync(path.resolve("scripts/stop-line-univ
 const tracker: any = JSON.parse(fs.readFileSync(path.resolve("src/data/signalTrackerCohort001.json"), "utf8"));
 let companies = selectedTicker
   ? manifest.companies.filter(company => company.ticker === selectedTicker)
+  : selectedTickers.length
+    ? manifest.companies.filter(company => selectedTickers.includes(company.ticker))
   : manifest.companies;
 if (selectedTicker && !companies.length) throw new Error(`Unknown stop-line ticker: ${selectedTicker}`);
+if (selectedTickers.length && companies.length !== new Set(selectedTickers).size) {
+  const known = new Set(companies.map(company => company.ticker));
+  throw new Error(`Unknown stop-line ticker(s): ${selectedTickers.filter(ticker => !known.has(ticker)).join(", ")}`);
+}
 if (limit) companies = companies.slice(0, limit);
 
 if (listOnly) {
