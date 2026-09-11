@@ -94,11 +94,13 @@ const metricText = (metric: BmsFactorAnalysis["factors"][number]["current"]["met
 
 export default function SignalEvidenceLayer({
   company,
-  signalDate,
+  lifecycleAsOf,
+  evidenceCutoff,
   onClose,
 }: {
   company: SignalEvidenceCompany;
-  signalDate: string;
+  lifecycleAsOf: string;
+  evidenceCutoff?: string;
   onClose: () => void;
 }) {
   const [activeTab, setActiveTab] = useState<EvidenceTab>("methodology");
@@ -107,6 +109,7 @@ export default function SignalEvidenceLayer({
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
   const [downloading, setDownloading] = useState(false);
+  const effectiveEvidenceCutoff = evidenceCutoff ?? new Date().toISOString().slice(0, 10);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -124,12 +127,13 @@ export default function SignalEvidenceLayer({
 
     (async () => {
       try {
-        const basicRequest = { ticker: company.symbol };
+        const basicRequest = { ticker: company.symbol, information_cutoff: effectiveEvidenceCutoff };
         const [dossierResponse, financialPayload, enrichmentPayload, marketPayload, factorPayload] = await Promise.all([
           post("/api/dossier/generate", {
             ticker: company.symbol,
             company_name: company.name,
             reporting_period: company.period,
+            information_cutoff: effectiveEvidenceCutoff,
           }),
           post("/api/pipeline/quarterly-performance", basicRequest)
             .then(response => response.ok ? response.json() : null).catch(() => null),
@@ -188,7 +192,7 @@ export default function SignalEvidenceLayer({
       active = false;
       controller.abort();
     };
-  }, [company, reloadKey]);
+  }, [company, effectiveEvidenceCutoff, reloadKey]);
 
   const qualification = data?.deliveryCheck?.qualification;
   const qualificationStatus = qualification?.status ?? "insufficient_evidence";
@@ -254,7 +258,7 @@ export default function SignalEvidenceLayer({
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">Signal evidence workspace · {company.symbol}</div>
                 <h1 className="mt-3 text-3xl font-semibold text-white md:text-5xl">Why this signal?</h1>
                 <p className="mt-3 text-sm leading-relaxed text-zinc-400 md:text-base">
-                  {company.name.replace(/[.\s]+$/, "")}. The BMS V1 record is preserved as of {formatDate(signalDate)}; this workspace explains its evidence and subsequent confirmation checks without rewriting it.
+                  {company.name.replace(/[.\s]+$/, "")}. The BMS V1 record is preserved as of {formatDate(lifecycleAsOf)}; this workspace explains its evidence through {formatDate(effectiveEvidenceCutoff)} and subsequent confirmation checks without rewriting it.
                 </p>
               </div>
               <div className="grid min-w-[290px] grid-cols-2 gap-3">

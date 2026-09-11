@@ -3490,6 +3490,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       return res.json({
         ...data,
         companies,
+        lifecycle_as_of: data?.lifecycle_as_of || BMS_LIFECYCLE_FREEZE_DATE,
         factor_schema: BMS_FACTOR_SCHEMA_DESCRIPTION,
         source: "business-momentum-engine",
       });

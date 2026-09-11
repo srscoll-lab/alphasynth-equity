@@ -19,6 +19,7 @@ import type { ResearchDossier } from "../dossier";
 import { augmentFactorAnalysisWithDeliveryEvidence, type BmsFactorAnalysis } from "../bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "../expectation-delivery";
 import { assessDossierReadiness } from "../dossier-readiness";
+import SignalEvidenceLayer from "./SignalEvidenceLayer";
 
 type BmsTrajectoryPoint = {
   period: string;
@@ -128,6 +129,7 @@ type DossierDeliveryCheck = {
 type BmsResponse = {
   name: string;
   company_count: number;
+  lifecycle_as_of?: string;
   stage_counts?: {
     watch: number;
     emerging: number;
@@ -511,6 +513,7 @@ export default function BusinessMomentum({
   const [dossierFinancials, setDossierFinancials] = useState<DossierFinancialRow[]>([]);
   const [dossierDeliveryCheck, setDossierDeliveryCheck] = useState<DossierDeliveryCheck | null>(null);
   const [dossierFactorAnalysis, setDossierFactorAnalysis] = useState<BmsFactorAnalysis | null>(null);
+  const [evidenceOpen, setEvidenceOpen] = useState(false);
   const dossierRequestId = useRef(0);
 
   const downloadDossierPdf = async () => {
@@ -1256,6 +1259,25 @@ export default function BusinessMomentum({
     },
   ];
 
+  if (evidenceOpen && selected) {
+    return (
+      <SignalEvidenceLayer
+        company={{
+          symbol: selected.symbol,
+          name: selected.company_name || selected.symbol,
+          lifecycle: momentumStageLabel(selected),
+          rawBms: selected.bms,
+          bmsChange: selected.bms_change ?? 0,
+          period: selected.period,
+          evidenceStrength: selected.evidence_strength || "Unavailable",
+          evidenceCount: selected.evidence_count,
+        }}
+        lifecycleAsOf={data?.lifecycle_as_of || "2026-08-25"}
+        onClose={() => setEvidenceOpen(false)}
+      />
+    );
+  }
+
   return (
     <section className="relative overflow-hidden border-b border-app-border bg-[#080b12]">
       <div className="absolute inset-0 pointer-events-none">
@@ -1915,12 +1937,11 @@ export default function BusinessMomentum({
                         </button>
 
                         <button
-                          onClick={generateDossier}
-                          disabled={dossierLoading}
-                          className="flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-400/[0.08] text-blue-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all hover:bg-blue-400/[0.14] disabled:opacity-70"
+                          onClick={() => setEvidenceOpen(true)}
+                          className="flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-400/[0.08] text-blue-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all hover:bg-blue-400/[0.14]"
                         >
-                          {dossierLoading ? "Building PDF Dossier…" : "Generate PDF Dossier"}
-                          {dossierLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Layers3 className="w-4 h-4" />}
+                          View Evidence Report
+                          <Eye className="w-4 h-4" />
                         </button>
 
                         <button

@@ -334,7 +334,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
     return (
       <SignalEvidenceLayer
         company={selected}
-        signalDate={cohortData.signalDate}
+        lifecycleAsOf={cohortData.signalDate}
         onClose={() => setEvidenceOpen(false)}
       />
     );
