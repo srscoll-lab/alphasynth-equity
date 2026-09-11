@@ -2991,6 +2991,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const officialDomains = Array.isArray(req.body?.official_domains)
       ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
       : [];
+    const officialSeedUrls = Array.isArray(req.body?.official_seed_urls)
+      ? req.body.official_seed_urls.slice(0, 4).map((value: unknown) => String(value).trim()).filter((url: string) =>
+          isOfficialDossierSource(url, officialDomains))
+      : [];
     if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
       return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
     }
@@ -3036,12 +3040,26 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     try {
       const siteScope = `(site:nseindia.com OR site:bseindia.com OR site:sebi.gov.in${officialDomains.map((d: string) => ` OR site:${d}`).join("")})`;
       const query = `${companyName} ${ticker} annual report quarterly results investor presentation ${siteScope}`;
-      const configuredSearchLimit = Number.parseInt(process.env.DOSSIER_SEARCH_LIMIT || "3", 10);
+      const configuredSearchLimit = Number.parseInt(process.env.DOSSIER_SEARCH_LIMIT || "6", 10);
       const searchLimit = Number.isFinite(configuredSearchLimit)
         ? Math.min(10, Math.max(1, configuredSearchLimit))
         : 3;
       const search: any = await scraper.search(query, { limit: searchLimit });
-      const candidates = [...(search?.web || []), ...(search?.news || [])];
+      // Reuse dated official evidence already attached to the immutable BMS signal.
+      // This is a general source hand-off, not a company-specific parser exception;
+      // every URL is revalidated against the same official-domain admission policy.
+      const seedCandidates = officialSeedUrls.map((url: string) => ({
+        url,
+        title: `${ticker} prior BMS official evidence source`,
+      }));
+      const searchCandidates = [...(search?.web || []), ...(search?.news || [])];
+      const candidateUrls = new Set<string>();
+      const candidates = [...seedCandidates, ...searchCandidates].filter((candidate: any) => {
+        const url = String(candidate?.url || "");
+        if (!url || candidateUrls.has(url)) return false;
+        candidateUrls.add(url);
+        return true;
+      });
       let admission = await collectOfficialEvidence(
         candidates,
         officialDomains,

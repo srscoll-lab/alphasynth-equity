@@ -83,3 +83,22 @@ Use `--skip-management` only for a non-mutating diagnostic run. The final accept
 6. Freeze methodology and architecture. Subsequent work is limited to defects, factual corrections and minor cosmetics, followed by the carousel/landing-page presentation.
 
 Company-specific scraping exceptions are not an acceptable route to passing this audit. If a company cannot be supported defensibly, the product should state that the dossier is unavailable.
+
+## Baseline result — 11 September 2026
+
+The first complete 25-company run did not pass:
+
+- technical dossier success: **15/25 (60%)**;
+- usable two-component delivery overlay: **15/25 (60%)**;
+- PDF ready: **0/25**; and
+- management scoring: insufficient live matured history across the cohort.
+
+Every technically successful dossier produced the basic revenue-and-margin delivery bridge. The recurring failures were official-source discovery/date admission, only two complete report-facing BMS factor comparisons, and absent structured quality-gate evidence.
+
+The bounded repair therefore does three things without changing BMS V1:
+
+1. increases the bounded official search breadth and reuses the already-recorded official BMS evidence URL after revalidating it through the normal admission policy;
+2. presents the published revenue-growth baseline as generic Execution evidence when Execution history is otherwise absent, without changing the recorded Execution or composite BMS score; and
+3. recognises a wider but still explicit set of cash-flow, leverage, working-capital, concentration, ROCE and acquisition-dependence statements for gate observations.
+
+It deliberately does **not** infer balance-sheet strength from the profit-and-loss table, convert insufficient management history into a pass, or weaken the PDF-readiness thresholds.

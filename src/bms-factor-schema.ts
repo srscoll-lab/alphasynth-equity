@@ -223,6 +223,44 @@ export function factorAnalysisFromResearchContext(context: any): BmsFactorAnalys
   });
 }
 
+/**
+ * Adds report-facing comparison evidence that has already been deterministically
+ * reconstructed by the delivery bridge. It never changes a BMS V1 factor score.
+ * At present only revenue delivery is a defensible generic Execution measure;
+ * balance-sheet and management factors remain unavailable without their own data.
+ */
+export function augmentFactorAnalysisWithDeliveryEvidence(
+  analysis: BmsFactorAnalysis | null | undefined,
+  deliveryCheck: any,
+): BmsFactorAnalysis | null {
+  if (!analysis) return null;
+  const execution = analysis.factors.find(factor => factor.id === "execution");
+  if (!execution || execution.availability === "complete") return analysis;
+  const metric = deliveryCheck?.input?.deliveryMetrics?.find((row: any) => row?.id === "revenue_growth");
+  if (!metric || !Number.isFinite(metric.expected) || !Number.isFinite(metric.actual)) return analysis;
+  const component = deliveryCheck?.assessment?.deliveryComponents?.find((row: any) => row?.id === "revenue_growth");
+  const previousPeriod = deliveryCheck?.input?.expectationFreezeDate || null;
+  const currentPeriod = deliveryCheck?.input?.outcomeDate || deliveryCheck?.input?.expectationFreezeDate || null;
+  const factors = analysis.factors.map(factor => factor.id !== "execution" ? factor : {
+    ...factor,
+    previous: {
+      ...factor.previous,
+      period: factor.previous.period || previousPeriod,
+      metrics: [{ key: "revenue_growth_baseline", label: "Previous YoY revenue-growth reading", value: metric.expected, unit: "%", displayValue: null }],
+    },
+    current: {
+      ...factor.current,
+      period: factor.current.period || currentPeriod,
+      metrics: [{ key: "revenue_growth_current", label: "Current YoY revenue-growth reading", value: metric.actual, unit: "%", displayValue: component?.direction || null }],
+    },
+    explanation: "Published quarterly revenue was compared with its prior YoY growth baseline as generic execution evidence. This reconstruction explains delivery but does not alter the recorded BMS V1 score.",
+    evidenceRefs: [...new Set([...(factor.evidenceRefs || []), ...(metric.evidenceRefs || [])])],
+    availability: "complete" as const,
+    confidence: factor.confidence === "unavailable" ? "low" as const : factor.confidence,
+  });
+  return { ...analysis, factors };
+}
+
 export const BMS_FACTOR_SCHEMA_DESCRIPTION = {
   schemaVersion: BMS_FACTOR_SCHEMA_VERSION,
   methodologyVersion: BMS_METHODOLOGY_VERSION,

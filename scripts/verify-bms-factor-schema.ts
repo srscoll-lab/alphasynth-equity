@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   BMS_FACTOR_DEFINITIONS,
   BMS_FACTOR_SCHEMA_DESCRIPTION,
+  augmentFactorAnalysisWithDeliveryEvidence,
   factorAnalysisFromResearchContext,
   normalizeBmsFactorAnalysis,
 } from "../src/bms-factor-schema";
@@ -77,6 +78,22 @@ assert.equal(researchEarnings.current.factorScore, 0.8);
 assert.equal(researchEarnings.weightedScoreContribution, 0.2);
 assert.equal(researchEarnings.weightedChangeContribution, null);
 assert.deepEqual(researchEarnings.evidenceRefs, ["change-record-3860", "change-record-3861"]);
+
+const augmented = augmentFactorAnalysisWithDeliveryEvidence(researchContext, {
+  input: {
+    expectationFreezeDate: "2026-09-10",
+    outcomeDate: "2026-09-10",
+    deliveryMetrics: [{ id: "revenue_growth", expected: 12.5, actual: 27, evidenceRefs: ["supplemental-financial-001"] }],
+  },
+  assessment: { deliveryComponents: [{ id: "revenue_growth", direction: "positive" }] },
+});
+const augmentedExecution = augmented?.factors.find(factor => factor.id === "execution");
+assert.equal(augmentedExecution?.availability, "complete");
+assert.equal(augmentedExecution?.previous.metrics[0].value, 12.5);
+assert.equal(augmentedExecution?.current.metrics[0].value, 27);
+assert.equal(augmentedExecution?.current.factorScore, 0);
+assert.deepEqual(augmentedExecution?.evidenceRefs, ["supplemental-financial-001"]);
+assert.match(augmentedExecution?.explanation || "", /does not alter/i);
 
 assert.equal(BMS_FACTOR_DEFINITIONS.reduce((sum, factor) => sum + factor.weight, 0), 1);
 assert.equal(BMS_FACTOR_SCHEMA_DESCRIPTION.methodologyVersion, "BMS_V1");

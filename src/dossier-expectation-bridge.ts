@@ -38,12 +38,12 @@ const gateDefinitions: Array<[string, string, "hard" | "soft"]> = [
 
 const explicitGateRules: Partial<Record<string, { pass: RegExp; fail: RegExp }>> = {
   cash_conversion: {
-    pass: /\b(?:cash conversion|operating cash flow).{0,50}\b(?:improved|strong|positive)\b/i,
-    fail: /\b(?:cash conversion|operating cash flow).{0,50}\b(?:deteriorated|weak|negative)\b/i,
+    pass: /\b(?:cash conversion|operating cash flow|free cash flow).{0,70}\b(?:improved|grew|increased|strong|positive)\b|\bpositive (?:operating |free )?cash flow\b/i,
+    fail: /\b(?:cash conversion|operating cash flow|free cash flow).{0,70}\b(?:deteriorated|declined|fell|weak|negative|outflow)\b|\bnegative (?:operating |free )?cash flow\b/i,
   },
   leverage_coverage: {
-    pass: /\b(?:debt[- ]free|net cash|zero net debt)\b/i,
-    fail: /\b(?:debt service default|defaulted on debt|negative interest coverage)\b/i,
+    pass: /\b(?:debt[- ]free|net cash|zero net debt|net debt.{0,35}(?:declined|reduced|fell)|interest coverage.{0,35}(?:improved|increased))\b/i,
+    fail: /\b(?:debt service default|defaulted on debt|negative interest coverage|net debt.{0,35}(?:increased|rose)|leverage.{0,35}(?:increased|elevated|stretched))\b/i,
   },
   promoter_pledge: {
     pass: /\b(?:no|nil|zero)\s+(?:promoter\s+)?(?:share\s+)?pledge\b|\b(?:promoter\s+)?pledge.{0,20}\b0(?:\.0+)?%/i,
@@ -56,6 +56,22 @@ const explicitGateRules: Partial<Record<string, { pass: RegExp; fail: RegExp }>>
   material_governance: {
     pass: /\bno material (?:governance|regulatory) (?:issue|concern|action)s?\b/i,
     fail: /\b(?:material fraud|regulatory action|SEBI (?:action|penalty|investigation)|governance failure)\b/i,
+  },
+  working_capital: {
+    pass: /\bworking capital.{0,60}\b(?:improved|reduced|declined|released|normalised|normalized)\b/i,
+    fail: /\bworking capital.{0,60}\b(?:deteriorated|increased|rose|stretched|absorbed)\b/i,
+  },
+  concentration: {
+    pass: /\b(?:customer|product) concentration.{0,60}\b(?:declined|reduced|improved)|\bdiversif(?:ied|ication).{0,50}\b(?:customer|product|revenue)\b/i,
+    fail: /\b(?:high|material|significant) (?:customer|product) concentration\b|\bdependen(?:ce|cy).{0,45}\b(?:single|largest|key) (?:customer|product)\b/i,
+  },
+  incremental_roce: {
+    pass: /\b(?:ROCE|return on capital).{0,45}\b(?:improved|increased|rose|expanded)\b/i,
+    fail: /\b(?:ROCE|return on capital).{0,45}\b(?:declined|decreased|fell|contracted)\b/i,
+  },
+  acquisition_dependence: {
+    pass: /\borganic (?:revenue |sales )?growth.{0,35}\b(?:improved|increased|strong|positive)\b/i,
+    fail: /\b(?:growth|revenue|profit).{0,45}\b(?:primarily|largely|mainly) (?:from|driven by) acquisition/i,
   },
 };
 

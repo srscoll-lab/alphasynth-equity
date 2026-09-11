@@ -14,7 +14,11 @@ const dossier: ResearchDossier = {
   schemaVersion: "1.0.0", reportId: "TEST-1", generatedAt: "2026-09-10T00:00:00Z",
   company: { symbol: "TEST", name: "Test Ltd.", exchange: "NSE", sector: "Test", officialDomains: ["example.com"] },
   sections: {
-    snapshot: [{ claimId: "claim-001", text: "The company remains debt-free.", sourceIds: ["official-001"], status: "supported" }],
+    snapshot: [
+      { claimId: "claim-001", text: "The company remains debt-free.", sourceIds: ["official-001"], status: "supported" },
+      { claimId: "claim-002", text: "Free cash flow increased and remained positive.", sourceIds: ["official-001"], status: "supported" },
+      { claimId: "claim-003", text: "Working capital days reduced during the year.", sourceIds: ["official-001"], status: "supported" },
+    ],
     developments: [], operatingEvidence: [], managementCommitments: [], risks: [],
   },
   quarterlyPerformance: quarters,
@@ -27,6 +31,8 @@ const input = buildExpectationDeliveryInputFromDossier(dossier, {
 });
 assert.equal(input.assessmentMode, "reconstructed_today");
 assert.equal(input.qualityGates.find(gate => gate.id === "leverage_coverage")?.result, "pass");
+assert.equal(input.qualityGates.find(gate => gate.id === "cash_conversion")?.result, "pass");
+assert.equal(input.qualityGates.find(gate => gate.id === "working_capital")?.result, "pass");
 assert.equal(input.deliveryMetrics[0].expected, 15);
 assert.equal(input.deliveryMetrics[0].actual, 20);
 assert.equal(input.deliveryMetrics[1].expected, 20);

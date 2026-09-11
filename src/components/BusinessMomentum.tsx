@@ -16,7 +16,7 @@ import { motion } from "motion/react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ResearchDossier } from "../dossier";
-import type { BmsFactorAnalysis } from "../bms-factor-schema";
+import { augmentFactorAnalysisWithDeliveryEvidence, type BmsFactorAnalysis } from "../bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "../expectation-delivery";
 import { assessDossierReadiness } from "../dossier-readiness";
 
@@ -939,7 +939,10 @@ export default function BusinessMomentum({
         setDossierDeliveryCheck(deliveryCheck?.assessment ? deliveryCheck : null);
         setDossierEnrichment(enrichmentPayload || null);
         setDossierMarket(marketPayload || null);
-        setDossierFactorAnalysis(factorPayload?.factor_analysis ?? selected.factor_analysis ?? null);
+        setDossierFactorAnalysis(augmentFactorAnalysisWithDeliveryEvidence(
+          factorPayload?.factor_analysis ?? selected.factor_analysis ?? null,
+          deliveryCheck,
+        ));
       }
     } catch (error: any) {
       if (requestId === dossierRequestId.current) {

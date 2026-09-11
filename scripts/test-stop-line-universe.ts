@@ -4,6 +4,7 @@ import { execFileSync } from "node:child_process";
 import { isResearchDossier } from "../src/dossier.ts";
 import { assessDossierReadiness } from "../src/dossier-readiness.ts";
 import type { DossierPdfPayload } from "../src/dossier-pdf.ts";
+import { augmentFactorAnalysisWithDeliveryEvidence } from "../src/bms-factor-schema.ts";
 
 type Company = {
   ticker: string;
@@ -101,6 +102,7 @@ for (const company of companies) {
   }
 
   try {
+    const trackerCompany = (tracker.companies || []).find((row: any) => row.symbol === company.ticker) || {};
     const dossierResponse = await postJson("/api/dossier/research-evidence", {
       ticker: company.ticker,
       company_name: company.company_name,
@@ -109,6 +111,7 @@ for (const company of companies) {
       exchange: company.exchange,
       sector: company.sector,
       social_affects_bms: false,
+      official_seed_urls: [trackerCompany?.resultDateSourceUrl].filter(Boolean),
     }, true);
     const dossier = dossierResponse.payload;
     if (dossierResponse.status !== 200 || !isResearchDossier(dossier)) {
@@ -138,8 +141,10 @@ for (const company of companies) {
       managementGuidance,
     }, true);
     const overlay = overlayResponse.payload;
-    const trackerCompany = (tracker.companies || []).find((row: any) => row.symbol === company.ticker) || {};
-    const factorAnalysis = factorResponse.payload?.factor_analysis || trackerCompany.factor_analysis || null;
+    const factorAnalysis = augmentFactorAnalysisWithDeliveryEvidence(
+      factorResponse.payload?.factor_analysis || trackerCompany.factor_analysis || null,
+      overlay,
+    );
     const payload: DossierPdfPayload = {
       dossier,
       financials,
