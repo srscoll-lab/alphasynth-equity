@@ -430,7 +430,13 @@ An end-to-end RELIANCE persistence test passed:
 - the second independent request returned HTTP 200, read the existing ledger, admitted no duplicate records and retained exactly three unique commitments; and
 - the assessment correctly remained `insufficient_history` because none of the three commitments had matured and revision-discipline evidence was not yet available.
 
-This verifies durable storage, cross-request retrieval and idempotent deduplication. It does not yet verify a scored management-delivery history, which requires at least three matured, verifiable commitments.
+This verifies durable storage, cross-request retrieval and idempotent deduplication.
+
+### Reconstructed management-history validation
+
+On 11 September 2026, an offline `reconstructed_today` TITAN fixture passed the existing deterministic scorer with four matured, officially evidenced commitments. One commitment was delivered and three were missed. The resulting composite was **45.8/100 (`mixed_delivery`, low confidence)**, with a matured-delivery component of only **25/100**. The higher composite reflects separately scored revision discipline and disclosure clarity; the UI must show those components so the composite cannot be mistaken for a strong delivery record.
+
+The fixture is deliberately isolated from the live GCS ledger. It proves that the history scorer can produce a result once the minimum evidence threshold is satisfied; it does not establish universal company coverage or predictive value. Full evidence and the acceptance-test result are recorded in [TITAN_MANAGEMENT_HISTORY_VALIDATION.md](TITAN_MANAGEMENT_HISTORY_VALIDATION.md).
 
 ## 11. Verification already implemented
 
@@ -515,7 +521,7 @@ After these ten conditions pass, **no further methodology or architecture additi
 1. Re-run the five-company pilot and review unavailable, partial and contradictory cases.
 2. Confirm that the n8n expectation workflow preserves a management `unavailable` result rather than inventing a pass.
 3. Confirm the UI and PDF explain score versus confidence, the effect of qualification, and insufficient-history states.
-4. Validate at least one reconstructed company history containing three matured, verifiable commitments, without contaminating prospective records.
+4. ~~Validate at least one reconstructed company history containing three matured, verifiable commitments, without contaminating prospective records.~~ **Completed for TITAN on 11 September 2026.**
 5. Review the candidate before any traffic promotion.
 
 ### Product close-out
@@ -582,6 +588,7 @@ Core disclaimer:
 - [BMS_V1_SPECIFICATION.md](BMS_V1_SPECIFICATION.md) — protected BMS definitions and lifecycle rules
 - [BMS_FACTOR_REPORT_SCHEMA.md](BMS_FACTOR_REPORT_SCHEMA.md) — factor explainability contract
 - [EXPECTATIONS_DELIVERY_V1.md](EXPECTATIONS_DELIVERY_V1.md) — overlay rules and classification policy
+- [TITAN_MANAGEMENT_HISTORY_VALIDATION.md](TITAN_MANAGEMENT_HISTORY_VALIDATION.md) — bounded reconstructed-history acceptance test
 - [n8n/README.md](n8n/README.md) — workflow, credential and evidence-pipeline operations
 - [DOSSIER_REPAIR_2026-09-07.md](DOSSIER_REPAIR_2026-09-07.md) — dossier pilot repair and source-admission history
 - `src/management-guidance-delivery.ts` — deterministic management scoring

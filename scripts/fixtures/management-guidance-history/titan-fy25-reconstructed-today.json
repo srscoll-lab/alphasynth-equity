@@ -1,0 +1,172 @@
+{
+  "schemaVersion": "1.0.0",
+  "assessmentMode": "reconstructed_today",
+  "reconstructedAt": "2026-09-11",
+  "purpose": "Bounded offline validation of the management guidance and delivery scorer. This fixture must never be merged into the live GCS ledger.",
+  "sources": [
+    {
+      "sourceId": "titan-q1fy25-transcript",
+      "title": "Titan Company Q1 FY25 earnings call transcript",
+      "publishedAt": "2024-08-02",
+      "url": "https://www.titancompany.in/sites/default/files/2024-08/Q1FY25%20Earnings%20Call%20Transcript_1.pdf",
+      "pages": [8, 9]
+    },
+    {
+      "sourceId": "titan-q2fy25-transcript",
+      "title": "Titan Company Q2 FY25 earnings call transcript",
+      "publishedAt": "2024-11-05",
+      "url": "https://www.titancompany.in/sites/default/files/2024-11/Q2FY25%20-%20Earnings%20call%20transcripts_Final%20uploaded.pdf",
+      "pages": [6, 11, 12, 14]
+    },
+    {
+      "sourceId": "titan-q4fy25-presentation",
+      "title": "Titan Company Q4 FY25 earnings presentation",
+      "publishedAt": "2025-05-08",
+      "url": "https://www.titancompany.in/sites/default/files/2025-05/Q4FY25%20-%20Earnings%20presentation%20Uploaded_0.pdf",
+      "pages": [17, 18, 19, 37]
+    },
+    {
+      "sourceId": "titan-fy25-results-release",
+      "title": "Titan Company FY25 results release",
+      "publishedAt": "2025-05-08",
+      "url": "https://www.titancompany.in/sites/default/files/2025-05/SEoutcome%2520-%2520Copy.pdf",
+      "pages": [1, 3, 4]
+    }
+  ],
+  "judgementNotes": [
+    "The test uses only dated official Titan disclosures.",
+    "Jewellery and watches margin outcomes use the same segment and full-year basis disclosed by Titan; both fell below the stated lower bounds.",
+    "Mia's FY25 endpoint is 232 domestic plus 2 international stores, below the stated 250-store expectation.",
+    "CaratLane moved from 301 stores at the commitment date to 322 at FY25 year-end, exceeding the commitment to add another 20.",
+    "Disclosure-quality and revision-discipline dimensions are rubric judgements reconstructed on 2026-09-11, not facts published by Titan."
+  ],
+  "input": {
+    "symbol": "TITAN",
+    "asOfDate": "2025-05-08",
+    "statements": [
+      {
+        "statementId": "titan-jewellery-margin-prior-fy25",
+        "commitmentKey": "titan-jewellery-ebit-margin-fy25",
+        "statement": "Earlier FY25 jewellery EBIT margin guidance was 11.5% to 12.5%.",
+        "statedAt": "2024-08-02",
+        "targetDate": "2025-03-31",
+        "metric": "FY25 jewellery EBIT margin",
+        "specificity": 0.95,
+        "measurability": 1,
+        "deadlineClarity": 1,
+        "evidenceRefs": ["titan-q1fy25-transcript", "titan-q2fy25-transcript"]
+      },
+      {
+        "statementId": "titan-jewellery-margin-revised-fy25",
+        "commitmentKey": "titan-jewellery-ebit-margin-fy25",
+        "statement": "Management revised the FY25 jewellery EBIT margin band to 11% to 11.5%.",
+        "statedAt": "2024-11-05",
+        "targetDate": "2025-03-31",
+        "metric": "FY25 jewellery EBIT margin",
+        "specificity": 0.95,
+        "measurability": 1,
+        "deadlineClarity": 1,
+        "evidenceRefs": ["titan-q1fy25-transcript", "titan-q2fy25-transcript"]
+      },
+      {
+        "statementId": "titan-watches-margin-fy25",
+        "commitmentKey": "titan-watches-ebit-margin-fy25",
+        "statement": "Management committed to a 13% to 14% EBIT margin range for Watches and Wearables.",
+        "statedAt": "2024-11-05",
+        "targetDate": "2025-03-31",
+        "metric": "FY25 Watches and Wearables EBIT margin",
+        "specificity": 0.9,
+        "measurability": 1,
+        "deadlineClarity": 0.75,
+        "evidenceRefs": ["titan-q2fy25-transcript"]
+      },
+      {
+        "statementId": "titan-mia-store-count-fy25",
+        "commitmentKey": "titan-mia-store-count-fy25",
+        "statement": "Mia was expected to reach 250 stores by the end of FY25.",
+        "statedAt": "2024-11-05",
+        "targetDate": "2025-03-31",
+        "metric": "Mia total store count",
+        "specificity": 0.95,
+        "measurability": 1,
+        "deadlineClarity": 1,
+        "evidenceRefs": ["titan-q2fy25-transcript"]
+      },
+      {
+        "statementId": "titan-caratlane-store-additions-fy25",
+        "commitmentKey": "titan-caratlane-store-additions-fy25",
+        "statement": "From a base of 301 stores, CaratLane expected to add another 20 stores before March 2025.",
+        "statedAt": "2024-11-05",
+        "targetDate": "2025-03-31",
+        "metric": "CaratLane net store additions",
+        "specificity": 1,
+        "measurability": 1,
+        "deadlineClarity": 1,
+        "evidenceRefs": ["titan-q2fy25-transcript"]
+      }
+    ],
+    "commentary": [
+      {
+        "observationId": "titan-jewellery-margin-revision-nov-2024",
+        "commitmentKey": "titan-jewellery-ebit-margin-fy25",
+        "observedAt": "2024-11-05",
+        "change": "lowered",
+        "previousStatementId": "titan-jewellery-margin-prior-fy25",
+        "currentStatementId": "titan-jewellery-margin-revised-fy25",
+        "revisionTimeliness": 0.9,
+        "explanationQuality": 0.9,
+        "internalConsistency": 1,
+        "evidenceRefs": ["titan-q2fy25-transcript"]
+      }
+    ],
+    "delivery": [
+      {
+        "observationId": "titan-jewellery-margin-fy25-outcome",
+        "commitmentKey": "titan-jewellery-ebit-margin-fy25",
+        "assessedAt": "2025-05-08",
+        "status": "missed",
+        "materialityWeight": 1,
+        "explanation": "FY25 consolidated jewellery EBIT margin was 9.7%, below the revised 11% lower bound.",
+        "evidenceRefs": ["titan-q4fy25-presentation", "titan-fy25-results-release"]
+      },
+      {
+        "observationId": "titan-watches-margin-fy25-outcome",
+        "commitmentKey": "titan-watches-ebit-margin-fy25",
+        "assessedAt": "2025-05-08",
+        "status": "missed",
+        "materialityWeight": 1,
+        "explanation": "FY25 Watches and Wearables EBIT margin was 12.1%, below the 13% lower bound.",
+        "evidenceRefs": ["titan-fy25-results-release"]
+      },
+      {
+        "observationId": "titan-mia-store-count-fy25-outcome",
+        "commitmentKey": "titan-mia-store-count-fy25",
+        "assessedAt": "2025-05-08",
+        "status": "missed",
+        "materialityWeight": 1,
+        "explanation": "Mia ended FY25 with 232 domestic and 2 international stores, 16 below the stated 250-store endpoint.",
+        "evidenceRefs": ["titan-q4fy25-presentation"]
+      },
+      {
+        "observationId": "titan-caratlane-store-additions-fy25-outcome",
+        "commitmentKey": "titan-caratlane-store-additions-fy25",
+        "assessedAt": "2025-05-08",
+        "status": "delivered",
+        "materialityWeight": 1,
+        "explanation": "CaratLane reached 322 stores at FY25 year-end, a net increase of 21 from the stated base of 301.",
+        "evidenceRefs": ["titan-q4fy25-presentation"]
+      }
+    ]
+  },
+  "expected": {
+    "score": 45.8,
+    "band": "mixed_delivery",
+    "confidence": "low",
+    "statementOccurrences": 5,
+    "uniqueCommitments": 4,
+    "duplicateStatementsCollapsed": 1,
+    "matured": 4,
+    "pending": 0,
+    "scorable": 4
+  }
+}
