@@ -117,6 +117,14 @@ const displayScore = (value: number | null | undefined) => value == null
   ? null
   : Math.max(0, Math.min(100, Math.round(50 + (value / 0.75) * 50)));
 
+const scoreDescription = (score: number | null) => score === null
+  ? "Unavailable"
+  : score >= 80 ? "Strong positive momentum"
+    : score >= 60 ? "Positive momentum"
+      : score > 40 ? "Mixed or neutral momentum"
+        : score >= 20 ? "Negative momentum"
+          : "Strong negative momentum";
+
 const formatDate = (value: string | null | undefined) => {
   if (!value) return "Date unavailable";
   return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" })
@@ -128,9 +136,21 @@ const readable = (value: string | null | undefined) => value
   : "Unavailable";
 
 const metricText = (metric: BmsFactorAnalysis["factors"][number]["current"]["metrics"][number]) => {
-  if (metric.displayValue) return metric.displayValue;
   if (metric.value === null) return "N/A";
-  return `${metric.value}${metric.unit ? ` ${metric.unit}` : ""}`;
+  const numericValue = typeof metric.value === "number"
+    ? new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(metric.value)
+    : String(metric.value);
+  const normalizedUnit = metric.unit?.toLowerCase().replaceAll(" ", "") ?? "";
+  const base = ["rs.cr", "rs.cr.", "₹crore", "inrcrore"].includes(normalizedUnit)
+    ? `₹${numericValue} crore`
+    : normalizedUnit === "₹pershare" || normalizedUnit === "rs./share"
+      ? `₹${numericValue} per share`
+      : metric.unit === "%"
+        ? `${numericValue}%`
+        : `${numericValue}${metric.unit ? ` ${metric.unit}` : ""}`;
+  if (!metric.displayValue) return base;
+  if (/^(?:₹|rs\.?\s)|\bcrore\b|\bper share\b/i.test(metric.displayValue)) return metric.displayValue;
+  return `${base} (${metric.displayValue})`;
 };
 
 export default function SignalEvidenceLayer({
@@ -386,17 +406,18 @@ export default function SignalEvidenceLayer({
                             <div className="grid gap-5 lg:grid-cols-[190px_1fr]">
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
-                                <div className="mt-3 flex items-end gap-3"><span className="text-3xl font-mono font-bold text-teal-300">{comparable && score !== null ? score : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-500">{factor.weight * 100}% weight</span></div>
-                                <div className="mt-2 text-[10px] font-black uppercase tracking-wider text-zinc-500">{comparable ? `${factor.confidence} confidence` : "No comparable evidence"}</div>
+                                <div className="mt-3 flex items-end gap-3"><span className="text-3xl font-mono font-bold text-teal-300">{comparable && score !== null ? `${score}/100` : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
+                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? scoreDescription(score) : "No comparable evidence"}</div>
+                                <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{comparable ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-zinc-200">{definition?.purpose}</p>
-                                <p className="mt-1 text-xs text-zinc-500">Evidence considered: {definition?.evidenceSignals}. Cadence: {readable(definition?.cadence)}.</p>
+                                <p className="mt-1 text-xs text-zinc-300">Evidence considered: {definition?.evidenceSignals}. Cadence: {readable(definition?.cadence)}.</p>
                                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                                   {([["Previous", factor.previous], ["Current", factor.current]] as const).map(([label, measurement]) => (
                                     <div key={label} className="rounded-xl border border-white/[0.07] bg-black/15 p-3">
-                                      <div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">{label} · {measurement.period || "period unavailable"}</div>
-                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-300">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-500">{metric.label}</span><span className="text-right">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-600">Structured measurements not supplied.</p>}
+                                      <div className="text-[9px] font-black uppercase tracking-wider text-zinc-400">{label} · {measurement.period || "period unavailable"}</div>
+                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-200">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-400">{metric.label}</span><span className="text-right font-medium text-zinc-100">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-500">Structured measurements not supplied.</p>}
                                     </div>
                                   ))}
                                 </div>

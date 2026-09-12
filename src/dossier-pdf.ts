@@ -85,7 +85,7 @@ export type DossierPdfPayload = {
 const C = {
   navy: "#172033",
   ink: "#263044",
-  slate: "#667085",
+  slate: "#536178",
   line: "#D7DDE7",
   pale: "#F4F7FA",
   green: "#2A825F",
@@ -534,13 +534,24 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     ? `Structured factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of model weight. N/A means no comparable structured measurement; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
     : "Structured factor coverage was not supplied. No component-level confirmation should be inferred.";
   r.paragraph(coverageText, { size: 8, color: C.slate, bold: weightCoverage < 100 });
+  const factorMetricText = (metric: BmsFactorAnalysis["factors"][number]["current"]["metrics"][number]) => {
+    if (metric.value == null) return "N/A";
+    const numericValue = typeof metric.value === "number" ? fmt(metric.value) : clean(metric.value);
+    const normalizedUnit = metric.unit?.toLowerCase().replaceAll(" ", "") ?? "";
+    const base = ["rs.cr", "rs.cr.", "₹crore", "inrcrore"].includes(normalizedUnit)
+      ? `Rs. ${numericValue} crore`
+      : normalizedUnit === "₹pershare" || normalizedUnit === "rs./share"
+        ? `Rs. ${numericValue} per share`
+        : metric.unit === "%"
+          ? `${numericValue}%`
+          : `${numericValue}${metric.unit ? ` ${clean(metric.unit)}` : ""}`;
+    if (!metric.displayValue) return base;
+    const supplied = clean(metric.displayValue);
+    if (/^(?:Rs\.?\s)|\bcrore\b|\bper share\b/i.test(supplied)) return supplied;
+    return `${base} (${supplied})`;
+  };
   const measurementText = (measurement: BmsFactorAnalysis["factors"][number]["current"]) => {
-    const metrics = measurement.metrics.slice(0, 2).map((metric) => {
-      const value = metric.value == null
-        ? "N/A"
-        : typeof metric.value === "number" ? fmt(metric.value) : clean(metric.value);
-      return `${metric.label}: ${metric.displayValue || `${value}${metric.unit ? ` ${metric.unit}` : ""}`}`;
-    });
+    const metrics = measurement.metrics.slice(0, 2).map((metric) => `${metric.label}: ${factorMetricText(metric)}`);
     return metrics.length
       ? `${measurement.period || "Period unavailable"}: ${metrics.join("; ")}`
       : `${measurement.period || "Period unavailable"}: structured measurements not supplied`;
@@ -563,7 +574,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         .text(structuredComparison ? directionalScoreToDisplay(factor.current.factorScore) : "N/A", r.margin + 10, scoreY, { width: 42 });
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
         .text(`${fmt(factor.weight * 100)}% WEIGHT`, r.margin + 52, scoreY + 4, { width: 56 })
-        .text(structuredComparison ? `${factor.confidence.toUpperCase()} CONFIDENCE` : "NO COMPARABLE EVIDENCE", r.margin + 10, wrapsFactorLabel ? top + 52 : top + 49, { width: 100 });
+        .text(structuredComparison ? `MOMENTUM SCORE / 100` : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
+        .text(structuredComparison ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "NO COMPARABLE EVIDENCE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
       r.doc.font("Helvetica-Bold").fontSize(7.2).fillColor(C.ink)

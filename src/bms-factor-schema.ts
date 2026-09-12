@@ -71,6 +71,35 @@ const metricValue = (value: unknown): BmsMetricValue => {
   return null;
 };
 
+const inferredMetricUnit = (key: string): string | null => {
+  const normalized = key.toLowerCase();
+  if (/margin|rate|growth|yield|return/.test(normalized)) return "%";
+  if (/eps|earnings_per_share/.test(normalized)) return "₹ per share";
+  if (/revenue|sales|income|pat|profit|ebitda|ebit|cash|debt|capex/.test(normalized)) return "₹ crore";
+  return null;
+};
+
+const compactNumber = (value: number) => new Intl.NumberFormat("en-IN", {
+  maximumFractionDigits: 2,
+}).format(value);
+
+const metricDisplayValue = (key: string, value: number | null, change: number | null) => {
+  if (value === null) return null;
+  const unit = inferredMetricUnit(key);
+  const base = unit === "₹ crore"
+    ? `₹${compactNumber(value)} crore`
+    : unit === "₹ per share"
+      ? `₹${compactNumber(value)} per share`
+      : unit === "%"
+        ? `${compactNumber(value)}%`
+        : compactNumber(value);
+  if (change === null) return base;
+  const signedChange = `${change > 0 ? "+" : ""}${compactNumber(change)}%`;
+  return unit === "%"
+    ? `${base} (${signedChange} relative change)`
+    : `${base} (${signedChange} change)`;
+};
+
 const normalizeMetrics = (value: unknown): BmsFactorMetric[] => Array.isArray(value)
   ? value.flatMap((item: any) => {
       const key = stringOrNull(item?.key);
@@ -186,19 +215,19 @@ export function factorAnalysisFromResearchContext(context: any): BmsFactorAnalys
         const previousMetrics = factorDrivers.flatMap((driver: any) => {
           const key = stringOrNull(driver?.metric);
           if (!key) return [];
-          return [{ key, label: key.replaceAll("_", " "), value: finiteNumberOrNull(driver?.previous_value), unit: null }];
+          return [{ key, label: key.replaceAll("_", " "), value: finiteNumberOrNull(driver?.previous_value), unit: inferredMetricUnit(key) }];
         });
         const currentMetrics = factorDrivers.flatMap((driver: any) => {
           const key = stringOrNull(driver?.metric);
           if (!key) return [];
+          const currentValue = finiteNumberOrNull(driver?.current_value);
+          const changeValue = finiteNumberOrNull(driver?.change_value);
           return [{
             key,
             label: key.replaceAll("_", " "),
-            value: finiteNumberOrNull(driver?.current_value),
-            unit: null,
-            displayValue: finiteNumberOrNull(driver?.change_value) === null
-              ? null
-              : `${finiteNumberOrNull(driver?.change_value)?.toFixed(2)}% change`,
+            value: currentValue,
+            unit: inferredMetricUnit(key),
+            displayValue: metricDisplayValue(key, currentValue, changeValue),
           }];
         });
         const confidences = factorDrivers.map((driver: any) => finiteNumberOrNull(driver?.confidence)).filter((value: number | null): value is number => value !== null);
