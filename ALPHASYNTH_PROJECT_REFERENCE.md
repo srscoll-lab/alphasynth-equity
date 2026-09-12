@@ -533,13 +533,23 @@ After these ten conditions pass, **no further methodology or architecture additi
 
 ## 14. Work remaining before the stop line
 
+### Release candidate status — 12 September 2026
+
+The functional release candidate is **Cloud Run revision `alphasynth-equity-expectation30`**, built from Git commit **`da5acfe`** on `codex/server-dossier-pdf`. It is deployed behind the zero-traffic `expectation-pilot` tag and has not been promoted to the production service URL.
+
+The fixed 25-company stop-line cohort achieved **24/25 technical success (96%)** and **24/25 usable delivery overlays (96%)**. The single technical failure was a bounded HAL timeout rather than an invented or malformed result. **2/25 companies (8%)** met the deliberately stricter PDF-readiness threshold. Low PDF availability is an explicit safety outcome: the on-screen evidence workspace remains available with transparent missing-data labels, while incomplete PDFs remain disabled.
+
+Live smoke testing confirmed that MRF—an intentionally incomplete-dossier case—opens the on-screen workspace, displays available BMS measurements, reports zero admitted dossier sources, explains the missing evidence and keeps PDF download disabled. Automated type checking, dossier-readiness verification, expectations–delivery verification, management-guidance contract verification, n8n pilot verification and the production build all passed on 12 September 2026.
+
+Final visual acceptance was granted on 12 September 2026. The candidate is therefore **functionally frozen as AlphaSynth BMS V1**. No methodology, architecture or new analytical feature should be added during presentation preparation.
+
 ### Immediate engineering work
 
-1. Run the fixed 25-company stop-line audit and review unavailable, partial and contradictory cases. The cohort, thresholds and commands are recorded in [STOP_LINE_UNIVERSE_VALIDATION.md](STOP_LINE_UNIVERSE_VALIDATION.md).
-2. Confirm that the n8n expectation workflow preserves a management `unavailable` result rather than inventing a pass.
-3. Confirm the UI and PDF explain score versus confidence, the effect of qualification, and insufficient-history states.
+1. ~~Run the fixed 25-company stop-line audit and review unavailable, partial and contradictory cases.~~ **Completed on 11 September 2026: 96% technical success and 96% usable delivery coverage.** The cohort, thresholds and commands are recorded in [STOP_LINE_UNIVERSE_VALIDATION.md](STOP_LINE_UNIVERSE_VALIDATION.md).
+2. ~~Confirm that the n8n expectation workflow preserves a management `unavailable` result rather than inventing a pass.~~ **Completed.**
+3. ~~Confirm the UI and PDF explain score versus confidence, the effect of qualification, and insufficient-history states.~~ **Completed in the `expectation30` evidence workspace.**
 4. ~~Validate at least one reconstructed company history containing three matured, verifiable commitments, without contaminating prospective records.~~ **Completed for TITAN on 11 September 2026.**
-5. Review the candidate before any traffic promotion.
+5. ~~Complete final visual acceptance and explicitly review the candidate before any traffic promotion.~~ **Completed on 12 September 2026. Production traffic promotion remains a separate operational decision.**
 
 ### Product close-out
 
