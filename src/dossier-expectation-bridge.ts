@@ -33,7 +33,7 @@ const gateDefinitions: Array<[string, string, "hard" | "soft"]> = [
   ["concentration", "Customer or product concentration", "soft"],
   ["incremental_roce", "Incremental return on capital", "soft"],
   ["acquisition_dependence", "Acquisition dependence", "soft"],
-  ["management_delivery_history", "Management delivery history", "soft"],
+  ["management_delivery_history", "Management promises and delivery record", "soft"],
 ];
 
 const explicitGateRules: Partial<Record<string, { pass: RegExp; fail: RegExp }>> = {

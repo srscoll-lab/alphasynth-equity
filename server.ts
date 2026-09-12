@@ -116,8 +116,8 @@ function lifecycleQualification(
     ...assessment.hardGateFailures.map(label => `Failed hard gate: ${label}.`),
     ...assessment.softWarnings.map(label => `Quality warning: ${label}.`),
     ...(managementAssessment?.reasons || []),
-    ...(hardUnknown ? ["One or more hard quality gates remain unobserved."] : []),
-    ...(!managementAssessment ? ["Management delivery history is unavailable."] : []),
+    ...(hardUnknown ? ["One or more required business-quality checks lack supporting evidence."] : []),
+    ...(!managementAssessment ? ["There is not yet enough history to judge management's delivery record."] : []),
     ...(assessment.deliveryCoverage < 60 ? ["Comparable measurable-delivery coverage is below 60%."] : []),
   ];
   return { status, reasons: [...new Set(reasons)] };

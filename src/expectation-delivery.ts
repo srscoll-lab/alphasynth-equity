@@ -239,7 +239,7 @@ export function assessExpectationDelivery(input: ExpectationDeliveryInput): Expe
 
 export const EXPECTATION_DELIVERY_RULES = {
   lifecyclePolicy: "The overlay never changes the frozen BMS score or lifecycle classification.",
-  qualityPolicy: "Any failed hard gate excludes a company from the refined shortlist; unknown hard gates produce insufficient evidence.",
+  qualityPolicy: "Any required business-quality check that is not met excludes a company from the refined shortlist; a required check without evidence means more evidence is needed.",
   evidencePolicy: "Missing values remain unknown and are never converted to zero or estimated by a language model.",
   historyPolicy: "Reconstructed history must be labelled reconstructed_today and cannot be represented as a prospectively frozen signal.",
   deliveryPolicy: "A delivery classification requires at least 60 percent of configured metric weight to have comparable values; materially opposing components are labelled mixed instead of being hidden by net-score cancellation.",
