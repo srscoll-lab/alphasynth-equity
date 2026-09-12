@@ -540,11 +540,11 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       }))
     : (bms?.components || []).map((item) => ({ label: item.label, value: item.score, available: true }));
 
-  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Bar height represents the normalized directional reading. Exact factor scores are printed only for high-confidence evidence; other readings use a directional band.`);
-  r.bars("Business Momentum components", componentBars, true, [C.green]);
+  r.title("How the BMS V1 signal was built", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Bar height represents the normalized directional reading. Exact factor scores are printed only for high-confidence evidence; other readings use a directional band.`);
+  r.bars("The five parts of Business Momentum", componentBars, true, [C.green]);
   const coverageText = factorAnalysis?.factors?.length
-    ? `Structured factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of model weight. N/A means no comparable structured measurement; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
-    : "Structured factor coverage was not supplied. No component-level confirmation should be inferred.";
+    ? `Comparable factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of the overall score. N/A means previous and current figures were not both available; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
+    : "Comparable factor figures were not supplied. No factor-level conclusion should be inferred.";
   r.paragraph(coverageText, { size: 8, color: C.slate, bold: weightCoverage < 100 });
   const factorMetricText = (metric: BmsFactorAnalysis["factors"][number]["current"]["metrics"][number]) => {
     if (metric.value == null) return "N/A";
@@ -566,10 +566,10 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     const metrics = measurement.metrics.slice(0, 2).map((metric) => `${metric.label}: ${factorMetricText(metric)}`);
     return metrics.length
       ? `${measurement.period || "Period unavailable"}: ${metrics.join("; ")}`
-      : `${measurement.period || "Period unavailable"}: structured measurements not supplied`;
+      : `${measurement.period || "Period unavailable"}: comparable figures not available`;
   };
   if (factorAnalysis?.factors?.length) {
-    r.heading("Five-factor evidence bridge");
+    r.heading("Five-part signal explanation");
     factorAnalysis.factors.forEach((factor, index) => {
       const definition = BMS_FACTOR_DEFINITIONS.find((item) => item.id === factor.id)!;
       const height = 68;
@@ -588,13 +588,13 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
         .text(exactScoreVisible ? `${fmt(factor.weight * 100)}% WEIGHT` : `${fmt(factor.weight * 100)}% WT`, r.margin + (exactScoreVisible ? 52 : 80), scoreY + 4, { width: exactScoreVisible ? 56 : 30 })
         .text(structuredComparison ? (exactScoreVisible ? `MOMENTUM SCORE / 100` : "DIRECTIONAL READING") : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
-        .text(structuredComparison ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "NO COMPARABLE EVIDENCE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
+        .text(structuredComparison ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "PREVIOUS/CURRENT FIGURES UNAVAILABLE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
       r.doc.font("Helvetica-Bold").fontSize(7.2).fillColor(C.ink)
         .text(definition.purpose, detailX, top + 7, { width: detailWidth, height: 17, ellipsis: true });
       r.doc.font("Helvetica").fontSize(6.5).fillColor(C.slate)
-        .text(`Evidence considered: ${definition.evidenceSignals}.`, detailX, top + 23, { width: detailWidth, height: 11, ellipsis: true });
+        .text(`What we check: ${definition.evidenceSignals}.`, detailX, top + 23, { width: detailWidth, height: 11, ellipsis: true });
       const evidenceWidth = (detailWidth - 10) / 2;
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.navy).text("PREVIOUS", detailX, top + 36);
       r.doc.font("Helvetica").fontSize(6.3).fillColor(C.ink)
@@ -604,20 +604,20 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         .text(measurementText(factor.current), detailX + evidenceWidth + 10, top + 45, { width: evidenceWidth, height: 17, ellipsis: true });
       r.y = top + height + 3;
     });
-    r.paragraph("Only factors with structured previous and current measurements receive a displayed factor reading. Missing factors are not treated as zero or neutral evidence, and are not retrospectively justified.", { size: 7, color: C.slate });
+    r.paragraph("Only factors with comparable previous and current figures receive a displayed factor reading. Missing factors are not treated as zero or neutral evidence, and are not retrospectively justified.", { size: 7, color: C.slate });
   } else {
-    r.paragraph("The BMS service did not supply a structured five-factor evidence bridge. No factor explanation has been reconstructed after the assessment.", { color: C.slate });
+    r.paragraph("Comparable figures for the five BMS factors were not supplied. No factor explanation has been added after the assessment.", { color: C.slate });
   }
 
   r.title("Market and financial evidence", usesOperatingProfit
     ? "The comparable quarterly series is reproduced from Screener's published table and should be verified against exchange filings. Missing values are never estimated."
-    : "Company figures come from admitted official documents. Missing values are shown as N/A and are never estimated.");
+    : "Company figures come from verified official documents. Missing values are shown as N/A and are never estimated.");
   if (market?.priceHistory?.length) r.priceChart(market.priceHistory);
   r.financialTrend(financialRows.map((quarter) => ({ period: quarter.period, revenue: quarter.revenueCr ?? null, pat: quarter.patCr ?? null })));
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
 
-  r.title("Lifecycle confirmation layer", "This secondary layer asks whether subsequent delivery and minimum quality evidence support further investigation within the recorded BMS V1 lifecycle. It is not a second BMS score.");
+  r.title("Do later results support the signal?", "This separate check asks whether subsequently published results and basic business-quality evidence support further investigation within the recorded BMS V1 lifecycle. It is not a second BMS score.");
   if (deliveryAssessment && deliveryCheck) {
     const direction = deliveryAssessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
     const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result === "pass" || gate.result === "fail").length;
@@ -627,15 +627,15 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     const confirmationWidth = (r.width - confirmationGap * 3) / 4;
     [
       ["BMS V1 LIFECYCLE", deliveryAssessment.lifecycle],
-      ["DELIVERY READING", direction],
-      ["EVIDENCE COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
-      ["OBSERVED GATES", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
+      ["LATER-RESULTS READING", direction],
+      ["RESULTS COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
+      ["QUALITY CHECKS COMPLETED", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
     ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (confirmationWidth + confirmationGap), confirmationWidth));
     r.y = confirmationY + 54;
     r.heading("Why this check exists");
-    r.paragraph(`The BMS V1 lifecycle records where business momentum stood as of ${deliveryCheck.input.lifecycleFreezeDate}. The confirmation layer then compares later published delivery with an earlier comparable reading and checks whether basic financial, governance and operating-quality conditions are sufficiently evidenced. Its purpose is to prioritise research inside a lifecycle cohort without rewriting history.`, { size: 8.5 });
-    if (notDueGates) r.paragraph(`${notDueGates} half-year-cadence quality gate${notDueGates === 1 ? " is" : "s are"} marked not due for the latest quarter. This is a disclosure-timing status, not a pass, failure or zero score. The latest verified half-year or annual balance-sheet evidence should be retained with its own as-of date.`, { size: 8, color: C.slate });
-    r.table("Published delivery bridge", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
+    r.paragraph(`The BMS V1 lifecycle records where business momentum stood as of ${deliveryCheck.input.lifecycleFreezeDate}. We then compare later published results with an earlier comparable reading and check whether basic financial, governance and operating-quality conditions have enough supporting evidence. The purpose is to prioritise research inside a lifecycle group without rewriting history.`, { size: 8.5 });
+    if (notDueGates) r.paragraph(`${notDueGates} balance-sheet check${notDueGates === 1 ? " is" : "s are"} not due for the latest quarter because this information is normally reviewed half-yearly. This is a reporting-timing status, not a pass, concern or zero score. The latest verified half-year or annual balance-sheet evidence should retain its original date.`, { size: 8, color: C.slate });
+    r.table("Later-results comparison", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
       deliveryAssessment.deliveryComponents.slice(0, 3).map((component) => [
         component.label,
         `${fmt(component.baseline)}${component.unit}`,
@@ -644,25 +644,25 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         component.direction.toUpperCase(),
       ]));
     r.heading("What the result means");
-    r.paragraph(`The BMS V1 lifecycle recorded as of ${deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The reconstructed delivery reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% metric coverage. Quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
-    r.table("Interpretation rules", ["Observed combination", "Research interpretation"], [36, 64], [
-      ["Ahead delivery + no hard-gate failure", "Higher priority within the same recorded lifecycle; investigate durability."],
+    r.paragraph(`The BMS V1 lifecycle recorded as of ${deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The later-results reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% results coverage. Business-quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
+    r.table("How to interpret the checks", ["What the checks show", "What it means for research"], [36, 64], [
+      ["Ahead delivery + all required checks met", "Higher priority within the same recorded lifecycle; investigate durability."],
       ["Mixed delivery", "Evidence points in opposing directions; retain for monitoring."],
       ["Behind delivery", "The momentum thesis may be weakening; require stronger subsequent evidence."],
-      ["Any hard-gate failure", "Exclude from the refined shortlist while preserving the BMS V1 lifecycle record."],
-      ["Low coverage / unknown gates", "Do not infer confirmation. Collect evidence and reassess after the next result."],
-      ["Balance-sheet gate not due", "Do not penalise the company. Carry the latest verified half-year or annual observation with its original date."],
+      ["Any required check not met", "Exclude from the refined shortlist while preserving the BMS V1 lifecycle record."],
+      ["Limited coverage / unavailable checks", "Do not infer confirmation. Collect evidence and reassess after the next result."],
+      ["Balance-sheet check not due", "Do not penalise the company. Carry the latest verified half-year or annual observation with its original date."],
     ]);
-    r.table("What the quality gates test", ["Gate family", "Purpose"], [30, 70], [
+    r.table("What the business-quality checks cover", ["Area reviewed", "What we look for"], [30, 70], [
       ["Financial resilience", "Cash conversion, leverage and the ability to support growth without financial strain."],
       ["Governance integrity", "Promoter pledging, auditor signals and material governance or regulatory concerns."],
       ["Operating discipline", "Working-capital behaviour and customer or product concentration."],
       ["Capital allocation", "Incremental returns on capital and dependence on acquisitions."],
       ["Management reliability", "Whether reported delivery remains consistent with prior commitments."],
     ]);
-    r.paragraph(`Reconstructed today as of ${deliveryCheck.input.expectationFreezeDate}. This comparison was not recorded prospectively on that historical date.`, { size: 7.5, color: C.slate });
+    r.paragraph(`Calculated later using information available through ${deliveryCheck.input.expectationFreezeDate}. This comparison was not recorded prospectively on the earlier date.`, { size: 7.5, color: C.slate });
   } else {
-    r.paragraph("A comparable reconstructed delivery assessment was not available. The BMS V1 lifecycle recorded as of the stated date remains the only classification shown, and no confirmation conclusion should be inferred.", { color: C.slate });
+    r.paragraph("Previous and current results were not sufficient for comparison. The BMS V1 lifecycle recorded as of the stated date remains the only classification shown, and no later-results conclusion should be inferred.", { color: C.slate });
   }
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");
@@ -741,7 +741,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     ["CONFLICTS", fmt(dossier.qualityControl.conflicts)],
   ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (coverageWidth + 9), coverageWidth));
   r.y = coverageY + 55;
-  r.paragraph(`Report generated: ${clean(dossier.generatedAt).slice(0, 10)}. Every factual claim must trace to an admitted, dated official record. Public commentary is kept separate and is never treated as company evidence.`, { size: 8, color: C.slate });
+  r.paragraph(`Report generated: ${clean(dossier.generatedAt).slice(0, 10)}. Every factual claim must trace to a verified, dated official record. Public commentary is kept separate and is never treated as company evidence.`, { size: 8, color: C.slate });
   r.heading("Concise official-source register");
   dossier.sources.slice(0, 6).forEach((source) => {
     const coverage = [...(sourceCoverage.get(source.sourceId) || [])];
@@ -750,7 +750,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     r.doc.font("Helvetica-Bold").fontSize(7.3).fillColor(C.green).text("Open source", r.margin + r.width - 70, r.y, { width: 70, align: "right", link: source.url, underline: true });
     r.y = r.doc.y + 5;
   });
-  if (dossier.sources.length > 6) r.paragraph(`${dossier.sources.length - 6} additional admitted records are retained in the digital dossier.`, { size: 7, color: C.slate });
+  if (dossier.sources.length > 6) r.paragraph(`${dossier.sources.length - 6} additional verified records are retained in the digital dossier.`, { size: 7, color: C.slate });
   const supplementalFinancialSources = [...new Map(financialRows
     .filter((row) => row.sourceUrl)
     .map((row) => [row.sourceUrl, row])).values()];
@@ -768,7 +768,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   }
   r.heading("Quality-control summary");
   r.paragraph(`Unsupported claims: ${dossier.qualityControl.unsupportedClaims}. Conflicts: ${dossier.qualityControl.conflicts}. Human review required: ${dossier.qualityControl.humanReviewRequired ? "Yes" : "No"}.`, { bold: true });
-  r.paragraph("Coverage note: source counts measure admitted documents, not completeness of the investment case. Market opinions may change after publication and should be read as sentiment, not verified fact.", { size: 8, color: C.slate });
+  r.paragraph("Coverage note: source counts measure verified documents, not completeness of the investment case. Market opinions may change after publication and should be read as sentiment, not verified fact.", { size: 8, color: C.slate });
   r.paragraph("AI-generated research for informational purposes only. Verify material claims against the cited official documents. Supplemental market, promoter, ownership and peer data should be checked against the latest exchange filing. This is not investment advice.", { size: 8, color: C.slate });
 
   r.footer(dossier.company.symbol);

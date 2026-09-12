@@ -59,9 +59,9 @@ const sparsePayload: any = {
 const blocked = assessDossierReadiness(sparsePayload);
 assert.equal(blocked.ready, false);
 assert.equal(blocked.code, "DOSSIER_EVIDENCE_INCOMPLETE");
-assert.ok(blocked.reasons.some((reason) => reason.includes("supported claims")));
-assert.ok(blocked.reasons.some((reason) => reason.includes("narrative evidence sections")));
+assert.ok(blocked.reasons.some((reason) => reason.includes("company facts")));
+assert.ok(blocked.reasons.some((reason) => reason.includes("report sections")));
 assert.ok(blocked.reasons.some((reason) => reason.includes("BMS factors")));
-assert.ok(blocked.reasons.some((reason) => reason.includes("quality gates")));
+assert.ok(blocked.reasons.some((reason) => reason.includes("business-quality checks")));
 
 console.log("Dossier readiness gate verified.");

@@ -132,19 +132,19 @@ const lifecycleMeaning: Record<Lifecycle, string> = {
 
 const qualificationCopy: Record<QualificationStatus, { label: string; style: string }> = {
   qualified: {
-    label: "Qualified",
+    label: "Ready for deeper research",
     style: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
   },
   qualified_with_caution: {
-    label: "Qualified with caution",
+    label: "Research with caution",
     style: "border-amber-400/30 bg-amber-400/10 text-amber-200",
   },
   not_qualified: {
-    label: "Not qualified",
+    label: "Not ready for shortlist",
     style: "border-red-400/30 bg-red-400/10 text-red-300",
   },
   insufficient_evidence: {
-    label: "Insufficient evidence",
+    label: "More evidence needed",
     style: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
   },
 };
@@ -439,11 +439,11 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                       onClick={() => chooseTrackerView("qualified")}
                       className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.09em] transition-colors ${trackerView === "qualified" ? "bg-teal-300 text-slate-950" : "text-zinc-400 hover:text-white"}`}
                     >
-                      Qualified shortlist
+                      Research-ready shortlist
                     </button>
                   </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-                    The shortlist is an additional evidence qualification. It never removes or rewrites an original BMS signal.
+                    This shortlist contains signals with enough supporting evidence for deeper research. It never removes or rewrites an original BMS signal.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -493,7 +493,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                 )) : (
                   <div className="px-4 py-10 text-center text-sm text-zinc-500">
                     {trackerView === "qualified"
-                      ? "No company currently has enough evidence to enter this qualified shortlist. All original signals remain available in All signals."
+                      ? "No company currently has enough supporting evidence to enter the research-ready shortlist. All original signals remain available in All signals."
                       : "No matching prototype company."}
                   </div>
                 )}
@@ -526,20 +526,20 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
               <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Evidence qualification · separate from BMS V1</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Research readiness · separate from BMS V1</div>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <span className={`inline-flex rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${selectedQualificationCopy.style}`}>{selectedQualificationCopy.label}</span>
                       <span className="text-xs text-zinc-500">
                         Delivery {selected.measurableDeliveryDirection ? deliveryDirectionLabel[selected.measurableDeliveryDirection].toLowerCase() : "not yet assessed"}
-                        {selected.qualityGatesObserved !== undefined ? ` · ${selected.qualityGatesObserved}${selected.qualityGatesTotal ? `/${selected.qualityGatesTotal}` : ""} gates observed` : ""}
+                        {selected.qualityGatesObserved !== undefined ? ` · ${selected.qualityGatesObserved}${selected.qualityGatesTotal ? `/${selected.qualityGatesTotal}` : ""} quality checks completed` : ""}
                       </span>
                     </div>
                     <p className="mt-2 truncate text-xs text-zinc-500">
-                      {selectedReasons[0] || "Open the evidence workspace to inspect methodology, delivery checks, quality gates and sources."}
+                      {selectedReasons[0] || "Open the signal explanation to see how the score was built, compare later results, review business quality, and inspect sources."}
                     </p>
                   </div>
                   <button type="button" onClick={() => setEvidenceOpen(true)} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/30 bg-teal-400/10 px-4 py-3 text-[10px] font-black uppercase tracking-wider text-teal-200 transition-colors hover:bg-teal-400/15">
-                    <FileCheck2 className="h-4 w-4" /> View evidence report
+                    <FileCheck2 className="h-4 w-4" /> View signal explanation
                   </button>
                 </div>
               </div>

@@ -106,12 +106,29 @@ const qualificationStyle = {
   insufficient_evidence: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
 };
 
+const qualificationLabel = {
+  qualified: "Ready for deeper research",
+  qualified_with_caution: "Research with caution",
+  not_qualified: "Not ready for shortlist",
+  insufficient_evidence: "More evidence needed",
+};
+
 const gateStyle: Record<QualityGateObservation["result"], string> = {
   pass: "border-emerald-400/25 bg-emerald-400/[0.06] text-emerald-300",
   fail: "border-red-400/25 bg-red-400/[0.06] text-red-300",
   not_due: "border-sky-400/25 bg-sky-400/[0.06] text-sky-300",
   unknown: "border-zinc-600/40 bg-white/[0.025] text-zinc-400",
 };
+
+const checkResultLabel: Record<QualityGateObservation["result"], string> = {
+  pass: "Meets check",
+  fail: "Concern found",
+  not_due: "Not due this period",
+  unknown: "Evidence unavailable",
+};
+
+const checkImportanceLabel = (severity: QualityGateObservation["severity"]) =>
+  severity === "hard" ? "Required check" : "Supporting check";
 
 const displayScore = (value: number | null | undefined) => value == null
   ? null
@@ -337,9 +354,9 @@ export default function SignalEvidenceLayer({
                   <div className="mt-1 text-xs text-zinc-500">{company.lifecycle} · {company.period}</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Evidence qualification</div>
+                  <div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Research readiness</div>
                   <span className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${qualificationStyle[qualificationStatus]}`}>
-                    {readable(qualificationStatus)}
+                    {qualificationLabel[qualificationStatus]}
                   </span>
                   <div className="mt-2 text-[10px] text-zinc-500">Separate from BMS V1</div>
                 </div>
@@ -350,15 +367,15 @@ export default function SignalEvidenceLayer({
           {loading && (
             <div className="flex min-h-[520px] flex-col items-center justify-center px-6 text-center">
               <LoaderCircle className="h-8 w-8 animate-spin text-teal-300" />
-              <h2 className="mt-5 text-xl font-semibold text-white">Building the evidence view</h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">Collecting admitted company evidence, comparable financial history, BMS factors, quality gates and the stored management record. This may take a few minutes.</p>
+              <h2 className="mt-5 text-xl font-semibold text-white">Building the signal explanation</h2>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">Collecting verified company records, comparable financial history, the five BMS factors, business-quality checks and management's delivery record. This may take a few minutes.</p>
             </div>
           )}
 
           {!loading && error && (
             <div className="flex min-h-[480px] flex-col items-center justify-center px-6 text-center">
               <TriangleAlert className="h-8 w-8 text-amber-300" />
-              <h2 className="mt-4 text-xl font-semibold text-white">Evidence view unavailable</h2>
+              <h2 className="mt-4 text-xl font-semibold text-white">Signal explanation unavailable</h2>
               <p className="mt-2 max-w-xl text-sm text-zinc-400">{error}</p>
               <button type="button" onClick={() => setReloadKey(value => value + 1)} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-teal-400/30 bg-teal-400/10 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-teal-200 hover:bg-teal-400/15">
                 <RefreshCw className="h-4 w-4" /> Try again
@@ -371,9 +388,9 @@ export default function SignalEvidenceLayer({
               <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 md:flex-row md:items-center md:justify-between md:px-8">
                 <nav className="flex gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/20 p-1" aria-label="Evidence sections">
                   {([
-                    ["methodology", "BMS methodology"],
-                    ["delivery", "Delivery check"],
-                    ["quality", "Quality & management"],
+                    ["methodology", "How the signal works"],
+                    ["delivery", "Later results"],
+                    ["quality", "Business quality"],
                     ["sources", "Sources & limits"],
                   ] as Array<[EvidenceTab, string]>).map(([id, label]) => (
                     <button key={id} type="button" onClick={() => setActiveTab(id)} className={`whitespace-nowrap rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.1em] transition-colors ${activeTab === id ? "bg-teal-300 text-slate-950" : "text-zinc-400 hover:text-white"}`}>
@@ -391,12 +408,12 @@ export default function SignalEvidenceLayer({
                 {activeTab === "methodology" && (
                   <section>
                     <div className="max-w-3xl">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-teal-300"><BarChart3 className="h-4 w-4" /> Five-factor measurement bridge</div>
-                      <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">What the BMS score considered</h2>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-teal-300"><BarChart3 className="h-4 w-4" /> Five-part signal explanation</div>
+                      <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">How this signal was built</h2>
                       <p className="mt-3 text-sm leading-relaxed text-zinc-400">A score and confidence answer different questions. The score describes measured direction; confidence describes the completeness and comparability of the evidence supporting it.</p>
                     </div>
                     <div className="mt-7 space-y-4">
-                      {!factors.length && <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5 text-sm leading-relaxed text-zinc-400">The five-factor definitions remain part of BMS V1, but structured previous/current measurements are not available for this company.</div>}
+                      {!factors.length && <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5 text-sm leading-relaxed text-zinc-400">The five BMS factors still apply, but comparable previous and current figures are not available for this company.</div>}
                       {factors.map(factor => {
                         const definition = BMS_FACTOR_DEFINITIONS.find(item => item.id === factor.id);
                         const score = displayScore(factor.current.factorScore);
@@ -408,17 +425,17 @@ export default function SignalEvidenceLayer({
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
                                 <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
-                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Directional reading; exact score withheld") : "No comparable evidence"}</div>
+                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Direction shown; precise score not shown") : "Previous and current figures unavailable"}</div>
                                 <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{comparable ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-zinc-200">{definition?.purpose}</p>
-                                <p className="mt-1 text-xs text-zinc-300">Evidence considered: {definition?.evidenceSignals}. Cadence: {readable(definition?.cadence)}.</p>
+                                <p className="mt-1 text-xs text-zinc-300">What we check: {definition?.evidenceSignals}. Review frequency: {readable(definition?.cadence)}.</p>
                                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                                   {([["Previous", factor.previous], ["Current", factor.current]] as const).map(([label, measurement]) => (
                                     <div key={label} className="rounded-xl border border-white/[0.07] bg-black/15 p-3">
                                       <div className="text-[9px] font-black uppercase tracking-wider text-zinc-400">{label} · {measurement.period || "period unavailable"}</div>
-                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-200">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-400">{metric.label}</span><span className="text-right font-medium text-zinc-100">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-500">Structured measurements not supplied.</p>}
+                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-200">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-400">{metric.label}</span><span className="text-right font-medium text-zinc-100">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-500">Comparable figures were not available.</p>}
                                     </div>
                                   ))}
                                 </div>
@@ -434,7 +451,7 @@ export default function SignalEvidenceLayer({
                 {activeTab === "delivery" && (
                   <section>
                     <div className="max-w-3xl">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-sky-300"><CheckCircle2 className="h-4 w-4" /> Reconstructed confirmation layer</div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-sky-300"><CheckCircle2 className="h-4 w-4" /> Later-results check</div>
                       <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">Did subsequently published delivery support the signal?</h2>
                       <p className="mt-3 text-sm leading-relaxed text-zinc-400">This comparison helps rank research priorities inside the recorded lifecycle. It cannot rewrite the BMS V1 result or create a recommendation.</p>
                     </div>
@@ -444,8 +461,8 @@ export default function SignalEvidenceLayer({
                           {[
                             ["Recorded lifecycle", data.deliveryCheck.assessment.lifecycle],
                             ["Delivery direction", readable(data.deliveryCheck.assessment.deliveryDirection)],
-                            ["Metric coverage", `${data.deliveryCheck.assessment.deliveryCoverage}%`],
-                            ["Quality reading", readable(data.deliveryCheck.assessment.qualityStatus)],
+                            ["Results coverage", `${data.deliveryCheck.assessment.deliveryCoverage}%`],
+                            ["Business quality status", readable(data.deliveryCheck.assessment.qualityStatus)],
                           ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">{label}</div><div className="mt-2 text-lg font-semibold text-white">{value}</div></div>)}
                         </div>
                         <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
@@ -462,56 +479,56 @@ export default function SignalEvidenceLayer({
                         </div>
                         <div className="mt-5 rounded-2xl border border-sky-400/15 bg-sky-400/[0.04] p-5 text-sm leading-relaxed text-zinc-400">{data.deliveryCheck.assessment.explanation}</div>
                       </>
-                    ) : <p className="mt-7 text-sm text-zinc-500">No comparable delivery assessment is currently available.</p>}
+                    ) : <p className="mt-7 text-sm text-zinc-500">Previous and current results are not yet sufficient for comparison.</p>}
                   </section>
                 )}
 
                 {activeTab === "quality" && (
                   <section>
                     <div className="max-w-3xl">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200"><ShieldCheck className="h-4 w-4" /> Qualification overlay</div>
-                      <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">Quality gates and management reliability</h2>
-                      <p className="mt-3 text-sm leading-relaxed text-zinc-400">A gate can qualify, caution or exclude a company from the refined shortlist. Unknown and not-due observations never become automatic passes.</p>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-amber-200"><ShieldCheck className="h-4 w-4" /> Research readiness</div>
+                      <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">Business quality checks and management track record</h2>
+                      <p className="mt-3 text-sm leading-relaxed text-zinc-400">These checks decide whether a company is ready for the refined research shortlist, needs caution, or should be excluded. Missing information and checks that are not yet due never count as passes.</p>
                     </div>
                     <div className="mt-7 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {qualityGates.map(gate => (
                         <article key={gate.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                          <div className="flex items-start justify-between gap-3"><h3 className="text-sm font-semibold text-white">{gate.label}</h3><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${gateStyle[gate.result]}`}>{readable(gate.result)}</span></div>
-                          <p className="mt-3 text-xs leading-relaxed text-zinc-500">{gate.explanation || (gate.result === "not_due" ? "This evidence is not scheduled for the current reporting cadence." : "No admissible observation was available.")}</p>
-                          <div className="mt-3 text-[9px] uppercase tracking-wider text-zinc-600">{gate.severity} gate · {gate.evidenceRefs.length} evidence reference{gate.evidenceRefs.length === 1 ? "" : "s"}</div>
+                          <div className="flex items-start justify-between gap-3"><h3 className="text-sm font-semibold text-white">{gate.label}</h3><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${gateStyle[gate.result]}`}>{checkResultLabel[gate.result]}</span></div>
+                          <p className="mt-3 text-xs leading-relaxed text-zinc-500">{gate.explanation || (gate.result === "not_due" ? "This information is not normally reported for the current period." : "No verified information was available for this check.")}</p>
+                          <div className="mt-3 text-[9px] uppercase tracking-wider text-zinc-600">{checkImportanceLabel(gate.severity)} · {gate.evidenceRefs.length} supporting source{gate.evidenceRefs.length === 1 ? "" : "s"}</div>
                         </article>
                       ))}
                     </div>
                     <div className="mt-7 rounded-2xl border border-teal-400/15 bg-teal-400/[0.035] p-5 md:p-6">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-white"><UserRoundCheck className="h-5 w-5 text-teal-300" /> Management guidance and delivery</div>
+                      <div className="flex items-center gap-2 text-sm font-semibold text-white"><UserRoundCheck className="h-5 w-5 text-teal-300" /> Management promises and delivery record</div>
                       {management?.assessment ? (
                         <div className="mt-5 grid gap-4 md:grid-cols-[220px_1fr]">
                           <div><div className="text-3xl font-mono font-bold text-teal-300">{management.assessment.score ?? "N/A"}</div><div className="mt-1 text-xs text-zinc-500">{readable(management.assessment.band)} · {readable(management.assessment.evidenceConfidence)} confidence</div></div>
                           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[
-                            ["Commitments", management.assessment.commitmentCounts.uniqueCommitments],
-                            ["Matured", management.assessment.commitmentCounts.matured],
-                            ["Pending", management.assessment.commitmentCounts.pending],
-                            ["Commentary changes", management.assessment.currentCommentary.length],
+                            ["Promises tracked", management.assessment.commitmentCounts.uniqueCommitments],
+                            ["Due for review", management.assessment.commitmentCounts.matured],
+                            ["Still pending", management.assessment.commitmentCounts.pending],
+                            ["Changes in tone", management.assessment.currentCommentary.length],
                           ].map(([label, value]) => <div key={label} className="rounded-xl border border-white/[0.07] bg-black/15 p-3"><div className="text-lg font-bold text-white">{value}</div><div className="mt-1 text-[8px] font-black uppercase tracking-wider text-zinc-600">{label}</div></div>)}</div>
                         </div>
-                      ) : <p className="mt-4 text-sm leading-relaxed text-zinc-500">{management?.reason || "No durable management-guidance history is currently available. The company is not assumed to have passed this check."}</p>}
+                      ) : <p className="mt-4 text-sm leading-relaxed text-zinc-500">{management?.reason || "There is not yet enough history to judge whether management has delivered on earlier statements. The company is not assumed to have passed this check."}</p>}
                     </div>
-                    {qualification?.reasons?.length ? <div className="mt-5 rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5"><div className="text-[10px] font-black uppercase tracking-wider text-amber-200">Why the current qualification applies</div><ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-400">{qualification.reasons.map(reason => <li key={reason}>• {reason}</li>)}</ul></div> : null}
+                    {qualification?.reasons?.length ? <div className="mt-5 rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5"><div className="text-[10px] font-black uppercase tracking-wider text-amber-200">Why this research-readiness status applies</div><ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-400">{qualification.reasons.map(reason => <li key={reason}>• {reason}</li>)}</ul></div> : null}
                   </section>
                 )}
 
                 {activeTab === "sources" && (
                   <section>
                     <div className="max-w-3xl">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-300"><FileCheck2 className="h-4 w-4" /> Provenance and completeness</div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-blue-300"><FileCheck2 className="h-4 w-4" /> Sources and completeness</div>
                       <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">Sources, coverage and limits</h2>
-                      <p className="mt-3 text-sm leading-relaxed text-zinc-400">The on-screen view can show incomplete evidence transparently. A downloadable report is enabled only when the same payload passes every PDF-readiness check.</p>
+                      <p className="mt-3 text-sm leading-relaxed text-zinc-400">This screen shows what is available and what is missing. The PDF becomes available only when the company has enough verified information for a useful report.</p>
                     </div>
                     <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[
                       ["Official sources", data.readiness.coverage.officialSources],
-                      ["Supported claims", supportedClaims],
+                      ["Verified facts", supportedClaims],
                       ["Comparable factors", `${data.readiness.coverage.completeBmsFactors}/5`],
-                      ["Observed gates", data.readiness.coverage.observedQualityGates],
+                      ["Quality checks completed", data.readiness.coverage.observedQualityGates],
                     ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-2xl font-bold text-white">{value}</div><div className="mt-1 text-[9px] font-black uppercase tracking-wider text-zinc-500">{label}</div></div>)}</div>
                     {!data.dossierAvailable && <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5"><div className="text-sm font-semibold text-sky-200">Official dossier evidence unavailable</div><p className="mt-2 text-sm leading-relaxed text-zinc-400">{data.dossierIssue} The methodology and available comparison layers remain visible, but this absence counts as zero official sources and keeps the PDF disabled.</p></div>}
                     {!data.readiness.ready && <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5"><div className="text-sm font-semibold text-amber-200">Why the PDF is not yet available</div><ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-400">{data.readiness.reasons.map(reason => <li key={reason}>• {reason}</li>)}</ul></div>}

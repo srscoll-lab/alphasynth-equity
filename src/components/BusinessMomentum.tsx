@@ -803,7 +803,7 @@ export default function BusinessMomentum({
       const conflictCount = allClaims.filter(claim => claim.status === "conflict").length;
       const insufficientCount = allClaims.filter(claim => claim.status === "insufficient_evidence").length;
 
-      sectionPage("Market and ownership", "Price history and ownership data are supplemental market information, separate from the admitted official-evidence record.");
+      sectionPage("Market and ownership", "Price history and ownership data are supplemental market information, separate from the verified official company record.");
       drawPriceChart();
       const shareholdingLabels: Record<string, string> = {
         promoter: "Promoter", fii: "Foreign institutions", dii: "Domestic institutions", mutualFund: "Mutual funds", retail: "Retail / public",
@@ -821,7 +821,7 @@ export default function BusinessMomentum({
         { label: "Insufficient", value: insufficientCount },
       ], Math.max(1, allClaims.length));
 
-      sectionPage("Financial performance and peers", "Company figures cite admitted official documents. Peer figures are supplemental market comparisons and may use a different reporting basis.");
+      sectionPage("Financial performance and peers", "Company figures cite verified official documents. Peer figures are supplemental market comparisons and may use a different reporting basis.");
       drawTable("Quarter-wise financial performance",
         ["Period", "Basis", "Revenue Rs.Cr", "EBITDA %", "PAT Rs.Cr", "EPS"],
         [25, 29, 36, 28, 32, 24],
@@ -2064,7 +2064,7 @@ export default function BusinessMomentum({
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="text-[9px] uppercase tracking-[0.18em] font-black text-blue-300">Research Dossier · PDF</p>
-                          <p className="mt-1 text-[9px] text-zinc-600">BMS methodology, lifecycle confirmation, financial evidence and cited sources</p>
+                          <p className="mt-1 text-[9px] text-zinc-600">How the signal was built, later-results comparison, financial evidence and cited sources</p>
                         </div>
                         {dossier && (
                           <button
@@ -2105,8 +2105,8 @@ export default function BusinessMomentum({
                             <section className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.035] p-3">
                               <div className="flex items-start justify-between gap-3">
                                 <div>
-                                  <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Delivery check · reconstructed</h4>
-                                  <p className="mt-1 text-[10px] text-zinc-500">Secondary overlay; the recorded BMS V1 lifecycle remains unchanged.</p>
+                                  <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Later-results check</h4>
+                                  <p className="mt-1 text-[10px] text-zinc-500">Later published results are compared with the earlier reading; the recorded BMS V1 lifecycle remains unchanged.</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-sm font-black uppercase text-zinc-100">{dossierDeliveryCheck.assessment.deliveryDirection.replaceAll("_", " ")}</p>

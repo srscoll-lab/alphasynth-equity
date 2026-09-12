@@ -215,8 +215,8 @@ export function assessExpectationDelivery(input: ExpectationDeliveryInput): Expe
   const explanation = gapClassification === "insufficient_evidence"
     ? "The available evidence does not yet support a complete expectations–delivery classification. Missing observations remain unknown."
     : gapClassification === "not_eligible"
-      ? `The company is excluded from the refined research shortlist because it failed ${quality.hardGateFailures.length} hard quality gate${quality.hardGateFailures.length === 1 ? "" : "s"}. Its frozen lifecycle classification is unchanged.`
-      : `The frozen ${input.lifecycle} lifecycle remains unchanged. Quality is ${readable(quality.qualityStatus)}, market expectations are ${readable(expectation)}, and measured delivery is ${readable(delivery.deliveryDirection)}.`;
+      ? `The company is excluded from the refined research shortlist because it did not meet ${quality.hardGateFailures.length} required business-quality check${quality.hardGateFailures.length === 1 ? "" : "s"}. Its recorded lifecycle classification is unchanged.`
+      : `The recorded ${input.lifecycle} lifecycle remains unchanged. Business quality is ${readable(quality.qualityStatus)}, market expectations are ${readable(expectation)}, and measured delivery is ${readable(delivery.deliveryDirection)}.`;
   return {
     schemaVersion: EXPECTATION_DELIVERY_SCHEMA_VERSION,
     symbol: input.symbol,

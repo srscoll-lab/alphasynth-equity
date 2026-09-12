@@ -54,14 +54,14 @@ export function assessDossierReadiness(payload: DossierPdfPayload): DossierReadi
   const deliveryComponents = payload.deliveryCheck?.assessment.deliveryComponents.length || 0;
 
   const reasons: string[] = [];
-  if (officialSources < 2) reasons.push(`Only ${officialSources} distinct official source${officialSources === 1 ? " was" : "s were"} admitted; at least 2 are required.`);
-  if (supportedClaims < 8) reasons.push(`Only ${supportedClaims} supported claims were extracted; at least 8 are required.`);
-  if (populatedNarrativeSections < 3) reasons.push(`Only ${populatedNarrativeSections} of 4 narrative evidence sections are populated; at least 3 are required.`);
-  if (!risksPopulated) reasons.push("No supported company-specific risk or watch item was found.");
-  if (completeBmsFactors < 3) reasons.push(`Only ${completeBmsFactors} of 5 BMS factors have comparable previous and current evidence; at least 3 are required.`);
-  if (observedQualityGates < 3) reasons.push(`Only ${observedQualityGates} quality gates have current or carried-forward evidence; at least 3 are required. Gates not due this quarter are not counted as observations.`);
+  if (officialSources < 2) reasons.push(`Only ${officialSources} distinct official source${officialSources === 1 ? " was" : "s were"} verified; at least 2 are required.`);
+  if (supportedClaims < 8) reasons.push(`Only ${supportedClaims} company facts were verified; at least 8 are required.`);
+  if (populatedNarrativeSections < 3) reasons.push(`Only ${populatedNarrativeSections} of 4 report sections contain verified information; at least 3 are required.`);
+  if (!risksPopulated) reasons.push("No verified company-specific risk or watch item was found.");
+  if (completeBmsFactors < 3) reasons.push(`Only ${completeBmsFactors} of 5 BMS factors have comparable previous and current figures; at least 3 are required.`);
+  if (observedQualityGates < 3) reasons.push(`Only ${observedQualityGates} business-quality checks have supporting evidence; at least 3 are required. Checks that are not due this quarter do not count as completed.`);
   if (deliveryComponents < 2 || (payload.deliveryCheck?.assessment.deliveryCoverage || 0) < 60) {
-    reasons.push("The delivery check needs at least 2 comparable components and 60% evidence coverage.");
+    reasons.push("The later-results comparison needs at least 2 comparable measures covering 60% of the delivery assessment.");
   }
   if (quarterlyRows < 2) reasons.push("At least 2 usable quarterly financial rows are required.");
   if (pricePoints < 2) reasons.push("At least 2 dated price observations are required.");
