@@ -84,9 +84,25 @@ const augmented = augmentFactorAnalysisWithDeliveryEvidence(researchContext, {
   input: {
     expectationFreezeDate: "2026-09-10",
     outcomeDate: "2026-09-10",
+    qualityGates: [{ id: "leverage_coverage", label: "Leverage and coverage", result: "pass", evidenceRefs: ["official-balance-001"] }],
     deliveryMetrics: [{ id: "revenue_growth", expected: 12.5, actual: 27, evidenceRefs: ["supplemental-financial-001"] }],
   },
   assessment: { deliveryComponents: [{ id: "revenue_growth", direction: "positive" }] },
+  managementGuidance: {
+    evidenceRefs: ["official-management-001"],
+    assessment: {
+      score: 45.8,
+      asOfDate: "2026-09-10",
+      evidenceConfidence: "low",
+      components: {
+        maturedDelivery: { score: 25 },
+        revisionDiscipline: { score: 93.3 },
+        disclosureQuality: { score: 96.3 },
+      },
+    },
+  },
+}, {
+  sources: [{ sourceId: "official-balance-001", publishedAt: "2026-08-05" }],
 });
 const augmentedExecution = augmented?.factors.find(factor => factor.id === "execution");
 assert.equal(augmentedExecution?.availability, "complete");
@@ -95,6 +111,26 @@ assert.equal(augmentedExecution?.current.metrics[0].value, 27);
 assert.equal(augmentedExecution?.current.factorScore, 0);
 assert.deepEqual(augmentedExecution?.evidenceRefs, ["supplemental-financial-001"]);
 assert.match(augmentedExecution?.explanation || "", /does not alter/i);
+const augmentedBalanceSheet = augmented?.factors.find(factor => factor.id === "balance_sheet");
+assert.equal(augmentedBalanceSheet?.availability, "partial");
+assert.equal(augmentedBalanceSheet?.previous.metrics.length, 0);
+assert.equal(augmentedBalanceSheet?.current.metrics[0].value, "Meets check");
+assert.deepEqual(augmentedBalanceSheet?.evidenceRefs, ["official-balance-001"]);
+const augmentedManagement = augmented?.factors.find(factor => factor.id === "management_delivery");
+assert.equal(augmentedManagement?.availability, "partial");
+assert.equal(augmentedManagement?.previous.metrics.length, 0);
+assert.equal(augmentedManagement?.current.metrics[0].value, 45.8);
+assert.equal(augmentedManagement?.current.metrics[1].value, 25);
+assert.deepEqual(augmentedManagement?.evidenceRefs, ["official-management-001"]);
+
+const undatedBalance = augmentFactorAnalysisWithDeliveryEvidence(researchContext, {
+  input: {
+    qualityGates: [{ id: "leverage_coverage", label: "Leverage and coverage", result: "pass", evidenceRefs: ["undated-source"] }],
+    deliveryMetrics: [],
+  },
+});
+assert.equal(undatedBalance?.factors.find(factor => factor.id === "balance_sheet")?.availability, "partial");
+assert.equal(undatedBalance?.factors.find(factor => factor.id === "balance_sheet")?.current.metrics.length, 0);
 
 const emptyCompleteExecution = {
   ...researchContext,

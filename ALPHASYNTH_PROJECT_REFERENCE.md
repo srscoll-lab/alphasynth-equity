@@ -593,6 +593,16 @@ Core disclaimer:
 
 > AlphaSynth organises research evidence and tracks changes in business momentum. It does not provide investment advice, guarantee future performance or replace verification of company filings and licensed market data.
 
+### Five-factor display acceptance
+
+The report-facing five-factor bridge distinguishes three states:
+
+- **Comparable evidence:** dated previous and current measurements are present, so a momentum direction may be displayed.
+- **Current evidence only:** a dated balance-sheet check or scored management-delivery history is available, but there is no equally defined earlier observation. The evidence is displayed without calculating a momentum direction.
+- **Unavailable:** neither side contains admissible evidence. The factor remains `N/A`; missing information is never converted to zero.
+
+Execution may use a published quarterly revenue-growth comparison as a generic, low-confidence delivery measure. Balance Sheet may show current, sourced cash-conversion, leverage, working-capital or incremental-ROCE checks, but requires two same-basis half-year or annual measurements before becoming comparable. Management Delivery may show the current deterministic ledger score and its components once the minimum history requirement is met, but requires another time-stamped assessment before becoming a momentum comparison. None of these report-facing additions rewrites the recorded BMS V1 score or lifecycle.
+
 ## 17. Glossary
 
 | Term | Meaning |

@@ -240,6 +240,7 @@ export default function SignalEvidenceLayer({
         const factorAnalysis = augmentFactorAnalysisWithDeliveryEvidence(
           factorPayload?.factor_analysis ?? company.factorAnalysis ?? null,
           deliveryPayload,
+          dossierPayload,
         );
         const readinessPayload: DossierPdfPayload = {
           dossier: dossierPayload,
@@ -417,16 +418,19 @@ export default function SignalEvidenceLayer({
                       {factors.map(factor => {
                         const definition = BMS_FACTOR_DEFINITIONS.find(item => item.id === factor.id);
                         const score = displayScore(factor.current.factorScore);
-                        const comparable = factor.previous.metrics.length > 0 && factor.current.metrics.length > 0;
+                        const hasPrevious = factor.previous.metrics.length > 0;
+                        const hasCurrent = factor.current.metrics.length > 0;
+                        const comparable = hasPrevious && hasCurrent;
+                        const partial = hasPrevious !== hasCurrent;
                         const exactScoreVisible = comparable && score !== null && factor.confidence === "high";
                         return (
                           <article key={factor.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 md:p-6">
                             <div className="grid gap-5 lg:grid-cols-[190px_1fr]">
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
-                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
-                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Direction shown; precise score not shown") : "Previous and current figures unavailable"}</div>
-                                <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{comparable ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
+                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : partial ? (hasCurrent ? "Current evidence only" : "Earlier evidence only") : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
+                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Direction shown; precise score not shown") : partial ? "Shown for context; no momentum comparison calculated" : "Previous and current figures unavailable"}</div>
+                                <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{(comparable || partial) ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
                               <div>
                                 <p className="text-sm font-semibold text-zinc-200">{definition?.purpose}</p>
@@ -435,7 +439,7 @@ export default function SignalEvidenceLayer({
                                   {([["Previous", factor.previous], ["Current", factor.current]] as const).map(([label, measurement]) => (
                                     <div key={label} className="rounded-xl border border-white/[0.07] bg-black/15 p-3">
                                       <div className="text-[9px] font-black uppercase tracking-wider text-zinc-400">{label} · {measurement.period || "period unavailable"}</div>
-                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-200">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-400">{metric.label}</span><span className="text-right font-medium text-zinc-100">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-500">Comparable figures were not available.</p>}
+                                      {measurement.metrics.length ? <div className="mt-2 space-y-1 text-xs text-zinc-200">{measurement.metrics.slice(0, 4).map(metric => <div key={metric.key} className="flex justify-between gap-4"><span className="text-zinc-400">{metric.label}</span><span className="text-right font-medium text-zinc-100">{metricText(metric)}</span></div>)}</div> : <p className="mt-2 text-xs text-zinc-500">Evidence for this side of the comparison was not available.</p>}
                                     </div>
                                   ))}
                                 </div>

@@ -513,6 +513,8 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   const factorAnalysis = bms?.factorAnalysis;
   const hasStructuredComparison = (factor: BmsFactorAnalysis["factors"][number]) =>
     factor.previous.metrics.length > 0 && factor.current.metrics.length > 0;
+  const hasAnyStructuredEvidence = (factor: BmsFactorAnalysis["factors"][number]) =>
+    factor.previous.metrics.length > 0 || factor.current.metrics.length > 0;
   const directionalScoreToDisplay = (value: number | null | undefined) => value == null
     ? "N/A"
     : fmt(Math.max(0, Math.min(100, Math.round(50 + (value / 0.75) * 50))));
@@ -578,17 +580,18 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       r.doc.roundedRect(r.margin, top, r.width, height, 5).fill(index % 2 ? C.pale : C.greenPale);
       const leftWidth = 112;
       const structuredComparison = hasStructuredComparison(factor);
+      const partialEvidence = !structuredComparison && hasAnyStructuredEvidence(factor);
       const wrapsFactorLabel = factor.label.length > 15;
       r.doc.font("Helvetica-Bold").fontSize(wrapsFactorLabel ? 9 : 10).fillColor(C.navy)
         .text(factor.label, r.margin + 10, top + 8, { width: leftWidth - 18, height: 23, ellipsis: true });
       const scoreY = wrapsFactorLabel ? top + 32 : top + 27;
       const exactScoreVisible = structuredComparison && factor.confidence === "high";
-      r.doc.font("Helvetica-Bold").fontSize(exactScoreVisible ? 15 : 9.5).fillColor(structuredComparison ? C.green : C.slate)
-        .text(structuredComparison ? (exactScoreVisible ? directionalScoreToDisplay(factor.current.factorScore) : directionalBand(factor.current.factorScore, true)) : "N/A", r.margin + 10, scoreY + (exactScoreVisible ? 0 : 4), { width: exactScoreVisible ? 42 : 68 });
+      r.doc.font("Helvetica-Bold").fontSize(exactScoreVisible ? 15 : partialEvidence ? 8 : 9.5).fillColor(structuredComparison || partialEvidence ? C.green : C.slate)
+        .text(structuredComparison ? (exactScoreVisible ? directionalScoreToDisplay(factor.current.factorScore) : directionalBand(factor.current.factorScore, true)) : partialEvidence ? "CURRENT ONLY" : "N/A", r.margin + 10, scoreY + (exactScoreVisible ? 0 : 4), { width: exactScoreVisible ? 42 : 68, lineBreak: false });
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
         .text(exactScoreVisible ? `${fmt(factor.weight * 100)}% WEIGHT` : `${fmt(factor.weight * 100)}% WT`, r.margin + (exactScoreVisible ? 52 : 80), scoreY + 4, { width: exactScoreVisible ? 56 : 30 })
-        .text(structuredComparison ? (exactScoreVisible ? `MOMENTUM SCORE / 100` : "DIRECTIONAL READING") : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
-        .text(structuredComparison ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "PREVIOUS/CURRENT FIGURES UNAVAILABLE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
+        .text(structuredComparison ? (exactScoreVisible ? `MOMENTUM SCORE / 100` : "DIRECTIONAL READING") : partialEvidence ? "NO COMPARISON" : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
+        .text(structuredComparison || partialEvidence ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "PREVIOUS/CURRENT FIGURES UNAVAILABLE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
       r.doc.font("Helvetica-Bold").fontSize(7.2).fillColor(C.ink)
@@ -604,7 +607,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         .text(measurementText(factor.current), detailX + evidenceWidth + 10, top + 45, { width: evidenceWidth, height: 17, ellipsis: true });
       r.y = top + height + 3;
     });
-    r.paragraph("Only factors with comparable previous and current figures receive a displayed factor reading. Missing factors are not treated as zero or neutral evidence, and are not retrospectively justified.", { size: 7, color: C.slate });
+    r.paragraph("Only factors with comparable previous and current figures receive a momentum reading. A single dated observation is shown as current evidence only, without manufacturing a comparison. Missing factors are not treated as zero or neutral evidence.", { size: 7, color: C.slate });
   } else {
     r.paragraph("Comparable figures for the five BMS factors were not supplied. No factor explanation has been added after the assessment.", { color: C.slate });
   }

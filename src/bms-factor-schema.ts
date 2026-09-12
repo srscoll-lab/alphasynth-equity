@@ -255,41 +255,110 @@ export function factorAnalysisFromResearchContext(context: any): BmsFactorAnalys
 /**
  * Adds report-facing comparison evidence that has already been deterministically
  * reconstructed by the delivery bridge. It never changes a BMS V1 factor score.
- * At present only revenue delivery is a defensible generic Execution measure;
- * balance-sheet and management factors remain unavailable without their own data.
+ * Quarterly delivery can provide a comparable Execution measure. Dated
+ * balance-sheet checks and a scored management history are shown as current-only
+ * supporting evidence until an equally defined earlier observation exists.
  */
 export function augmentFactorAnalysisWithDeliveryEvidence(
   analysis: BmsFactorAnalysis | null | undefined,
   deliveryCheck: any,
+  evidenceDossier?: any,
 ): BmsFactorAnalysis | null {
   if (!analysis) return null;
-  const execution = analysis.factors.find(factor => factor.id === "execution");
+  let factors = analysis.factors;
+  const execution = factors.find(factor => factor.id === "execution");
   const alreadyHasComparableExecution = Boolean(
     execution?.previous.metrics.length && execution?.current.metrics.length,
   );
-  if (!execution || alreadyHasComparableExecution) return analysis;
-  const metric = deliveryCheck?.input?.deliveryMetrics?.find((row: any) => row?.id === "revenue_growth");
-  if (!metric || !Number.isFinite(metric.expected) || !Number.isFinite(metric.actual)) return analysis;
-  const component = deliveryCheck?.assessment?.deliveryComponents?.find((row: any) => row?.id === "revenue_growth");
-  const previousPeriod = deliveryCheck?.input?.expectationFreezeDate || null;
-  const currentPeriod = deliveryCheck?.input?.outcomeDate || deliveryCheck?.input?.expectationFreezeDate || null;
-  const factors = analysis.factors.map(factor => factor.id !== "execution" ? factor : {
-    ...factor,
-    previous: {
-      ...factor.previous,
-      period: factor.previous.period || previousPeriod,
-      metrics: [{ key: "revenue_growth_baseline", label: "Previous YoY revenue-growth reading", value: metric.expected, unit: "%", displayValue: null }],
-    },
-    current: {
-      ...factor.current,
-      period: factor.current.period || currentPeriod,
-      metrics: [{ key: "revenue_growth_current", label: "Current YoY revenue-growth reading", value: metric.actual, unit: "%", displayValue: component?.direction || null }],
-    },
-    explanation: "Published quarterly revenue was compared with its prior YoY growth baseline as generic execution evidence. This reconstruction explains delivery but does not alter the recorded BMS V1 score.",
-    evidenceRefs: [...new Set([...(factor.evidenceRefs || []), ...(metric.evidenceRefs || [])])],
-    availability: "complete" as const,
-    confidence: factor.confidence === "unavailable" ? "low" as const : factor.confidence,
-  });
+  const executionMetric = deliveryCheck?.input?.deliveryMetrics?.find((row: any) => row?.id === "revenue_growth");
+  if (execution && !alreadyHasComparableExecution
+    && Number.isFinite(executionMetric?.expected) && Number.isFinite(executionMetric?.actual)) {
+    const component = deliveryCheck?.assessment?.deliveryComponents?.find((row: any) => row?.id === "revenue_growth");
+    const previousPeriod = deliveryCheck?.input?.expectationFreezeDate || null;
+    const currentPeriod = deliveryCheck?.input?.outcomeDate || deliveryCheck?.input?.expectationFreezeDate || null;
+    factors = factors.map(factor => factor.id !== "execution" ? factor : {
+      ...factor,
+      previous: {
+        ...factor.previous,
+        period: factor.previous.period || previousPeriod,
+        metrics: [{ key: "revenue_growth_baseline", label: "Previous YoY revenue-growth reading", value: executionMetric.expected, unit: "%", displayValue: null }],
+      },
+      current: {
+        ...factor.current,
+        period: factor.current.period || currentPeriod,
+        metrics: [{ key: "revenue_growth_current", label: "Current YoY revenue-growth reading", value: executionMetric.actual, unit: "%", displayValue: component?.direction || null }],
+      },
+      explanation: "Published quarterly revenue was compared with its prior YoY growth baseline as generic execution evidence. This reconstruction explains delivery but does not alter the recorded BMS V1 score.",
+      evidenceRefs: [...new Set([...(factor.evidenceRefs || []), ...(executionMetric.evidenceRefs || [])])],
+      availability: "complete" as const,
+      confidence: factor.confidence === "unavailable" ? "low" as const : factor.confidence,
+    });
+  }
+
+  const balanceFactor = factors.find(factor => factor.id === "balance_sheet");
+  const hasBalanceEvidence = Boolean(balanceFactor?.previous.metrics.length || balanceFactor?.current.metrics.length);
+  const balanceIds = new Set(["cash_conversion", "leverage_coverage", "working_capital", "incremental_roce"]);
+  const balanceChecks = (Array.isArray(deliveryCheck?.input?.qualityGates) ? deliveryCheck.input.qualityGates : [])
+    .filter((row: any) => balanceIds.has(row?.id) && ["pass", "fail"].includes(row?.result)
+      && Array.isArray(row?.evidenceRefs) && row.evidenceRefs.length > 0);
+  const balanceEvidenceRefs = [...new Set(balanceChecks.flatMap((row: any) => row.evidenceRefs))] as string[];
+  const balanceEvidenceDates = (Array.isArray(evidenceDossier?.sources) ? evidenceDossier.sources : [])
+    .filter((source: any) => balanceEvidenceRefs.includes(source?.sourceId) && /^\d{4}-\d{2}-\d{2}$/.test(source?.publishedAt || ""))
+    .map((source: any) => source.publishedAt as string)
+    .sort();
+  const balanceObservedAt = balanceEvidenceDates.at(-1) || null;
+  if (balanceFactor && !hasBalanceEvidence && balanceChecks.length && balanceObservedAt) {
+    factors = factors.map(factor => factor.id !== "balance_sheet" ? factor : ({
+      ...factor,
+      current: {
+        ...factor.current,
+        period: factor.current.period || balanceObservedAt,
+        observedAt: factor.current.observedAt || balanceObservedAt,
+        metrics: balanceChecks.map((row: any) => ({
+          key: row.id,
+          label: row.label,
+          value: row.result === "pass" ? "Meets check" : "Concern found",
+          unit: null,
+          displayValue: null,
+        })),
+      },
+      explanation: "Verified balance-sheet checks are shown as current supporting evidence. A momentum reading remains unavailable until a comparable earlier half-year or annual measurement is supplied.",
+      evidenceRefs: balanceEvidenceRefs,
+      availability: "partial" as const,
+      confidence: "low" as const,
+    }));
+  }
+
+  const managementFactor = factors.find(factor => factor.id === "management_delivery");
+  const hasManagementEvidence = Boolean(managementFactor?.previous.metrics.length || managementFactor?.current.metrics.length);
+  const management = deliveryCheck?.managementGuidance?.assessment;
+  const managementEvidenceRefs = [...new Set(deliveryCheck?.managementGuidance?.evidenceRefs || [])] as string[];
+  if (managementFactor && !hasManagementEvidence && Number.isFinite(management?.score) && managementEvidenceRefs.length) {
+    const componentMetrics = [
+      ["matured_delivery", "Matured commitments delivered", management?.components?.maturedDelivery?.score],
+      ["revision_discipline", "Revision discipline", management?.components?.revisionDiscipline?.score],
+      ["disclosure_quality", "Disclosure quality", management?.components?.disclosureQuality?.score],
+    ].flatMap(([key, label, value]) => Number.isFinite(value)
+      ? [{ key: String(key), label: String(label), value: Number(value), unit: "/100", displayValue: null }]
+      : []);
+    factors = factors.map(factor => factor.id !== "management_delivery" ? factor : ({
+      ...factor,
+      current: {
+        ...factor.current,
+        period: factor.current.period || management.asOfDate || null,
+        metrics: [
+          { key: "management_delivery_record", label: "Current delivery record", value: Number(management.score), unit: "/100", displayValue: null },
+          ...componentMetrics,
+        ],
+      },
+      explanation: "The current deterministic management-delivery record is shown separately from BMS V1. A momentum reading requires another comparable, time-stamped management-history assessment.",
+      evidenceRefs: managementEvidenceRefs,
+      availability: "partial" as const,
+      confidence: (["high", "medium", "low"] as const).includes(management.evidenceConfidence)
+        ? management.evidenceConfidence
+        : "low" as const,
+    }));
+  }
   return { ...analysis, factors };
 }
 

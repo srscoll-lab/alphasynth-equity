@@ -945,6 +945,7 @@ export default function BusinessMomentum({
         setDossierFactorAnalysis(augmentFactorAnalysisWithDeliveryEvidence(
           factorPayload?.factor_analysis ?? selected.factor_analysis ?? null,
           deliveryCheck,
+          payload,
         ));
       }
     } catch (error: any) {

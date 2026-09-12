@@ -77,9 +77,9 @@ const payload: DossierPdfPayload = {
     factor_analysis: { factors: [
       { id: "earnings", previous: { period: "Q3 FY25", factor_score: null, metrics: [{ key: "revenue", label: "Revenue", value: 1294, unit: "Rs.Cr" }, { key: "pat", label: "PAT", value: 95, unit: "Rs.Cr" }] }, current: { period: "Q3 FY26", factor_score: 0.79, metrics: [{ key: "revenue", label: "Revenue", value: 1547, unit: "Rs.Cr", displayValue: "+19.55% YoY" }, { key: "pat", label: "PAT", value: 155, unit: "Rs.Cr", displayValue: "+63.16% YoY" }] }, explanation: "Earnings momentum strengthened.", evidence_refs: ["official-001"], confidence: "medium" },
       { id: "economics", previous: { period: "Q3 FY25", factor_score: null, metrics: [{ key: "operating_margin", label: "Operating margin", value: 14, unit: "%" }] }, current: { period: "Q3 FY26", factor_score: 0.82, metrics: [{ key: "operating_margin", label: "Operating margin", value: 17, unit: "%", displayValue: "+21.43% change" }] }, explanation: "Operating economics improved.", evidence_refs: ["official-001"], confidence: "medium" },
-      { id: "execution", previous: { period: null, factor_score: null }, current: { period: "Q3 FY26", factor_score: 0 }, explanation: null, evidence_refs: [], confidence: "unavailable" },
-      { id: "balance_sheet", previous: { period: null, factor_score: null }, current: { period: "Q3 FY26", factor_score: 0 }, explanation: null, evidence_refs: [], confidence: "unavailable" },
-      { id: "management_delivery", previous: { period: null, factor_score: null }, current: { period: "Q3 FY26", factor_score: 0 }, explanation: null, evidence_refs: [], confidence: "unavailable" },
+      { id: "execution", previous: { period: "Q3 FY25", factor_score: null, metrics: [{ key: "premium_volume_growth", label: "Premium volume growth", value: 14.2, unit: "%" }] }, current: { period: "Q3 FY26", factor_score: 0.58, metrics: [{ key: "premium_volume_growth", label: "Premium volume growth", value: 21.4, unit: "%" }] }, explanation: "Illustrative comparable execution evidence for layout acceptance only.", evidence_refs: ["official-001"], confidence: "medium" },
+      { id: "balance_sheet", previous: { period: null, factor_score: null }, current: { period: "H1 FY26", factor_score: 0, metrics: [{ key: "leverage_coverage", label: "Leverage and coverage", value: "Meets check" }] }, explanation: "Illustrative current-only balance-sheet evidence for layout acceptance only.", evidence_refs: ["official-002"], confidence: "low" },
+      { id: "management_delivery", previous: { period: null, factor_score: null }, current: { period: "30 Jun 2026", factor_score: 0, metrics: [{ key: "management_delivery_record", label: "Current delivery record", value: 45.8, unit: "/100" }, { key: "matured_delivery", label: "Matured commitments delivered", value: 25, unit: "/100" }] }, explanation: "Illustrative current-only management evidence for layout acceptance only.", evidence_refs: ["official-003"], confidence: "low" },
     ] },
   }), components: [
     { label: "Earnings", score: 87 }, { label: "Economics", score: 76 }, { label: "Execution", score: 81 }, { label: "Balance sheet", score: 72 }, { label: "Management", score: 79 },
@@ -114,7 +114,7 @@ const payload: DossierPdfPayload = {
   },
 };
 
-const output = path.resolve("output/pdf/AlphaSynth-Professional-Dossier-Sample.pdf");
+const output = path.resolve("output/pdf/AlphaSynth-Factor-Coverage-Acceptance-Sample.pdf");
 await fs.mkdir(path.dirname(output), { recursive: true });
 await fs.writeFile(output, await renderDossierPdf(payload));
 console.log(output);

@@ -165,6 +165,7 @@ for (const company of companies) {
     const factorAnalysis = augmentFactorAnalysisWithDeliveryEvidence(
       factorResponse.payload?.factor_analysis || trackerCompany.factor_analysis || null,
       overlay,
+      dossier,
     );
     const payload: DossierPdfPayload = {
       dossier,
