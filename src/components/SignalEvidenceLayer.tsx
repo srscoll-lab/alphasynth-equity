@@ -401,13 +401,14 @@ export default function SignalEvidenceLayer({
                         const definition = BMS_FACTOR_DEFINITIONS.find(item => item.id === factor.id);
                         const score = displayScore(factor.current.factorScore);
                         const comparable = factor.previous.metrics.length > 0 && factor.current.metrics.length > 0;
+                        const exactScoreVisible = comparable && score !== null && factor.confidence === "high";
                         return (
                           <article key={factor.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 md:p-6">
                             <div className="grid gap-5 lg:grid-cols-[190px_1fr]">
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
-                                <div className="mt-3 flex items-end gap-3"><span className="text-3xl font-mono font-bold text-teal-300">{comparable && score !== null ? `${score}/100` : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
-                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? scoreDescription(score) : "No comparable evidence"}</div>
+                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
+                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Directional reading; exact score withheld") : "No comparable evidence"}</div>
                                 <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{comparable ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
                               <div>

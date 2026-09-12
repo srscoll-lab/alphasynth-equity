@@ -182,7 +182,7 @@ class Report {
     this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate).text(clean(label).toUpperCase(), x + 8, this.y + 28, { width: width - 16, align: "center" });
   }
 
-  bars(title: string, values: Array<{ label: string; value: number | null; available?: boolean }>, neutralMarker = false, palette: string[] = [C.green]) {
+  bars(title: string, values: Array<{ label: string; value: number | null; available?: boolean; displayLabel?: string }>, neutralMarker = false, palette: string[] = [C.green]) {
     const chartHeight = 100;
     this.ensure(67 + chartHeight);
     this.y += 12;
@@ -203,7 +203,7 @@ class Report {
           .moveTo(x, top + chartHeight / 2).lineTo(x + barWidth, top + chartHeight / 2).stroke().undash();
       }
       this.doc.font("Helvetica-Bold").fontSize(available ? 9 : 11).fillColor(available && (value as number) > 15 ? C.white : C.slate)
-        .text(available ? fmt(value) : "N/A", x, available ? top + chartHeight - Math.max(15, h) + 4 : top + chartHeight / 2 - 7, { width: barWidth, align: "center" });
+        .text(available ? clean(item.displayLabel || fmt(value)) : "N/A", x, available ? top + chartHeight - Math.max(15, h) + 4 : top + chartHeight / 2 - 7, { width: barWidth, align: "center" });
       if (!available) this.doc.font("Helvetica-Bold").fontSize(5.8).fillColor(C.slate)
         .text("NO COMPARABLE DATA", x + 4, top + chartHeight / 2 + 9, { width: barWidth - 8, align: "center" });
       this.doc.font("Helvetica-Bold").fontSize(6.5).fillColor(C.slate)
@@ -516,6 +516,15 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   const directionalScoreToDisplay = (value: number | null | undefined) => value == null
     ? "N/A"
     : fmt(Math.max(0, Math.min(100, Math.round(50 + (value / 0.75) * 50))));
+  const directionalBand = (value: number | null | undefined, compact = false) => {
+    const score = value == null ? null : Number(directionalScoreToDisplay(value));
+    if (score === null || !Number.isFinite(score)) return "N/A";
+    if (score >= 80) return compact ? "STRONG +" : "STRONG POSITIVE";
+    if (score >= 60) return "POSITIVE";
+    if (score > 40) return "MIXED / NEUTRAL";
+    if (score >= 20) return "NEGATIVE";
+    return compact ? "STRONG -" : "STRONG NEGATIVE";
+  };
   const measuredFactors = factorAnalysis?.factors?.filter(hasStructuredComparison) || [];
   const totalFactorWeight = factorAnalysis?.factors?.reduce((sum, factor) => sum + factor.weight, 0) || 0;
   const measuredFactorWeight = measuredFactors.reduce((sum, factor) => sum + factor.weight, 0);
@@ -525,10 +534,13 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         label: factor.label,
         value: Number(directionalScoreToDisplay(factor.current.factorScore)),
         available: hasStructuredComparison(factor),
+        displayLabel: factor.confidence === "high"
+          ? directionalScoreToDisplay(factor.current.factorScore)
+          : directionalBand(factor.current.factorScore, true),
       }))
     : (bms?.components || []).map((item) => ({ label: item.label, value: item.score, available: true }));
 
-  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Available bars are normalized change scores; fifty is the neutral reference point, not a portfolio weight.`);
+  r.title("BMS V1 measurement anatomy", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Bar height represents the normalized directional reading. Exact factor scores are printed only for high-confidence evidence; other readings use a directional band.`);
   r.bars("Business Momentum components", componentBars, true, [C.green]);
   const coverageText = factorAnalysis?.factors?.length
     ? `Structured factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of model weight. N/A means no comparable structured measurement; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
@@ -570,11 +582,12 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       r.doc.font("Helvetica-Bold").fontSize(wrapsFactorLabel ? 9 : 10).fillColor(C.navy)
         .text(factor.label, r.margin + 10, top + 8, { width: leftWidth - 18, height: 23, ellipsis: true });
       const scoreY = wrapsFactorLabel ? top + 32 : top + 27;
-      r.doc.font("Helvetica-Bold").fontSize(15).fillColor(structuredComparison ? C.green : C.slate)
-        .text(structuredComparison ? directionalScoreToDisplay(factor.current.factorScore) : "N/A", r.margin + 10, scoreY, { width: 42 });
+      const exactScoreVisible = structuredComparison && factor.confidence === "high";
+      r.doc.font("Helvetica-Bold").fontSize(exactScoreVisible ? 15 : 9.5).fillColor(structuredComparison ? C.green : C.slate)
+        .text(structuredComparison ? (exactScoreVisible ? directionalScoreToDisplay(factor.current.factorScore) : directionalBand(factor.current.factorScore, true)) : "N/A", r.margin + 10, scoreY + (exactScoreVisible ? 0 : 4), { width: exactScoreVisible ? 42 : 68 });
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
-        .text(`${fmt(factor.weight * 100)}% WEIGHT`, r.margin + 52, scoreY + 4, { width: 56 })
-        .text(structuredComparison ? `MOMENTUM SCORE / 100` : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
+        .text(exactScoreVisible ? `${fmt(factor.weight * 100)}% WEIGHT` : `${fmt(factor.weight * 100)}% WT`, r.margin + (exactScoreVisible ? 52 : 80), scoreY + 4, { width: exactScoreVisible ? 56 : 30 })
+        .text(structuredComparison ? (exactScoreVisible ? `MOMENTUM SCORE / 100` : "DIRECTIONAL READING") : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
         .text(structuredComparison ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "NO COMPARABLE EVIDENCE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
