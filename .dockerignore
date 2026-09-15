@@ -4,3 +4,9 @@ dist
 .env
 gcp-key.json
 *.log
+carousel-assets
+carousel-build
+carousel-output
+.codex-finalizer-carousel
+output
+tmp
