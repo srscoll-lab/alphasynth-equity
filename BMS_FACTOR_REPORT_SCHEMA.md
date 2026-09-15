@@ -40,6 +40,12 @@ a zero, is not evidence by itself. Records below the threshold remain in the
 internal repair universe and expose neither a composite score nor a lifecycle
 rank on the public frontend.
 
+Run `npm run audit:bms-publication -- --base-url=URL` after an ingestion cycle.
+The audit writes an eligible set and a private repair queue containing the
+missing factors for each rejected company. Repeating the audit never weakens the
+gate: newly retrieved evidence can admit a company, while failed retrieval or
+incomplete comparisons keep its score unpublished.
+
 ## Migration
 
 Legacy lifecycle responses are normalized automatically. The live research-context bridge adds genuine previous/current driver measurements and current weighted-score contributions. Previous factor-score changes remain unavailable until the BMS service exposes its stored historical factor snapshots; these fields stay `null` rather than being reconstructed. The BMS engine can populate the full `factor_analysis` object prospectively without breaking older clients.
