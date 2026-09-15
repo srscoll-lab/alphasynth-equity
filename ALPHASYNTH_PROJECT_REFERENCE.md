@@ -605,6 +605,22 @@ The report-facing five-factor bridge distinguishes three states:
 
 Execution may use a published quarterly revenue-growth comparison as a generic, low-confidence delivery measure. Balance Sheet may show current, sourced cash-conversion, leverage, working-capital or incremental-ROCE checks, but requires two same-basis half-year or annual measurements before becoming comparable. Management Delivery may show the current deterministic ledger score and its components once the minimum history requirement is met, but requires another time-stamped assessment before becoming a momentum comparison. None of these report-facing additions rewrites the recorded BMS V1 score or lifecycle.
 
+### Public shortlist publication gate
+
+The Signal Tracker now fails closed. The BMS service may continue to monitor
+the full company universe internally, but the application publishes a company
+only when at least four factors contain sourced, comparable previous/current
+measurements. Earnings and Economics are mandatory, and the completed factors
+must represent at least 75% of model weight. Stored scores and zero-valued
+factor fields do not count as evidence.
+
+A company below this standard remains in the internal evidence-repair universe,
+but its composite score and lifecycle rank are withheld from the frontend. The
+detailed factor contract returns `publication_eligibility`, including completed
+and missing factors, coverage weight and deterministic rejection reasons. New
+evidence can therefore return a company to the shortlist without weakening or
+silently bypassing the publication rule.
+
 ## 17. Glossary
 
 | Term | Meaning |

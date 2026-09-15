@@ -52,6 +52,88 @@ export type BmsFactorAnalysis = {
   factors: BmsFactorComparison[];
 };
 
+export const BMS_PUBLICATION_POLICY = {
+  minimumCompleteFactors: 4,
+  minimumCoverageWeight: 0.75,
+  mandatoryFactors: ["earnings", "economics"] as BmsFactorId[],
+} as const;
+
+export type BmsPublicationEligibility = {
+  status: "eligible" | "repair_required";
+  scorePublishable: boolean;
+  completeFactorIds: BmsFactorId[];
+  missingFactorIds: BmsFactorId[];
+  completeFactorCount: number;
+  coverageWeight: number;
+  reasons: string[];
+};
+
+const hasObservedMetric = (measurement: BmsFactorMeasurement) =>
+  measurement.metrics.some(metric => metric.value !== null && metric.value !== "");
+
+/**
+ * Fail-closed publication gate for the ranked Signal Tracker.
+ *
+ * A stored score or a zero-valued factor is not evidence. A factor counts only
+ * when both comparison periods contain an observed metric, the factor carries
+ * at least one evidence reference, and its confidence is available. Companies
+ * that fail remain available to backend repair jobs but must not be ranked or
+ * exposed in the public shortlist.
+ */
+export function assessBmsPublicationEligibility(
+  analysis: BmsFactorAnalysis | null | undefined,
+): BmsPublicationEligibility {
+  const factors = analysis?.factors ?? [];
+  const completeFactorIds = BMS_FACTOR_DEFINITIONS.flatMap(definition => {
+    const factor = factors.find(candidate => candidate.id === definition.id);
+    const complete = Boolean(
+      factor
+      && factor.availability === "complete"
+      && factor.confidence !== "unavailable"
+      && factor.evidenceRefs.length > 0
+      && hasObservedMetric(factor.previous)
+      && hasObservedMetric(factor.current),
+    );
+    return complete ? [definition.id] : [];
+  });
+  const completeSet = new Set<BmsFactorId>(completeFactorIds);
+  const missingFactorIds = BMS_FACTOR_DEFINITIONS
+    .map(definition => definition.id)
+    .filter(id => !completeSet.has(id));
+  const coverageWeight = Number(BMS_FACTOR_DEFINITIONS
+    .filter(definition => completeSet.has(definition.id))
+    .reduce((sum, definition) => sum + definition.weight, 0)
+    .toFixed(2));
+  const missingMandatory = BMS_PUBLICATION_POLICY.mandatoryFactors
+    .filter(id => !completeSet.has(id));
+  const reasons: string[] = [];
+
+  if (completeFactorIds.length < BMS_PUBLICATION_POLICY.minimumCompleteFactors) {
+    reasons.push(
+      `Only ${completeFactorIds.length} of 5 factors have comparable sourced evidence; at least ${BMS_PUBLICATION_POLICY.minimumCompleteFactors} are required.`,
+    );
+  }
+  if (coverageWeight < BMS_PUBLICATION_POLICY.minimumCoverageWeight) {
+    reasons.push(
+      `Comparable evidence covers ${Math.round(coverageWeight * 100)}% of model weight; at least ${Math.round(BMS_PUBLICATION_POLICY.minimumCoverageWeight * 100)}% is required.`,
+    );
+  }
+  if (missingMandatory.length) {
+    reasons.push(`Mandatory factor evidence is missing: ${missingMandatory.join(", ")}.`);
+  }
+
+  const scorePublishable = reasons.length === 0;
+  return {
+    status: scorePublishable ? "eligible" : "repair_required",
+    scorePublishable,
+    completeFactorIds,
+    missingFactorIds,
+    completeFactorCount: completeFactorIds.length,
+    coverageWeight,
+    reasons,
+  };
+}
+
 const finiteNumberOrNull = (value: unknown): number | null => {
   if (value === null || value === undefined || value === "") return null;
   const number = Number(value);

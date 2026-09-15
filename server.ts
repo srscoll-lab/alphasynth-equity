@@ -13,6 +13,8 @@ import { extractPdfTextLocally } from "./src/pdf-text";
 import { buildExpectationDeliveryInputFromDossier } from "./src/dossier-expectation-bridge";
 import {
   BMS_FACTOR_SCHEMA_DESCRIPTION,
+  BMS_PUBLICATION_POLICY,
+  assessBmsPublicationEligibility,
   factorAnalysisFromResearchContext,
   normalizeBmsFactorAnalysis,
 } from "./src/bms-factor-schema";
@@ -3508,18 +3510,39 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
 
       const data: any = await response.json();
-      const companies = Array.isArray(data?.companies)
-        ? data.companies.map((company: any) => ({
-            ...company,
-            factor_analysis: normalizeBmsFactorAnalysis(company),
-          }))
-        : [];
+      const monitoredCompanies = Array.isArray(data?.companies) ? data.companies : [];
+      const evaluatedCompanies = monitoredCompanies.map((company: any) => {
+        const factorAnalysis = Array.isArray(company?.fresh_drivers)
+          ? factorAnalysisFromResearchContext(company)
+          : normalizeBmsFactorAnalysis(company);
+        return {
+          ...company,
+          factor_analysis: factorAnalysis,
+          publication_eligibility: assessBmsPublicationEligibility(factorAnalysis),
+        };
+      });
+      const companies = evaluatedCompanies.filter((company: any) =>
+        company.publication_eligibility.scorePublishable,
+      );
+      const stageCounts = {
+        watch: companies.filter((company: any) => company.lifecycle_stage === "WATCH" && !company.fading_warning).length,
+        emerging: companies.filter((company: any) => company.lifecycle_stage === "EMERGING" && !company.fading_warning).length,
+        building: companies.filter((company: any) => company.lifecycle_stage === "BUILDING" && !company.fading_warning).length,
+        established: companies.filter((company: any) => company.lifecycle_stage === "ESTABLISHED" && !company.fading_warning).length,
+        outside: companies.filter((company: any) => company.lifecycle_stage === "OUTSIDE" && !company.fading_warning).length,
+        fading_warnings: companies.filter((company: any) => Boolean(company.fading_warning)).length,
+      };
 
       return res.json({
         ...data,
+        company_count: companies.length,
+        monitored_company_count: monitoredCompanies.length,
+        excluded_company_count: monitoredCompanies.length - companies.length,
+        stage_counts: stageCounts,
         companies,
         lifecycle_as_of: data?.lifecycle_as_of || BMS_LIFECYCLE_FREEZE_DATE,
         factor_schema: BMS_FACTOR_SCHEMA_DESCRIPTION,
+        publication_policy: BMS_PUBLICATION_POLICY,
         source: "business-momentum-engine",
       });
     } catch (error: any) {
@@ -3810,9 +3833,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       if (!response.ok) throw new Error(`BMS research context returned HTTP ${response.status}`);
       const context: any = await response.json();
       if (context?.found === false) return res.status(404).json({ error: "BMS factor record was not found." });
+      const factorAnalysis = factorAnalysisFromResearchContext(context);
       return res.json({
         symbol,
-        factor_analysis: factorAnalysisFromResearchContext(context),
+        factor_analysis: factorAnalysis,
+        publication_eligibility: assessBmsPublicationEligibility(factorAnalysis),
         bms_signal: context?.bms_signal ?? null,
         source: "business-momentum-engine",
       });

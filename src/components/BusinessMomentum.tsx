@@ -129,6 +129,8 @@ type DossierDeliveryCheck = {
 type BmsResponse = {
   name: string;
   company_count: number;
+  monitored_company_count?: number;
+  excluded_company_count?: number;
   lifecycle_as_of?: string;
   stage_counts?: {
     watch: number;
@@ -1332,7 +1334,7 @@ export default function BusinessMomentum({
                     Momentum Universe
                   </p>
                   <p className="text-sm text-zinc-300 mt-1">
-                    Latest lifecycle state across the tracked universe
+                    Evidence-qualified signals available to research
                   </p>
                 </div>
 
@@ -1354,16 +1356,16 @@ export default function BusinessMomentum({
                   {loading ? "—" : data?.company_count ?? 0}
                 </span>
                 <div className="pb-2">
-                  <p className="text-emerald-300 font-bold">businesses tracked</p>
+                  <p className="text-emerald-300 font-bold">qualified businesses</p>
                   <p className="text-xs text-zinc-500">
-                    through the BMS lifecycle
+                    from {data?.monitored_company_count ?? data?.company_count ?? 0} monitored companies
                   </p>
                 </div>
               </div>
 
               <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-2 text-xs text-zinc-500">
                 <Sparkles className="w-4 h-4 text-gold" />
-                Deterministic signal · research action, not investment advice
+                Four-factor minimum · incomplete scores remain off the shortlist
               </div>
             </div>
           </div>
@@ -1518,10 +1520,14 @@ export default function BusinessMomentum({
                   ))}
 
                 {!loading && stageCompanies.length === 0 && (
-                  <div className="p-10 text-center text-zinc-500">
+                  <div className="p-10 text-center">
                     {searchTerm
-                      ? "No matching companies found in this lifecycle stage."
-                      : "No companies currently qualify for this lifecycle stage."}
+                      ? <p className="text-zinc-500">No matching evidence-qualified company was found.</p>
+                      : <div>
+                          <ShieldCheck className="mx-auto h-7 w-7 text-amber-300" />
+                          <p className="mt-3 font-semibold text-zinc-200">No company currently passes the publication standard in this lifecycle.</p>
+                          <p className="mx-auto mt-2 max-w-md text-sm leading-relaxed text-zinc-500">Incomplete records remain in the internal evidence-repair queue and will appear here only after at least four factors, including Earnings and Economics, have comparable sourced evidence.</p>
+                        </div>}
                   </div>
                 )}
 

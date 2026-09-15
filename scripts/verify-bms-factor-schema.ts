@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import {
   BMS_FACTOR_DEFINITIONS,
   BMS_FACTOR_SCHEMA_DESCRIPTION,
+  assessBmsPublicationEligibility,
   augmentFactorAnalysisWithDeliveryEvidence,
   factorAnalysisFromResearchContext,
   normalizeBmsFactorAnalysis,
@@ -150,6 +151,61 @@ const repairedEmptyComplete = augmentFactorAnalysisWithDeliveryEvidence(emptyCom
   assessment: { deliveryComponents: [{ id: "revenue_growth", direction: "positive" }] },
 });
 assert.equal(repairedEmptyComplete?.factors.find(factor => factor.id === "execution")?.previous.metrics.length, 1);
+
+const legacyEligibility = assessBmsPublicationEligibility(legacy);
+assert.equal(legacyEligibility.scorePublishable, false);
+assert.equal(legacyEligibility.completeFactorCount, 0);
+
+const eligibilityFactor = (id: typeof BMS_FACTOR_DEFINITIONS[number]["id"]) => ({
+  id,
+  previous: {
+    period: "Q3 FY25",
+    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 10 }],
+  },
+  current: {
+    period: "Q3 FY26",
+    factor_score: 0.6,
+    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 12 }],
+  },
+  evidence_refs: [`official-${id}`],
+  confidence: "medium",
+});
+
+const fourFactorAnalysis = normalizeBmsFactorAnalysis({
+  period: "Q3 FY26",
+  factor_analysis: {
+    factors: ["earnings", "economics", "execution", "balance_sheet"].map(id => eligibilityFactor(
+      id as typeof BMS_FACTOR_DEFINITIONS[number]["id"],
+    )),
+  },
+});
+const fourFactorEligibility = assessBmsPublicationEligibility(fourFactorAnalysis);
+assert.equal(fourFactorEligibility.scorePublishable, true);
+assert.equal(fourFactorEligibility.completeFactorCount, 4);
+assert.equal(fourFactorEligibility.coverageWeight, 0.9);
+
+const missingEarningsAnalysis = normalizeBmsFactorAnalysis({
+  period: "Q3 FY26",
+  factor_analysis: {
+    factors: ["economics", "execution", "balance_sheet", "management_delivery"].map(id => eligibilityFactor(
+      id as typeof BMS_FACTOR_DEFINITIONS[number]["id"],
+    )),
+  },
+});
+const missingEarningsEligibility = assessBmsPublicationEligibility(missingEarningsAnalysis);
+assert.equal(missingEarningsEligibility.scorePublishable, false);
+assert.match(missingEarningsEligibility.reasons.join(" "), /Mandatory factor evidence is missing: earnings/);
+
+const unsourcedFourFactorAnalysis = normalizeBmsFactorAnalysis({
+  period: "Q3 FY26",
+  factor_analysis: {
+    factors: ["earnings", "economics", "execution", "balance_sheet"].map(id => ({
+      ...eligibilityFactor(id as typeof BMS_FACTOR_DEFINITIONS[number]["id"]),
+      evidence_refs: [],
+    })),
+  },
+});
+assert.equal(assessBmsPublicationEligibility(unsourcedFourFactorAnalysis).completeFactorCount, 0);
 
 assert.equal(BMS_FACTOR_DEFINITIONS.reduce((sum, factor) => sum + factor.weight, 0), 1);
 assert.equal(BMS_FACTOR_SCHEMA_DESCRIPTION.methodologyVersion, "BMS_V1");

@@ -30,6 +30,16 @@ The five factors remain Earnings (25%), Economics (25%), Execution (25%), Balanc
 4. AI may explain supplied measurements but cannot calculate or change scores.
 5. The report must disclose partial or unavailable comparisons.
 
+## Public shortlist eligibility
+
+The ranked Signal Tracker fails closed. A company is published only when at
+least four factors contain sourced, comparable previous/current observations,
+including the mandatory Earnings and Economics factors, and those completed
+factors represent at least 75% of model weight. A stored factor score, including
+a zero, is not evidence by itself. Records below the threshold remain in the
+internal repair universe and expose neither a composite score nor a lifecycle
+rank on the public frontend.
+
 ## Migration
 
 Legacy lifecycle responses are normalized automatically. The live research-context bridge adds genuine previous/current driver measurements and current weighted-score contributions. Previous factor-score changes remain unavailable until the BMS service exposes its stored historical factor snapshots; these fields stay `null` rather than being reconstructed. The BMS engine can populate the full `factor_analysis` object prospectively without breaking older clients.
