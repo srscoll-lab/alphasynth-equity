@@ -814,7 +814,11 @@ export default function BusinessMomentum({
           label: `${shareholdingLabels[key] || key}${item.trend ? ` (${item.trend} QoQ)` : ""}`,
           value: Number(item.value),
         }));
-      drawBars(`Shareholding pattern${dossierEnrichment?.shareholdingAsOf ? ` - ${dossierEnrichment.shareholdingAsOf}` : ""}`, shareholdingRows, 100);
+      if (shareholdingRows.some((row) => row.value > 0)) {
+        drawBars(`Shareholding pattern${dossierEnrichment?.shareholdingAsOf ? ` - ${dossierEnrichment.shareholdingAsOf}` : ""}`, shareholdingRows, 100);
+      } else {
+        write("A verified shareholding pattern was not available for this report.", 8.5, 0, slate);
+      }
       drawBars("Evidence quality", [
         { label: "Supported", value: supportedCount },
         { label: "Conflicts", value: conflictCount },
@@ -1915,29 +1919,12 @@ export default function BusinessMomentum({
                         </p>
 
                         <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                          Investigate why Business Momentum changed, or open the full
+                          Review the evidence behind this signal, or open the broader
                           AlphaSynth company research workflow.
                         </p>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() => onResearch?.(selected)}
-                          disabled={researchLoading}
-                          className={`flex items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/[0.08] text-emerald-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${
-                            researchLoading
-                              ? "opacity-70 cursor-wait"
-                              : "hover:bg-emerald-400/[0.14]"
-                          }`}
-                        >
-                          {researchLoading ? "Investigating…" : "Research Signal"}
-                          {researchLoading ? (
-                            <RefreshCw className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <ArrowRight className="w-4 h-4" />
-                          )}
-                        </button>
-
                         <button
                           onClick={() => setEvidenceOpen(true)}
                           className="flex items-center justify-center gap-2 rounded-xl border border-blue-400/30 bg-blue-400/[0.08] text-blue-300 px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] transition-all hover:bg-blue-400/[0.14]"
@@ -1963,8 +1950,8 @@ export default function BusinessMomentum({
 
                     <div className="grid md:grid-cols-2 gap-2 mt-4 pt-4 border-t border-white/[0.06]">
                       <p className="text-[9px] text-zinc-600 leading-relaxed">
-                        <span className="font-bold text-zinc-500">Research Signal:</span>{" "}
-                        Why has BMS changed? Supporting evidence, challenges and what to watch.
+                        <span className="font-bold text-zinc-500">Evidence Report:</span>{" "}
+                        See how the signal was built, what supports it and what remains uncertain.
                       </p>
 
                       <p className="text-[9px] text-zinc-600 leading-relaxed">

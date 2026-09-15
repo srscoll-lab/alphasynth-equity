@@ -1233,8 +1233,8 @@ Company: ${companyName || ticker}`;
           MANDATORY SCORECARD: At the very end of your report, after all 5 sections, output EXACTLY these 4 lines. Replace each X with a single integer from 1 to 10 — no other text on these lines:
           Transcript Transparency: X
           Disclosure Completeness: X
-          Guideline Conservatism: X
-          Governance Cleanliness: X`;
+          Guidance Realism: X
+          Governance Evidence: X`;
         modelReportDescription = "Exhaustive SEBI compliance audit and corporate disclosure report styled in Markdown.";
       } else if (mode === 'move') {
         modePromptBody = `Analyze immediate momentum, volume anomalies, structural price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker} (search as "${searchTicker}" on NSE India).
@@ -1461,8 +1461,8 @@ Company: ${companyName || ticker}`;
         scores = {
           transparency: parseFilingsScore(reportText, 'Transcript Transparency'),
           completeness: parseFilingsScore(reportText, 'Disclosure Completeness'),
-          conservatism: parseFilingsScore(reportText, 'Guideline Conservatism'),
-          governance:   parseFilingsScore(reportText, 'Governance Cleanliness'),
+          conservatism: parseFilingsScore(reportText, 'Guidance Realism') ?? parseFilingsScore(reportText, 'Guideline Conservatism'),
+          governance:   parseFilingsScore(reportText, 'Governance Evidence') ?? parseFilingsScore(reportText, 'Governance Cleanliness'),
         };
         const anyMissing = Object.values(scores).some(v => v === null);
         if (anyMissing) {
@@ -1478,8 +1478,8 @@ ${reportText.substring(0, 8000)}
 Output ONLY these 4 lines, replacing X with a single integer 1-10. No other text:
 Transcript Transparency: X
 Disclosure Completeness: X
-Guideline Conservatism: X
-Governance Cleanliness: X`;
+Guidance Realism: X
+Governance Evidence: X`;
             const scoreRes = await ai.models.generateContent({
               model: "gemini-2.5-flash",
               contents: [{ role: 'user', parts: [{ text: scorePrompt }] }],
@@ -1490,8 +1490,8 @@ Governance Cleanliness: X`;
             // Fill only values still null
             if (scores.transparency === null) scores.transparency = parseFilingsScore(scoreText, 'Transcript Transparency');
             if (scores.completeness === null) scores.completeness = parseFilingsScore(scoreText, 'Disclosure Completeness');
-            if (scores.conservatism === null) scores.conservatism = parseFilingsScore(scoreText, 'Guideline Conservatism');
-            if (scores.governance   === null) scores.governance   = parseFilingsScore(scoreText, 'Governance Cleanliness');
+            if (scores.conservatism === null) scores.conservatism = parseFilingsScore(scoreText, 'Guidance Realism');
+            if (scores.governance   === null) scores.governance   = parseFilingsScore(scoreText, 'Governance Evidence');
           } catch (scoreErr: any) {
             console.warn(`[ANALYZE/SCORES] Fallback extraction failed for ${cleanTicker}:`, scoreErr.message);
           }
@@ -1603,8 +1603,8 @@ Governance Cleanliness: X`;
           MANDATORY SCORECARD at the very end (integers 1-10, no other text on these lines):
           Transcript Transparency: X
           Disclosure Completeness: X
-          Guideline Conservatism: X
-          Governance Cleanliness: X`;
+          Guidance Realism: X
+          Governance Evidence: X`;
       } else if (mode === 'move') {
         streamModeBody = `Analyze momentum, volume anomalies, price action breaks, block trades, and catalyst drivers causing recent market movements for ${cleanTicker} (search as "${streamSearchTicker}" on NSE India). Write an institutional Markdown report.
 
@@ -2492,7 +2492,7 @@ ${rawText}` }] }],
         5. biggestRisk: the single biggest risk in one short line.
         6. signalSupport: 2-3 specific data points that justify a "${sig}" signal for this stock, plus a one-line plain-English explanation of what "${sig}" means for a retail investor here.
         7. shareholdingAsOf: the latest disclosed quarter/date for the ownership figures.
-        8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ.
+        8. shareholding: the LATEST quarter shareholding pattern with the change vs the PREVIOUS quarter for each of: promoter, FII, DII, mutual funds, retail/public. Give the percentage (number) and whether it went up / down / stable QoQ. Use one dated filing basis. Never use 0 as a placeholder for a missing figure; omit an unavailable category.
         9. sourceUrls: up to five direct URLs actually used for company history, promoter identity or shareholding.
         10. publicCommentary: a balanced summary of current, dated PUBLIC MARKET OPINION from up to five traceable sources. Include up to two professional publication/analyst views and up to two clearly separated investor-forum or social-media views (for example ValuePickr, Reddit or Stocktwits) when traceable. For every viewpoint return sourceName, sourceType (publication/analyst/investor_forum/social_media), publishedAt, stance (positive/cautious/mixed/negative), a neutral paraphrase of at most 45 words, and the direct URL. Do not treat opinions as company facts. Do not repeat allegations or present user-generated claims as verified. Exclude posts without a stable, dated page.
         Report actual figures; if a value is genuinely unavailable say N/A. Return a clear labelled list.`;
@@ -2568,6 +2568,17 @@ ${rawText}` }] }],
           ? { value: value !== null && value >= 0 && value <= 100 ? value : null, trend: trend(c.trend) }
           : { value: null, trend: null };
       };
+      const sanitizedShareholding = {
+        promoter: shCat(sh.promoter),
+        fii: shCat(sh.fii),
+        dii: shCat(sh.dii),
+        mutualFund: shCat(sh.mutualFund || sh.mf),
+        retail: shCat(sh.retail || sh.public),
+      };
+      // A wholly unavailable table sometimes arrives as five zeroes. That cannot
+      // describe a share register, so withhold the block instead of showing false precision.
+      const hasUsableShareholding = Object.values(sanitizedShareholding)
+        .some((category) => category.value !== null && category.value > 0);
 
       const payload = {
         ticker: cleanTicker,
@@ -2586,14 +2597,8 @@ ${rawText}` }] }],
           dataPoints: Array.isArray(parsed.signalDataPoints) ? parsed.signalDataPoints.filter((x: any) => typeof x === 'string' && x.trim()).slice(0, 3) : [],
           plainExplanation: parsed.signalPlainExplanation || null,
         },
-        shareholding: {
-          promoter: shCat(sh.promoter),
-          fii: shCat(sh.fii),
-          dii: shCat(sh.dii),
-          mutualFund: shCat(sh.mutualFund || sh.mf),
-          retail: shCat(sh.retail || sh.public),
-        },
-        shareholdingAsOf: parsed.shareholdingAsOf || null,
+        shareholding: hasUsableShareholding ? sanitizedShareholding : {},
+        shareholdingAsOf: hasUsableShareholding ? (parsed.shareholdingAsOf || null) : null,
         sourceUrls: Array.isArray(parsed.sourceUrls)
           ? parsed.sourceUrls.filter((url: any) => typeof url === "string" && /^https:\/\//i.test(url)).slice(0, 5)
           : [],

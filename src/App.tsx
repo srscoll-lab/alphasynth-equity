@@ -2044,8 +2044,8 @@ ${list}
       const metrics = {
         transparency: serverScores.transparency ?? parseMetric('Transcript Transparency'),
         completeness: serverScores.completeness ?? parseMetric('Disclosure Completeness'),
-        conservatism: serverScores.conservatism ?? parseMetric('Guideline Conservatism'),
-        governance:   serverScores.governance   ?? parseMetric('Governance Cleanliness'),
+        conservatism: serverScores.conservatism ?? parseMetric('Guidance Realism') ?? parseMetric('Guideline Conservatism'),
+        governance:   serverScores.governance   ?? parseMetric('Governance Evidence') ?? parseMetric('Governance Cleanliness'),
       };
 
       const filingsReportData = {
@@ -2798,8 +2798,8 @@ ${list}
                           Not what you meant? Other matches: {lastReport.candidates.filter((c: any) => c.symbol !== lastReport.ticker).map((c: any) => `${c.name} (${c.symbol})`).join(' · ')}
                         </p>
                       )}
-                      <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-1.5">Institutional Audit • Grounding Active</p>
-                      <p className="text-[10px] text-zinc-500 italic mt-1 normal-case tracking-normal font-normal">AI-generated data analysis only. Not a SEBI-registered Research Analyst. This is not investment advice or a recommendation to buy, sell, or hold any security.</p>
+                      <p className="text-[10px] text-zinc-300 font-bold uppercase tracking-widest mt-1.5">AI research review · sources linked where available</p>
+                      <p className="text-[10px] text-zinc-400 italic mt-1 normal-case tracking-normal font-normal">AI-generated data analysis only. Not a SEBI-registered Research Analyst. This is not investment advice or a recommendation to buy, sell, or hold any security.</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -2832,14 +2832,14 @@ ${list}
                         <Zap className="w-12 h-12" />
                       </div>
                       <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <Zap className="w-4 h-4 text-gold fill-current" /> Cross-Analysis Suite
+                        <Zap className="w-4 h-4 text-gold fill-current" /> Choose a research view
                       </h3>
                       <p className="text-[10px] text-zinc-400 font-medium leading-normal mb-4">
-                        Switch research lens and run immediate multi-angle AI audits on <strong>{lastReport.ticker}</strong>:
+                        Continue the review of <strong>{lastReport.ticker}</strong> with a different research question:
                       </p>
                       <div className="grid grid-cols-1 gap-2.5">
                          {[
-                           { id: 'deep_dive', name: '🔎 Equity Deep Dive', desc: 'Institutional conviction report' },
+                           { id: 'deep_dive', name: '🔎 Equity Deep Dive', desc: 'Company fundamentals and risks' },
                            { id: 'earnings_intelligence', name: '🧠 Earnings Intelligence', desc: 'Unified concall + results report' },
                            { id: 'move', name: '🚀 Explain the Move', desc: 'Analyze daily price spikes' }
                          ].map((m) => {
@@ -3168,111 +3168,6 @@ ${list}
                           </div>
                         );
                       })()}
-                      {/* Interactive Visual Differential Widgets based on Mode */}
-                      {(lastReport.mode === 'earnings' || lastReport.mode === 'earnings_intelligence') && lastReport.mode !== 'earnings_intelligence' && (
-                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Operational Execution Diagnostic
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">EBITDA Margin Trend</p>
-                              <p className="text-sm font-bold text-emerald-400 flex items-center gap-1">Expanding (+60bps YoY)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Guidance Outlook</p>
-                              <p className="text-xs font-bold text-white truncate">Upward capex trajectory</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">C-Suite Response Speed</p>
-                              <p className="text-sm font-bold text-gold">High Transparency (8.5/10)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Operational Health Check</p>
-                              <p className="text-xs font-mono text-emerald-400 font-bold uppercase py-0.5 px-2 bg-emerald-500/10 rounded w-max mt-0.5">HEALTHY</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {lastReport.mode === 'move' && (
-                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Catalyst Strength & Technical Speedometer
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Trading RSI-14</p>
-                              <p className="text-sm font-bold text-amber-400">72.5 (Mildly Overbought)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">NSE Delivery Ratio</p>
-                              <p className="text-xs font-bold text-white truncate">2.4x median (High Accumulation)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Sector Sympathy Correlation</p>
-                              <p className="text-sm font-bold text-gold">Parallel move (Industry rally)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Trend Velocity</p>
-                              <p className="text-xs font-mono text-emerald-400 font-bold uppercase py-0.5 px-2 bg-emerald-500/10 rounded w-max mt-0.5">BREAKOUT</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {lastReport.mode === 'filings' && (
-                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Governance & Integrity Shield
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Pledged Promoter Shares</p>
-                              <p className="text-sm font-bold text-emerald-400">0.00% (Safest Band)</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Forensic Alert Alert</p>
-                              <p className="text-sm font-bold text-white">Safe / No red flags</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Auditors Signature</p>
-                              <p className="text-xs font-bold text-gold truncate">Unqualified Clean Report</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Transparency Index</p>
-                              <p className="text-xs font-mono text-emerald-400 font-bold uppercase py-0.5 px-2 bg-emerald-500/10 rounded w-max mt-0.5">A+ GRADE</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {lastReport.mode === 'deep_dive' && (
-                        <div className="mb-10 p-6 bg-gold/5 border border-gold/20 rounded-2xl">
-                          <h4 className="text-[10px] font-black text-gold uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                            <span className="w-2 h-2 rounded-full bg-amber animate-pulse" /> Strategic Moat & Conviction Scope
-                          </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Growth Runway</p>
-                              <p className="text-sm font-bold text-emerald-400">Multi-year structural scale</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Valuation Position</p>
-                              <p className="text-xs font-bold text-white truncate">Within Fair Value SD</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Target Entry Mode</p>
-                              <p className="text-xs font-bold text-gold truncate">High Confidence Accumulation</p>
-                            </div>
-                            <div className="p-3.5 bg-black/40 rounded-xl border border-app-border">
-                              <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">Strategic Audit</p>
-                              <p className="text-xs font-mono text-emerald-400 font-bold uppercase py-0.5 px-2 bg-emerald-500/10 rounded w-max mt-0.5">COMPLETED</p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       {lastReport.mode === 'earnings_intelligence' && earningsIntelReport ? (
                         <div className="space-y-6">
                           {/* Quarter + Reliability header */}
@@ -4318,6 +4213,9 @@ ${list}
           // Full AlphaSynth Deep Dive.
           // Deliberately separate from the focused BMS signal investigation.
           setTicker(company.symbol);
+          setBmsResearchContext(company);
+          setBmsResearchText("");
+          setBmsResearchError("");
 
           setResolvedCompany({
             name: company.company_name || company.symbol,
@@ -5292,7 +5190,7 @@ ${list}
                     const cats = ([
                       ['Promoter', sh.promoter], ['FII', sh.fii], ['DII', sh.dii], ['Mutual Funds', sh.mutualFund], ['Retail / Public', sh.retail],
                     ] as [string, any][]).filter(([, c]) => c && c.value != null);
-                    if (!cats.length) return null;
+                    if (!cats.some(([, c]) => Number(c.value) > 0)) return null;
                     const arrow = (t: string) => t === 'up' ? { s: '▲', c: 'text-emerald-400', l: 'Increasing' } : t === 'down' ? { s: '▼', c: 'text-rose-400', l: 'Decreasing' } : { s: '→', c: 'text-zinc-400', l: 'Stable' };
                     return (
                       <div className="bg-app-surface border border-app-border rounded-3xl p-6 md:p-8 relative overflow-hidden mt-6 shadow-2xl">
@@ -5407,16 +5305,16 @@ ${list}
                      {/* Left Workspace Panel */}
                      <div className="lg:col-span-8 space-y-8">
                         <div>
-                           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white mb-2 leading-none">SEBI DISCLOSURES & MANAGEMENT MEETS</h2>
+                           <h2 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white mb-2 leading-none">FILINGS & MANAGEMENT COMMENTARY</h2>
                            <p className="text-zinc-400 text-xs md:text-sm max-w-xl leading-relaxed">
-                              Forensically track corporate filings, evaluate transparency metrics, index investor transcript guidance conservatism, and audit board decisions.
+                              Review dated company filings, compare management statements over time, and flag gaps between guidance and reported outcomes.
                            </p>
                         </div>
 
                         {/* Search and Trigger Console */}
                         <div className="bg-app-surface border border-app-border rounded-3xl p-6 shadow-2xl relative overflow-hidden">
                            <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-[50px] -z-10 rounded-full" />
-                           <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Auditing Pipeline Registry</h3>
+                           <h3 className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-3">Company filing review</h3>
                            
                            <div className="flex flex-col sm:flex-row gap-3 mb-6">
                               <input 
@@ -5438,7 +5336,7 @@ ${list}
                                    </>
                                 ) : (
                                    <>
-                                      <FileText className="w-3.5 h-3.5" /> Run Filings Audit
+                                      <FileText className="w-3.5 h-3.5" /> Review Filings
                                    </>
                                 )}
                               </button>
@@ -5493,8 +5391,8 @@ ${list}
                                     {[
                                       { label: "Transcript Transparency", score: filingsReport.metrics.transparency, desc: "Answering direct analyst inquiries", color: "text-blue-400", bg: "bg-blue-400/5", border: "border-blue-400/20" },
                                       { label: "Disclosure Completeness", score: filingsReport.metrics.completeness, desc: "Level of SEBI compliance details", color: "text-emerald-400", bg: "bg-emerald-400/5", border: "border-emerald-400/20" },
-                                      { label: "Guideline Conservatism", score: filingsReport.metrics.conservatism, desc: "Realism level of outlook goals", color: "text-amber-400", bg: "bg-amber-400/5", border: "border-amber-400/20" },
-                                      { label: "Governance Cleanliness", score: filingsReport.metrics.governance, desc: "Pledges & board independence metrics", color: "text-rose-400", bg: "bg-rose-400/5", border: "border-rose-400/20" }
+                                      { label: "Guidance Realism", score: filingsReport.metrics.conservatism, desc: "How measured the stated outlook appears", color: "text-amber-400", bg: "bg-amber-400/5", border: "border-amber-400/20" },
+                                      { label: "Governance Evidence", score: filingsReport.metrics.governance, desc: "Pledge, auditor and board evidence", color: "text-rose-400", bg: "bg-rose-400/5", border: "border-rose-400/20" }
                                     ].map((m, idx) => (
                                        <div key={idx} className={`p-4 rounded-xl border ${m.border} ${m.bg} flex flex-col justify-between`}>
                                           <div>
@@ -5641,24 +5539,24 @@ ${list}
                      {/* Right Advisory Sidebar Panel */}
                      <div className="lg:col-span-4 space-y-6">
                         <div className="p-6 bg-app-surface border border-app-border rounded-3xl">
-                           <span className="text-[8px] font-black px-2 py-0.5 bg-sky-400/[0.07] border border-sky-400/20 text-sky-300 tracking-widest rounded uppercase">Compliance Node</span>
-                           <h4 className="text-sm font-bold text-white uppercase mt-4 mb-2">Corporate Disclosures Scope</h4>
-                           <p className="text-xs text-zinc-500 leading-relaxed font-semibold">
-                              This model specializes in examining management honesty, transcript inconsistencies, SEBI filing transparency audits, and capital reallocation pledge fluctuations.
+                           <span className="text-[8px] font-black px-2 py-0.5 bg-sky-400/[0.07] border border-sky-400/20 text-sky-300 tracking-widest rounded uppercase">What this review covers</span>
+                           <h4 className="text-sm font-bold text-white uppercase mt-4 mb-2">Company disclosures</h4>
+                           <p className="text-xs text-zinc-400 leading-relaxed font-semibold">
+                              The review examines dated filings and management commentary. It highlights changes in guidance, disclosure completeness and reported outcomes.
                            </p>
 
                            <div className="mt-6 pt-6 border-t border-app-border space-y-4">
                               <div className="flex gap-3">
                                  <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
-                                 <p className="text-xs text-zinc-400 font-bold">Auto-scrapes NSE corporate announcements and annual returns.</p>
+                                 <p className="text-xs text-zinc-300 font-bold">Reviews NSE company announcements and annual reports.</p>
                               </div>
                               <div className="flex gap-3">
                                  <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
-                                 <p className="text-xs text-zinc-400 font-bold">Calculates guideline conservatism indexes to spot management hyperbole.</p>
+                                 <p className="text-xs text-zinc-300 font-bold">Compares the wording and measurability of guidance across reporting periods.</p>
                               </div>
                               <div className="flex gap-3">
                                  <div className="w-1.5 h-1.5 rounded-full bg-amber mt-1.5" />
-                                 <p className="text-xs text-zinc-400 font-bold">Extracts explicit answers to contrarian questions from analyst conferences.</p>
+                                 <p className="text-xs text-zinc-300 font-bold">Separates disclosed facts from unanswered questions in analyst calls.</p>
                               </div>
                            </div>
                         </div>
@@ -5667,9 +5565,9 @@ ${list}
                            <div className="absolute top-0 right-0 p-4 opacity-5 text-white">
                               <ShieldCheck className="w-16 h-16" />
                            </div>
-                           <h4 className="text-xs font-black text-zinc-400 uppercase tracking-wider mb-2">Filing Integrity Audit</h4>
+                           <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wider mb-2">Evidence limitations</h4>
                            <p className="text-[10px] text-zinc-500 leading-relaxed mb-4">
-                              Cross-references board independent resolutions, pledge updates, and audit transparency vectors. Updates are calculated in close compliance with Indian SEBI LODR rules.
+                              Results depend on the dated sources retrieved for the company. Missing evidence remains unavailable and should be checked against the latest exchange filing.
                            </p>
                            <button 
                              onClick={() => { setActiveTab('news'); scrollToWorkflow(); }}
