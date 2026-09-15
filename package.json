@@ -15,6 +15,7 @@
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
     "verify:dossier-readiness": "node --import tsx scripts/verify-dossier-readiness.ts",
     "verify:peer-metrics": "node --experimental-strip-types scripts/verify-peer-metric-validation.ts",
+    "verify:deep-dive-boundary": "node --experimental-strip-types scripts/verify-deep-dive-investment-boundary.ts",
     "build:expectation-delivery-pilot": "node --import tsx scripts/build-expectation-delivery-pilot.ts",
     "verify:ai-transition": "node --import tsx scripts/verify-ai-transition-schema.ts && node --import tsx scripts/verify-ai-transition-sources.ts && node --import tsx scripts/verify-ai-transition-history.ts && node --import tsx scripts/verify-ai-transition-outcomes.ts",
     "render:ai-transition": "node --import tsx scripts/render-ai-transition-history.ts",

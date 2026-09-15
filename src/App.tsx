@@ -363,9 +363,8 @@ const getStopLossVsLtpLabel = (slStr: string, priceStr: string, ltp: number) => 
 
 // Derive the Signal/rating from a report. Prefers the explicit, AI-justified
 // "SIGNAL: <POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS> — …" line the prompt now requires.
-// Falls back to the legacy keyword heuristic only for older reports without it.
-// (The old heuristic checked includes('buy') FIRST, so any report with a bull case
-//  — i.e. almost all of them — was forced to "Positive". That bias is fixed here.)
+// If that explicit line is absent, remain neutral. Words such as "buy" inside an
+// attributed analyst view must never become AlphaSynth's own stance.
 // Google Analytics 4 custom-event helper. No-ops safely if gtag hasn't loaded
 // (e.g. ad-blocker, dev, or before the GA4 Measurement ID is configured).
 const trackEvent = (name: string, params?: Record<string, any>): void => {
@@ -379,8 +378,17 @@ const deriveRating = (report: string): string => {
     const s = m[1].toUpperCase();
     return s === 'POSITIVE' ? 'buy' : s === 'NEGATIVE' ? 'sell' : s === 'CAUTIOUS' ? 'cautious' : 'hold';
   }
-  const lower = report.toLowerCase();
-  return lower.includes('buy') ? 'buy' : lower.includes('sell') ? 'sell' : 'hold';
+  return 'hold';
+};
+
+// Keep the legacy internal rating values for stored-report compatibility, but never
+// present them as AlphaSynth trading instructions in the research UI or exports.
+const researchStanceLabel = (rating?: string): string => {
+  const normalized = String(rating || '').toLowerCase();
+  if (normalized === 'buy') return 'Positive';
+  if (normalized === 'sell') return 'Negative';
+  if (normalized === 'cautious') return 'Cautious';
+  return 'Neutral';
 };
 
 // Pull the one-sentence justification after the report's "SIGNAL: <verdict> — <reason>" line.
@@ -821,33 +829,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (lastReport) {
-      const isLtpMatch = scripLtp > 0 && scripLtpTicker === lastReport.ticker.toUpperCase();
-      const livePriceToUse = isLtpMatch ? scripLtp : (lastReport.parsedLtp || 0);
-      const ltp = livePriceToUse;
-      const inRange = (v: number) => ltp > 0 && v >= ltp * 0.5 && v <= ltp * 2.0;
-
-      const rawEntry  = lastReport.entryPrice  ? (lastReport.entryPrice  > 10 ? lastReport.entryPrice  : lastReport.entryPrice  * 100) : 0;
-      const rawTarget = lastReport.targetPrice ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100) : 0;
-      const rawSL     = lastReport.stopLoss    ? (lastReport.stopLoss    > 10 ? lastReport.stopLoss    : lastReport.stopLoss    * 100) : 0;
-
-      const defaultPrice = (rawEntry && inRange(rawEntry)) ? rawEntry : ltp;
-      const roundedPrice = defaultPrice > 0 ? Math.round(defaultPrice * 100) / 100 : ltp;
-      setTradePrice(roundedPrice.toFixed(2));
-
-      const defaultTarget = (rawTarget && inRange(rawTarget)) ? rawTarget : roundedPrice * 1.05;
-      setTradeTargetPrice((Math.round(defaultTarget * 100) / 100).toFixed(2));
-
-      const defaultSL = (rawSL && inRange(rawSL)) ? rawSL : roundedPrice * 0.95;
-      setTradeStopLoss((Math.round(defaultSL * 100) / 100).toFixed(2));
-    } else {
-      // Set defaults using scripLtp when lastReport is null
-      const isLtpMatch = scripLtp > 0 && scripLtpTicker === (ticker || '').toUpperCase();
-      const basePrice = isLtpMatch ? scripLtp : 0;
-      setTradePrice(basePrice.toFixed(2));
-      setTradeTargetPrice(basePrice > 0 ? (basePrice * 1.05).toFixed(2) : '0.00');
-      setTradeStopLoss(basePrice > 0 ? (basePrice * 0.95).toFixed(2) : '0.00');
-    }
+    const activeTicker = (lastReport?.ticker || ticker || '').toUpperCase();
+    const isLtpMatch = scripLtp > 0 && scripLtpTicker === activeTicker;
+    const referencePrice = isLtpMatch ? scripLtp : (lastReport?.parsedLtp || 0);
+    setTradePrice(referencePrice > 0 ? referencePrice.toFixed(2) : '0.00');
+    // AlphaSynth does not manufacture target or stop levels. These fields remain
+    // empty even in the currently disabled broker prototype.
+    setTradeTargetPrice('');
+    setTradeStopLoss('');
   }, [lastReport, showTradeModal, scripLtp, scripLtpTicker, ticker]);
 
   const executeTrade = () => {
@@ -1137,19 +1126,9 @@ export default function App() {
     const inr = (v: number) => `₹${Number(v).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const num = (v: any) => (v === null || v === undefined || isNaN(Number(v))) ? 'N/A' : v;
 
-    // --- Trade parameters (mirror the in-app Trade Parameters logic exactly) ---
+    // --- Market context. AlphaSynth does not calculate entry, exit or target levels. ---
     const ltpMatch = scripLtp > 0 && scripLtpTicker === tkrU;
     const ltpForCalc = ltpMatch ? scripLtp : (lr.parsedLtp || 0);
-    const useLtpDerived = lr.mode === 'move' || lr.mode === 'earnings_intelligence';
-    const isValidVsLtp = (p: number) => ltpForCalc > 0 && p >= ltpForCalc * 0.5 && p <= ltpForCalc * 2.0;
-    const adj = (v: number) => v ? (v > 10 ? v : v * 100) : 0;
-    const rawTarget = adj(lr.targetPrice), rawEntry = adj(lr.entryPrice), rawStop = adj(lr.stopLoss);
-    const targetIsEst = !useLtpDerived && (!rawTarget || !isValidVsLtp(rawTarget));
-    const entryIsEst = !useLtpDerived && (!rawEntry || !isValidVsLtp(rawEntry));
-    const stopIsEst = !useLtpDerived && (!rawStop || !isValidVsLtp(rawStop));
-    const displayTarget = useLtpDerived ? ltpForCalc * 1.03 : (targetIsEst ? ltpForCalc * 1.05 : rawTarget);
-    const displayEntry = useLtpDerived ? ltpForCalc : (entryIsEst ? ltpForCalc : rawEntry);
-    const displayStop = useLtpDerived ? ltpForCalc * 0.98 : (stopIsEst ? ltpForCalc * 0.95 : rawStop);
 
     const sigMap: any = { buy: ['Positive', 'buy'], sell: ['Negative', 'sell'], hold: ['Neutral', 'hold'], cautious: ['Cautious', 'cautious'] };
     const sig = sigMap[(lr.rating || 'hold').toLowerCase()] || sigMap.hold;
@@ -1163,22 +1142,20 @@ export default function App() {
       <div class="sub">${modeLabel} &middot; Confidence: ${(lr.confidence || 'medium').toUpperCase()} &middot; Generated ${dateStr}</div>
     </div>`;
 
-    // Trade parameters table
+    // Market context table
     const ltpTs = ltpAsOf ? new Date(ltpAsOf).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false }) : '';
     const ltpCell = ltpMatch
       ? `${inr(scripLtp)} <span class="chg ${ltpPercentChange >= 0 ? 'up' : 'dn'}">(${ltpPercentChange >= 0 ? '+' : ''}${ltpPercentChange.toFixed(2)}%)</span>${ltpTs ? ` <span class="muted">· as of ${ltpTs} IST</span>` : ''}`
       : (ltpForCalc > 0 ? `${inr(ltpForCalc)} <span class="muted">(from report)</span>` : 'Unavailable');
     let params = `<tr><td>Last Traded Price (LTP)</td><td>${ltpCell}</td></tr>`;
-    params += `<tr><td>Entry Zone${entryIsEst ? ' (est.)' : ''}</td><td>${displayEntry > 0 ? inr(displayEntry) : 'N/A'}</td></tr>`;
-    params += `<tr><td>Target Price${useLtpDerived ? ' (+3%)' : targetIsEst ? ' (est.)' : ''}</td><td>${displayTarget > 0 ? inr(displayTarget) : 'N/A'}</td></tr>`;
-    params += `<tr><td>Stop Loss${useLtpDerived ? ' (-2%)' : stopIsEst ? ' (est.)' : ''}</td><td>${displayStop > 0 ? inr(displayStop) : 'N/A'}</td></tr>`;
     if (week52 && week52.high > week52.low) {
       const pct = Math.max(0, Math.min(100, ((ltpForCalc - week52.low) / (week52.high - week52.low)) * 100));
       params += `<tr><td>52-Week Low</td><td>${inr(week52.low)}</td></tr>`;
       params += `<tr><td>52-Week High</td><td>${inr(week52.high)}</td></tr>`;
       if (ltpForCalc > 0) params += `<tr><td>52-Week Position</td><td>${Math.round(pct)}% of range</td></tr>`;
     }
-    h += `<h2>Trade Parameters</h2><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${params}</tbody></table>`;
+    h += `<h2>Market Context</h2><table class="data-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>${params}</tbody></table>`;
+    h += `<p class="muted">AlphaSynth does not calculate entry, exit, target-price or stop-loss levels. Any analyst target in the report is an attributed external view and must include a traceable source.</p>`;
 
     // Conviction engine scores (X/10)
     const m = lr.metrics || {};
@@ -1585,6 +1562,7 @@ export default function App() {
     return {
       ticker: clean(lr.ticker) || 'this stock',
       rating: (clean(lr.rating) || 'hold').toUpperCase(),
+      stance: researchStanceLabel(clean(lr.rating)),
       bull, bear, appUrl, snip,
       metrics: lr.metrics || null,
     };
@@ -1603,7 +1581,7 @@ export default function App() {
 | Risk | ${mScore(s.metrics.risk)} |` : "";
 
     return `### 🚀 Institutional Audit: ${s.ticker} ($${s.ticker})
-**Conviction Rating: ${s.rating}**
+**Research Stance: ${s.stance}**
 
 ---
 
@@ -1631,7 +1609,7 @@ ${s.bear || "Refer to the full audit for the risk deep-dive."}
     const s = marketingSource();
     return `**New DD on ${s.ticker}** 📊
 
-Rating: **${s.rating}**
+Research stance: **${s.stance}**
 
 Quick Bull Case: ${s.bull ? s.snip(s.bull, 200) : 'See the full report for the bull thesis.'}
 Risk Alpha: ${s.bear ? s.snip(s.bear, 150) : 'See the full report for the risk analysis.'}
@@ -1644,7 +1622,7 @@ Full AI-powered research report: [${s.appUrl}?ticker=${s.ticker}]`;
     const s = marketingSource();
     return `🚀 I just used my AI Grounding Engine to analyze ${s.ticker} on the NSE.
 
-The data reveals a compelling ${s.rating} case based on institutional-grade metrics.
+The research evidence indicates a ${s.stance.toLowerCase()} stance based on the available metrics.
 
 Key Highlights:
 ✅ Bull Case: ${s.bull ? s.snip(s.bull, 150) : 'See the full report for the bull thesis.'}
@@ -1662,7 +1640,7 @@ Check out the full live report here: ${s.appUrl}?ticker=${s.ticker}
   const getTwitterPitch = () => {
     if (!lastReport) return "";
     const s = marketingSource();
-    return `Deep Dive: ${s.ticker} ($${s.ticker}) is looking like a ${s.rating} 📊
+    return `Deep Dive: ${s.ticker} ($${s.ticker}) currently has a ${s.stance.toLowerCase()} research stance 📊
 
 Quick Breakdown:
 📈 Bull Case: ${s.bull ? s.snip(s.bull, 80) : 'See the full report.'}
@@ -1718,7 +1696,7 @@ ${list}
         summary: lastReport.rawReport || lastReport.summary,
         bullCase: lastReport.bullCase || lastReport.rawReport,
         bearCase: lastReport.bearCase || "Contrarian view not provided.",
-        rating: lastReport.rating || (lastReport.rawReport?.toLowerCase().includes('buy') ? 'buy' : lastReport.rawReport?.toLowerCase().includes('sell') ? 'sell' : 'hold'),
+        rating: lastReport.rating || deriveRating(lastReport.rawReport || ''),
         createdAt: serverTimestamp(),
         authorId: user.uid,
         authorName: user.displayName || 'Anonymous Analyst',
@@ -2668,7 +2646,8 @@ ${list}
           bear: /(?:\*\*|#+)\s*(?:2\.\s*)?THE CONTRARIAN BEAR CASE/i,
           metrics: /(?:\*\*|#+)\s*(?:3\.\s*)?INSTITUTIONAL CONVICTION METRICS/i,
           earnings: /(?:\*\*|#+)\s*(?:4\.\s*)?EARNINGS & CATALYSTS/i,
-          targets: /(?:\*\*|#+)\s*(?:5\.\s*)?ANALYST TARGETS/i
+          targets: /(?:\*\*|#+)\s*(?:5\.\s*)?(?:EXTERNAL ANALYST VIEWS|ANALYST TARGETS)/i,
+          scorecard: /^Valuation Intelligence\s*:/im
         };
 
         const bullMatch = report.match(patterns.bull);
@@ -2692,6 +2671,7 @@ ${list}
           bullCase: getSection(patterns.bull, patterns.bear), 
           bearCase: getSection(patterns.bear, patterns.metrics),
           earnings: getSection(patterns.earnings, patterns.targets),
+          analystViews: getSection(patterns.targets, patterns.scorecard),
           metrics,
           ticker: ticker.toUpperCase(),
           companyName: (resolvedCompanyRef.current && resolvedCompanyRef.current.symbol === ticker.toUpperCase()) ? resolvedCompanyRef.current.name : ticker.toUpperCase(),
@@ -2699,9 +2679,6 @@ ${list}
           rating: deriveRating(report),
           sourceUrl: usedUrl,
           mode: activeMode,
-          entryPrice: parsePrice('Tactical Entry Zone'),
-          targetPrice: parsePrice('Consensus Target Price'),
-          stopLoss: parsePrice('Strategic Stop Loss'),
           parsedLtp: parsedLtpValue,
           confidence: (data.confidence as 'high' | 'medium' | 'low') || (report.length > 3000 ? 'high' : report.length > 1000 ? 'medium' : 'low'),
           scrapeQuality
@@ -2882,7 +2859,7 @@ ${list}
                      <div className="absolute top-0 right-0 p-4 opacity-10 text-zinc-800">
                        <Target className="w-12 h-12" />
                      </div>
-                     <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-6">Trade Parameters</h3>
+                     <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-6">Market Context</h3>
                      <div className="grid grid-cols-1 gap-4">
                         {(() => {
                           const ltpVerified = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase();
@@ -2912,7 +2889,7 @@ ${list}
                              </p>
                            ) : (
                              <p className="text-sm font-medium text-zinc-500 italic">
-                               {isLtpFetching ? 'Fetching price…' : 'Live price unavailable — please confirm on your broker before trading.'}
+                               {isLtpFetching ? 'Fetching price…' : 'Market price unavailable from the current data source.'}
                              </p>
                            )}
                         </div>
@@ -2928,10 +2905,10 @@ ${list}
                           const band = pct <= 25 ? 'low' : pct >= 75 ? 'high' : 'mid';
                           const pctColor = band === 'low' ? 'text-emerald-400' : band === 'high' ? 'text-rose-400' : 'text-gold';
                           const interp = band === 'low'
-                            ? 'Trading near 52-week lows — stock has significant room to recover to previous highs'
+                            ? 'The current price is in the lower quarter of its disclosed 52-week range.'
                             : band === 'high'
-                            ? 'Trading near 52-week highs — limited upside to historical peak, assess carefully'
-                            : 'Trading in mid-range — balanced risk/reward based on historical price action';
+                            ? 'The current price is in the upper quarter of its disclosed 52-week range.'
+                            : 'The current price is in the middle half of its disclosed 52-week range.';
                           const fmt = (v: number) => `₹${v.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
                           return (
                             <div className="p-4 bg-black/40 rounded-xl border border-app-border">
@@ -2953,102 +2930,10 @@ ${list}
                             </div>
                           );
                         })()}
-                        {(() => {
-                           // For move and earnings_intelligence, derive from live LTP only.
-                           // For deep_dive, use parser-extracted prices with LTP-range sanity check.
-                           const ltpForCalc = scripLtp > 0 && scripLtpTicker === (lastReport?.ticker || ticker).toUpperCase()
-                             ? scripLtp
-                             : (lastReport?.parsedLtp || 0);
-                           const useLtpDerived = lastReport.mode === 'move' || lastReport.mode === 'earnings_intelligence';
-
-                           // Reject any extracted price that is outside 50%–200% of LTP —
-                           // catches small numbers like "12" from "12x PE" or "12%" in the report.
-                           const isValidVsLtp = (price: number) =>
-                             ltpForCalc > 0 && price >= ltpForCalc * 0.5 && price <= ltpForCalc * 2.0;
-
-                           const rawTarget = lastReport.targetPrice
-                             ? (lastReport.targetPrice > 10 ? lastReport.targetPrice : lastReport.targetPrice * 100)
-                             : 0;
-                           const rawEntry = lastReport.entryPrice
-                             ? (lastReport.entryPrice > 10 ? lastReport.entryPrice : lastReport.entryPrice * 100)
-                             : 0;
-                           const rawStop = lastReport.stopLoss
-                             ? (lastReport.stopLoss > 10 ? lastReport.stopLoss : lastReport.stopLoss * 100)
-                             : 0;
-
-                           const targetIsEst = !useLtpDerived && (!rawTarget || !isValidVsLtp(rawTarget));
-                           const entryIsEst  = !useLtpDerived && (!rawEntry  || !isValidVsLtp(rawEntry));
-                           const stopIsEst   = !useLtpDerived && (!rawStop   || !isValidVsLtp(rawStop));
-
-                           const displayTarget = useLtpDerived ? ltpForCalc * 1.03 : (targetIsEst ? ltpForCalc * 1.05 : rawTarget);
-                           const displayEntry  = useLtpDerived ? ltpForCalc         : (entryIsEst  ? ltpForCalc         : rawEntry);
-                           const displayStop   = useLtpDerived ? ltpForCalc * 0.98  : (stopIsEst   ? ltpForCalc * 0.95  : rawStop);
-
-                           const fmt = (v: number) => v > 0 ? `₹${v.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—';
-                           return (
-                             <>
-                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Target Price{useLtpDerived ? ' (+3%)' : targetIsEst ? ' (est.)' : ''}
-                                 </p>
-                                 <p className="text-xl font-display font-black text-positive">{fmt(displayTarget)}</p>
-                               </div>
-                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Entry Zone{useLtpDerived ? ' (at LTP)' : entryIsEst ? ' (est.)' : ''}
-                                 </p>
-                                 <p className="text-xl font-display font-black text-white">{fmt(displayEntry)}</p>
-                               </div>
-                               <div className="p-4 bg-black/40 rounded-xl border border-app-border">
-                                 <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1">
-                                   Stop Loss{useLtpDerived ? ' (-2%)' : stopIsEst ? ' (est.)' : ''}
-                                 </p>
-                                 <p className="text-xl font-display font-black text-negative">{fmt(displayStop)}</p>
-                               </div>
-                             </>
-                           );
-                        })()}
                      </div>
-                     <button
-                        disabled
-                        className="w-full mt-6 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed flex items-center justify-center gap-2"
-                      >
-                        <LockIcon className="w-3.5 h-3.5" /> Broker Execution — Coming Soon
-                      </button>
-
-                      {/* Actionable Direct Broker Gateways */}
-                      <div className="mt-6 pt-4 border-t border-zinc-800/80 space-y-2">
-                         <p className="text-[8px] text-zinc-500 font-black uppercase tracking-widest leading-none mb-2 text-center">Actionable Web Broker Routing</p>
-                         <div className="grid grid-cols-3 gap-1.5">
-                            <a 
-                              href={`https://kite.zerodha.com`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
-                            >
-                               Kite
-                            </a>
-                            <a 
-                              href={`https://groww.in/search?q=${lastReport.ticker.replace(".NS", "")}`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
-                            >
-                               Groww
-                            </a>
-                            <a 
-                              href={`https://upstox.com`} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="px-1.5 py-2.5 bg-zinc-900 border border-app-border rounded-xl text-[9px] font-black text-center text-zinc-400 hover:bg-gold/15 hover:text-gold hover:border-gold/50 transition-all uppercase tracking-tight block hover:scale-[1.03]"
-                            >
-                               Upstox
-                            </a>
-                         </div>
-                         <p className="text-[8px] text-center text-zinc-650 font-bold leading-normal uppercase tracking-wider mt-2">
-                           Direct web-routing nodes for instant execution.
-                         </p>
-                      </div>
+                     <p className="mt-5 text-[10px] leading-relaxed text-zinc-400">
+                       AlphaSynth does not calculate entry, exit, target-price or stop-loss levels. Any analyst target in the report must identify its external source and publication date.
+                     </p>
                   </div>
 
                   {/* Conviction Engine — only meaningful for deep_dive which outputs all 5 scores */}
@@ -3364,6 +3249,16 @@ ${list}
                             );
                           })()}
 
+                          <section className="mt-12">
+                            <h3 className="text-xs font-black text-sky-300 uppercase tracking-[0.2em] mb-3">External Analyst Views</h3>
+                            <p className="mb-5 text-[10px] leading-relaxed text-zinc-500">
+                              These are attributed third-party views, not AlphaSynth targets or trading instructions.
+                            </p>
+                            <div className="prose prose-invert prose-orange max-w-none prose-sm leading-relaxed text-zinc-300 p-5 bg-app-surface/30 border border-app-border rounded-xl">
+                              <MD>{lastReport.analystViews || 'No traceable external analyst target or recommendation was available in the retrieved evidence. AlphaSynth has not estimated one.'}</MD>
+                            </div>
+                          </section>
+
                           {/* Improvement 5 — Valuation Context by time horizon (factual, not advice) */}
                           {(() => {
                             const subj = peerComparison.find((r: any) => r.isTarget);
@@ -3497,9 +3392,9 @@ ${list}
                         <span className={`text-4xl md:text-5xl font-display font-black uppercase tracking-[0.1em] ${
                             lastReport.rating === 'buy' ? 'text-positive shadow-[0_0_20px_rgba(20,184,166,0.2)]' : lastReport.rating === 'sell' ? 'text-negative shadow-[0_0_20px_rgba(244,63,94,0.2)]' : 'text-gold'
                         }`}>
-                            {lastReport.rating}
+                            {researchStanceLabel(lastReport.rating)}
                         </span>
-                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-2">Conviction Rating</p>
+                        <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.2em] mt-2">Research Stance</p>
                       </div>
                   </div>
 
@@ -5134,7 +5029,7 @@ ${list}
                                     ...lastReport,
                                     ticker: tkr,
                                     summary: lastReport.rawReport || lastReport.summary,
-                                    rating: lastReport.rating || (lastReport.rawReport?.toLowerCase().includes('buy') ? 'buy' : lastReport.rawReport?.toLowerCase().includes('sell') ? 'sell' : 'hold'),
+                                    rating: lastReport.rating || deriveRating(lastReport.rawReport || ''),
                                     userId: user.uid,
                                     createdAt: serverTimestamp(), // Keep this for legacy or tracking
                                     updatedAt: serverTimestamp()

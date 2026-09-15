@@ -40,6 +40,7 @@ import {
   normalizeManagementGuidanceExtraction,
 } from "./src/management-guidance-extraction";
 import { sanitizeDebtEquity } from "./src/peer-metric-validation";
+import { enforceDeepDiveInvestmentBoundary } from "./src/deep-dive-investment-boundary";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -592,9 +593,9 @@ BALANCED & RIGOROUS ANALYSIS (MANDATORY — these enforce objectivity, not a pos
 9. HUNT FOR RED FLAGS: Actively investigate and PROMINENTLY report any of the following that exist — never omit or soft-pedal them: corporate governance red flags, promoter share-pledging levels, auditor qualifications or resignations, related-party transactions, the multi-year debt trajectory, and any SEBI / stock-exchange regulatory actions, fines, or investigations. These are the issues retail investors most often miss and most need to know.
 10. LEAD WITH BAD NEWS: If the most recent quarterly results show a decline in revenue or net profit (YoY or QoQ), OR if FII (foreign institutional) ownership has fallen materially, you MUST state this explicitly in the opening Executive Summary. Do not bury it deeper in the report.
 11. KEY RISKS — MINIMUM THREE: Within the risk/bear discussion include a clearly labelled "Key Risks" list of at least 3 specific, concrete, company-specific risks grounded in actual data (e.g. "promoter pledge at 45% of holding", "receivable days up from 60 to 95", "AGR dues of ₹X cr due by FY26"). Generic risks such as "market risk", "global headwinds", "competition" or "regulatory risk" do NOT count toward the minimum.
-12. JUSTIFIED SIGNAL: State a clear signal and justify it with SPECIFIC data points, not general sentiment. Use NEGATIVE or CAUTIOUS without hesitation when the data warrants it — do not default to a positive or hopeful tone. In your recommendation / verdict section, include a single line in EXACTLY this format (on its own line):
+12. JUSTIFIED RESEARCH STANCE: State a clear evidence-based stance and justify it with SPECIFIC data points, not general sentiment. Use NEGATIVE or CAUTIOUS without hesitation when the data warrants it — do not default to a positive or hopeful tone. This stance prioritises further research; it is not a trading instruction. Include a single line in EXACTLY this format (on its own line):
 SIGNAL: <POSITIVE|NEGATIVE|NEUTRAL|CAUTIOUS> — <one sentence citing the specific data that drove this call>
-POSITIVE = constructive/buy, NEGATIVE = avoid/sell, NEUTRAL = balanced/hold, CAUTIOUS = real unresolved concerns warranting caution.
+POSITIVE = constructive evidence, NEGATIVE = deteriorating evidence, NEUTRAL = balanced evidence, CAUTIOUS = real unresolved concerns warranting caution. Never translate these labels into buy, sell, hold, entry, exit, target-price or stop-loss instructions.
 13. PRESERVE STRUCTURE: Keep the report's existing section structure and layout. These rules strengthen the rigour, balance and honesty of the content WITHIN those sections; they do not add or remove top-level sections.
 
 `;
@@ -1290,8 +1291,8 @@ Company: ${companyName || ticker}`;
           ## EARNINGS & CATALYSTS
           Latest quarterly performance, management guidance, and upcoming catalysts.
 
-          ## ANALYST TARGETS
-          Current market price, consensus target price, tactical entry zone, and strategic stop loss.
+          ## EXTERNAL ANALYST VIEWS
+          Include only traceable, published third-party analyst targets or recommendations. Each individual view must name the brokerage or analyst, state the publication date, preserve the original recommendation wording, give the target price when published, and include a direct http(s) source URL on the same row. Do not calculate an AlphaSynth target, consensus target, entry zone, exit point, upside, downside, or stop loss. Do not use an anonymous or unattributed target. If no qualifying view is available, write exactly: "No traceable external analyst target or recommendation was available in the retrieved evidence. AlphaSynth has not estimated one."
 
           MANDATORY: At the very end of your report output these exact lines with integer scores 1-10, nothing else on those lines:
           Valuation Intelligence: [score 1-10 based on current valuation vs intrinsic value]
@@ -1353,6 +1354,8 @@ Company: ${companyName || ticker}`;
       // FIX 5 & 6: Mandatory section structure to prevent incomplete reports
       const mandatoryStructure = isFilingsMode
         ? `\n\nComplete ALL of these sections:\n1. Corporate Governance Overview\n2. Recent SEBI Disclosures and Filings\n3. Management Commentary and Guidance\n4. Disclosure Scorecard Assessment\n5. Red Flags or Concerns if any\n6. Overall Transparency Rating`
+        : mode === 'deep_dive'
+        ? `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary\n2. Financial Performance\n3. Bull Case\n4. Bear Case with company-specific risks\n5. Research Conclusion\n6. External Analyst Views, subject to the attribution rules above\nDo not issue an AlphaSynth buy, sell, hold, entry, exit, target-price or stop-loss instruction.`
         : `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary (2-3 paragraphs)\n2. Financial Performance (key metrics and trends)\n3. Bull Case (investment thesis)\n4. Bear Case (key risks)\n5. Investment Recommendation (clear conclusion)\nIf you are running low on available response length, condense each section but do not omit any section entirely.`;
       // FIX 4: Limit context to 5000 chars to leave room for output tokens
       const trimmedGrounded = rawGroundedMetrics.substring(0, 5000);
@@ -1422,7 +1425,9 @@ Company: ${companyName || ticker}`;
       // Attempt 2: pure Gemini search grounding, zero scraped context
       if (!validation.valid) {
         console.log(`[ANALYZE] Report still invalid (${validation.reason}) — Attempt 2: pure Gemini grounding fallback`);
-        const fallbackGroundingPrompt = `Generate a comprehensive institutional equity research report for ${cleanTicker} listed on NSE India. Include: company overview, recent financial performance, quarterly results analysis, management quality assessment, bull case, bear case, key risks, valuation and investment recommendation. Use your search grounding to find the most current data available. Processing Date: ${todayStr}.`;
+        const fallbackGroundingPrompt = mode === 'deep_dive'
+          ? `Generate a comprehensive institutional equity research report for ${cleanTicker} listed on NSE India. Include company overview, recent financial performance, quarterly results, management quality, an equal-weight bull and bear case, company-specific risks, valuation context and a research conclusion. Do not issue an AlphaSynth investment recommendation or calculate an entry, exit, target price, upside, downside or stop loss. Include an External Analyst Views section only for published third-party views where every row names the analyst or brokerage, publication date and direct http(s) source URL. Processing Date: ${todayStr}.`
+          : `Generate a comprehensive institutional equity research report for ${cleanTicker} listed on NSE India. Include: company overview, recent financial performance, quarterly results analysis, management quality assessment, bull case, bear case, key risks, valuation and investment recommendation. Use your search grounding to find the most current data available. Processing Date: ${todayStr}.`;
         try {
           const fallbackSearch = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -1450,6 +1455,7 @@ Company: ${companyName || ticker}`;
         reportText = `# Analysis Unavailable: ${cleanTicker}\n\nThe research pipeline was unable to generate a valid report for this ticker. Please retry — live grounding requires an active connection.`;
       }
 
+      if (mode === 'deep_dive') reportText = enforceDeepDiveInvestmentBoundary(reportText);
       const confidence = assessConfidence(reportText);
 
       // ── Scorecard extraction for filings mode ──────────────────────────────
@@ -1637,7 +1643,8 @@ Governance Evidence: X`;
           (Equal weight and depth to the Bull Case — a rigorous stress-test covering governance red flags, promoter pledging, auditor qualifications, related-party transactions, debt trajectory and any SEBI/exchange actions where they exist. Include a "Key Risks" list of at least 3 specific, data-grounded, company-specific risks.)
           ## INSTITUTIONAL CONVICTION METRICS
           ## EARNINGS & CATALYSTS
-          ## ANALYST TARGETS
+          ## EXTERNAL ANALYST VIEWS
+          Include only traceable, published third-party analyst targets or recommendations. Every row must name the brokerage or analyst, publication date, original recommendation wording and direct http(s) source URL. Do not calculate an AlphaSynth target, consensus target, entry zone, exit point, upside, downside or stop loss. If no qualifying view is available, state that no traceable external analyst view was available and that AlphaSynth has not estimated one.
 
           MANDATORY scores at the very end (integers 1-10):
           Valuation Intelligence: [score]
@@ -1790,6 +1797,8 @@ Return the independent BMS validation as JSON.`;
       const isStreamFilings = mode === 'filings' || mode === 'research';
       const streamMandatoryStructure = isStreamFilings
         ? `\n\nComplete ALL of these sections:\n1. Corporate Governance Overview\n2. Recent SEBI Disclosures and Filings\n3. Management Commentary and Guidance\n4. Disclosure Scorecard Assessment\n5. Red Flags or Concerns if any\n6. Overall Transparency Rating`
+        : resolvedMode === 'deep_dive'
+        ? `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary\n2. Financial Performance\n3. Bull Case\n4. Bear Case with company-specific risks\n5. Research Conclusion\n6. External Analyst Views, subject to the attribution rules above\nDo not issue an AlphaSynth buy, sell, hold, entry, exit, target-price or stop-loss instruction.`
         : `\n\nStructure your report with these mandatory sections and complete ALL of them even if briefly:\n1. Executive Summary (2-3 paragraphs)\n2. Financial Performance (key metrics and trends)\n3. Bull Case (investment thesis)\n4. Bear Case (key risks)\n5. Investment Recommendation (clear conclusion)\nIf you are running low on available response length, condense each section but do not omit any section entirely.`;
       // FIX 4: Limit context to 5000 chars to leave room for output tokens
       const trimmedStreamGrounded = rawGroundedMetrics.substring(0, 5000);
@@ -1859,6 +1868,14 @@ Return the independent BMS validation as JSON.`;
             send({ type: 'replace', text: correctedText });
           }
         } catch { /* keep original stream if correction fails */ }
+      }
+
+      if (resolvedMode === 'deep_dive') {
+        const boundedReport = enforceDeepDiveInvestmentBoundary(accumulatedReport);
+        if (boundedReport !== accumulatedReport) {
+          accumulatedReport = boundedReport;
+          send({ type: 'replace', text: boundedReport });
+        }
       }
 
       // Stage 3: Benchmarking numbers
