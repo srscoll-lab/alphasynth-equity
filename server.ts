@@ -39,6 +39,7 @@ import {
   buildManagementGuidanceGeminiRequest,
   normalizeManagementGuidanceExtraction,
 } from "./src/management-guidance-extraction";
+import { sanitizeDebtEquity } from "./src/peer-metric-validation";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -1955,11 +1956,6 @@ Return the independent BMS validation as JSON.`;
       const n = num(v);
       return n !== null && n > 0 ? n : null;
     };
-    const nonNegativeNum = (v: any): number | null => {
-      const n = num(v);
-      return n !== null && n >= 0 ? n : null;
-    };
-
     // Live Yahoo metrics for one base symbol: price + 52W high/low + trailing 52W return.
     // Same unauthenticated v8 chart endpoint the price route uses; range=1y gives the
     // first close needed for the return calc. Tries NSE then BSE.
@@ -2130,7 +2126,7 @@ Return the independent BMS validation as JSON.`;
           - Price-to-Book ratio, plain number
           - ROE % (return on equity), plain number
           - ROCE % (return on capital employed), plain number
-          - Debt-to-Equity ratio, plain number
+          - Debt-to-Equity ratio, plain number. This must be the dimensionless ratio itself, not debt, equity or market-capitalisation in INR. Omit it when the ratio is not explicitly published or economically comparable.
           - Revenue growth YoY %, plain number
           - Operating margin %, plain number
           - Market capitalisation in INR crores, plain number (e.g. 1769000)
@@ -2147,7 +2143,7 @@ Return the independent BMS validation as JSON.`;
         model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text:
 `Convert the peer data below into JSON for subject "${cleanTicker}" (${subjectName}).
-Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; epsTtm/epsGrowthYoY/peg/pe/pb/roe/roce/debtEquity/revenueGrowthYoY/operatingMargin/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores.
+Rules: extract ONLY values explicitly stated in the text. If a metric is missing or "N/A", OMIT that field entirely — never output 0 or a guess. isTarget=true ONLY for ${cleanTicker} and it must be the FIRST element; tickers are NSE symbols without suffix; epsTtm/epsGrowthYoY/peg/pe/pb/roe/roce/debtEquity/revenueGrowthYoY/operatingMargin/marketCap are plain numbers (no %, ₹, commas); marketCap is in INR crores. debtEquity must be the dimensionless published ratio, never a rupee balance or market-cap number; omit it if uncertain.
 
 Source data:
 ${rawText}` }] }],
@@ -2199,7 +2195,7 @@ ${rawText}` }] }],
           pb: positiveNum(c.pb ?? c.priceToBook),
           roe: pctNorm(c.roe ?? c.returnOnEquity),
           roce: pctNorm(c.roce ?? c.returnOnCapitalEmployed),
-          debtEquity: nonNegativeNum(c.debtEquity ?? c.debtToEquity),
+          debtEquity: sanitizeDebtEquity(c.debtEquity ?? c.debtToEquity),
           revenueGrowthYoY: pctNorm(c.revenueGrowthYoY ?? c.revenueGrowth),
           operatingMargin: pctNorm(c.operatingMargin ?? c.operatingMarginPct),
           marketCapCr: positiveNum(c.marketCap ?? c.marketCapCr ?? c.market_cap),
@@ -2239,6 +2235,9 @@ ${rawText}` }] }],
       ]);
       const rows = ordered.map((c: any, i: number) => ({
         ...c,
+        // Final response-boundary check protects every upstream and fallback path.
+        // An invalid value is withheld rather than guessed or silently corrected.
+        debtEquity: sanitizeDebtEquity(c.debtEquity),
         epsTtm: published[i]?.epsTtm ?? c.epsTtm,
         epsGrowthYoY: published[i]?.epsGrowthYoY ?? c.epsGrowthYoY,
         peg: published[i]?.peg ?? c.peg,

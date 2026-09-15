@@ -81,6 +81,7 @@ import {
 import BusinessMomentum from "./components/BusinessMomentum";
 import SignalTracker from "./components/SignalTracker";
 import AiTransitionObservatory from "./components/AiTransitionObservatory";
+import { sanitizeDebtEquity } from "./peer-metric-validation";
 
 // Inject spinner keyframe
 if (typeof document !== 'undefined') {
@@ -1226,7 +1227,7 @@ export default function App() {
           <td>${r.marketCapCr != null ? '₹' + Number(r.marketCapCr).toLocaleString('en-IN') : 'N/A'}</td>
           <td>${r.pe != null ? Number(r.pe).toFixed(1) : 'N/A'}</td>
           <td>${pctf(r.roe)}</td>
-          <td>${r.debtEquity != null ? Number(r.debtEquity).toFixed(2) : 'N/A'}</td>
+          <td>${sanitizeDebtEquity(r.debtEquity) != null ? Number(sanitizeDebtEquity(r.debtEquity)).toFixed(2) : 'N/A'}</td>
           <td>${pctf(r.revenueGrowthYoY)}</td>
           <td>${retf(r.week52Return)}</td>
         </tr>`;
@@ -5347,13 +5348,14 @@ ${list}
                          { key: 'marketCapCr', label: 'Mkt Cap (₹ Cr)', dir: 0, fmt: (v) => v != null ? `₹${Number(v).toLocaleString('en-IN')} Cr` : 'N/A' },
                          { key: 'pe', label: 'P/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(1) : 'N/A' },
                          { key: 'roe', label: 'ROE %', dir: 1, fmt: (v) => v != null ? `${Number(v).toFixed(1)}%` : 'N/A' },
-                         { key: 'debtEquity', label: 'D/E', dir: -1, fmt: (v) => v != null ? Number(v).toFixed(2) : 'N/A' },
+                         { key: 'debtEquity', label: 'D/E', dir: -1, fmt: (v) => sanitizeDebtEquity(v) != null ? Number(sanitizeDebtEquity(v)).toFixed(2) : 'N/A' },
                          { key: 'revenueGrowthYoY', label: 'Rev Growth YoY', dir: 1, fmt: (v) => v != null ? `${Number(v).toFixed(1)}%` : 'N/A' },
                          { key: 'week52Return', label: '52W Return', dir: 1, fmt: (v) => v != null ? `${Number(v) >= 0 ? '+' : ''}${Number(v).toFixed(1)}%` : 'N/A' },
                        ];
                        const colorFor = (m: any, row: any) => {
                          if (row.isTarget || m.dir === 0) return '';
-                         const a = row[m.key]; const b = subject ? subject[m.key] : null;
+                         const a = m.key === 'debtEquity' ? sanitizeDebtEquity(row[m.key]) : row[m.key];
+                         const b = m.key === 'debtEquity' ? sanitizeDebtEquity(subject?.[m.key]) : (subject ? subject[m.key] : null);
                          if (a == null || b == null || a === b) return '';
                          const better = m.dir > 0 ? a > b : a < b;
                          return better ? 'text-emerald-400' : 'text-rose-400';
