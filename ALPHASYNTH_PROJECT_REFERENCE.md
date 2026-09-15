@@ -561,7 +561,7 @@ Once the build passes the stop line:
 - create a carousel presentation with optional voiceover; and
 - collect structured feedback before considering wider launch or monetisation.
 
-The peer-review carousel is maintained as an editable nine-slide square PowerPoint deck at `carousel-output/AlphaSynth-BMS-V1-Carousel-Final.pptx`. Each slide includes optional voiceover copy in its speaker notes. The final slide directs reviewers to the tagged live evidence workspace; it does not imply that the pilot has received production traffic.
+The peer-review carousel is maintained as an editable nine-slide square PowerPoint deck at `carousel-output/AlphaSynth-BMS-V1-Carousel-Final-v3.pptx`. Each slide includes optional voiceover copy in its speaker notes. Chart labels use high-contrast presentation text, and the confirmation overlay explains the historical lifecycle and later confirmation check in plain language. The final slide directs reviewers to the tagged live evidence workspace; it does not imply that the pilot has received production traffic.
 
 ## 15. Explicitly deferred ideas
 

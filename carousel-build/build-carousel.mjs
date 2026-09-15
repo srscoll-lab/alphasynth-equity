@@ -6,8 +6,12 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 const workspaceDir = "C:\\Users\\admin\\Documents\\ChatGPT\\Alphasynth Intelligence\\alphasynth-equity";
 const SKILL_DIR = "C:\\Users\\admin\\.codex\\plugins\\cache\\openai-primary-runtime\\presentations\\26.909.12148\\skills\\presentations";
 const TMP_DIR = path.join(workspaceDir, "carousel-build");
-const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final.pptx");
+const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final-v3.pptx");
 const RUNTIME_PYTHON = "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe";
+process.env.RUNTIME_NODE ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe";
+process.env.RUNTIME_NODE_MODULES ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\node_modules";
+process.env.RUNTIME_BIN_DIR ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\bin\\override";
+process.env.RUNTIME_PYTHON ||= RUNTIME_PYTHON;
 
 const { applyPresentationChartFont, finalizePresentation } = await import(
   pathToFileURL(path.join(SKILL_DIR, "container_tools", "artifact_tool_utils.mjs")).href,
@@ -123,11 +127,15 @@ console.log("builder: slide 2");
     barOptions: { direction: "column", grouping: "clustered" },
     hasLegend: false,
     dataLabels: { showValue: false },
+    xAxis: { visible: false },
     valueAxis: { minimumScale: 0, maximumScale: 30, majorUnit: 5, numberFormatCode: "0\"%\"" },
   });
   applyPresentationChartFont(chart, { fontFamily: font });
   [["25%", 132, 374], ["25%", 316, 374], ["25%", 500, 374], ["15%", 684, 518], ["10%", 868, 575]].forEach(([value, left, top]) => {
     text(slide, value, left, top, 80, 30, 16, C.white, true, "center");
+  });
+  [["EARNINGS", 86], ["ECONOMICS", 271], ["EXECUTION", 455], ["BALANCE SHEET", 639], ["MANAGEMENT", 823]].forEach(([value, left]) => {
+    text(slide, value, left, 700, 170, 34, 18, C.white, true, "center");
   });
   label(slide, "Score", 68, 772, 180, C.gold);
   text(slide, "Direction and strength of measured change", 68, 804, 410, 72, 21, C.white, true);
@@ -166,7 +174,7 @@ console.log("builder: slide 4");
 {
   const slide = deck.slides.add();
   base(slide, 5, "The confirmation overlay");
-  text(slide, "The recorded lifecycle remains unchanged. Later evidence qualifies the research priority.", 66, 245, 920, 70, 24, C.text);
+  text(slide, "After we record a lifecycle, we check later results to see whether the earlier reading still holds. We keep the original reading as history and use the new check to set today's research priority.", 66, 245, 920, 104, 23, C.text);
   const rows = [
     ["MEASURABLE DELIVERY", "Previous reading compared with current results"],
     ["BUSINESS QUALITY CHECKS", "Meets check, concern found, unavailable or not due"],
@@ -181,7 +189,7 @@ console.log("builder: slide 4");
   shape(slide, "rect", 70, 835, 880, 2, C.line);
   text(slide, "Output", 70, 862, 130, 34, 15, C.gold, true);
   text(slide, "Qualified    Qualified with caution    Not qualified    Insufficient evidence", 70, 904, 900, 60, 24, C.white, true);
-  note(slide, "After BMS records the lifecycle, a separate overlay checks delivery, quality and management history. It can refine the research shortlist. It cannot rewrite the original historical signal.");
+  note(slide, "After AlphaSynth records a lifecycle, it checks later results to see whether the earlier reading still holds. The original lifecycle remains part of the historical record. The new evidence can raise, lower or leave today's research priority unchanged.");
 }
 console.log("builder: slide 5");
 
@@ -220,11 +228,15 @@ console.log("builder: slide 6");
     barOptions: { direction: "column", grouping: "clustered" },
     hasLegend: false,
     dataLabels: { showValue: false },
+    xAxis: { visible: false },
     valueAxis: { minimumScale: 0, maximumScale: 100, majorUnit: 20, numberFormatCode: "0\"%\"" },
   });
   applyPresentationChartFont(chart, { fontFamily: font });
   [["96%", 190, 352], ["96%", 492, 352], ["8%", 795, 652]].forEach(([value, left, top]) => {
     text(slide, value, left, top, 92, 30, 17, C.white, true, "center");
+  });
+  [["TECHNICAL SUCCESS", 95], ["USABLE DELIVERY CHECK", 400], ["PDF READY", 705]].forEach(([value, left]) => {
+    text(slide, value, left, 710, 280, 34, 18, C.white, true, "center");
   });
   text(slide, "24 of 25", 70, 790, 245, 60, 40, C.white, true);
   text(slide, "technical paths completed", 70, 852, 270, 48, 18, C.text);
@@ -309,7 +321,7 @@ if (!finalExists) await finalizePresentation({
   materializeLiteralChartWorkbooks: true,
   fontPolicy: { basis: "design", families: [font] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final.validation.json"),
+  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final-v3.validation.json"),
 });
 
 console.log(JSON.stringify({ final: FINAL_PPTX, font }, null, 2));
