@@ -6,7 +6,7 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 const workspaceDir = "C:\\Users\\admin\\Documents\\ChatGPT\\Alphasynth Intelligence\\alphasynth-equity";
 const SKILL_DIR = "C:\\Users\\admin\\.codex\\plugins\\cache\\openai-primary-runtime\\presentations\\26.909.12148\\skills\\presentations";
 const TMP_DIR = path.join(workspaceDir, "carousel-build");
-const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final-v3.pptx");
+const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final-v4.pptx");
 const RUNTIME_PYTHON = "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe";
 process.env.RUNTIME_NODE ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe";
 process.env.RUNTIME_NODE_MODULES ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\node_modules";
@@ -87,15 +87,19 @@ function note(slide, value) {
   console.log("builder: image read");
   slide.images.add({ blob: imageBytes, contentType: "image/png", alt: "Abstract signal emerging from financial data", fit: "cover", position: { left: 0, top: 0, width: 1080, height: 1080 } });
   console.log("builder: image added");
-  shape(slide, "rect", 0, 0, 620, 1080, "#08101D");
+  shape(slide, "rect", 0, 0, 700, 1080, "#08101D");
   console.log("builder: cover panel");
   shape(slide, "rect", 70, 116, 76, 7, C.gold);
   text(slide, "ALPHASYNTH INTELLIGENCE", 70, 140, 500, 42, 16, C.gold, true);
-  text(slide, "Business momentum\nwith an evidence trail", 70, 250, 690, 270, 58, C.white, true);
-  text(slide, "A research prioritisation system for detecting change, checking delivery and preserving uncertainty.", 72, 568, 520, 130, 25, C.text, false);
-  text(slide, "BMS V1, peer review edition", 72, 918, 420, 34, 15, C.muted, true);
+  text(slide, "Business momentum\nwith an evidence trail", 70, 238, 610, 250, 54, C.white, true);
+  text(slide, "A research system that detects changes in business momentum and preserves the evidence behind each signal.", 72, 520, 565, 100, 22, C.text, false);
+  text(slide, "WHAT IT DOES", 72, 670, 260, 34, 16, C.teal, true);
+  text(slide, "Highlights where company momentum may be strengthening or weakening.", 72, 708, 565, 76, 20, C.white, true);
+  text(slide, "WHAT IT DOES NOT CLAIM", 72, 820, 330, 34, 16, C.gold, true);
+  text(slide, "It does not predict multibaggers, replace due diligence or recommend trades.", 72, 858, 565, 84, 20, C.text, false);
+  text(slide, "BMS V1", 72, 990, 220, 28, 14, C.muted, true);
   console.log("builder: cover text");
-  note(slide, "Most investment platforms tell us what a company has already reported. AlphaSynth asks a different question: where is business momentum changing, and does later evidence support that early reading?");
+  note(slide, "AlphaSynth highlights where a company's business momentum may be strengthening or weakening and preserves the evidence behind that reading. It helps users decide where deeper research may be worthwhile. It does not predict multibaggers, replace due diligence or recommend trades.");
   console.log("builder: cover note");
 }
 console.log("builder: slide 1");
@@ -219,11 +223,11 @@ console.log("builder: slide 6");
 // 7. Validation
 {
   const slide = deck.slides.add();
-  base(slide, 7, "Stop-line validation across 25 companies");
-  text(slide, "The fixed cohort covered five companies from each BMS lifecycle category.", 66, 245, 900, 58, 24, C.text);
+  base(slide, 7, "What happened when we tested 25 companies");
+  text(slide, "We applied the same evidence process to five companies from each lifecycle category.", 66, 245, 900, 58, 24, C.text);
   const chart = slide.charts.add("bar", {
     position: { left: 70, top: 335, width: 940, height: 400 },
-    categories: ["Technical success", "Usable delivery overlay", "PDF ready"],
+    categories: ["Evidence process completed", "Results comparison available", "Full report standard met"],
     series: [{ name: "Share of cohort", values: [96, 96, 8], fill: C.teal }],
     barOptions: { direction: "column", grouping: "clustered" },
     hasLegend: false,
@@ -235,15 +239,15 @@ console.log("builder: slide 6");
   [["96%", 190, 352], ["96%", 492, 352], ["8%", 795, 652]].forEach(([value, left, top]) => {
     text(slide, value, left, top, 92, 30, 17, C.white, true, "center");
   });
-  [["TECHNICAL SUCCESS", 95], ["USABLE DELIVERY CHECK", 400], ["PDF READY", 705]].forEach(([value, left]) => {
-    text(slide, value, left, 710, 280, 34, 18, C.white, true, "center");
+  [["EVIDENCE PROCESS\nCOMPLETED", 95], ["RESULTS COMPARISON\nAVAILABLE", 400], ["FULL REPORT\nSTANDARD MET", 705]].forEach(([value, left]) => {
+    text(slide, value, left, 700, 280, 60, 17, C.white, true, "center");
   });
   text(slide, "24 of 25", 70, 790, 245, 60, 40, C.white, true);
-  text(slide, "technical paths completed", 70, 852, 270, 48, 18, C.text);
+  text(slide, "evidence workflows completed", 70, 852, 300, 48, 18, C.text);
   text(slide, "2 of 25", 540, 790, 245, 60, 40, C.gold, true);
-  text(slide, "met the stricter PDF threshold", 540, 852, 330, 48, 18, C.text);
-  text(slide, "Selective PDF availability prevents polished but incomplete reports.", 70, 930, 880, 42, 19, C.teal, true);
-  note(slide, "In the final twenty-five-company test, twenty-four completed the technical path and produced a usable delivery overlay. Only two met the stricter PDF standard. That low PDF rate is deliberate because an incomplete report should not look authoritative.");
+  text(slide, "met the full report standard", 540, 852, 330, 48, 18, C.text);
+  text(slide, "These figures measure system coverage and evidence handling, not investment accuracy.", 70, 930, 900, 42, 19, C.teal, true);
+  note(slide, "The twenty-five-company test measured whether the evidence workflow completed and whether later results could be compared without inventing missing values. Twenty-four companies completed both steps. Two met the stricter full-report standard. These figures measure system coverage and evidence handling. They do not claim that the lifecycle signal predicts returns with ninety-six percent accuracy.");
 }
 console.log("builder: slide 7");
 
@@ -269,23 +273,28 @@ console.log("builder: slide 7");
 }
 console.log("builder: slide 8");
 
-// 9. Close
+// 9. Sample report
 {
   const slide = deck.slides.add();
-  slide.background.fill = C.navy;
-  const imageBytes = await fs.readFile(path.join(workspaceDir, "carousel-assets", "alphasynth-signal-background.png"));
-  slide.images.add({ blob: imageBytes, contentType: "image/png", alt: "Abstract signal emerging from financial data", fit: "cover", position: { left: 0, top: 0, width: 1080, height: 1080 } });
-  shape(slide, "rect", 0, 0, 720, 1080, "#08101D");
-  shape(slide, "rect", 70, 108, 76, 7, C.gold);
-  text(slide, "CURRENT SCOPE", 70, 138, 280, 36, 16, C.gold, true);
-  text(slide, "AlphaSynth BMS V1 is ready for peer review", 70, 230, 610, 210, 48, C.white, true);
-  text(slide, "What it does", 70, 495, 240, 40, 18, C.teal, true);
-  text(slide, "Detects fundamental momentum and preserves the supporting evidence.", 70, 540, 600, 90, 23, C.text);
-  text(slide, "What it does not claim", 70, 660, 300, 40, 18, C.gold, true);
-  text(slide, "It does not predict multibaggers, replace due diligence or recommend trades.", 70, 705, 600, 100, 23, C.text);
-  text(slide, "Explore the live evidence workspace", 70, 858, 600, 42, 22, C.white, true);
-  text(slide, "expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app", 70, 910, 610, 58, 16, C.teal, false);
-  note(slide, "AlphaSynth BMS V1 is ready for structured peer feedback. It detects fundamental momentum and preserves its evidence trail. It does not claim to predict multibaggers or replace due diligence. Open the live pilot to see the signal tracker and its supporting evidence workspace.");
+  base(slide, 9, "A sample downloadable report");
+  text(slide, "The PDF appears only when the supporting evidence meets the full-report standard.", 66, 245, 920, 58, 24, C.text);
+  shape(slide, "rect", 62, 322, 426, 614, C.white, C.gold);
+  const reportPage = await fs.readFile(path.join(workspaceDir, "carousel-assets", "radico-dossier-sample-page.png"));
+  slide.images.add({
+    blob: reportPage,
+    contentType: "image/png",
+    alt: "First page of an illustrative AlphaSynth research dossier for Radico Khaitan",
+    fit: "contain",
+    position: { left: 70, top: 330, width: 410, height: 598 },
+  });
+  label(slide, "Company snapshot", 550, 350, 400, C.gold);
+  text(slide, "A concise description of the business and its principal watch item.", 550, 390, 420, 76, 21, C.white, true);
+  label(slide, "Lifecycle and BMS", 550, 505, 400, C.teal);
+  text(slide, "The recorded lifecycle, score and evidence coverage appear together.", 550, 545, 420, 76, 21, C.white, true);
+  label(slide, "Supporting explanation", 550, 660, 420, C.gold);
+  text(slide, "Later pages explain the factors, subsequent result checks, management history and source evidence.", 550, 700, 420, 100, 21, C.white, true);
+  text(slide, "Illustrative sample: Radico Khaitan. Research aid only. No buy or sell recommendation.", 550, 865, 420, 70, 18, C.text);
+  note(slide, "This is the first page of the six-page AlphaSynth Professional Dossier sample for Radico Khaitan. It shows the format a user can expect when the available evidence meets the full-report standard. Later pages explain the BMS factors, later-results check, management history and sources. The dossier remains a research aid rather than a trading recommendation.");
 }
 console.log("builder: slide 9");
 
@@ -321,7 +330,7 @@ if (!finalExists) await finalizePresentation({
   materializeLiteralChartWorkbooks: true,
   fontPolicy: { basis: "design", families: [font] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final-v3.validation.json"),
+  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final-v4.validation.json"),
 });
 
 console.log(JSON.stringify({ final: FINAL_PPTX, font }, null, 2));
