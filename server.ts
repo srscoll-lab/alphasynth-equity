@@ -166,7 +166,7 @@ function sanitizeJsonShell(jsonText: string): string {
 // real newlines). Both break markdown table parsing on the client.
 function repairMarkdownTables(text: string): string {
   if (!text) return text;
-  return text
+  const repaired = text
     // Turn literal escape sequences back into real characters.
     .replace(/\\r\\n/g, '\n')
     .replace(/\\n/g, '\n')
@@ -174,6 +174,13 @@ function repairMarkdownTables(text: string): string {
     // Replace || (two consecutive pipe chars) with a newline between them, restoring
     // proper table row boundaries when Gemini omits the newline in the JSON string.
     .replace(/\|\|/g, '|\n|');
+
+  // Gemini occasionally wraps every value inside a Markdown table in literal
+  // double quotes. They add no meaning and make narrow report panes harder to read.
+  return repaired
+    .split('\n')
+    .map(line => /^\s*\|/.test(line) ? line.replace(/"/g, '') : line)
+    .join('\n');
 }
 
 function sanitizeGroundingJson(jsonText: string): string {
@@ -4155,6 +4162,10 @@ ${rawText}` }] }],
       // Scrape concall transcript + financials page
       let transcriptContext = context || "";
       let sourceUrl = "";
+      let transcriptSourceUrl = "";
+      let transcriptStatus: "provided_context" | "direct_source" | "search_grounded" | "unavailable" = transcriptContext
+        ? "provided_context"
+        : "unavailable";
 
       if (!transcriptContext && scraper) {
         try {
@@ -4167,6 +4178,8 @@ ${rawText}` }] }],
             const raw = scrapeResult?.markdown || "";
             if (isScrapedContentUsable(raw)) {
               transcriptContext = raw.substring(0, 8000);
+              transcriptSourceUrl = topUrl;
+              transcriptStatus = "direct_source";
               console.log(`[EARNINGS-INTEL] Scraped ${transcriptContext.length} chars from ${topUrl}`);
             }
           }
@@ -4215,6 +4228,8 @@ Produce JSON with these exact fields:
 currentQuarter: The quarter this report covers (e.g. "Q3FY25")
 previousQuarter: The quarter whose promises are evaluated (e.g. "Q2FY25")
 
+transcriptEvidence: TRANSCRIPT DIAGNOSTIC — Write 2-4 concise markdown bullets containing only identifiable management commentary or analyst Q&A from the latest concall/transcript evidence in the Research Data. State the speaker or topic and the substantive point. Do not insert financial-table values merely to fill this field. If no identifiable transcript or concall material exists, write exactly: "No identifiable transcript commentary was available in the retrieved evidence."
+
 earningsSnapshot: SECTION 1 — QUANTITATIVE ONLY. Write a concise markdown report covering: Revenue (₹ Crore), Net Profit, EBITDA, margins (%), EPS, YoY growth, QoQ growth, P/E, ROCE, Debt/Equity. Include a markdown table of key metrics. No management quotes. No forward guidance. Pure numbers.
 
 managementPromises: SECTION 2 — NARRATIVE ONLY. Array of 4-6 specific commitments management made in the PREVIOUS quarter. For each: the exact promise (in management's own words if possible), whether it was KEPT/MISSED/PENDING, and the actual result in one sentence. Do not repeat the raw numbers already in earningsSnapshot unless directly verifying a specific promise.
@@ -4231,6 +4246,7 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
         properties: {
           currentQuarter: { type: "STRING" },
           previousQuarter: { type: "STRING" },
+          transcriptEvidence: { type: "STRING" },
           earningsSnapshot: { type: "STRING" },
           managementPromises: {
             type: "ARRAY",
@@ -4249,7 +4265,7 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
           reliabilityScore: { type: "NUMBER" },
           reliabilityJustification: { type: "STRING" }
         },
-        required: ["currentQuarter", "previousQuarter", "earningsSnapshot", "managementPromises", "guidanceOutlook", "redFlagsAndSentiment", "reliabilityScore", "reliabilityJustification"]
+        required: ["currentQuarter", "previousQuarter", "transcriptEvidence", "earningsSnapshot", "managementPromises", "guidanceOutlook", "redFlagsAndSentiment", "reliabilityScore", "reliabilityJustification"]
       };
 
       const stage2Res = await ai.models.generateContent({
@@ -4278,13 +4294,27 @@ reliabilityJustification: SECTION 5 — Exactly 2-3 sentences synthesising how w
         parsed.earningsSnapshot = `## Earnings Snapshot: ${cleanTicker}\n\nQuantitative data unavailable — please retry with an active connection for live grounding.`;
       }
 
+      const noTranscriptEvidence = "No identifiable transcript commentary was available in the retrieved evidence.";
+      if (!parsed.transcriptEvidence || parsed.transcriptEvidence.trim().length < 20) {
+        parsed.transcriptEvidence = noTranscriptEvidence;
+      }
+      if (transcriptStatus === "unavailable" && parsed.transcriptEvidence !== noTranscriptEvidence) {
+        transcriptStatus = "search_grounded";
+      }
+
       // Fix tables collapsed onto one line (|| pattern → newline between rows)
       parsed.earningsSnapshot = repairMarkdownTables(parsed.earningsSnapshot);
       if (parsed.guidanceOutlook) parsed.guidanceOutlook = repairMarkdownTables(parsed.guidanceOutlook);
       if (parsed.redFlagsAndSentiment) parsed.redFlagsAndSentiment = repairMarkdownTables(parsed.redFlagsAndSentiment);
 
       console.log(`[EARNINGS-INTEL] Complete for ${cleanTicker} | Q: ${parsed.currentQuarter} | Score: ${parsed.reliabilityScore} | Snapshot: ${parsed.earningsSnapshot?.length} chars`);
-      return res.json({ ...parsed, ticker: cleanTicker, sourceUrl });
+      return res.json({
+        ...parsed,
+        ticker: cleanTicker,
+        sourceUrl,
+        transcriptStatus,
+        transcriptSourceUrl,
+      });
 
     } catch (error: any) {
       console.error(`[EARNINGS-INTEL] Error for ${cleanTicker}:`, error.message);

@@ -164,8 +164,8 @@ const MarkdownComponents = {
     <hr className="my-10 border-0 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
   ),
   table: ({ children }: any) => (
-    <div className="my-12 overflow-hidden rounded-[32px] border border-app-border bg-app-surface-accent shadow-2xl">
-      <table className="w-full border-collapse">
+    <div className="my-8 max-w-full overflow-x-auto rounded-2xl border border-app-border bg-app-surface-accent shadow-2xl">
+      <table className="w-full min-w-[560px] table-fixed border-collapse">
         {children}
       </table>
     </div>
@@ -176,12 +176,12 @@ const MarkdownComponents = {
     </thead>
   ),
   th: ({ children }: any) => (
-    <th className="px-8 py-5 text-left text-[11px] font-black uppercase tracking-[0.25em] text-gold">
+    <th className="px-3 py-4 sm:px-4 text-left text-[10px] font-black uppercase tracking-[0.1em] text-gold align-top break-words">
       {children}
     </th>
   ),
   td: ({ children }: any) => (
-    <td className="px-8 py-5 text-base font-mono text-[#B0B8C8] border-b border-app-border/50">
+    <td className="px-3 py-4 sm:px-4 text-sm font-mono text-[#B0B8C8] border-b border-app-border/50 align-top whitespace-normal break-words">
       {children}
     </td>
   ),
@@ -2107,6 +2107,9 @@ ${list}
         mode: 'earnings_intelligence' as const,
         ticker: tkr,
         rawReport: '',
+        earnings: data.transcriptEvidence || 'No identifiable transcript commentary was available in the retrieved evidence.',
+        transcriptStatus: data.transcriptStatus || 'unavailable',
+        transcriptSourceUrl: data.transcriptSourceUrl || '',
         confidence: 'high' as const,
         scrapeQuality: 'good' as const,
         metrics: {},
@@ -2802,7 +2805,7 @@ ${list}
 
               <div className="flex-1 overflow-y-auto p-8 grid lg:grid-cols-12 gap-8 no-scrollbar">
                 {/* Sidebar Logic: Metrics and Rating */}
-                <div className="lg:col-span-4 space-y-8">
+                <div className="lg:col-span-4 min-w-0 space-y-8">
                   {/* Cross-Analysis Selector Card */}
                   <div className="p-6 bg-app-surface/50 border border-gold/15 rounded-2xl relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-4 opacity-5 text-gold">
@@ -2828,7 +2831,18 @@ ${list}
                                onClick={() => {
                                  if (m.id === 'earnings_intelligence') {
                                    if (cachedEarnings && cachedEarnings.ticker === lastReport.ticker) {
-                                     const r = { mode: 'earnings_intelligence' as const, ticker: lastReport.ticker, rawReport: '', confidence: 'high' as const, scrapeQuality: 'good' as const, metrics: {}, sourceUrl: cachedEarnings.sourceUrl || '' };
+                                      const r = {
+                                        mode: 'earnings_intelligence' as const,
+                                        ticker: lastReport.ticker,
+                                        rawReport: '',
+                                        earnings: cachedEarnings.transcriptEvidence || 'No identifiable transcript commentary was available in the retrieved evidence.',
+                                        transcriptStatus: cachedEarnings.transcriptStatus || 'unavailable',
+                                        transcriptSourceUrl: cachedEarnings.transcriptSourceUrl || '',
+                                        confidence: 'high' as const,
+                                        scrapeQuality: 'good' as const,
+                                        metrics: {},
+                                        sourceUrl: cachedEarnings.sourceUrl || ''
+                                      };
                                      setLastReport(r); setEarningsIntelReport(cachedEarnings);
                                    } else { triggerEarningsIntelligence(lastReport.ticker); }
                                  } else if (m.id === 'deep_dive') {
@@ -2958,16 +2972,30 @@ ${list}
                   </div>
                   )}
 
-                  <div className="p-6 bg-gold/5 border border-gold/20 rounded-2xl">
-                      <h3 className="text-xs font-black text-gold uppercase tracking-widest mb-4">Earnings Diagnostic</h3>
-                      <div className="text-xs text-zinc-300 leading-relaxed max-h-[150px] overflow-y-auto no-scrollbar prose prose-invert prose-xs">
-                        <MD>{lastReport.earnings || 'Parsing latest transcript data...'}</MD>
+                  <div className="p-6 bg-gold/5 border border-gold/20 rounded-2xl min-w-0">
+                      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-xs font-black text-gold uppercase tracking-widest">
+                          {lastReport.mode === 'earnings_intelligence' ? 'Transcript Evidence' : 'Earnings Diagnostic'}
+                        </h3>
+                        {lastReport.mode === 'earnings_intelligence' && (
+                          <span className="rounded-full border border-gold/20 bg-black/20 px-2 py-1 text-[8px] font-black uppercase tracking-wider text-zinc-400">
+                            {lastReport.transcriptStatus === 'direct_source' ? 'Direct transcript' : lastReport.transcriptStatus === 'provided_context' ? 'Provided transcript' : lastReport.transcriptStatus === 'search_grounded' ? 'Search-grounded commentary' : 'Transcript unavailable'}
+                          </span>
+                        )}
                       </div>
+                      <div className="text-xs text-zinc-300 leading-relaxed max-h-[150px] overflow-y-auto no-scrollbar prose prose-invert prose-xs">
+                        <MD>{lastReport.earnings || 'No identifiable transcript commentary was available in the retrieved evidence.'}</MD>
+                      </div>
+                      {lastReport.transcriptSourceUrl && (
+                        <a href={lastReport.transcriptSourceUrl} target="_blank" rel="noreferrer" className="mt-4 block truncate text-[9px] font-bold text-gold hover:text-white">
+                          View transcript source
+                        </a>
+                      )}
                   </div>
                 </div>
 
                 {/* Main Content */}
-                <div className="lg:col-span-8 space-y-12">
+                <div className="lg:col-span-8 min-w-0 space-y-12">
                   {analyzing ? (
                     streamingReport.length >= 100 ? (
                       /* ── Streaming report view — shows as text arrives ── */
