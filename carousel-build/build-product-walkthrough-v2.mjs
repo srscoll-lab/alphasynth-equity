@@ -5,8 +5,8 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 
 const root = "C:/Users/admin/Documents/ChatGPT/Alphasynth Intelligence/alphasynth-equity";
 const skill = "C:/Users/admin/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations";
-const tmp = path.join(root, ".codex-carousel-walkthrough-v2");
-const output = path.join(root, "carousel-output", "AlphaSynth-Product-Walkthrough-Carousel-v2.pptx");
+const tmp = path.join(root, ".codex-carousel-walkthrough-v3");
+const output = path.join(root, "carousel-output", "AlphaSynth-Product-Walkthrough-Carousel-v3.pptx");
 const python = "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe";
 process.env.RUNTIME_NODE ||= "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe";
 process.env.RUNTIME_NODE_MODULES ||= "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules";
@@ -21,7 +21,8 @@ const deck = Presentation.create({ slideSize: { width: 1080, height: 1080 } });
 const font = "Aptos";
 const C = { bg: "#080D18", panel: "#111B2D", panel2: "#0C2430", white: "#F8FAFC", text: "#D3DCE8", muted: "#A8B6C9", teal: "#25D7C8", gold: "#E7B640", line: "#30415C", red: "#F47777", green: "#5FE09B" };
 const p = (...x) => path.join(root, ...x);
-const trackerTop = p("carousel-assets", "walkthrough-v2", "01-tracker-radico-top.png");
+const trackerTop = p("carousel-assets", "walkthrough-v3", "01-tracker-universe-overview.png");
+const trackerList = p("carousel-assets", "walkthrough-v3", "02-tracker-company-list.png");
 const trackerDetail = p("carousel-assets", "walkthrough-v2", "02-radico-signal-detail.png");
 const deepEntry = p("carousel-assets", "screenshots", "deep-dive-entry.png");
 const deepResult = p("carousel-assets", "screenshots", "deep-dive-result.png");
@@ -99,19 +100,32 @@ function point(slide, n, heading, body, left, top, width) {
   notes(s, "The four layers are Signal Tracker, Evidence Report, later-results confirmation, and Deep Dive. PDF is an optional output within the evidence layer, not a required step for every company.");
 }
 
-// 3. Complete tracker capture
+// 3. Full tracker overview
 {
-  const s = deck.slides.add(); base(s, 3, "Start with the monitored BMS universe", "A complete screen capture: choose a lifecycle, search a company and see the current momentum snapshot.");
-  await img(s, trackerTop, { left: 56, top: 270, width: 968, height: 545 }, "Complete Signal Tracker screen with RADICO selected");
-  tag(s, "477 MONITORED COMPANIES", 56, 858, 265, C.gold);
-  txt(s, "The tracker is a research queue, not a ranking of investment attractiveness.", 350, 860, 674, 36, 18, C.white, true);
-  txt(s, "Lifecycle describes how business momentum has evolved through successive results.", 350, 906, 674, 42, 17, C.text);
-  notes(s, "Live pilot capture from 15 September 2026. The 477-company count refers specifically to the monitored BMS universe.");
+  const s = deck.slides.add(); base(s, 3, "The monitored BMS universe", "The opening screen shows the product purpose, total coverage and distribution across five lifecycle stages.");
+  await img(s, trackerTop, { left: 56, top: 256, width: 968, height: 545 }, "Complete Signal Tracker universe overview");
+  const labels = [["WATCH", "298", C.white], ["EMERGING", "19", C.teal], ["BUILDING", "32", C.white], ["ESTABLISHED", "73", C.green], ["FADING", "55", C.gold]];
+  labels.forEach(([label,count,color], i) => {
+    const left = 56 + i * 194;
+    txt(s, label, left, 842, 178, 27, 16, color, true, "center");
+    txt(s, count, left, 875, 178, 34, 23, C.white, true, "center");
+  });
+  txt(s, "These brighter labels repeat the live categories so they remain legible when the carousel is viewed on a phone.", 100, 936, 880, 38, 17, C.text, false, "center");
+  notes(s, "Complete live pilot capture from 15 September 2026. The five lifecycle labels are repeated below the screenshot at presentation size for legibility. The 477-company count refers specifically to the monitored BMS universe.");
 }
 
-// 4. Complete signal/action capture
+// 4. Multi-company list
 {
-  const s = deck.slides.add(); base(s, 4, "Read the signal, then choose the next depth", "The lower part of the selected-company screen shows the human interpretation and the three research actions.");
+  const s = deck.slides.add(); base(s, 4, "The company list and selected signal", "The full list remains visible in the carousel. The selected company appears beside its momentum and market context.");
+  await img(s, trackerList, { left: 56, top: 256, width: 968, height: 545 }, "Complete Signal Tracker list with several Emerging companies");
+  point(s, 1, "Several companies stay visible", "The capture shows the ranked research queue instead of an empty filtered panel.", 56, 842, 450);
+  point(s, 2, "The selected company stays in context", "The right side explains the lifecycle, score direction and available market context.", 565, 842, 459);
+  notes(s, "Complete live pilot capture from 15 September 2026. The screenshot shows multiple Emerging companies and the selected MRF signal without cropping the list.");
+}
+
+// 5. Complete signal/action capture
+{
+  const s = deck.slides.add(); base(s, 5, "The signal and next research action", "The lower part of the selected-company screen shows the human interpretation and the three research actions.");
   await img(s, trackerDetail, { left: 56, top: 270, width: 968, height: 545 }, "Complete lower Signal Tracker screen showing research actions");
   point(s, 1, "Research Signal", "Understand what changed and what would change the signal again.", 56, 855, 300);
   point(s, 2, "Evidence Report", "Open the supporting factors, confidence and confirmation checks.", 382, 855, 300);
@@ -119,9 +133,9 @@ function point(slide, n, heading, body, left, top, width) {
   notes(s, "Live pilot capture from 15 September 2026. The Evidence Report and Deep Dive are separate layers; the tracker remains deliberately concise.");
 }
 
-// 5. Lifecycle method
+// 6. Lifecycle method
 {
-  const s = deck.slides.add(); base(s, 5, "Lifecycle adds history to a single score", "One result can create a signal. Repeated evidence shows whether it broadens, persists or fades.");
+  const s = deck.slides.add(); base(s, 6, "Lifecycle adds history to a single score", "One result can create a signal. Repeated evidence shows whether it broadens, persists or fades.");
   const rows = [
     ["WATCH", "First evidence; establish a baseline"], ["EMERGING", "A positive inflection begins"],
     ["BUILDING", "More factors or periods confirm it"], ["ESTABLISHED", "Improvement persists through results"],
@@ -140,17 +154,17 @@ function point(slide, n, heading, body, left, top, width) {
 
 // 6-11. One complete PDF page per slide
 const pdfSlides = [
-  [6, "A selective PDF begins with the decision context", "The cover preserves the recorded lifecycle, evidence coverage, central watch item and research-readiness status.", 1, [
+  [7, "A selective PDF begins with the decision context", "The cover preserves the recorded lifecycle, evidence coverage, central watch item and research-readiness status.", 1, [
     ["Recorded history", "The original BMS V1 lifecycle remains auditable."], ["Evidence coverage", "Sources and supported claims are counted."], ["Visible uncertainty", "A watch item is shown rather than concealed."]]],
-  [7, "Score and confidence answer different questions", "The factor score measures direction within available comparisons. Confidence measures how complete that evidence is.", 2, [
+  [8, "Score and confidence answer different questions", "The factor score measures direction within available comparisons. Confidence measures how complete that evidence is.", 2, [
     ["100 / 100", "Strong measured momentum in the factors supplied."], ["Medium confidence", "Only part of the five-factor model is comparable."], ["N/A stays N/A", "Missing evidence is never converted into zero or neutral."]]],
-  [8, "Financial evidence makes the comparison inspectable", "The report shows prices, quarterly financials and the periods used for comparison — with explicit units.", 3, [
+  [9, "Financial evidence makes the comparison inspectable", "The report shows prices, quarterly financials and the periods used for comparison, with explicit units.", 3, [
     ["Comparable periods", "Previous and current readings are labelled."], ["Explicit units", "₹ crore, percentages, EPS and score /100."], ["Source-linked", "Quantitative inputs remain traceable to their source."]]],
-  [9, "Later results test the earlier lifecycle", "After a lifecycle is recorded, subsequent evidence checks whether that earlier reading still appears valid.", 4, [
+  [10, "Later results test the earlier lifecycle", "After a lifecycle is recorded, subsequent evidence checks whether that earlier reading still appears valid.", 4, [
     ["Preserve", "Do not rewrite the historical classification."], ["Compare", "Test delivery and business-quality evidence."], ["Prioritise", "Raise, lower or defer today’s research priority."]]],
-  [10, "Management claims need memory before they need a score", "A statement becomes useful only when it is dated, measurable, remembered and checked against a later outcome.", 5, [
+  [11, "Management claims need memory before they need a score", "A statement becomes useful only when it is dated, measurable, remembered and checked against a later outcome.", 5, [
     ["Record", "Capture a measurable commitment and source."], ["Mature", "Wait until the target date or outcome exists."], ["Verify", "Assess delivery, revision discipline and disclosure quality."]]],
-  [11, "The methodology preserves the source trail", "The final page explains the method, limitations and source register so the conclusion can be challenged.", 6, [
+  [12, "The methodology preserves the source trail", "The final page explains the method, limitations and source register so the conclusion can be challenged.", 6, [
     ["Official-first", "Company and exchange evidence lead admission."], ["Bounded fallbacks", "Alternative evidence is labelled and constrained."], ["No invention", "Unknown or incomplete evidence remains visible."]]],
 ];
 for (const [num,title,subtitle,page,bullets] of pdfSlides) {
@@ -162,27 +176,27 @@ for (const [num,title,subtitle,page,bullets] of pdfSlides) {
   notes(s, `Complete page ${page} of the generated RADICO professional dossier sample, September 2026. No portion of the page has been cropped.`);
 }
 
-// 12. Deep Dive entry
+// 13. Deep Dive entry
 {
-  const s = deck.slides.add(); base(s, 12, "Deep Dive begins with a deliberate handoff", "The selected company carries from the BMS experience into the broader research workflow.");
+  const s = deck.slides.add(); base(s, 13, "Deep Dive begins with a deliberate handoff", "The selected company carries from the BMS experience into the broader research workflow.");
   await img(s, deepEntry, { left: 86, top: 260, width: 908, height: 724 }, "Complete Deep Dive entry screen for RADICO");
   tag(s, "SELECT COMPANY", 115, 892, 190, C.gold);
   txt(s, "The user initiates the fuller analysis only when the signal deserves additional work.", 335, 895, 620, 40, 17, C.white, true);
   notes(s, "Complete live pilot capture from 15 September 2026. Deep Dive is a deliberate next action, not an automatic claim attached to every signal.");
 }
 
-// 13. Deep Dive result
+// 14. Deep Dive result
 {
-  const s = deck.slides.add(); base(s, 13, "Deep Dive returns a broader company review", "The output adds an executive narrative, quantitative scoring and risk identification beyond the concise tracker.");
+  const s = deck.slides.add(); base(s, 14, "Deep Dive returns a broader company review", "The output adds an executive narrative, quantitative scoring and risk identification beyond the concise tracker.");
   await img(s, deepResult, { left: 86, top: 260, width: 908, height: 724 }, "Complete Deep Dive result screen for RADICO");
   tag(s, "BROADER ON-DEMAND COVERAGE", 115, 892, 300, C.teal);
   txt(s, "Additional small and mid caps may be researched subject to data availability. Deep Dive coverage does not itself confer a BMS lifecycle.", 445, 886, 515, 58, 16, C.text);
   notes(s, "Complete live pilot capture from 15 September 2026. The on-demand Deep Dive universe is broader than the 477-company BMS tracker; those two coverage claims must not be conflated.");
 }
 
-// 14. Validation and close
+// 15. Validation and close
 {
-  const s = deck.slides.add(); base(s, 14, "Finish with evidence discipline, not more claims", "The build is ready for demonstration when the workflow completes reliably and weak evidence is stopped visibly.");
+  const s = deck.slides.add(); base(s, 15, "Evidence discipline and validation", "The build is ready for demonstration when the workflow completes reliably and weak evidence is stopped visibly.");
   shape(s, "roundRect", 72, 285, 438, 235, C.panel2, C.teal, 18);
   txt(s, "24 of 25", 102, 320, 250, 70, 46, C.teal, true);
   txt(s, "Evidence workflows completed in the bounded validation cohort.", 102, 405, 360, 70, 18, C.white, true);
@@ -202,7 +216,7 @@ const candidate = path.join(tmp, "candidate.pptx");
 await (await PresentationFile.exportPptx(deck)).save(candidate);
 if (await fs.access(output).then(() => true).catch(() => false)) throw new Error(`Refusing to overwrite ${output}`);
 await finalizePresentation({
-  explicitTotalSlideCount: 14,
+  explicitTotalSlideCount: 15,
   requiredNativeTableOwnerSlides: [],
   requiredNativeChartOwnerSlides: [],
   materializeLiteralChartWorkbooks: false,
@@ -215,6 +229,6 @@ await finalizePresentation({
   layoutArgs: ["--expected-slide-size-emu", "10287000,10287000", "--validate-bullet-geometry", "--validate-heading-fit"],
   fontPolicy: { basis: "design", families: [font] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(tmp, "AlphaSynth-Product-Walkthrough-Carousel-v2.validation.json"),
+  receiptPath: path.join(tmp, "AlphaSynth-Product-Walkthrough-Carousel-v3.validation.json"),
 });
 console.log(JSON.stringify({ output, slides: deck.slides.items.length }, null, 2));
