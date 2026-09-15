@@ -6,7 +6,7 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 const workspaceDir = "C:\\Users\\admin\\Documents\\ChatGPT\\Alphasynth Intelligence\\alphasynth-equity";
 const SKILL_DIR = "C:\\Users\\admin\\.codex\\plugins\\cache\\openai-primary-runtime\\presentations\\26.909.12148\\skills\\presentations";
 const TMP_DIR = path.join(workspaceDir, "carousel-build");
-const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final-v4.pptx");
+const FINAL_PPTX = path.join(workspaceDir, "carousel-output", "AlphaSynth-BMS-V1-Carousel-Final-v5.pptx");
 const RUNTIME_PYTHON = "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe";
 process.env.RUNTIME_NODE ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\bin\\node.exe";
 process.env.RUNTIME_NODE_MODULES ||= "C:\\Users\\admin\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\node\\node_modules";
@@ -294,6 +294,7 @@ console.log("builder: slide 8");
   label(slide, "Supporting explanation", 550, 660, 420, C.gold);
   text(slide, "Later pages explain the factors, subsequent result checks, management history and source evidence.", 550, 700, 420, 100, 21, C.white, true);
   text(slide, "Illustrative sample: Radico Khaitan. Research aid only. No buy or sell recommendation.", 550, 865, 420, 70, 18, C.text);
+  text(slide, "expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app", 550, 946, 420, 28, 12, C.teal);
   note(slide, "This is the first page of the six-page AlphaSynth Professional Dossier sample for Radico Khaitan. It shows the format a user can expect when the available evidence meets the full-report standard. Later pages explain the BMS factors, later-results check, management history and sources. The dossier remains a research aid rather than a trading recommendation.");
 }
 console.log("builder: slide 9");
@@ -330,7 +331,7 @@ if (!finalExists) await finalizePresentation({
   materializeLiteralChartWorkbooks: true,
   fontPolicy: { basis: "design", families: [font] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final-v4.validation.json"),
+  receiptPath: path.join(stagingDir, "AlphaSynth-BMS-V1-Carousel-Final-v5.validation.json"),
 });
 
 console.log(JSON.stringify({ final: FINAL_PPTX, font }, null, 2));
