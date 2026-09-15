@@ -4173,10 +4173,10 @@ ${rawText}` }] }],
           const searchRes: any = await scraper.search(searchQuery, { limit: 2 });
           const topUrl = searchRes?.web?.[0]?.url || searchRes?.news?.[0]?.url;
           if (topUrl) {
-            sourceUrl = topUrl;
             const scrapeResult = await scraper.scrape(topUrl, { formats: ['markdown'], onlyMainContent: true });
             const raw = scrapeResult?.markdown || "";
             if (isScrapedContentUsable(raw)) {
+              sourceUrl = topUrl;
               transcriptContext = raw.substring(0, 8000);
               transcriptSourceUrl = topUrl;
               transcriptStatus = "direct_source";

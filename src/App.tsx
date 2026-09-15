@@ -2103,6 +2103,11 @@ ${list}
       }
 
       const data = await response.json();
+      const earningsConfidence = data.transcriptStatus === 'direct_source' || data.transcriptStatus === 'provided_context'
+        ? 'high'
+        : data.transcriptStatus === 'search_grounded'
+        ? 'medium'
+        : 'low';
       const reportData = {
         mode: 'earnings_intelligence' as const,
         ticker: tkr,
@@ -2110,7 +2115,7 @@ ${list}
         earnings: data.transcriptEvidence || 'No identifiable transcript commentary was available in the retrieved evidence.',
         transcriptStatus: data.transcriptStatus || 'unavailable',
         transcriptSourceUrl: data.transcriptSourceUrl || '',
-        confidence: 'high' as const,
+        confidence: earningsConfidence as 'high' | 'medium' | 'low',
         scrapeQuality: 'good' as const,
         metrics: {},
         sourceUrl: data.sourceUrl || ''
@@ -2830,7 +2835,12 @@ ${list}
                                disabled={analyzing}
                                onClick={() => {
                                  if (m.id === 'earnings_intelligence') {
-                                   if (cachedEarnings && cachedEarnings.ticker === lastReport.ticker) {
+                                    if (cachedEarnings && cachedEarnings.ticker === lastReport.ticker) {
+                                      const cachedConfidence = cachedEarnings.transcriptStatus === 'direct_source' || cachedEarnings.transcriptStatus === 'provided_context'
+                                        ? 'high'
+                                        : cachedEarnings.transcriptStatus === 'search_grounded'
+                                        ? 'medium'
+                                        : 'low';
                                       const r = {
                                         mode: 'earnings_intelligence' as const,
                                         ticker: lastReport.ticker,
@@ -2838,7 +2848,7 @@ ${list}
                                         earnings: cachedEarnings.transcriptEvidence || 'No identifiable transcript commentary was available in the retrieved evidence.',
                                         transcriptStatus: cachedEarnings.transcriptStatus || 'unavailable',
                                         transcriptSourceUrl: cachedEarnings.transcriptSourceUrl || '',
-                                        confidence: 'high' as const,
+                                        confidence: cachedConfidence as 'high' | 'medium' | 'low',
                                         scrapeQuality: 'good' as const,
                                         metrics: {},
                                         sourceUrl: cachedEarnings.sourceUrl || ''
@@ -3205,14 +3215,16 @@ ${list}
                           )}
 
                           {/* Source + disclaimer */}
-                          {earningsIntelReport.sourceUrl && (
+                          {(earningsIntelReport.transcriptSourceUrl || earningsIntelReport.sourceUrl) && (
                             <div className="p-4 bg-gold/5 border border-gold/20 rounded-2xl flex items-center justify-between">
                               <div className="flex items-center gap-3">
                                 <ShieldCheck className="text-gold w-4 h-4" />
-                                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">Grounded via Gemini + Firecrawl transcript scraping</p>
+                                <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest">
+                                  {earningsIntelReport.transcriptStatus === 'direct_source' ? 'Direct transcript retrieved and analysed' : 'Supporting research source'}
+                                </p>
                               </div>
-                              <a href={earningsIntelReport.sourceUrl} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-zinc-900 border border-app-border text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white rounded-lg truncate max-w-[150px]">
-                                {(() => { try { return new URL(earningsIntelReport.sourceUrl).hostname; } catch { return 'Source'; } })()}
+                              <a href={earningsIntelReport.transcriptSourceUrl || earningsIntelReport.sourceUrl} target="_blank" rel="noreferrer" className="px-3 py-1.5 bg-zinc-900 border border-app-border text-[9px] font-bold uppercase tracking-wider text-zinc-400 hover:text-white rounded-lg truncate max-w-[150px]">
+                                {(() => { try { return new URL(earningsIntelReport.transcriptSourceUrl || earningsIntelReport.sourceUrl).hostname; } catch { return 'Source'; } })()}
                               </a>
                             </div>
                           )}
