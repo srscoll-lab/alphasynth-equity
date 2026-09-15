@@ -6,7 +6,7 @@ import { Presentation, PresentationFile } from "@oai/artifact-tool";
 const root = "C:/Users/admin/Documents/ChatGPT/Alphasynth Intelligence/alphasynth-equity";
 const skill = "C:/Users/admin/.codex/plugins/cache/openai-primary-runtime/presentations/26.909.12148/skills/presentations";
 const tmp = path.join(root, ".codex-final-walkthrough");
-const output = path.join(root, "carousel-output", "AlphaSynth-Product-Walkthrough-Carousel-Final-v7.pptx");
+const output = path.join(root, "carousel-output", "AlphaSynth-Product-Walkthrough-Carousel-Final-v8.pptx");
 const python = "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe";
 process.env.RUNTIME_NODE ||= "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node.exe";
 process.env.RUNTIME_NODE_MODULES ||= "C:/Users/admin/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules";
@@ -69,10 +69,10 @@ function stage(slide, name, body, left, top, accent = C.teal) {
   shape(s, "roundRect", 70, 682, 940, 158, C.panel2, C.teal, 16);
   txt(s, "What it does", 100, 712, 230, 28, 17, C.teal, true);
   txt(s, "Prioritises companies whose reported business momentum may deserve further research.", 100, 750, 390, 62, 17, C.white);
-  txt(s, "What it does not claim", 550, 712, 280, 28, 17, C.gold, true);
-  txt(s, "It does not predict returns, set a target price or provide a buy or sell recommendation.", 550, 750, 390, 62, 17, C.white);
+  txt(s, "Investment boundary", 550, 712, 280, 28, 17, C.gold, true);
+  txt(s, "BMS does not generate entry or exit calls. Deep Dive may show traceable analyst targets or recommendations as attributed external views, not as AlphaSynth advice.", 550, 750, 390, 82, 17, C.white);
   txt(s, "Live pilot: expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app", 70, 925, 940, 34, 17, C.gold, true, "center");
-  notes(s, "Opening. State the product boundary before demonstrating it. The URL points to the current AlphaSynth pilot.");
+  notes(s, "Opening. BMS itself does not generate trading calls. Deep Dive may aggregate traceable analyst targets and recommendations, which must remain attributed external views rather than AlphaSynth advice. The URL points to the current AlphaSynth pilot.");
 }
 
 // 2. Journey
@@ -231,7 +231,7 @@ function stage(slide, name, body, left, top, accent = C.teal) {
   notes(s, "Close with a live demonstration rather than a separate ready-for-peer-review claim. The cohort measured workflow completion and evidence readiness, not investment performance.");
 }
 
-const candidate = path.join(tmp, "candidate-v7.pptx");
+const candidate = path.join(tmp, "candidate-v8.pptx");
 await (await PresentationFile.exportPptx(deck)).save(candidate);
 if (await fs.access(output).then(() => true).catch(() => false)) throw new Error(`Refusing to overwrite ${output}`);
 await finalizePresentation({
@@ -248,6 +248,6 @@ await finalizePresentation({
   layoutArgs: ["--expected-slide-size-emu", "10287000,10287000", "--validate-bullet-geometry", "--validate-heading-fit"],
   fontPolicy: { basis: "design", families: [font] },
   verifyArtifactToolImport: true,
-  receiptPath: path.join(tmp, "AlphaSynth-Product-Walkthrough-Carousel-Final-v7.validation.json"),
+  receiptPath: path.join(tmp, "AlphaSynth-Product-Walkthrough-Carousel-Final-v8.validation.json"),
 });
 console.log(JSON.stringify({ output, slides: deck.slides.items.length }, null, 2));

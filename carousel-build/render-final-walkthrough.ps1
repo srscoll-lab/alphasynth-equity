@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
-$deckPath = "C:\Users\admin\Documents\ChatGPT\Alphasynth Intelligence\alphasynth-equity\carousel-output\AlphaSynth-Product-Walkthrough-Carousel-Final-v7.pptx"
-$renderPath = "C:\Users\admin\Documents\ChatGPT\Alphasynth Intelligence\alphasynth-equity\carousel-build\final-walkthrough-v7-render"
+$deckPath = "C:\Users\admin\Documents\ChatGPT\Alphasynth Intelligence\alphasynth-equity\carousel-output\AlphaSynth-Product-Walkthrough-Carousel-Final-v8.pptx"
+$renderPath = "C:\Users\admin\Documents\ChatGPT\Alphasynth Intelligence\alphasynth-equity\carousel-build\final-walkthrough-v8-render"
 
 New-Item -ItemType Directory -Force -Path $renderPath | Out-Null
 
