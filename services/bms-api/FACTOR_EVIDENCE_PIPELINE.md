@@ -34,6 +34,30 @@ Use `stock_intelligence.factor_evidence_importer.import_factor_evidence_csv`
 against the isolated quarterly candidate database before recalculating and
 publishing the product artifact.
 
+## Bounded official-evidence cohort
+
+The AlphaSynth dossier workflow can emit optional `factorEvidence` rows for
+Execution and Balance Sheet while it is reading already-admitted dated official
+documents. The extraction is fail-closed: it accepts only explicit numeric
+previous/current comparisons, checks the metric against the deterministic BMS
+taxonomy, and does not reuse revenue, profit, EBITDA, or margin as Execution.
+
+After running the stop-line cohort against the isolated pilot, export those
+rows to the importer contract with:
+
+```text
+npm run export:bms-factor-evidence -- \
+  --input=/tmp/alphasynth-stop-line-YYYYMMDD \
+  --output=/tmp/bms-factor-evidence.csv \
+  --cutoff=YYYY-MM-DD
+```
+
+The cutoff used for score repair must be the lifecycle freeze date, not a later
+confirmation date. Later evidence belongs in the confirmation overlay and must
+not rewrite the frozen score. The exporter writes a sibling diagnostics JSON
+showing admitted rows and factor coverage by company. Review that file before
+importing anything into the candidate database.
+
 ## Publication response
 
 `GET /bms/lifecycle/current` returns:
