@@ -62,6 +62,22 @@ BMS_SUPPLEMENTAL_EVIDENCE_FILE = Path(
     )
 )
 
+BMS_DISPLAY_RANGE = 0.75
+
+
+def bms_display_score(value: float | int | None) -> int:
+    """Match the 0-100 display conversion used by every AlphaSynth surface."""
+    raw = float(value or 0)
+    displayed = math.floor(50 + (raw / BMS_DISPLAY_RANGE) * 50 + 0.50000001)
+    return max(0, min(100, displayed))
+
+
+def bms_display_change_points(value: float | int | None) -> int:
+    """Convert raw BMS movement into the same display-point scale as the UI."""
+    raw = float(value or 0)
+    displayed = math.floor((raw / BMS_DISPLAY_RANGE) * 50 + 0.50000001)
+    return max(-50, min(50, displayed))
+
 
 @app.get("/health")
 def health():
@@ -732,26 +748,12 @@ def bms_research_context(symbol: str):
         "period": period,
         "bms_signal": {
             "bms_raw": company_signal.get("bms"),
-            "bms_display": max(
-                0,
-                min(
-                    100,
-                    math.floor(
-                        50 + (float(company_signal.get("bms") or 0) / 0.4) * 50 + 0.50000001
-                    ),
-                ),
-            ),
+            "bms_display": bms_display_score(company_signal.get("bms")),
             "previous_bms_raw": company_signal.get("previous_bms"),
             "previous2_bms_raw": company_signal.get("previous2_bms"),
             "bms_change_raw": company_signal.get("bms_change"),
-            "bms_change_points": max(
-                -50,
-                min(
-                    50,
-                    math.floor(
-                        (float(company_signal.get("bms_change") or 0) / 0.4) * 50 + 0.50000001
-                    ),
-                ),
+            "bms_change_points": bms_display_change_points(
+                company_signal.get("bms_change")
             ),
             "momentum_state": company_signal.get("momentum_state"),
             "lifecycle_stage": company_signal.get("lifecycle_stage"),
