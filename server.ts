@@ -3628,6 +3628,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const diagnostics: any[] = [];
       const seen = new Set<string>();
       const normalizeSourceLabel = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const numericVariants = (value: number) => [...new Set([
+        String(value), value.toFixed(1), value.toFixed(2), Math.round(value).toString(),
+      ].map(item => item.replace(/[,\.\s]/g, "")))].filter(item => item && item !== "nan");
+      const containsEvidenceValue = (text: string, value: number) => {
+        const compact = text.replace(/[,\s₹$€£%]/g, "").toLowerCase();
+        return numericVariants(value).some(variant => compact.includes(variant));
+      };
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
         const mapping = mapBmsFactorMetric(candidate?.metricName);
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
@@ -3659,6 +3666,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }
         seen.add(key);
         let verifiedUrl = sourceUrl;
+        let verificationMethod = "direct_official_document";
         try {
           const verification = await fetch(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
@@ -3675,18 +3683,27 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 40)
             : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
-          const compact = documentText.replace(/[,\s₹$€£%]/g, "").toLowerCase();
-          const variants = (value: number) => [...new Set([
-            String(value), value.toFixed(1), value.toFixed(2), Math.round(value).toString(),
-          ].map(item => item.replace(/[,.\s]/g, "")))].filter(item => item && item !== "nan");
-          if (!variants(previousValue).some(value => compact.includes(value))
-            || !variants(currentValue).some(value => compact.includes(value))) {
+          if (!containsEvidenceValue(documentText, previousValue)
+            || !containsEvidenceValue(documentText, currentValue)) {
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified" });
             continue;
           }
         } catch {
-          diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
-          continue;
+          // NSE/BSE frequently block server-side PDF downloads. Permit a lower-
+          // confidence fallback only when this exact official URL came from the
+          // grounded source index and both values occur in the grounded research.
+          const groundedOfficialSource = groundedSources.some((source: any) =>
+            source.url === sourceUrl
+            || (normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl)
+              && source.url === indexedUrl));
+          if (!groundedOfficialSource
+            || !isOfficialDossierSource(sourceUrl, officialDomains)
+            || !containsEvidenceValue(grounded.text || "", previousValue)
+            || !containsEvidenceValue(grounded.text || "", currentValue)) {
+            diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
+            continue;
+          }
+          verificationMethod = "gemini_grounded_official_fallback";
         }
         const hostname = new URL(verifiedUrl).hostname.toLowerCase();
         rows.push({
@@ -3694,9 +3711,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           previous_period: previousPeriod, current_period: currentPeriod,
           previous_value: previousValue, current_value: currentValue,
           source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
-          source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff, confidence: 0.85,
+          source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff,
+          confidence: verificationMethod === "direct_official_document" ? 0.85 : 0.75,
         });
-        diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "admitted" });
+        diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl,
+          outcome: verificationMethod === "direct_official_document" ? "admitted" : "admitted_grounded_official_fallback" });
       }
       return res.json({ ticker, cutoff, method: "gemini_grounded_official_evidence", modelJsonRepaired, rows, diagnostics });
     } catch (error: any) {
