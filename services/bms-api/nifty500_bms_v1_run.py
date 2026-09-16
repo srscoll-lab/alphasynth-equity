@@ -23,25 +23,21 @@ from pathlib import Path
 
 import pandas as pd
 
-
 BASE = Path(__file__).resolve().parent
 
-FUNDAMENTALS = (
-    BASE / "final_validation"
-    / "nifty500_bms_v1_fundamentals.csv"
-)
+FUNDAMENTALS = BASE / "final_validation" / "nifty500_bms_v1_fundamentals.csv"
 
-READINESS = (
-    BASE / "final_validation"
-    / "nifty500_bms_v1_final_readiness.csv"
-)
+READINESS = BASE / "final_validation" / "nifty500_bms_v1_final_readiness.csv"
 
-DB_FILE = (
-    BASE / "nifty500_bms_v1_candidate.db"
-)
+DB_FILE = BASE / "nifty500_bms_v1_candidate.db"
 
-OUTPUT = (
-    BASE / "nifty500_bms_v1_results.csv"
+OUTPUT = BASE / "nifty500_bms_v1_results.csv"
+
+FACTOR_EVIDENCE = Path(
+    os.environ.get(
+        "BMS_FACTOR_EVIDENCE_FILE",
+        str(BASE / "final_validation" / "nifty500_bms_factor_evidence.csv"),
+    )
 )
 
 PERIODS = [
@@ -70,9 +66,7 @@ SCORE_PERIODS = [
 
 
 def stop(message: str) -> None:
-    raise SystemExit(
-        f"\nSTOP: {message}\n"
-    )
+    raise SystemExit(f"\nSTOP: {message}\n")
 
 
 def metric_category(metric: str) -> str:
@@ -103,44 +97,24 @@ def main() -> None:
     print("=" * 76)
 
     if not FUNDAMENTALS.exists():
-        stop(
-            f"Missing fundamentals: "
-            f"{FUNDAMENTALS}"
-        )
+        stop(f"Missing fundamentals: {FUNDAMENTALS}")
 
     if not READINESS.exists():
-        stop(
-            f"Missing readiness file: "
-            f"{READINESS}"
-        )
+        stop(f"Missing readiness file: {READINESS}")
 
-    fundamentals = pd.read_csv(
-        FUNDAMENTALS
-    )
+    fundamentals = pd.read_csv(FUNDAMENTALS)
 
-    readiness = pd.read_csv(
-        READINESS
-    )
+    readiness = pd.read_csv(READINESS)
 
     for df in [
         fundamentals,
         readiness,
     ]:
-        df["symbol"] = (
-            df["symbol"]
-            .astype(str)
-            .str.strip()
-            .str.upper()
-        )
+        df["symbol"] = df["symbol"].astype(str).str.strip().str.upper()
 
-    ready = readiness[
-        readiness["bms_v1_status"]
-        == "ready"
-    ].copy()
+    ready = readiness[readiness["bms_v1_status"] == "ready"].copy()
 
-    ready_symbols = set(
-        ready["symbol"]
-    )
+    ready_symbols = set(ready["symbol"])
 
     print()
     print(
@@ -149,29 +123,18 @@ def main() -> None:
     )
 
     if len(ready_symbols) != 477:
-        stop(
-            "Expected 477 ready companies, "
-            f"found {len(ready_symbols)}"
-        )
+        stop(f"Expected 477 ready companies, found {len(ready_symbols)}")
 
-    fundamentals = fundamentals[
-        fundamentals["symbol"]
-        .isin(ready_symbols)
-    ].copy()
+    fundamentals = fundamentals[fundamentals["symbol"].isin(ready_symbols)].copy()
 
     fundamentals["value"] = pd.to_numeric(
         fundamentals["value"],
         errors="coerce",
     )
 
-    fundamentals = fundamentals[
-        fundamentals["value"].notna()
-    ].copy()
+    fundamentals = fundamentals[fundamentals["value"].notna()].copy()
 
-    fundamentals = fundamentals[
-        fundamentals["period"]
-        .isin(PERIODS)
-    ].copy()
+    fundamentals = fundamentals[fundamentals["period"].isin(PERIODS)].copy()
 
     duplicates = fundamentals.duplicated(
         subset=[
@@ -182,10 +145,7 @@ def main() -> None:
     ).sum()
 
     if duplicates:
-        stop(
-            f"Found {duplicates} duplicate "
-            "symbol/period/metric rows"
-        )
+        stop(f"Found {duplicates} duplicate symbol/period/metric rows")
 
     print(
         "Usable observations:",
@@ -199,14 +159,7 @@ def main() -> None:
 
     print()
     print("Observations by period:")
-    print(
-        fundamentals["period"]
-        .value_counts()
-        .reindex(PERIODS)
-        .fillna(0)
-        .astype(int)
-        .to_string()
-    )
+    print(fundamentals["period"].value_counts().reindex(PERIODS).fillna(0).astype(int).to_string())
 
     # --------------------------------------------------------
     # CREATE ISOLATED DATABASE
@@ -218,9 +171,7 @@ def main() -> None:
     if OUTPUT.exists():
         OUTPUT.unlink()
 
-    os.environ["DATABASE_URL"] = (
-        f"sqlite:///{DB_FILE}"
-    )
+    os.environ["DATABASE_URL"] = f"sqlite:///{DB_FILE}"
 
     from sqlalchemy import (
         create_engine,
@@ -229,46 +180,40 @@ def main() -> None:
         sessionmaker,
     )
 
+    from stock_intelligence.evidence_promotion import (
+        promote_change_to_evidence,
+    )
+    from stock_intelligence.factor_evidence_importer import (
+        import_factor_evidence_csv,
+    )
+    from stock_intelligence.financial_observation_service import (
+        create_observation_with_change,
+    )
     from stock_intelligence.models import (
         Base,
         Company,
         Thesis,
         ThesisEvidence,
     )
-
-    from stock_intelligence.financial_observation_service import (
-        create_observation_with_change,
-    )
-
-    from stock_intelligence.evidence_promotion import (
-        promote_change_to_evidence,
-    )
-
     from stock_intelligence.tcs_from_evidence import (
         calculate_tcs_from_thesis_evidence,
     )
-
     from stock_intelligence.tcs_state import (
         classify_tcs_state,
     )
 
     engine = create_engine(
         f"sqlite:///{DB_FILE}",
-        connect_args={
-            "check_same_thread": False
-        },
+        connect_args={"check_same_thread": False},
     )
 
     Base.metadata.create_all(engine)
 
-    Session = sessionmaker(
-        bind=engine
-    )
+    Session = sessionmaker(bind=engine)
 
     db = Session()
 
     try:
-
         # ----------------------------------------------------
         # COMPANY + THESIS IDENTITIES
         # ----------------------------------------------------
@@ -281,9 +226,7 @@ def main() -> None:
                 ]
             ]
             .drop_duplicates("symbol")
-            .set_index("symbol")[
-                "company_name"
-            ]
+            .set_index("symbol")["company_name"]
             .to_dict()
         )
 
@@ -291,15 +234,10 @@ def main() -> None:
             sorted(ready_symbols),
             start=1,
         ):
-
             company = Company(
                 id=idx,
-                company_uuid=str(
-                    uuid.uuid4()
-                ),
-                legal_name=names.get(
-                    symbol
-                ),
+                company_uuid=str(uuid.uuid4()),
+                legal_name=names.get(symbol),
                 nse_symbol=symbol,
                 symbol=symbol,
                 exchange="NSE",
@@ -312,47 +250,27 @@ def main() -> None:
 
         db.commit()
 
-        companies = {
-            company.symbol: company
-            for company in (
-                db.query(Company).all()
-            )
-        }
+        companies = {company.symbol: company for company in (db.query(Company).all())}
 
-        for symbol in sorted(
-            ready_symbols
-        ):
-
+        for symbol in sorted(ready_symbols):
             company = companies[symbol]
 
             thesis = Thesis(
                 company_id=company.id,
                 thesis_type="fundamental",
-                title=(
-                    f"{symbol} Nifty 500 "
-                    "BMS V1 thesis"
-                ),
+                title=(f"{symbol} Nifty 500 BMS V1 thesis"),
                 thesis_text=(
-                    "Expanded Nifty 500 "
-                    "BMS V1 deterministic "
-                    "fundamental momentum thesis."
+                    "Expanded Nifty 500 BMS V1 deterministic fundamental momentum thesis."
                 ),
                 status="active",
-                model_version=(
-                    "nifty500-bms-v1"
-                ),
+                model_version=("nifty500-bms-v1"),
             )
 
             db.add(thesis)
 
         db.commit()
 
-        theses = {
-            thesis.company_id: thesis
-            for thesis in (
-                db.query(Thesis).all()
-            )
-        }
+        theses = {thesis.company_id: thesis for thesis in (db.query(Thesis).all())}
 
         print()
         print(
@@ -369,37 +287,22 @@ def main() -> None:
         # IMPORT CHRONOLOGICALLY
         # ----------------------------------------------------
 
-        order = {
-            period: idx
-            for idx, period in enumerate(
-                PERIODS
-            )
-        }
+        order = {period: idx for idx, period in enumerate(PERIODS)}
 
-        fundamentals["_order"] = (
-            fundamentals["period"]
-            .map(order)
-        )
+        fundamentals["_order"] = fundamentals["period"].map(order)
 
-        fundamentals = (
-            fundamentals
-            .sort_values(
-                [
-                    "_order",
-                    "symbol",
-                    "metric_name",
-                ]
-            )
+        fundamentals = fundamentals.sort_values(
+            [
+                "_order",
+                "symbol",
+                "metric_name",
+            ]
         )
 
         results = []
 
         for period in PERIODS:
-
-            rows = fundamentals[
-                fundamentals["period"]
-                == period
-            ]
+            rows = fundamentals[fundamentals["period"] == period]
 
             changes = []
 
@@ -409,75 +312,32 @@ def main() -> None:
             print("-" * 76)
 
             for _, row in rows.iterrows():
-
                 symbol = row["symbol"]
 
-                company = companies.get(
-                    symbol
-                )
+                company = companies.get(symbol)
 
                 if company is None:
                     continue
 
-                metric = (
-                    str(
-                        row["metric_name"]
-                    )
-                    .strip()
-                    .lower()
-                )
+                metric = str(row["metric_name"]).strip().lower()
 
-                _, change = (
-                    create_observation_with_change(
-                        db,
-                        company_id=company.id,
-                        metric_name=metric,
-                        metric_value=float(
-                            row["value"]
-                        ),
-                        period_label=period,
-                        period_type="quarterly",
-                        period_end_date=(
-                            pd.to_datetime(
-                                PERIOD_END[
-                                    period
-                                ]
-                            ).date()
-                        ),
-                        category=metric_category(
-                            metric
-                        ),
-                        comparison_type="YoY",
-                        unit=(
-                            None
-                            if pd.isna(
-                                row["unit"]
-                            )
-                            else str(
-                                row["unit"]
-                            )
-                        ),
-                        source_type=(
-                            None
-                            if pd.isna(
-                                row[
-                                    "source_type"
-                                ]
-                            )
-                            else str(
-                                row[
-                                    "source_type"
-                                ]
-                            )
-                        ),
-                        confidence=0.6
-                    )
+                _, change = create_observation_with_change(
+                    db,
+                    company_id=company.id,
+                    metric_name=metric,
+                    metric_value=float(row["value"]),
+                    period_label=period,
+                    period_type="quarterly",
+                    period_end_date=(pd.to_datetime(PERIOD_END[period]).date()),
+                    category=metric_category(metric),
+                    comparison_type="YoY",
+                    unit=(None if pd.isna(row["unit"]) else str(row["unit"])),
+                    source_type=(None if pd.isna(row["source_type"]) else str(row["source_type"])),
+                    confidence=0.6,
                 )
 
                 if change is not None:
-                    changes.append(
-                        change
-                    )
+                    changes.append(change)
 
             print(
                 "ChangeRecords:",
@@ -488,11 +348,27 @@ def main() -> None:
             if period not in SCORE_PERIODS:
                 continue
 
-            for change in changes:
-
-                thesis = theses.get(
-                    change.company_id
+            if FACTOR_EVIDENCE.exists():
+                factor_import = import_factor_evidence_csv(
+                    db,
+                    FACTOR_EVIDENCE,
+                    current_period=period,
                 )
+                print(
+                    "Factor evidence:",
+                    f"inserted={factor_import.inserted}",
+                    f"promoted={factor_import.promoted}",
+                    f"duplicates={factor_import.duplicates}",
+                    f"rejected={factor_import.rejected}",
+                )
+            else:
+                print(
+                    "Factor evidence: no supplemental file; "
+                    "companies with incomplete coverage will not be published."
+                )
+
+            for change in changes:
+                thesis = theses.get(change.company_id)
 
                 if thesis is None:
                     continue
@@ -505,94 +381,54 @@ def main() -> None:
 
             scored_this_period = 0
 
-            for symbol in sorted(
-                ready_symbols
-            ):
+            for symbol in sorted(ready_symbols):
+                company = companies[symbol]
 
-                company = companies[
-                    symbol
-                ]
+                thesis = theses[company.id]
 
-                thesis = theses[
-                    company.id
-                ]
-
-                result = (
-                    calculate_tcs_from_thesis_evidence(
-                        db=db,
-                        thesis_id=thesis.id,
-                    )
+                result = calculate_tcs_from_thesis_evidence(
+                    db=db,
+                    thesis_id=thesis.id,
                 )
 
-                factor_scores = {
-                    factor.name:
-                        factor.current_score
-                    for factor
-                    in result.factors
-                }
+                factor_scores = {factor.name: factor.current_score for factor in result.factors}
 
                 evidence_count = (
-                    db.query(
-                        ThesisEvidence
-                    )
-                    .filter(
-                        ThesisEvidence.thesis_id
-                        == thesis.id
-                    )
-                    .count()
+                    db.query(ThesisEvidence).filter(ThesisEvidence.thesis_id == thesis.id).count()
                 )
 
-                state = classify_tcs_state(
-                    tcs_score=(
-                        result.current_tcs
-                    )
-                )
+                state = classify_tcs_state(tcs_score=(result.current_tcs))
 
                 results.append(
                     {
-                        "company_id":
-                            company.id,
-                        "symbol":
-                            symbol,
-                        "company_name":
-                            names.get(
-                                symbol
-                            ),
-                        "period":
-                            period,
-                        "thesis_id":
-                            thesis.id,
-                        "bms":
-                            result.current_tcs,
-                        "state":
-                            state,
-                        "evidence_count":
-                            evidence_count,
-                        "earnings":
-                            factor_scores.get(
-                                "earnings",
-                                0.0,
-                            ),
-                        "economics":
-                            factor_scores.get(
-                                "economics",
-                                0.0,
-                            ),
-                        "execution":
-                            factor_scores.get(
-                                "execution",
-                                0.0,
-                            ),
-                        "balance_sheet":
-                            factor_scores.get(
-                                "balance_sheet",
-                                0.0,
-                            ),
-                        "management_delivery":
-                            factor_scores.get(
-                                "management_delivery",
-                                0.0,
-                            ),
+                        "company_id": company.id,
+                        "symbol": symbol,
+                        "company_name": names.get(symbol),
+                        "period": period,
+                        "thesis_id": thesis.id,
+                        "bms": result.current_tcs,
+                        "state": state,
+                        "evidence_count": evidence_count,
+                        "earnings": factor_scores.get(
+                            "earnings",
+                            0.0,
+                        ),
+                        "economics": factor_scores.get(
+                            "economics",
+                            0.0,
+                        ),
+                        "execution": factor_scores.get(
+                            "execution",
+                            0.0,
+                        ),
+                        "balance_sheet": factor_scores.get(
+                            "balance_sheet",
+                            0.0,
+                        ),
+                        "management_delivery": factor_scores.get(
+                            "management_delivery",
+                            0.0,
+                        ),
                     }
                 )
 
@@ -603,21 +439,12 @@ def main() -> None:
                 scored_this_period,
             )
 
-        output = pd.DataFrame(
-            results
-        )
+        output = pd.DataFrame(results)
 
-        expected_rows = (
-            len(ready_symbols)
-            * len(SCORE_PERIODS)
-        )
+        expected_rows = len(ready_symbols) * len(SCORE_PERIODS)
 
         if len(output) != expected_rows:
-            stop(
-                f"Expected {expected_rows} "
-                f"result rows, found "
-                f"{len(output)}"
-            )
+            stop(f"Expected {expected_rows} result rows, found {len(output)}")
 
         output.to_csv(
             OUTPUT,
@@ -626,9 +453,7 @@ def main() -> None:
 
         print()
         print("=" * 76)
-        print(
-            "NIFTY 500 BMS V1 RUN COMPLETE"
-        )
+        print("NIFTY 500 BMS V1 RUN COMPLETE")
         print("=" * 76)
 
         print()
@@ -639,24 +464,14 @@ def main() -> None:
 
         print(
             "Companies:",
-            output[
-                "symbol"
-            ].nunique(),
+            output["symbol"].nunique(),
         )
 
         print()
         print("Rows by period:")
-        print(
-            output["period"]
-            .value_counts()
-            .sort_index()
-            .to_string()
-        )
+        print(output["period"].value_counts().sort_index().to_string())
 
-        latest = output[
-            output["period"]
-            == "Q3 FY26"
-        ].copy()
+        latest = output[output["period"] == "Q3 FY26"].copy()
 
         latest = latest.sort_values(
             [
@@ -670,9 +485,7 @@ def main() -> None:
         )
 
         print()
-        print(
-            "TOP 20 — Q3 FY26"
-        )
+        print("TOP 20 — Q3 FY26")
         print(
             latest[
                 [
@@ -684,9 +497,7 @@ def main() -> None:
                 ]
             ]
             .head(20)
-            .to_string(
-                index=False
-            )
+            .to_string(index=False)
         )
 
         print()
@@ -701,10 +512,7 @@ def main() -> None:
         )
 
         print()
-        print(
-            "Existing 154-company "
-            "production BMS was NOT modified."
-        )
+        print("Existing 154-company production BMS was NOT modified.")
 
     finally:
         db.close()

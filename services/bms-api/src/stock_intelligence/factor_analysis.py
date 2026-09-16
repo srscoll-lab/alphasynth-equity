@@ -58,10 +58,11 @@ def load_factor_analyses(
 ) -> dict[str, dict]:
     """Build sourced previous/current factor comparisons in one database pass.
 
-    Only ChangeRecords actually promoted to ThesisEvidence are admitted. This
-    keeps the display, score inputs, and publication qualification on the same
-    evidence population. Management evidence without a comparable linked
-    ChangeRecord remains partial and cannot qualify a company by itself.
+    Every admitted comparable ChangeRecord is visible here, including a small
+    or neutral change that correctly produced no promoted thesis evidence. This
+    distinction prevents an observed neutral factor from being confused with a
+    missing factor. Management commentary without a comparable ChangeRecord
+    remains partial and cannot qualify a company by itself.
     """
 
     analyses = {
@@ -77,9 +78,6 @@ def load_factor_analyses(
             """
             SELECT
                 UPPER(COALESCE(c.nse_symbol, c.symbol)) AS symbol,
-                te.id AS evidence_id,
-                te.evidence_type,
-                te.confidence AS evidence_confidence,
                 cr.id AS change_record_id,
                 cr.metric_or_topic,
                 cr.previous_period,
@@ -88,11 +86,9 @@ def load_factor_analyses(
                 cr.current_value,
                 cr.change_value,
                 cr.confidence AS change_confidence
-            FROM thesis_evidence te
-            JOIN theses t ON t.id = te.thesis_id
-            JOIN companies c ON c.id = t.company_id
-            LEFT JOIN change_records cr ON cr.id = te.change_record_id
-            ORDER BY c.id, te.id
+            FROM change_records cr
+            JOIN companies c ON c.id = cr.company_id
+            ORDER BY c.id, cr.id
             """
         ).fetchall()
     except sqlite3.Error:
@@ -106,7 +102,7 @@ def load_factor_analyses(
         current_period = periods_by_symbol.get(symbol)
         if not current_period or row["current_period"] != current_period:
             continue
-        metric = str(row["evidence_type"] or row["metric_or_topic"] or "")
+        metric = str(row["metric_or_topic"] or "")
         mapping = map_evidence_to_tcs_factor(evidence_type=metric)
         if mapping is None:
             continue
@@ -127,7 +123,7 @@ def load_factor_analyses(
             for row in admitted:
                 if row["change_record_id"] is None:
                     continue
-                metric = str(row["metric_or_topic"] or row["evidence_type"])
+                metric = str(row["metric_or_topic"])
                 previous_period = previous_period or row["previous_period"]
                 current_period = row["current_period"] or current_period
                 previous_metrics.append(
@@ -146,7 +142,7 @@ def load_factor_analyses(
                     }
                 )
                 refs.append(f"change-record-{row['change_record_id']}")
-                confidence = row["change_confidence"] or row["evidence_confidence"]
+                confidence = row["change_confidence"]
                 if confidence is not None:
                     confidences.append(float(confidence))
 

@@ -41,6 +41,7 @@ REQUIRED_COLUMNS = {
 @dataclass(frozen=True)
 class FactorEvidenceImportResult:
     inserted: int
+    promoted: int
     duplicates: int
     rejected: int
     rejection_reasons: dict[str, int]
@@ -51,7 +52,12 @@ def _date(value: object) -> datetime:
     return parsed.to_pydatetime()
 
 
-def import_factor_evidence_csv(db: Session, path: str | Path) -> FactorEvidenceImportResult:
+def import_factor_evidence_csv(
+    db: Session,
+    path: str | Path,
+    *,
+    current_period: str | None = None,
+) -> FactorEvidenceImportResult:
     """Import dated, comparable evidence produced by the research workflow.
 
     The importer is deliberately strict and idempotent. It accepts only trusted
@@ -64,6 +70,10 @@ def import_factor_evidence_csv(db: Session, path: str | Path) -> FactorEvidenceI
     missing = REQUIRED_COLUMNS - set(frame.columns)
     if missing:
         raise ValueError("Factor evidence CSV missing columns: " + ", ".join(sorted(missing)))
+    if current_period is not None:
+        frame = frame[
+            frame["current_period"].astype(str).str.strip() == current_period.strip()
+        ].copy()
 
     companies = {
         str(company.nse_symbol or company.symbol).strip().upper(): company
@@ -73,7 +83,7 @@ def import_factor_evidence_csv(db: Session, path: str | Path) -> FactorEvidenceI
         thesis.company_id: thesis
         for thesis in db.query(Thesis).filter(Thesis.status == "active").all()
     }
-    inserted = duplicates = rejected = 0
+    inserted = promoted = duplicates = rejected = 0
     reasons: dict[str, int] = {}
 
     def reject(reason: str) -> None:
@@ -162,13 +172,13 @@ def import_factor_evidence_csv(db: Session, path: str | Path) -> FactorEvidenceI
             change_record=record,
             evidence_type=metric,
         )
-        if evidence is None:
-            reject("below_materiality_threshold")
-            continue
         inserted += 1
+        if evidence is not None:
+            promoted += 1
 
     return FactorEvidenceImportResult(
         inserted=inserted,
+        promoted=promoted,
         duplicates=duplicates,
         rejected=rejected,
         rejection_reasons=reasons,
