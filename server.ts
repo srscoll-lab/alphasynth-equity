@@ -3528,6 +3528,141 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
   });
 
+  // Gemini-grounded fallback for the bounded BMS repair cohort. This route is
+  // deliberately narrower than dossier generation: it admits only explicit
+  // comparable Execution and Balance Sheet measurements from dated official
+  // company or exchange URLs. It does not depend on Firecrawl credits.
+  app.post("/api/bms/factor-evidence/research", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Factor-evidence research is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const companyName = String(req.body?.company_name || ticker).trim();
+    const sector = String(req.body?.sector || "Unclassified").trim();
+    const cutoff = String(req.body?.information_cutoff || "").trim();
+    const officialDomains = Array.isArray(req.body?.official_domains)
+      ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
+      : [];
+    if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
+      return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
+    }
+
+    const mapFactorMetric = (rawMetric: unknown): { metric: string; factor: "execution" | "balance_sheet" } | null => {
+      const metric = String(rawMetric || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+      const direct: Record<string, "execution" | "balance_sheet"> = {
+        capacity: "execution", capacity_utilization: "execution", commissioning: "execution",
+        order_execution: "execution", order_book: "execution", project_execution: "execution",
+        volume_growth: "execution", market_share: "execution", innovative_medicine_sales: "execution",
+        deal_tcv: "execution", deal_wins: "execution", large_deal_wins: "execution",
+        client_additions: "execution", client_growth: "execution", utilization: "execution", attrition: "execution",
+        debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
+        inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
+        cash_flow: "balance_sheet", asset_quality: "balance_sheet", gnpa: "balance_sheet", nnpa: "balance_sheet",
+        credit_cost: "balance_sheet", stage_3_assets: "balance_sheet", capital_adequacy: "balance_sheet",
+        cash_conversion: "balance_sheet", net_cash: "balance_sheet",
+      };
+      const executionPatterns = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change"];
+      const balancePatterns = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "operating_cash_flow", "working_capital", "receivable", "inventory", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
+      const factor = direct[metric]
+        || (executionPatterns.some(pattern => metric.includes(pattern)) ? "execution" : null)
+        || (balancePatterns.some(pattern => metric.includes(pattern)) ? "balance_sheet" : null);
+      return factor ? { metric, factor } : null;
+    };
+
+    try {
+      const ai = getGenAI();
+      const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+      const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", ...officialDomains]
+        .map(domain => `site:${domain}`).join(" OR ");
+      const grounded = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [{ text:
+          `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
+          + `Use only official company documents or NSE/BSE filings (${officialScope}). Find explicit numeric previous/current comparisons for two categories. `
+          + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. `
+          + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
+          + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
+          + `For every comparison state the metric, factor, previous period/value, current period/value, unit, exact publication date and direct official source URL. Prefer at least two comparisons per factor. If unavailable, say so.`
+        }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+      });
+      const structured = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [{ text:
+          `Convert the research below into JSON. Keep only explicit numeric previous/current comparisons with a direct official-company, NSE or BSE URL and an exact publication date. `
+          + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n${grounded.text || ""}`
+        }] }],
+        config: {
+          responseMimeType: "application/json",
+          maxOutputTokens: 8192,
+          responseSchema: {
+            type: "OBJECT", required: ["rows"], properties: {
+              rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
+                factor: { type: "STRING" }, metricName: { type: "STRING" }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
+                previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" }, unit: { type: "STRING" }, sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" },
+              } } },
+            },
+          },
+        },
+      });
+      const parsed = JSON.parse(sanitizeJsonShell(structured.text || "{}"));
+      const rows: any[] = [];
+      const diagnostics: any[] = [];
+      const seen = new Set<string>();
+      for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
+        const mapping = mapFactorMetric(candidate?.metricName);
+        const declaredFactor = candidate?.factor === "execution" || candidate?.factor === "balance_sheet" ? candidate.factor : null;
+        const sourceUrl = String(candidate?.sourceUrl || "").trim();
+        const sourceDate = exactEvidenceDate(candidate?.sourceDate);
+        const previousPeriod = String(candidate?.previousPeriod || "").trim();
+        const currentPeriod = String(candidate?.currentPeriod || "").trim();
+        const previousValue = Number(candidate?.previousValue);
+        const currentValue = Number(candidate?.currentValue);
+        const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
+        let rejection: string | null = null;
+        if (!mapping || mapping.factor !== declaredFactor) rejection = "factor_mapping_mismatch";
+        else if (!sourceDate) rejection = "missing_exact_source_date";
+        else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
+        else if (!isOfficialDossierSource(sourceUrl, officialDomains)) rejection = "unverified_source_domain";
+        else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
+        else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
+        else if (seen.has(key)) rejection = "duplicate_comparison";
+        if (rejection) {
+          diagnostics.push({ metric: mapping?.metric || candidate?.metricName || null, sourceUrl, outcome: rejection });
+          continue;
+        }
+        seen.add(key);
+        let verifiedUrl = sourceUrl;
+        try {
+          const verification = await fetch(sourceUrl, {
+            method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
+            headers: { "user-agent": "AlphaSynth-Research/1.0", range: "bytes=0-2047" },
+          });
+          verifiedUrl = verification.url || sourceUrl;
+          await verification.body?.cancel();
+          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) throw new Error(`HTTP ${verification.status}`);
+        } catch {
+          diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
+          continue;
+        }
+        const hostname = new URL(verifiedUrl).hostname.toLowerCase();
+        rows.push({
+          symbol: ticker, factor: mapping.factor, metric_name: mapping.metric,
+          previous_period: previousPeriod, current_period: currentPeriod,
+          previous_value: previousValue, current_value: currentValue,
+          source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
+          source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff, confidence: 0.85,
+        });
+        diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "admitted" });
+      }
+      return res.json({ ticker, cutoff, method: "gemini_grounded_official_evidence", rows, diagnostics });
+    } catch (error: any) {
+      console.error(`[factor-evidence/${ticker}]`, error?.message || error);
+      return res.status(502).json({ error: "Grounded factor-evidence research failed.", ticker, rows: [] });
+    }
+  });
+
   // ── Business Momentum (BMS) ────────────────────────────────────────────────
   // AlphaSynth-facing bridge to the deterministic Python Business Momentum
   // engine. The BMS engine remains the source of truth; AlphaSynth consumes
