@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "1.0.0",
+  "freezeDate": "2026-09-16",
+  "freezeTimezone": "Asia/Kolkata",
+  "sourceBranch": "codex/server-dossier-pdf",
+  "sourceCommit": "3e8fa235a188fdb6d82aa231a80c25ffe4a93cf8",
+  "bmsEvidenceCommit": "69b212781760927d190728fd81d1c55192c67e1a",
+  "gitTag": "bms-v1-presentation-freeze-2026-09-16",
+  "deployment": {
+    "alphaSynthPilotUrl": "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app",
+    "bmsPilotUrl": "https://bms-evidence-pilot---bms-api-oqc2y4ogda-uc.a.run.app",
+    "bmsRevision": "bms-api-evidencegate3",
+    "productionTrafficChanged": false
+  },
+  "publicationPolicy": {
+    "minimumCompleteFactors": 4,
+    "minimumCoverageWeight": 0.75,
+    "mandatoryFactors": [
+      "earnings",
+      "economics"
+    ],
+    "missingEvidenceTreatment": "excluded_not_neutral"
+  },
+  "acceptance": {
+    "monitoredCompanies": 477,
+    "publishedCompanies": 1,
+    "excludedPendingRepair": 476,
+    "publishedSymbols": [
+      "BAJFINANCE"
+    ]
+  },
+  "publishedCompanyEligibility": [
+    {
+      "symbol": "BAJFINANCE",
+      "status": "eligible",
+      "scorePublishable": true,
+      "completeFactorIds": [
+        "earnings",
+        "economics",
+        "execution",
+        "balance_sheet"
+      ],
+      "missingFactorIds": [
+        "management_delivery"
+      ],
+      "completeFactorCount": 4,
+      "coverageWeight": 0.9,
+      "reasons": []
+    }
+  ],
+  "launchEvidence": {
+    "path": "services/bms-api/src/stock_intelligence/bms_launch_factor_evidence.csv",
+    "sha256": "E3D1D77D468C8DE89764842A25EA76FD0E1AF792A7D5EB1E9509287159EFC40D"
+  },
+  "freezeDecision": {
+    "coreDevelopmentFrozen": true,
+    "productionPromotionApproved": false,
+    "permittedNextWork": [
+      "evidence_coverage_expansion",
+      "verified_defect_correction",
+      "carousel_and_demo_material"
+    ]
+  }
+}
