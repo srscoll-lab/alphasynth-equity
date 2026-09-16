@@ -994,6 +994,23 @@ export default function BusinessMomentum({
     [data]
   );
 
+  useEffect(() => {
+    if (!companies.length) return;
+
+    const activeStageHasCompanies = companies.some(
+      (company) => momentumStageLabel(company) === activeStage,
+    );
+    if (activeStageHasCompanies) return;
+
+    const firstAvailableStage = (
+      ["WATCH", "EMERGING", "BUILDING", "ESTABLISHED", "FADING"] as const
+    ).find((stage) =>
+      companies.some((company) => momentumStageLabel(company) === stage),
+    );
+
+    if (firstAvailableStage) setActiveStage(firstAvailableStage);
+  }, [activeStage, companies]);
+
   const stageCompanies = useMemo(() => {
     const query = searchTerm.trim().toUpperCase();
 
