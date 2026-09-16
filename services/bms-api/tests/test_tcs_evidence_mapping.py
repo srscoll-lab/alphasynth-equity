@@ -37,7 +37,7 @@ def test_maps_sector_specific_execution_metric():
 
 
 def test_maps_launch_cohort_execution_synonyms():
-    for metric in ["order_inflow", "total_sales_volume", "new_loans_booked", "assets_under_management"]:
+    for metric in ["order_inflow", "total_sales_volume", "new_loans_booked", "assets_under_management", "customer_franchise"]:
         result = map_evidence_to_tcs_factor(evidence_type=metric)
         assert result is not None
         assert result.factor_name == "execution"

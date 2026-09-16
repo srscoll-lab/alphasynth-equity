@@ -7,7 +7,7 @@ const DIRECT: Record<string, RepairFactorId> = {
   production_volume: "execution", export_volume: "execution", market_share: "execution",
   innovative_medicine_sales: "execution", deal_tcv: "execution", deal_wins: "execution",
   large_deal_wins: "execution", client_additions: "execution", client_growth: "execution",
-  customer_franchise_growth: "execution", new_loans_booked: "execution",
+  customer_franchise: "execution", customer_franchise_growth: "execution", new_loans_booked: "execution",
   assets_under_management: "execution", aum_growth: "execution", utilization: "execution", attrition: "execution",
   debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
   inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
@@ -26,8 +26,12 @@ export function mapBmsFactorMetric(rawMetric: unknown): { metric: string; factor
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
   const aliases: Array<[RegExp, string]> = [
+    [/^gross_npa(?:_assets?)?$/, "gnpa"],
+    [/^net_npa(?:_assets?)?$/, "nnpa"],
     [/gross_(?:non_?performing|npa)_assets?/, "gnpa"],
     [/net_(?:non_?performing|npa)_assets?/, "nnpa"],
+    [/capital_adequacy(?:_ratio)?|\bcrar\b/, "capital_adequacy"],
+    [/customer_franchise(?:_growth)?/, "customer_franchise"],
     [/provision(?:ing)?_coverage(?:_ratio)?/, "provision_coverage"],
     [/(?:number_of_)?new_loans_booked/, "new_loans_booked"],
     [/(?:consolidated_)?assets_under_management|\baum\b/, "assets_under_management"],

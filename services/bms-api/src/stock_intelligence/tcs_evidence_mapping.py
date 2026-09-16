@@ -68,6 +68,7 @@ EVIDENCE_TYPE_MAP = {
     "large_deal_wins": "execution",
     "client_additions": "execution",
     "client_growth": "execution",
+    "customer_franchise": "execution",
     "customer_franchise_growth": "execution",
     "new_loans_booked": "execution",
     "assets_under_management": "execution",

@@ -3570,6 +3570,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
       });
+      const groundedSources = ((grounded as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
+        .map((chunk: any) => ({
+          title: String(chunk?.web?.title || "").trim(),
+          url: String(chunk?.web?.uri || "").trim(),
+        }))
+        .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
       const factorEvidenceSchema = {
         type: "OBJECT", required: ["rows"], properties: {
           rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
@@ -3582,7 +3588,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         model,
         contents: [{ role: "user", parts: [{ text:
           `Convert the research below into JSON. Keep only explicit numeric previous/current comparisons with a direct official-company, NSE or BSE URL and an exact publication date. `
-          + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n${grounded.text || ""}`
+          + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
+          + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
+          + `SOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
         }] }],
         config: {
           responseMimeType: "application/json",
@@ -3619,13 +3627,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const rows: any[] = [];
       const diagnostics: any[] = [];
       const seen = new Set<string>();
+      const normalizeSourceLabel = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
         const mapping = mapBmsFactorMetric(candidate?.metricName);
-        const normalizedDeclaredFactor = String(candidate?.factor || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-        const declaredFactor = normalizedDeclaredFactor === "execution" || normalizedDeclaredFactor === "balance_sheet" ? normalizedDeclaredFactor : null;
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
         const markdownUrl = rawSourceUrl.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i)?.[1];
-        const sourceUrl = markdownUrl || rawSourceUrl;
+        const indexedUrl = groundedSources.find((source: any) =>
+          normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl))?.url;
+        const sourceUrl = markdownUrl || (/^https?:\/\//i.test(rawSourceUrl) ? rawSourceUrl : indexedUrl || rawSourceUrl);
         const sourceDate = exactEvidenceDate(candidate?.sourceDate);
         const previousPeriod = String(candidate?.previousPeriod || "").trim();
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
@@ -3633,7 +3642,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const currentValue = Number(candidate?.currentValue);
         const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
         let rejection: string | null = null;
-        if (!mapping || mapping.factor !== declaredFactor) rejection = "factor_mapping_mismatch";
+        // The deterministic metric taxonomy is authoritative. Model-supplied factor
+        // labels are advisory because otherwise valid metrics are often labelled
+        // "operating" or "financial strength" instead of our internal IDs.
+        if (!mapping) rejection = "factor_mapping_mismatch";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
         else if (!isOfficialDossierSource(sourceUrl, officialDomains)

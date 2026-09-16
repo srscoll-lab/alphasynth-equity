@@ -6,5 +6,9 @@ assert.deepEqual(mapBmsFactorMetric("Number of New Loans Booked (Q4)"), { metric
 assert.deepEqual(mapBmsFactorMetric("Gross Non-Performing Assets"), { metric: "gnpa", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Net Non-Performing Assets"), { metric: "nnpa", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Provisioning Coverage Ratio"), { metric: "provision_coverage", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Customer Franchise"), { metric: "customer_franchise", factor: "execution" });
+assert.deepEqual(mapBmsFactorMetric("Capital Adequacy Ratio (CRAR)"), { metric: "capital_adequacy", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Gross NPA"), { metric: "gnpa", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Net NPA"), { metric: "nnpa", factor: "balance_sheet" });
 assert.equal(mapBmsFactorMetric("Revenue"), null);
 console.log("PASS: descriptive factor metrics canonicalize without admitting earnings as execution");
