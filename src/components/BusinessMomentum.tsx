@@ -1212,6 +1212,10 @@ export default function BusinessMomentum({
   const selectedMomentum = selected
     ? fundamentalMomentumLabel(selected.bms)
     : null;
+  const selectedIsFading = Boolean(selected?.fading_warning);
+  const selectedSnapshotLabel = selectedIsFading
+    ? "MOMENTUM WEAKENING"
+    : selectedMomentum;
   const selectedStage = selected
     ? momentumStageLabel(selected)
     : null;
@@ -1398,7 +1402,9 @@ export default function BusinessMomentum({
                 onClick={() => setActiveStage(stage.id)}
                 className={`rounded-2xl border px-4 py-4 text-left transition-all ${
                   active
-                    ? "border-emerald-400/35 bg-emerald-400/[0.08]"
+                    ? stage.id === "FADING"
+                      ? "border-amber-400/35 bg-amber-400/[0.08]"
+                      : "border-emerald-400/35 bg-emerald-400/[0.08]"
                     : "border-white/10 bg-white/[0.025] hover:bg-white/[0.045]"
                 }`}
               >
@@ -1527,7 +1533,9 @@ export default function BusinessMomentum({
                         <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-black">
                           BMS
                         </p>
-                        <p className="text-xl font-mono font-bold text-emerald-300">
+                        <p className={`text-xl font-mono font-bold ${
+                          company.fading_warning ? "text-amber-300" : "text-emerald-300"
+                        }`}>
                           {score100(company.bms)}
                         </p>
                       </div>
@@ -1578,7 +1586,7 @@ export default function BusinessMomentum({
                       </h2>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         <span
-                          className={`px-3 py-1.5 rounded-full border text-[11px] uppercase tracking-[0.08em] font-black ${selectedMeta.className}`}
+                          className={`px-3 py-1.5 rounded-full border text-[11px] uppercase tracking-[0.08em] font-black ${momentumStageClass(selected)}`}
                         >
                           {selectedStage}
                         </span>
@@ -1588,12 +1596,18 @@ export default function BusinessMomentum({
                     </div>
 
                     <div className="flex flex-col items-end gap-2">
-                      <div className="w-20 h-20 rounded-2xl border border-emerald-400/20 bg-emerald-400/[0.06] flex flex-col items-center justify-center">
-                        <span className="text-[11px] font-black text-emerald-300 text-center leading-tight px-2">
-                          {selectedMomentum}
+                      <div className={`w-24 h-20 rounded-2xl border flex flex-col items-center justify-center ${
+                        selectedIsFading
+                          ? "border-amber-400/25 bg-amber-400/[0.07]"
+                          : "border-emerald-400/20 bg-emerald-400/[0.06]"
+                      }`}>
+                        <span className={`text-[11px] font-black text-center leading-tight px-2 ${
+                          selectedIsFading ? "text-amber-300" : "text-emerald-300"
+                        }`}>
+                          {selectedSnapshotLabel}
                         </span>
                         <span className="text-[9px] uppercase tracking-[0.12em] font-semibold text-zinc-400 text-center leading-tight">
-                          CURRENT FUNDAMENTAL MOMENTUM
+                          {selectedIsFading ? "DIRECTION SINCE LAST RESULT" : "CURRENT FUNDAMENTAL MOMENTUM"}
                         </span>
                       </div>
 
@@ -1622,7 +1636,15 @@ export default function BusinessMomentum({
                       <span className="font-bold text-zinc-300">
                         What BMS means:{" "}
                       </span>
-                      Current Fundamental Momentum shows the <span className="font-bold text-emerald-300">present strength of change in the underlying business</span> — from strong positive improvement through neutral change to deterioration.
+                      {selectedIsFading ? (
+                        <>
+                          The current BMS level remains above neutral, but it has <span className="font-bold text-amber-300">weakened materially since the last result</span>. The primary lifecycle signal is therefore Fading.
+                        </>
+                      ) : (
+                        <>
+                          Current Fundamental Momentum shows the <span className="font-bold text-emerald-300">present strength of change in the underlying business</span> — from strong positive improvement through neutral change to deterioration.
+                        </>
+                      )}
                     </p>
 
                     <p className="text-[9px] text-zinc-500 mt-1.5 leading-relaxed">
@@ -1631,16 +1653,22 @@ export default function BusinessMomentum({
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-3 mb-6">
-                    <div className="rounded-2xl border border-emerald-400/15 bg-emerald-400/[0.035] p-4">
+                    <div className={`rounded-2xl border p-4 ${
+                      selectedIsFading
+                        ? "border-amber-400/15 bg-amber-400/[0.035]"
+                        : "border-emerald-400/15 bg-emerald-400/[0.035]"
+                    }`}>
                       <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
-                        Current Business Momentum
+                        Current BMS Level
                       </p>
                       <div className="flex items-end gap-2 mt-2">
-                        <span className="text-2xl font-mono font-bold text-emerald-300">
+                        <span className={`text-2xl font-mono font-bold ${
+                          selectedIsFading ? "text-amber-300" : "text-emerald-300"
+                        }`}>
                           {score100(selected.bms)}
                         </span>
                         <span className="text-[10px] font-bold text-zinc-400 mb-1">
-                          {selectedMomentum}
+                          {selectedIsFading ? `${selectedMomentum} LEVEL · WEAKENING` : selectedMomentum}
                         </span>
                       </div>
                       <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
