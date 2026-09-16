@@ -3570,6 +3570,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
       });
+      const factorEvidenceSchema = {
+        type: "OBJECT", required: ["rows"], properties: {
+          rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
+            factor: { type: "STRING" }, metricName: { type: "STRING" }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
+            previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" }, unit: { type: "STRING" }, sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" },
+          } } },
+        },
+      };
       const structured = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
@@ -3579,17 +3587,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
-          responseSchema: {
-            type: "OBJECT", required: ["rows"], properties: {
-              rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
-                factor: { type: "STRING" }, metricName: { type: "STRING" }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
-                previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" }, unit: { type: "STRING" }, sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" },
-              } } },
-            },
-          },
+          responseSchema: factorEvidenceSchema,
         },
       });
-      const parsed = JSON.parse(sanitizeJsonShell(structured.text || "{}"));
+      let parsed: any;
+      let structuredOutput = structured.text || "{}";
+      let modelJsonRepaired = false;
+      try {
+        parsed = JSON.parse(sanitizeJsonShell(structuredOutput));
+      } catch (parseError: any) {
+        // Gemini can rarely violate its response schema by omitting a comma in a
+        // long array. One bounded schema-constrained repair is cheaper and more
+        // reliable than failing the whole company or rerunning grounded search.
+        console.warn(`[factor-evidence/${ticker}] malformed model JSON; attempting one repair:`, parseError?.message || parseError);
+        const repaired = await ai.models.generateContent({
+          model,
+          contents: [{ role: "user", parts: [{ text:
+            `Repair the malformed JSON below. Preserve every supplied value exactly, do not add evidence, and discard any incomplete trailing row. `
+            + `Return only valid JSON matching the required schema.\n\n${structuredOutput}`
+          }] }],
+          config: {
+            responseMimeType: "application/json",
+            maxOutputTokens: 8192,
+            responseSchema: factorEvidenceSchema,
+          },
+        });
+        structuredOutput = repaired.text || "{}";
+        parsed = JSON.parse(sanitizeJsonShell(structuredOutput));
+        modelJsonRepaired = true;
+      }
       const rows: any[] = [];
       const diagnostics: any[] = [];
       const seen = new Set<string>();
@@ -3660,7 +3686,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         });
         diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "admitted" });
       }
-      return res.json({ ticker, cutoff, method: "gemini_grounded_official_evidence", rows, diagnostics });
+      return res.json({ ticker, cutoff, method: "gemini_grounded_official_evidence", modelJsonRepaired, rows, diagnostics });
     } catch (error: any) {
       console.error(`[factor-evidence/${ticker}]`, error?.message || error);
       return res.status(502).json({ error: "Grounded factor-evidence research failed.", ticker, rows: [] });
