@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import csv
 import sqlite3
 from collections import defaultdict
+from datetime import date
 from pathlib import Path
 
 from .publication_eligibility import FACTOR_WEIGHTS
@@ -55,6 +57,7 @@ def load_factor_analyses(
     *,
     periods_by_symbol: dict[str, str],
     scores_by_symbol: dict[str, dict[str, float | None]],
+    supplemental_evidence_file: Path | None = None,
 ) -> dict[str, dict]:
     """Build sourced previous/current factor comparisons in one database pass.
 
@@ -96,7 +99,7 @@ def load_factor_analyses(
     finally:
         connection.close()
 
-    grouped: dict[str, dict[str, list[sqlite3.Row]]] = defaultdict(lambda: defaultdict(list))
+    grouped: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
     for row in rows:
         symbol = str(row["symbol"] or "").strip().upper()
         current_period = periods_by_symbol.get(symbol)
@@ -107,6 +110,51 @@ def load_factor_analyses(
         if mapping is None:
             continue
         grouped[symbol][mapping.factor_name].append(row)
+
+    # A small launch file may attach manually verified official evidence when an
+    # exchange blocks server-side PDF retrieval. It is subject to the same
+    # period, taxonomy, source-date and cutoff rules as database evidence.
+    trusted_sources = {
+        "company_filing", "company_results", "company_presentation",
+        "company_transcript", "nse_filing", "bse_filing",
+        "audited_financial_statement",
+    }
+    if supplemental_evidence_file and supplemental_evidence_file.exists():
+        with supplemental_evidence_file.open(encoding="utf-8", newline="") as handle:
+            for item in csv.DictReader(handle):
+                symbol = str(item.get("symbol") or "").strip().upper()
+                current_period = periods_by_symbol.get(symbol)
+                metric = str(item.get("metric_name") or "").strip().lower()
+                mapping = map_evidence_to_tcs_factor(evidence_type=metric)
+                try:
+                    source_date = date.fromisoformat(str(item.get("source_date") or ""))
+                    cutoff_date = date.fromisoformat(str(item.get("cutoff_date") or ""))
+                    previous_value = float(str(item.get("previous_value") or ""))
+                    current_value = float(str(item.get("current_value") or ""))
+                    confidence = float(str(item.get("confidence") or ""))
+                except (TypeError, ValueError):
+                    continue
+                if (
+                    not current_period
+                    or str(item.get("current_period") or "").strip() != current_period
+                    or mapping is None
+                    or mapping.factor_name != str(item.get("factor") or "").strip().lower()
+                    or str(item.get("source_type") or "").strip().lower() not in trusted_sources
+                    or source_date > cutoff_date
+                    or not 0 <= confidence <= 1
+                ):
+                    continue
+                grouped[symbol][mapping.factor_name].append({
+                    "change_record_id": None,
+                    "evidence_ref": str(item.get("source_ref") or "").strip(),
+                    "metric_or_topic": metric,
+                    "previous_period": str(item.get("previous_period") or "").strip(),
+                    "current_period": current_period,
+                    "previous_value": previous_value,
+                    "current_value": current_value,
+                    "change_value": current_value - previous_value,
+                    "change_confidence": confidence,
+                })
 
     for symbol, factor_rows in grouped.items():
         analysis = analyses[symbol]
@@ -121,7 +169,12 @@ def load_factor_analyses(
             current_period = periods_by_symbol[symbol]
 
             for row in admitted:
-                if row["change_record_id"] is None:
+                evidence_ref = (
+                    row["evidence_ref"]
+                    if isinstance(row, dict)
+                    else f"change-record-{row['change_record_id']}"
+                )
+                if not evidence_ref:
                     continue
                 metric = str(row["metric_or_topic"])
                 previous_period = previous_period or row["previous_period"]
@@ -141,7 +194,7 @@ def load_factor_analyses(
                         "change": _number(row["change_value"]),
                     }
                 )
-                refs.append(f"change-record-{row['change_record_id']}")
+                refs.append(evidence_ref)
                 confidence = row["change_confidence"]
                 if confidence is not None:
                     confidences.append(float(confidence))

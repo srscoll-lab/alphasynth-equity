@@ -1,0 +1,5 @@
+symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,source_type,source_ref,source_date,cutoff_date,confidence
+BAJFINANCE,execution,assets_under_management,Q3 FY25,Q3 FY26,398043,484477,company_presentation,https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1,2026-02-03,2026-08-25,0.95
+BAJFINANCE,execution,new_loans_booked,Q3 FY25,Q3 FY26,12.06,13.90,company_presentation,https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1,2026-02-03,2026-08-25,0.95
+BAJFINANCE,balance_sheet,gnpa,Q3 FY25,Q3 FY26,1.12,1.21,company_presentation,https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1,2026-02-03,2026-08-25,0.95
+BAJFINANCE,balance_sheet,nnpa,Q3 FY25,Q3 FY26,0.48,0.47,company_presentation,https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1,2026-02-03,2026-08-25,0.95

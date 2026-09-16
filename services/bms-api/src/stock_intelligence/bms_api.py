@@ -55,6 +55,13 @@ BMS_DB_FILE = Path(
     )
 )
 
+BMS_SUPPLEMENTAL_EVIDENCE_FILE = Path(
+    os.environ.get(
+        "BMS_SUPPLEMENTAL_EVIDENCE_FILE",
+        str(_bms_artifact_root / "bms_launch_factor_evidence.csv"),
+    )
+)
+
 
 @app.get("/health")
 def health():
@@ -456,6 +463,7 @@ def current_bms_lifecycle():
         BMS_DB_FILE,
         periods_by_symbol=periods_by_symbol,
         scores_by_symbol=scores_by_symbol,
+        supplemental_evidence_file=BMS_SUPPLEMENTAL_EVIDENCE_FILE,
     )
     product["factor_analysis"] = product["symbol"].map(analyses)
     product["publication_eligibility"] = product["factor_analysis"].map(
