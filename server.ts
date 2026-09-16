@@ -3277,7 +3277,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const responseSchema = {
         type: "OBJECT",
-        required: ["claims", "quarterlyPerformance", "qualityEvidence"],
+        required: ["claims", "quarterlyPerformance", "qualityEvidence", "factorEvidence"],
         properties: {
           // Keep the model-facing schema deliberately small. Gemini compiles
           // response schemas into a constrained decoder; five repeated nested
@@ -3323,10 +3323,27 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
               },
             },
           },
+          factorEvidence: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceIds"],
+              properties: {
+                factor: { type: "STRING" },
+                metricName: { type: "STRING" },
+                previousPeriod: { type: "STRING" },
+                currentPeriod: { type: "STRING" },
+                previousValue: { type: "NUMBER" },
+                currentValue: { type: "NUMBER" },
+                unit: { type: "STRING" },
+                sourceIds: { type: "ARRAY", items: { type: "STRING" } },
+              },
+            },
+          },
         },
       };
       const extractionPrompt = (evidenceRows: Array<{ sourceId: string; text: string }>) =>
-        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Put narrative items in the claims array and set section to exactly one of snapshot, developments, operatingEvidence, managementCommitments, or risks. Set status to supported, except contradictory risk matters may use conflict. Return no more than eight claims per section. Every claim, quarterly row, and qualityEvidence observation must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. For qualityEvidence, emit an observation only when the evidence explicitly supports the result; never treat silence or absence as a pass. Use cash_conversion for explicit positive/improving versus negative/deteriorating operating or free cash flow; leverage_coverage for explicit debt-free/net-cash/reducing leverage versus defaults or rising/stretched leverage; promoter_pledge for explicit zero pledge versus a stated non-zero pledge; auditor_integrity for an explicit unmodified/unqualified opinion versus qualified/adverse/disclaimer/resignation; material_governance for an explicit clean statement versus a stated material fraud, regulatory or governance issue; working_capital for explicit improvement versus deterioration; concentration for explicit diversification/reduction versus material customer or product concentration; incremental_roce for explicit improvement versus decline; and acquisition_dependence for explicit organic growth versus growth mainly driven by acquisitions. Set every qualityEvidence result to pass or fail and omit every unobserved gate. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
+        `Extract a concise factual company dossier for ${companyName} (${ticker}) from the supplied official evidence. Put narrative items in the claims array and set section to exactly one of snapshot, developments, operatingEvidence, managementCommitments, or risks. Set status to supported, except contradictory risk matters may use conflict. Return no more than eight claims per section. Every claim, quarterly row, qualityEvidence observation, and factorEvidence row must cite one or more exact sourceId values supplied below. Do not infer forecasts, recommendations, valuations, or facts absent from the evidence. Omit unsupported claims. For quarterlyPerformance, extract up to eight explicitly reported quarters, prefer consolidated results, never mix consolidated and standalone values within a row, use INR crore for revenue/EBITDA/PAT, and omit unavailable numeric fields rather than estimating them. For factorEvidence, emit only explicit numeric previous/current comparisons for execution or balance_sheet. Execution must describe operational conversion rather than earnings: use only capacity, capacity_utilization, commissioning, order_execution, order_book, project_execution, volume_growth, market_share, innovative_medicine_sales, deal_tcv, deal_wins, large_deal_wins, client_additions, client_growth, utilization, attrition, or a descriptive metric ending in _vs_plan, _vs_guidance, _conversion, _ramp, _delivery, _mix_change, volume_growth, capacity_utilisation, market_share_change, project_completion_delay, or plant_availability_change. Balance-sheet metricName must use debt, total_debt, working_capital, inventory, receivables, operating_cash_flow, cash_flow, asset_quality, gnpa, nnpa, credit_cost, stage_3_assets, capital_adequacy, cash_conversion, net_cash, or a descriptive metric containing net_debt, interest_coverage, liquidity, cet1, crar, provision_coverage, loan_deposit_ratio, refinancing_risk, contingent_liability, or capitalised_development_cost. Prefer two independent comparable measurements for each factor. Do not reuse revenue, profit, EBITDA or margin as execution evidence. Do not convert qualitative statements into numbers. For qualityEvidence, emit an observation only when the evidence explicitly supports the result; never treat silence or absence as a pass. Use cash_conversion for explicit positive/improving versus negative/deteriorating operating or free cash flow; leverage_coverage for explicit debt-free/net-cash/reducing leverage versus defaults or rising/stretched leverage; promoter_pledge for explicit zero pledge versus a stated non-zero pledge; auditor_integrity for an explicit unmodified/unqualified opinion versus qualified/adverse/disclaimer/resignation; material_governance for an explicit clean statement versus a stated material fraud, regulatory or governance issue; working_capital for explicit improvement versus deterioration; concentration for explicit diversification/reduction versus material customer or product concentration; incremental_roce for explicit improvement versus decline; and acquisition_dependence for explicit organic growth versus growth mainly driven by acquisitions. Set every qualityEvidence result to pass or fail and omit every unobserved gate. Return JSON only. Evidence: ${JSON.stringify(evidenceRows)}`;
       const requestDossierSections = (evidenceRows: Array<{ sourceId: string; text: string }>) => ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text: extractionPrompt(evidenceRows) }] }],
@@ -3440,10 +3457,59 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }
       }
       const qualityEvidence = [...qualityEvidenceById.values()];
+      const directFactorMetrics: Record<string, string> = {
+        capacity: "execution", capacity_utilization: "execution", commissioning: "execution",
+        order_execution: "execution", order_book: "execution", project_execution: "execution",
+        volume_growth: "execution", market_share: "execution", innovative_medicine_sales: "execution",
+        deal_tcv: "execution", deal_wins: "execution", large_deal_wins: "execution",
+        client_additions: "execution", client_growth: "execution", utilization: "execution", attrition: "execution",
+        debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
+        inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
+        cash_flow: "balance_sheet", asset_quality: "balance_sheet", gnpa: "balance_sheet", nnpa: "balance_sheet",
+        credit_cost: "balance_sheet", stage_3_assets: "balance_sheet", capital_adequacy: "balance_sheet",
+        cash_conversion: "balance_sheet", net_cash: "balance_sheet",
+      };
+      const executionPatterns = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change"];
+      const balanceSheetPatterns = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "operating_cash_flow", "working_capital", "receivable", "inventory", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
+      const factorEvidence: any[] = [];
+      const factorEvidenceKeys = new Set<string>();
+      for (const observation of (Array.isArray(rawSections.factorEvidence) ? rawSections.factorEvidence : []).slice(0, 16)) {
+        const metricName = String(observation?.metricName || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+        const mappedFactor = directFactorMetrics[metricName]
+          || (executionPatterns.some(pattern => metricName.includes(pattern)) ? "execution" : null)
+          || (balanceSheetPatterns.some(pattern => metricName.includes(pattern)) ? "balance_sheet" : null);
+        const declaredFactor = observation?.factor === "execution" || observation?.factor === "balance_sheet"
+          ? observation.factor : null;
+        const previousPeriod = String(observation?.previousPeriod || "").trim();
+        const currentPeriod = String(observation?.currentPeriod || "").trim();
+        const previousValue = finiteOrNull(observation?.previousValue);
+        const currentValue = finiteOrNull(observation?.currentValue);
+        const observationSourceIds = [...new Set(
+          (Array.isArray(observation?.sourceIds) ? observation.sourceIds : [])
+            .filter((sourceId: string) => sourceIds.has(sourceId)),
+        )];
+        const key = `${mappedFactor}|${metricName}|${previousPeriod}|${currentPeriod}`;
+        if (!mappedFactor || mappedFactor !== declaredFactor || !metricName
+          || !previousPeriod || !currentPeriod || previousPeriod === currentPeriod
+          || previousValue === null || currentValue === null || !observationSourceIds.length
+          || factorEvidenceKeys.has(key)) continue;
+        factorEvidenceKeys.add(key);
+        factorEvidence.push({
+          factor: mappedFactor,
+          metricName,
+          previousPeriod,
+          currentPeriod,
+          previousValue,
+          currentValue,
+          unit: observation?.unit ? String(observation.unit).trim() : null,
+          sourceIds: observationSourceIds,
+          confidence: 0.85,
+        });
+      }
       const dossier: any = {
         schemaVersion: "1.0.0", reportId: `${ticker}-${Date.now()}`, generatedAt: new Date().toISOString(),
         company: { symbol: ticker, name: companyName, exchange: req.body?.exchange || "NSE", sector: req.body?.sector || "Unclassified", officialDomains },
-        sections, quarterlyPerformance, qualityEvidence, sources,
+        sections, quarterlyPerformance, qualityEvidence, factorEvidence, sources,
         marketConversation: { status: "disabled", affectsBms: false, sampleSize: 0, sentiment: { positive: 0, neutral: 1, negative: 0 }, themes: [] },
         qualityControl: { unsupportedClaims: 0, conflicts: Object.values(sections).flat().filter((claim: any) => claim.status === "conflict").length, humanReviewRequired: true },
       };

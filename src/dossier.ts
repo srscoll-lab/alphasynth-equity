@@ -44,6 +44,20 @@ export interface DossierQualityEvidence {
   sourceIds: string[];
 }
 
+export type DossierFactorEvidenceId = "execution" | "balance_sheet";
+
+export interface DossierFactorEvidence {
+  factor: DossierFactorEvidenceId;
+  metricName: string;
+  previousPeriod: string;
+  currentPeriod: string;
+  previousValue: number;
+  currentValue: number;
+  unit: string | null;
+  sourceIds: string[];
+  confidence: number;
+}
+
 export interface ResearchDossier {
   schemaVersion: "1.0.0";
   reportId: string;
@@ -64,6 +78,7 @@ export interface ResearchDossier {
   };
   quarterlyPerformance?: DossierQuarterPerformance[];
   qualityEvidence?: DossierQualityEvidence[];
+  factorEvidence?: DossierFactorEvidence[];
   sources: DossierSource[];
   marketConversation: {
     status: "available" | "insufficient_data" | "disabled";
@@ -144,6 +159,24 @@ export function isResearchDossier(value: unknown): value is ResearchDossier {
     if (dossier.qualityEvidence.some((observation) => !qualityEvidenceIds.has(observation.id)
       || !["pass", "fail"].includes(observation.result)
       || !observation.explanation
+      || !Array.isArray(observation.sourceIds)
+      || !observation.sourceIds.length
+      || observation.sourceIds.some((id) => !sourceIds.has(id)))) return false;
+  }
+
+  if (dossier.factorEvidence !== undefined) {
+    const factors = new Set(["execution", "balance_sheet"]);
+    if (!Array.isArray(dossier.factorEvidence)) return false;
+    if (dossier.factorEvidence.some((observation) => !factors.has(observation.factor)
+      || !observation.metricName
+      || !observation.previousPeriod
+      || !observation.currentPeriod
+      || observation.previousPeriod === observation.currentPeriod
+      || !Number.isFinite(observation.previousValue)
+      || !Number.isFinite(observation.currentValue)
+      || !Number.isFinite(observation.confidence)
+      || observation.confidence < 0
+      || observation.confidence > 1
       || !Array.isArray(observation.sourceIds)
       || !observation.sourceIds.length
       || observation.sourceIds.some((id) => !sourceIds.has(id)))) return false;

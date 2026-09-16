@@ -14,6 +14,8 @@
     "verify:management-guidance": "node --import tsx scripts/verify-management-guidance-delivery.ts && node --import tsx scripts/management-guidance-ledger-verify.ts && node --import tsx scripts/management-guidance-extraction-verify.ts && node --import tsx scripts/validate-management-guidance-pilot.ts",
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
+    "export:bms-factor-evidence": "node --import tsx scripts/export-bms-factor-evidence.ts",
+    "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",
     "verify:dossier-readiness": "node --import tsx scripts/verify-dossier-readiness.ts",
     "verify:peer-metrics": "node --experimental-strip-types scripts/verify-peer-metric-validation.ts",
     "verify:deep-dive-boundary": "node --experimental-strip-types scripts/verify-deep-dive-investment-boundary.ts",
