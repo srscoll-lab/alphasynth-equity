@@ -43,6 +43,7 @@ import {
 } from "./src/management-guidance-extraction";
 import { sanitizeDebtEquity } from "./src/peer-metric-validation";
 import { enforceDeepDiveInvestmentBoundary } from "./src/deep-dive-investment-boundary";
+import { mapBmsFactorMetric } from "./src/bms-factor-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -3477,8 +3478,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const factorEvidence: any[] = [];
       const factorEvidenceKeys = new Set<string>();
       for (const observation of (Array.isArray(rawSections.factorEvidence) ? rawSections.factorEvidence : []).slice(0, 16)) {
-        const metricName = String(observation?.metricName || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-        const mappedFactor = directFactorMetrics[metricName]
+        const mappedMetric = mapBmsFactorMetric(observation?.metricName);
+        const metricName = mappedMetric?.metric || String(observation?.metricName || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+        const mappedFactor = mappedMetric?.factor || directFactorMetrics[metricName]
           || (executionPatterns.some(pattern => metricName.includes(pattern)) ? "execution" : null)
           || (balanceSheetPatterns.some(pattern => metricName.includes(pattern)) ? "balance_sheet" : null);
         const declaredFactor = observation?.factor === "execution" || observation?.factor === "balance_sheet"
@@ -3551,28 +3553,6 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
     }
 
-    const mapFactorMetric = (rawMetric: unknown): { metric: string; factor: "execution" | "balance_sheet" } | null => {
-      const metric = String(rawMetric || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
-      const direct: Record<string, "execution" | "balance_sheet"> = {
-        capacity: "execution", capacity_utilization: "execution", commissioning: "execution",
-        order_execution: "execution", order_book: "execution", project_execution: "execution",
-        volume_growth: "execution", market_share: "execution", innovative_medicine_sales: "execution",
-        deal_tcv: "execution", deal_wins: "execution", large_deal_wins: "execution",
-        client_additions: "execution", client_growth: "execution", utilization: "execution", attrition: "execution",
-        debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
-        inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
-        cash_flow: "balance_sheet", asset_quality: "balance_sheet", gnpa: "balance_sheet", nnpa: "balance_sheet",
-        credit_cost: "balance_sheet", stage_3_assets: "balance_sheet", capital_adequacy: "balance_sheet",
-        cash_conversion: "balance_sheet", net_cash: "balance_sheet",
-      };
-      const executionPatterns = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change"];
-      const balancePatterns = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "operating_cash_flow", "working_capital", "receivable", "inventory", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
-      const factor = direct[metric]
-        || (executionPatterns.some(pattern => metric.includes(pattern)) ? "execution" : null)
-        || (balancePatterns.some(pattern => metric.includes(pattern)) ? "balance_sheet" : null);
-      return factor ? { metric, factor } : null;
-    };
-
     try {
       const ai = getGenAI();
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
@@ -3614,7 +3594,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const diagnostics: any[] = [];
       const seen = new Set<string>();
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
-        const mapping = mapFactorMetric(candidate?.metricName);
+        const mapping = mapBmsFactorMetric(candidate?.metricName);
         const normalizedDeclaredFactor = String(candidate?.factor || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
         const declaredFactor = normalizedDeclaredFactor === "execution" || normalizedDeclaredFactor === "balance_sheet" ? normalizedDeclaredFactor : null;
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();

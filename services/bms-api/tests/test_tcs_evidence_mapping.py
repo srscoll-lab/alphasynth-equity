@@ -37,14 +37,14 @@ def test_maps_sector_specific_execution_metric():
 
 
 def test_maps_launch_cohort_execution_synonyms():
-    for metric in ["order_inflow", "total_sales_volume", "new_loans_booked"]:
+    for metric in ["order_inflow", "total_sales_volume", "new_loans_booked", "assets_under_management"]:
         result = map_evidence_to_tcs_factor(evidence_type=metric)
         assert result is not None
         assert result.factor_name == "execution"
 
 
 def test_maps_launch_cohort_balance_sheet_synonyms():
-    for metric in ["net_debt_to_equity_ratio", "net_cash_from_operating_activities"]:
+    for metric in ["net_debt_to_equity_ratio", "net_cash_from_operating_activities", "provision_coverage"]:
         result = map_evidence_to_tcs_factor(evidence_type=metric)
         assert result is not None
         assert result.factor_name == "balance_sheet"

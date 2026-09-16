@@ -16,6 +16,7 @@
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
     "export:bms-factor-evidence": "node --import tsx scripts/export-bms-factor-evidence.ts",
     "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",
+    "verify:bms-factor-evidence-mapping": "node --import tsx scripts/verify-bms-factor-evidence-mapping.ts",
     "collect:bms-factor-evidence": "node --import tsx scripts/collect-bms-factor-evidence.ts",
     "verify:dossier-readiness": "node --import tsx scripts/verify-dossier-readiness.ts",
     "verify:peer-metrics": "node --experimental-strip-types scripts/verify-peer-metric-validation.ts",

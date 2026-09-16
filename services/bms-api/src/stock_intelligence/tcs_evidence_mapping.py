@@ -70,6 +70,7 @@ EVIDENCE_TYPE_MAP = {
     "client_growth": "execution",
     "customer_franchise_growth": "execution",
     "new_loans_booked": "execution",
+    "assets_under_management": "execution",
     "aum_growth": "execution",
     "utilization": "execution",
     "attrition": "execution",
@@ -94,6 +95,7 @@ EVIDENCE_TYPE_MAP = {
     "net_cash": "balance_sheet",
     "net_debt_to_equity_ratio": "balance_sheet",
     "net_cash_from_operating_activities": "balance_sheet",
+    "provision_coverage": "balance_sheet",
 
     # ---------------------------------------------------------
     # Management delivery / credibility
