@@ -58,7 +58,7 @@ BMS_DB_FILE = Path(
 BMS_SUPPLEMENTAL_EVIDENCE_FILE = Path(
     os.environ.get(
         "BMS_SUPPLEMENTAL_EVIDENCE_FILE",
-        str(_bms_artifact_root / "bms_launch_factor_evidence.csv"),
+        str(_bms_artifact_root / "src" / "stock_intelligence" / "bms_launch_factor_evidence.csv"),
     )
 )
 
