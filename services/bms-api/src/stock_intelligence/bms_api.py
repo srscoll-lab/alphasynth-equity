@@ -768,6 +768,11 @@ def bms_research_context(symbol: str):
             "balance_sheet": company_signal.get("balance_sheet"),
             "management_delivery": company_signal.get("management_delivery"),
         },
+        # Preserve the same sourced factor record used by the publication gate.
+        # Consumers must not reconstruct a narrower view from promoted drivers
+        # and accidentally drop admitted supplemental official evidence.
+        "factor_analysis": company_signal.get("factor_analysis"),
+        "publication_eligibility": company_signal.get("publication_eligibility"),
         "fresh_drivers": fresh_drivers,
         "agent_instructions": {
             "purpose": "Investigate why the deterministic BMS signal changed.",
