@@ -2,6 +2,12 @@ node_modules/
 build/
 dist/
 coverage/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+stock_intelligence.db
 .DS_Store
 *.log
 .env*

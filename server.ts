@@ -3536,8 +3536,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       return res.json({
         ...data,
         company_count: companies.length,
-        monitored_company_count: monitoredCompanies.length,
-        excluded_company_count: monitoredCompanies.length - companies.length,
+        monitored_company_count: Number(data?.monitored_company_count) || monitoredCompanies.length,
+        excluded_company_count: Number(data?.excluded_company_count) || (monitoredCompanies.length - companies.length),
         stage_counts: stageCounts,
         companies,
         lifecycle_as_of: data?.lifecycle_as_of || BMS_LIFECYCLE_FREEZE_DATE,
