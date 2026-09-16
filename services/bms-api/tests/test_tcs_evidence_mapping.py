@@ -36,6 +36,20 @@ def test_maps_sector_specific_execution_metric():
     assert result.factor_name == "execution"
 
 
+def test_maps_launch_cohort_execution_synonyms():
+    for metric in ["order_inflow", "total_sales_volume", "new_loans_booked"]:
+        result = map_evidence_to_tcs_factor(evidence_type=metric)
+        assert result is not None
+        assert result.factor_name == "execution"
+
+
+def test_maps_launch_cohort_balance_sheet_synonyms():
+    for metric in ["net_debt_to_equity_ratio", "net_cash_from_operating_activities"]:
+        result = map_evidence_to_tcs_factor(evidence_type=metric)
+        assert result is not None
+        assert result.factor_name == "balance_sheet"
+
+
 def test_maps_sector_specific_balance_sheet_metric():
     result = map_evidence_to_tcs_factor(evidence_type="net_debt_to_ebitda_change")
     assert result.factor_name == "balance_sheet"

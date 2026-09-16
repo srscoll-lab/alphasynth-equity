@@ -52,8 +52,13 @@ EVIDENCE_TYPE_MAP = {
     "commissioning": "execution",
     "order_execution": "execution",
     "order_book": "execution",
+    "order_inflow": "execution",
     "project_execution": "execution",
     "volume_growth": "execution",
+    "sales_volume": "execution",
+    "total_sales_volume": "execution",
+    "production_volume": "execution",
+    "export_volume": "execution",
     "market_share": "execution",
     "innovative_medicine_sales": "execution",
 
@@ -63,6 +68,9 @@ EVIDENCE_TYPE_MAP = {
     "large_deal_wins": "execution",
     "client_additions": "execution",
     "client_growth": "execution",
+    "customer_franchise_growth": "execution",
+    "new_loans_booked": "execution",
+    "aum_growth": "execution",
     "utilization": "execution",
     "attrition": "execution",
 
@@ -84,6 +92,8 @@ EVIDENCE_TYPE_MAP = {
     "capital_adequacy": "balance_sheet",
     "cash_conversion": "balance_sheet",
     "net_cash": "balance_sheet",
+    "net_debt_to_equity_ratio": "balance_sheet",
+    "net_cash_from_operating_activities": "balance_sheet",
 
     # ---------------------------------------------------------
     # Management delivery / credibility

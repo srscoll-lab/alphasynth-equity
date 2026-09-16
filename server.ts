@@ -3459,15 +3459,18 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const qualityEvidence = [...qualityEvidenceById.values()];
       const directFactorMetrics: Record<string, string> = {
         capacity: "execution", capacity_utilization: "execution", commissioning: "execution",
-        order_execution: "execution", order_book: "execution", project_execution: "execution",
-        volume_growth: "execution", market_share: "execution", innovative_medicine_sales: "execution",
+        order_execution: "execution", order_book: "execution", order_inflow: "execution", project_execution: "execution",
+        volume_growth: "execution", sales_volume: "execution", total_sales_volume: "execution",
+        production_volume: "execution", export_volume: "execution", market_share: "execution", innovative_medicine_sales: "execution",
         deal_tcv: "execution", deal_wins: "execution", large_deal_wins: "execution",
-        client_additions: "execution", client_growth: "execution", utilization: "execution", attrition: "execution",
+        client_additions: "execution", client_growth: "execution", customer_franchise_growth: "execution",
+        new_loans_booked: "execution", aum_growth: "execution", utilization: "execution", attrition: "execution",
         debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
         inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
         cash_flow: "balance_sheet", asset_quality: "balance_sheet", gnpa: "balance_sheet", nnpa: "balance_sheet",
         credit_cost: "balance_sheet", stage_3_assets: "balance_sheet", capital_adequacy: "balance_sheet",
-        cash_conversion: "balance_sheet", net_cash: "balance_sheet",
+        cash_conversion: "balance_sheet", net_cash: "balance_sheet", net_debt_to_equity_ratio: "balance_sheet",
+        net_cash_from_operating_activities: "balance_sheet",
       };
       const executionPatterns = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change"];
       const balanceSheetPatterns = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "operating_cash_flow", "working_capital", "receivable", "inventory", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
@@ -3580,7 +3583,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         contents: [{ role: "user", parts: [{ text:
           `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
           + `Use only official company documents or NSE/BSE filings (${officialScope}). Find explicit numeric previous/current comparisons for two categories. `
-          + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. `
+          + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. Sector examples include IT deal TCV and attrition; industrial order inflow/order book; vehicle production, domestic and export volumes; pharmaceutical specialty-product sales; and lender customer-franchise growth or new loans booked. `
           + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
           + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
           + `For every comparison state the metric, factor, previous period/value, current period/value, unit, exact publication date and direct official source URL. Prefer at least two comparisons per factor. If unavailable, say so.`
@@ -3612,8 +3615,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const seen = new Set<string>();
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
         const mapping = mapFactorMetric(candidate?.metricName);
-        const declaredFactor = candidate?.factor === "execution" || candidate?.factor === "balance_sheet" ? candidate.factor : null;
-        const sourceUrl = String(candidate?.sourceUrl || "").trim();
+        const normalizedDeclaredFactor = String(candidate?.factor || "").trim().toLowerCase().replace(/[\s-]+/g, "_");
+        const declaredFactor = normalizedDeclaredFactor === "execution" || normalizedDeclaredFactor === "balance_sheet" ? normalizedDeclaredFactor : null;
+        const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
+        const markdownUrl = rawSourceUrl.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i)?.[1];
+        const sourceUrl = markdownUrl || rawSourceUrl;
         const sourceDate = exactEvidenceDate(candidate?.sourceDate);
         const previousPeriod = String(candidate?.previousPeriod || "").trim();
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
@@ -3624,7 +3630,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         if (!mapping || mapping.factor !== declaredFactor) rejection = "factor_mapping_mismatch";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
-        else if (!isOfficialDossierSource(sourceUrl, officialDomains)) rejection = "unverified_source_domain";
+        else if (!isOfficialDossierSource(sourceUrl, officialDomains)
+          && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
         else if (seen.has(key)) rejection = "duplicate_comparison";
@@ -3637,11 +3644,28 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         try {
           const verification = await fetch(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
-            headers: { "user-agent": "AlphaSynth-Research/1.0", range: "bytes=0-2047" },
+            headers: { "user-agent": "AlphaSynth-Research/1.0" },
           });
           verifiedUrl = verification.url || sourceUrl;
-          await verification.body?.cancel();
           if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) throw new Error(`HTTP ${verification.status}`);
+          const maximumBytes = 20 * 1024 * 1024;
+          const declaredBytes = Number(verification.headers.get("content-length") || 0);
+          if (declaredBytes > maximumBytes) throw new Error("document_too_large");
+          const contentType = String(verification.headers.get("content-type") || "").toLowerCase();
+          const bytes = Buffer.from(await verification.arrayBuffer());
+          if (!bytes.length || bytes.length > maximumBytes) throw new Error("invalid_document_size");
+          const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
+            ? await extractPdfTextLocally(bytes, 40)
+            : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
+          const compact = documentText.replace(/[,\s₹$€£%]/g, "").toLowerCase();
+          const variants = (value: number) => [...new Set([
+            String(value), value.toFixed(1), value.toFixed(2), Math.round(value).toString(),
+          ].map(item => item.replace(/[,.\s]/g, "")))].filter(item => item && item !== "nan");
+          if (!variants(previousValue).some(value => compact.includes(value))
+            || !variants(currentValue).some(value => compact.includes(value))) {
+            diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified" });
+            continue;
+          }
         } catch {
           diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
           continue;
