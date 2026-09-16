@@ -4095,7 +4095,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       if (!response.ok) throw new Error(`BMS research context returned HTTP ${response.status}`);
       const context: any = await response.json();
       if (context?.found === false) return res.status(404).json({ error: "BMS factor record was not found." });
-      const factorAnalysis = context?.factor_analysis ?? factorAnalysisFromResearchContext(context);
+      const factorAnalysis = context?.factor_analysis
+        ? normalizeBmsFactorAnalysis({
+            ...context?.factor_scores,
+            period: context?.period,
+            factor_analysis: context.factor_analysis,
+          })
+        : factorAnalysisFromResearchContext(context);
       return res.json({
         symbol,
         factor_analysis: factorAnalysis,
