@@ -4017,20 +4017,21 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const accepted = proposal.statements.length + proposal.commentary.length + proposal.delivery.length;
       if (!accepted) {
         return respond(boundedPriorHistory, {
-          storage: "available", extraction: "no_admissible_records", rejected: proposal.rejected, diagnostics,
+          storage: "available", extraction: "no_admissible_records", evidenceDocuments,
+          rejected: proposal.rejected, diagnostics,
         });
       }
       const saved = await managementGuidanceLedger.merge(proposal.mergedLedger);
       if (saved.status === "unavailable") {
         return respond(boundedPriorHistory, {
           storage: "unavailable", storageReason: saved.reason, extraction: "admitted_but_not_persisted",
-          admittedRecords: accepted, rejected: proposal.rejected, diagnostics,
+          admittedRecords: accepted, evidenceDocuments, rejected: proposal.rejected, diagnostics,
         });
       }
       return respond(saved.history, {
         storage: "saved", extraction: "gemini_grounded_official_management_evidence",
         admittedRecords: accepted, admittedDocuments: evidenceDocuments.length,
-        rejected: proposal.rejected, diagnostics,
+        evidenceDocuments, rejected: proposal.rejected, diagnostics,
       });
     } catch (error: any) {
       console.error(`[management-guidance/${ticker}]`, error?.message || error);

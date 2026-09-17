@@ -84,8 +84,12 @@ for (const file of files) {
     continue;
   }
 
+  const sourceRows = [
+    ...(Array.isArray(payload?.dossier?.sources) ? payload.dossier.sources : []),
+    ...(Array.isArray(management?.evidenceDocuments) ? management.evidenceDocuments : []),
+  ];
   const sources = new Map<string, Source>(
-    (Array.isArray(payload?.dossier?.sources) ? payload.dossier.sources : [])
+    sourceRows
       .filter((source: Source) => source.sourceId && source.url && source.publishedAt)
       .map((source: Source) => [String(source.sourceId), source]),
   );
