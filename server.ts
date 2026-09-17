@@ -40,6 +40,7 @@ import {
   buildManagementGuidanceExtractionRequestFromDossier,
   buildManagementGuidanceGeminiRequest,
   normalizeManagementGuidanceExtraction,
+  type OfficialManagementEvidenceDocument,
 } from "./src/management-guidance-extraction";
 import { sanitizeDebtEquity } from "./src/peer-metric-validation";
 import { enforceDeepDiveInvestmentBoundary } from "./src/deep-dive-investment-boundary";
@@ -3849,6 +3850,192 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       rules: MANAGEMENT_GUIDANCE_DELIVERY_RULES,
       source: "alphasynth-deterministic-management-overlay",
     });
+  });
+
+  // Dedicated Management Delivery backfill. Unlike the full dossier route,
+  // this uses Gemini grounding directly and therefore does not depend on the
+  // Firecrawl credit balance. Admission remains strict: evidence must resolve
+  // to a dated official company, NSE, BSE, or regulator source; Gemini proposes
+  // records, while the deterministic normalizer and ledger remain authoritative.
+  app.post("/api/bms/management-guidance/research", async (req, res) => {
+    const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
+    if (!expectedToken) return res.status(503).json({ error: "Management-guidance research is not configured." });
+    if (req.header("x-dossier-token") !== expectedToken) return res.status(401).json({ error: "Unauthorized." });
+
+    const ticker = String(req.body?.ticker || "").trim().toUpperCase();
+    const companyName = String(req.body?.company_name || ticker).trim();
+    const sector = String(req.body?.sector || "Unclassified").trim();
+    const cutoff = String(req.body?.information_cutoff || "").trim();
+    const officialDomains = Array.isArray(req.body?.official_domains)
+      ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
+      : [];
+    if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
+      return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
+    }
+
+    const stored = await managementGuidanceLedger.read(ticker);
+    if (stored.status === "unavailable") {
+      return res.status(503).json({ error: stored.reason || "The management-guidance ledger is unavailable." });
+    }
+    const priorHistory: ManagementGuidanceDeliveryInput = stored.history ?? {
+      symbol: ticker, asOfDate: cutoff, statements: [], commentary: [], delivery: [],
+    };
+    const boundedPriorHistory: ManagementGuidanceDeliveryInput = {
+      ...priorHistory,
+      asOfDate: cutoff,
+      statements: priorHistory.statements.filter(row => row.statedAt <= cutoff),
+      commentary: priorHistory.commentary.filter(row => row.observedAt <= cutoff),
+      delivery: priorHistory.delivery.filter(row => row.assessedAt <= cutoff),
+    };
+    const respond = (history: ManagementGuidanceDeliveryInput, extra: Record<string, unknown> = {}) => {
+      const assessment = assessManagementGuidanceDelivery(history);
+      return res.json({ managementGuidance: {
+        status: assessment.score === null ? "insufficient_history" : "available",
+        assessment,
+        history,
+        reason: assessment.reasons.join(" ") || null,
+        evidenceRefs: [...new Set([
+          ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),
+          ...assessment.deliveryRecord.flatMap(row => row.evidenceRefs),
+        ])],
+        currentCommitments: [],
+        ...extra,
+      } });
+    };
+
+    try {
+      const ai = getGenAI();
+      const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+      const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", "sebi.gov.in", ...officialDomains]
+        .map(domain => `site:${domain}`).join(" OR ");
+      const grounded = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [{ text:
+          `Research the historical management delivery record of ${companyName} (${ticker}), sector ${sector}, using only information published on or before ${cutoff}. `
+          + `Use only official company investor documents, earnings-call transcripts hosted by the company, NSE/BSE filings, or regulator documents (${officialScope}). `
+          + `Find at least three distinct, measurable, time-bound management commitments made in earlier reporting periods and the later official evidence showing whether each was delivered, partly delivered, missed, revised, pending, or unverifiable. `
+          + `A commitment must be an explicit forward-looking management promise or target, not an analyst estimate, generic ambition, historical result, or inferred expectation. `
+          + `Pair each commitment with later outcome evidence about the same economic promise. Never infer a miss from silence. `
+          + `For every item give the exact statement, metric and target period, exact publication date, later outcome, later publication date, and direct official source URLs. Do not estimate or manufacture dates, targets, outcomes, or precision.`
+        }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 12288 },
+      });
+      const groundedSources = ((grounded as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
+        .map((chunk: any) => ({
+          title: String(chunk?.web?.title || "").trim(),
+          url: String(chunk?.web?.uri || "").trim(),
+        }))
+        .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
+
+      const evidenceSchema = {
+        type: "OBJECT", required: ["documents"], properties: {
+          documents: { type: "ARRAY", items: { type: "OBJECT", required: ["sourceUrl", "sourceDate", "title", "evidenceText"], properties: {
+            sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" }, title: { type: "STRING" }, evidenceText: { type: "STRING" },
+          } } },
+        },
+      };
+      const structured = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [{ text:
+          `Convert the grounded research into dated official evidence documents for a management-delivery ledger. `
+          + `Each evidenceText must faithfully preserve explicit management commitments, later revisions, or explicit outcomes stated in that source. `
+          + `Do not add facts. For sourceUrl copy the exact URL paired with the cited title in SOURCE INDEX; never put a title in sourceUrl. `
+          + `Exclude analyst estimates, undated material, non-official sources, and vague aspirations. Return an empty documents array if evidence is inadequate.\n\n`
+          + `SOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
+        }] }],
+        config: { responseMimeType: "application/json", maxOutputTokens: 12288, responseSchema: evidenceSchema },
+      });
+      const parsed = JSON.parse(sanitizeJsonShell(structured.text || "{}"));
+      const normalizeLabel = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const evidenceDocuments: OfficialManagementEvidenceDocument[] = [];
+      const diagnostics: any[] = [];
+      const seen = new Set<string>();
+      for (const candidate of (Array.isArray(parsed.documents) ? parsed.documents : []).slice(0, 24)) {
+        const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
+        const markdownUrl = rawSourceUrl.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i)?.[1];
+        const indexed = groundedSources.find((source: any) =>
+          source.url === rawSourceUrl || normalizeLabel(source.title) === normalizeLabel(rawSourceUrl));
+        const sourceUrl = markdownUrl || (/^https?:\/\//i.test(rawSourceUrl) ? rawSourceUrl : indexed?.url || "");
+        const sourceDate = exactEvidenceDate(candidate?.sourceDate);
+        const evidenceText = String(candidate?.evidenceText || "").trim();
+        const title = String(candidate?.title || indexed?.title || "").trim() || null;
+        let rejection: string | null = null;
+        if (!sourceUrl || !groundedSources.some((source: any) => source.url === sourceUrl)) rejection = "source_not_in_grounding_index";
+        else if (!sourceDate) rejection = "missing_exact_source_date";
+        else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
+        else if (!evidenceText) rejection = "empty_evidence_text";
+        else if (seen.has(`${sourceUrl}|${sourceDate}`)) rejection = "duplicate_document";
+        if (rejection) {
+          diagnostics.push({ sourceUrl: sourceUrl || rawSourceUrl, outcome: rejection });
+          continue;
+        }
+
+        let verifiedUrl = sourceUrl;
+        try {
+          const verification = await fetch(sourceUrl, {
+            method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
+            headers: { "user-agent": "AlphaSynth-Research/1.0" },
+          });
+          verifiedUrl = verification.url || sourceUrl;
+          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) {
+            throw new Error(`HTTP ${verification.status}`);
+          }
+        } catch {
+          if (!isOfficialDossierSource(sourceUrl, officialDomains)) {
+            diagnostics.push({ sourceUrl, outcome: "official_url_not_verified" });
+            continue;
+          }
+        }
+        seen.add(`${sourceUrl}|${sourceDate}`);
+        const sourceId = `mgmt-${String(evidenceDocuments.length + 1).padStart(2, "0")}`;
+        evidenceDocuments.push({ sourceId, url: verifiedUrl, publishedAt: sourceDate, title, text: evidenceText });
+        diagnostics.push({ sourceId, sourceUrl: verifiedUrl, outcome: "admitted" });
+      }
+
+      if (!evidenceDocuments.length) {
+        return respond(boundedPriorHistory, {
+          storage: "available", extraction: "insufficient_official_management_evidence", diagnostics,
+        });
+      }
+      const extractionRequest = { symbol: ticker, asOfDate: cutoff, evidenceDocuments, priorLedger: boundedPriorHistory };
+      const geminiRequest = buildManagementGuidanceGeminiRequest(extractionRequest);
+      const extraction = await ai.models.generateContent({
+        model,
+        contents: [{ role: "user", parts: [{ text: geminiRequest.prompt }] }],
+        config: {
+          systemInstruction: geminiRequest.systemInstruction,
+          responseMimeType: geminiRequest.generationConfig.responseMimeType,
+          responseJsonSchema: geminiRequest.generationConfig.responseJsonSchema,
+          temperature: geminiRequest.generationConfig.temperature,
+          maxOutputTokens: 12288,
+        } as any,
+      });
+      const proposal = normalizeManagementGuidanceExtraction(
+        extractionRequest,
+        JSON.parse(sanitizeJsonShell(extraction.text || "{}")),
+      );
+      const accepted = proposal.statements.length + proposal.commentary.length + proposal.delivery.length;
+      if (!accepted) {
+        return respond(boundedPriorHistory, {
+          storage: "available", extraction: "no_admissible_records", rejected: proposal.rejected, diagnostics,
+        });
+      }
+      const saved = await managementGuidanceLedger.merge(proposal.mergedLedger);
+      if (saved.status === "unavailable") {
+        return respond(boundedPriorHistory, {
+          storage: "unavailable", storageReason: saved.reason, extraction: "admitted_but_not_persisted",
+          admittedRecords: accepted, rejected: proposal.rejected, diagnostics,
+        });
+      }
+      return respond(saved.history, {
+        storage: "saved", extraction: "gemini_grounded_official_management_evidence",
+        admittedRecords: accepted, admittedDocuments: evidenceDocuments.length,
+        rejected: proposal.rejected, diagnostics,
+      });
+    } catch (error: any) {
+      console.error(`[management-guidance/${ticker}]`, error?.message || error);
+      return res.status(502).json({ error: "Grounded management-guidance research failed.", ticker });
+    }
   });
 
   app.post("/api/bms/management-guidance/from-dossier", async (req, res) => {

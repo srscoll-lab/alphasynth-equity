@@ -31,7 +31,10 @@ const baseUrl = (valueAfter("--base-url=") || "https://expectation-pilot---alpha
 const outputRoot = valueAfter("--output=") || "/tmp";
 const listOnly = process.argv.includes("--list");
 const skipManagement = process.argv.includes("--skip-management");
+const managementOnly = process.argv.includes("--management-only");
 const resume = process.argv.includes("--resume");
+
+if (skipManagement && managementOnly) throw new Error("--skip-management and --management-only cannot be combined");
 
 if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error("--cutoff must be YYYY-MM-DD");
 if (!Number.isInteger(limit) || limit < 0) throw new Error("--limit must be a non-negative integer");
@@ -51,7 +54,7 @@ if (selectedTickers.length && companies.length !== new Set(selectedTickers).size
 if (limit) companies = companies.slice(0, limit);
 
 if (listOnly) {
-  console.log(JSON.stringify({ cutoff, baseUrl, skipManagement, companies }, null, 2));
+  console.log(JSON.stringify({ cutoff, baseUrl, skipManagement, managementOnly, companies }, null, 2));
   process.exit(0);
 }
 
@@ -110,6 +113,41 @@ for (const company of companies) {
 
   try {
     const trackerCompany = (tracker.companies || []).find((row: any) => row.symbol === company.ticker) || {};
+    if (managementOnly) {
+      const managementResponse = await postJson("/api/bms/management-guidance/research", {
+        ticker: company.ticker,
+        company_name: company.company_name,
+        information_cutoff: cutoff,
+        official_domains: company.official_domains,
+        exchange: company.exchange,
+        sector: company.sector,
+      }, true, 600_000);
+      if (managementResponse.status !== 200) {
+        throw new Error(managementResponse.payload?.error || `Management research returned HTTP ${managementResponse.status}`);
+      }
+      const managementGuidance = managementResponse.payload?.managementGuidance || { status: "unavailable", assessment: null };
+      const managementUsable = managementGuidance.status === "available"
+        && Number.isFinite(managementGuidance.assessment?.score)
+        && Number(managementGuidance.assessment?.commitmentCounts?.matured || 0) >= 3;
+      const result = {
+        ticker: company.ticker,
+        lifecycle: company.lifecycle,
+        technicalSuccess: true,
+        seconds: Math.round((Date.now() - started) / 1000),
+        managementStatus: managementGuidance.status,
+        managementUsable,
+        managementScore: managementGuidance.assessment?.score ?? null,
+        managementUniqueCommitments: managementGuidance.assessment?.commitmentCounts?.uniqueCommitments ?? 0,
+        managementMatured: managementGuidance.assessment?.commitmentCounts?.matured ?? 0,
+        managementExtraction: managementGuidance.extraction ?? null,
+        managementAdmittedRecords: managementGuidance.admittedRecords ?? 0,
+        managementAdmittedDocuments: managementGuidance.admittedDocuments ?? 0,
+      };
+      fs.writeFileSync(resultPath, JSON.stringify({ result, managementGuidance }, null, 2), { mode: 0o600 });
+      results.push(result);
+      console.log(JSON.stringify(result));
+      continue;
+    }
     const dossierResponse = await postJson("/api/dossier/research-evidence", {
       ticker: company.ticker,
       company_name: company.company_name,
@@ -264,6 +302,7 @@ const summary = {
   cohortId: manifest.cohortId,
   cutoff,
   baseUrl,
+  mode: managementOnly ? "management_only" : "full_stop_line",
   tested: results.length,
   thresholds: {
     technicalSuccessPct: 90,
@@ -283,10 +322,12 @@ const summary = {
   },
   acceptance: {
     technical: percent(technicalCount) >= 90,
-    delivery: percent(deliveryCount) >= 70,
+    delivery: managementOnly ? null : percent(deliveryCount) >= 70,
     managementTarget: percent(managementCount) === 100,
-    overall: percent(technicalCount) >= 90 && percent(deliveryCount) >= 70,
-    note: "Four-factor eligibility is the safety floor. Five-factor completion, including Management Delivery, remains the 100% coverage target and is reported independently rather than weakened to make the release gate pass. PDF readiness is also reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
+    overall: percent(technicalCount) >= 90 && (managementOnly || percent(deliveryCount) >= 70),
+    note: managementOnly
+      ? "Management-only mode bypasses full-dossier retrieval and tests the Gemini-grounded official-evidence ledger directly. Technical acceptance measures whether the route completed; usable Management Delivery still requires at least three matured, verifiable commitments and remains a separate 100% coverage target."
+      : "Four-factor eligibility is the safety floor. Five-factor completion, including Management Delivery, remains the 100% coverage target and is reported independently rather than weakened to make the release gate pass. PDF readiness is also reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
   },
   lifecycleBreakdown,
   results,
