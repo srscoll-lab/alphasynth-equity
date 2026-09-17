@@ -15,17 +15,25 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error("--cutoff must be YYYY-
 
 const manifest = JSON.parse(fs.readFileSync(path.resolve("scripts/stop-line-universe-companies.json"), "utf8"));
 const reviewedByTicker = new Map(manifest.companies.map((company: any) => [company.ticker, company]));
+const universeResponse = await fetch(`${baseUrl}/api/dossier/companies`, { signal: AbortSignal.timeout(30_000) });
+const universe: any = await universeResponse.json().catch(() => ({}));
+if (!universeResponse.ok || !Array.isArray(universe.companies)) {
+  throw new Error(`Unable to load monitored company universe (HTTP ${universeResponse.status})`);
+}
+const universeByTicker = new Map(universe.companies.map((company: any) => [String(company.symbol).toUpperCase(), company]));
 let companies: any[];
 if (selected.size) {
-  companies = [...selected].map(ticker => reviewedByTicker.get(ticker) || {
-    ticker, company_name: ticker, sector: "Unclassified", official_domains: [],
+  companies = [...selected].map(ticker => {
+    const reviewed: any = reviewedByTicker.get(ticker);
+    const monitored: any = universeByTicker.get(ticker);
+    return reviewed || {
+      ticker,
+      company_name: monitored?.name || ticker,
+      sector: monitored?.sector || "Unclassified",
+      official_domains: [],
+    };
   });
 } else {
-  const response = await fetch(`${baseUrl}/api/dossier/companies`, { signal: AbortSignal.timeout(30_000) });
-  const universe: any = await response.json().catch(() => ({}));
-  if (!response.ok || !Array.isArray(universe.companies)) {
-    throw new Error(`Unable to load monitored company universe (HTTP ${response.status})`);
-  }
   companies = universe.companies
     .filter((company: any) => company?.publication_eligibility?.scorePublishable !== true)
     .slice(offset, offset + limit)
