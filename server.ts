@@ -3908,24 +3908,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", "sebi.gov.in", ...officialDomains]
         .map(domain => `site:${domain}`).join(" OR ");
-      const grounded = await ai.models.generateContent({
+      const commonResearchBoundary =
+        `Company: ${companyName} (${ticker}); sector: ${sector}; cutoff: ${cutoff}. `
+        + `Use only official company investor documents, company-hosted earnings-call transcripts, NSE/BSE filings, or regulator documents (${officialScope}). `
+        + `Exclude analyst estimates, media articles, inferred expectations, generic ambitions and anything published after the cutoff. Give exact publication dates and direct official URLs. `;
+      const researchPrompts = [
+        commonResearchBoundary
+          + `Find explicit measurable, time-bound management promises or targets made in earlier annual reports, investor presentations or earnings calls. `
+          + `Capture the exact statement, metric, scope, target period and stated date. Find at least five candidates so three can survive verification.`,
+        commonResearchBoundary
+          + `Find later official results or management commentary that explicitly reports delivery, partial delivery, a miss, revision, postponement or withdrawal of earlier targets. `
+          + `Connect each outcome to the same economic promise and state both the earlier and later source. Never infer a miss from silence.`,
+        commonResearchBoundary
+          + `Search official historical earnings-call transcripts, annual reports and exchange-filed investor presentations for paired guidance and subsequent outcomes. `
+          + `Prioritise capacity, volume, project commissioning, order execution, cost reduction, leverage, cash flow, customer additions and other sector-relevant operating targets.`,
+      ];
+      const groundedResponses = await Promise.all(researchPrompts.map(prompt => ai.models.generateContent({
         model,
-        contents: [{ role: "user", parts: [{ text:
-          `Research the historical management delivery record of ${companyName} (${ticker}), sector ${sector}, using only information published on or before ${cutoff}. `
-          + `Use only official company investor documents, earnings-call transcripts hosted by the company, NSE/BSE filings, or regulator documents (${officialScope}). `
-          + `Find at least three distinct, measurable, time-bound management commitments made in earlier reporting periods and the later official evidence showing whether each was delivered, partly delivered, missed, revised, pending, or unverifiable. `
-          + `A commitment must be an explicit forward-looking management promise or target, not an analyst estimate, generic ambition, historical result, or inferred expectation. `
-          + `Pair each commitment with later outcome evidence about the same economic promise. Never infer a miss from silence. `
-          + `For every item give the exact statement, metric and target period, exact publication date, later outcome, later publication date, and direct official source URLs. Do not estimate or manufacture dates, targets, outcomes, or precision.`
-        }] }],
-        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 12288 },
-      });
-      const groundedSources = ((grounded as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
+      })));
+      const groundedText = groundedResponses.map(response => response.text || "").filter(Boolean).join("\n\n---\n\n");
+      const groundedSources = groundedResponses.flatMap((response: any) =>
+        response?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
         .map((chunk: any) => ({
           title: String(chunk?.web?.title || "").trim(),
           url: String(chunk?.web?.uri || "").trim(),
         }))
-        .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
+        .filter((source: any) => source.title && /^https?:\/\//i.test(source.url))
+        .filter((source: any, index: number, rows: any[]) => rows.findIndex(row => row.url === source.url) === index);
 
       const evidenceSchema = {
         type: "OBJECT", required: ["documents"], properties: {
@@ -3941,7 +3952,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           + `Each evidenceText must faithfully preserve explicit management commitments, later revisions, or explicit outcomes stated in that source. `
           + `Do not add facts. For sourceUrl copy the exact URL paired with the cited title in SOURCE INDEX; never put a title in sourceUrl. `
           + `Exclude analyst estimates, undated material, non-official sources, and vague aspirations. Return an empty documents array if evidence is inadequate.\n\n`
-          + `SOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
+          + `SOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${groundedText}`
         }] }],
         config: { responseMimeType: "application/json", maxOutputTokens: 12288, responseSchema: evidenceSchema },
       });
@@ -3950,7 +3961,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const evidenceDocuments: OfficialManagementEvidenceDocument[] = [];
       const diagnostics: any[] = [];
       const seen = new Set<string>();
-      for (const candidate of (Array.isArray(parsed.documents) ? parsed.documents : []).slice(0, 24)) {
+      for (const candidate of (Array.isArray(parsed.documents) ? parsed.documents : []).slice(0, 12)) {
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
         const markdownUrl = rawSourceUrl.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i)?.[1];
         const indexed = groundedSources.find((source: any) =>
@@ -3960,7 +3971,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const evidenceText = String(candidate?.evidenceText || "").trim();
         const title = String(candidate?.title || indexed?.title || "").trim() || null;
         let rejection: string | null = null;
-        if (!sourceUrl || !groundedSources.some((source: any) => source.url === sourceUrl)) rejection = "source_not_in_grounding_index";
+        if (!sourceUrl) rejection = "missing_source_url";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
         else if (!evidenceText) rejection = "empty_evidence_text";
@@ -3971,6 +3982,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         }
 
         let verifiedUrl = sourceUrl;
+        let verifiedDocumentText = "";
         try {
           const verification = await fetch(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
@@ -3980,16 +3992,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) {
             throw new Error(`HTTP ${verification.status}`);
           }
+          const maximumBytes = 20 * 1024 * 1024;
+          const declaredBytes = Number(verification.headers.get("content-length") || 0);
+          if (declaredBytes > maximumBytes) throw new Error("document_too_large");
+          const contentType = String(verification.headers.get("content-type") || "").toLowerCase();
+          const bytes = Buffer.from(await verification.arrayBuffer());
+          if (!bytes.length || bytes.length > maximumBytes) throw new Error("invalid_document_size");
+          verifiedDocumentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
+            ? await extractPdfTextLocally(bytes, 40)
+            : bytes.toString("utf8").replace(/<script[\s\S]*?<\/script>/gi, " ")
+              .replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ");
+          verifiedDocumentText = verifiedDocumentText.replace(/\s+/g, " ").trim().slice(0, 60_000);
+          if (verifiedDocumentText.length < 100) throw new Error("document_text_unavailable");
         } catch {
-          if (!isOfficialDossierSource(sourceUrl, officialDomains)) {
+          const exactGroundedSource = groundedSources.some((source: any) => source.url === sourceUrl);
+          if (!exactGroundedSource || !isOfficialDossierSource(sourceUrl, officialDomains)) {
             diagnostics.push({ sourceUrl, outcome: "official_url_not_verified" });
             continue;
           }
         }
         seen.add(`${sourceUrl}|${sourceDate}`);
         const sourceId = `mgmt-${String(evidenceDocuments.length + 1).padStart(2, "0")}`;
-        evidenceDocuments.push({ sourceId, url: verifiedUrl, publishedAt: sourceDate, title, text: evidenceText });
-        diagnostics.push({ sourceId, sourceUrl: verifiedUrl, outcome: "admitted" });
+        evidenceDocuments.push({
+          sourceId, url: verifiedUrl, publishedAt: sourceDate, title,
+          text: verifiedDocumentText || evidenceText,
+        });
+        diagnostics.push({
+          sourceId, sourceUrl: verifiedUrl,
+          outcome: verifiedDocumentText ? "admitted_verified_document" : "admitted_grounded_official_fallback",
+        });
       }
 
       if (!evidenceDocuments.length) {
