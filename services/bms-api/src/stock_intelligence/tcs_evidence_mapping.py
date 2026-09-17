@@ -77,6 +77,8 @@ EVIDENCE_TYPE_MAP = {
     "aum_growth": "execution",
     "utilization": "execution",
     "attrition": "execution",
+    "store_count": "execution",
+    "store_additions": "execution",
 
     # ---------------------------------------------------------
     # Balance sheet / risk
@@ -97,8 +99,13 @@ EVIDENCE_TYPE_MAP = {
     "capital_adequacy": "balance_sheet",
     "cash_conversion": "balance_sheet",
     "net_cash": "balance_sheet",
+    "cash_balance": "balance_sheet",
+    "debt_equity_ratio": "balance_sheet",
+    "current_ratio": "balance_sheet",
+    "net_debt_to_ebitda_ratio": "balance_sheet",
     "net_debt_to_equity_ratio": "balance_sheet",
     "net_cash_from_operating_activities": "balance_sheet",
+    "net_worth": "balance_sheet",
     "provision_coverage": "balance_sheet",
 
     # ---------------------------------------------------------

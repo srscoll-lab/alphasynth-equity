@@ -14,15 +14,28 @@ def test_controlled_cohort_is_balanced_and_current_rows_are_valid():
     }
     assert result["structuralErrors"] == []
     assert result["rowErrors"] == []
-    assert result["candidateReadyCount"] == 8
+    assert result["candidateReadyCount"] == 19
+    assert result["candidateReadyPct"] == 76.0
+    assert result["releaseGatePassed"] is True
     assert result["candidateReadySymbols"] == [
         "ADANIENSOL",
+        "ADANIENT",
+        "BAJAJ-AUTO",
         "BAJFINANCE",
+        "BEL",
+        "BHARTIARTL",
+        "GRASIM",
+        "HCLTECH",
         "HINDZINC",
         "JSWSTEEL",
         "LT",
+        "PIDILITIND",
         "RELIANCE",
+        "SUNPHARMA",
         "TATASTEEL",
+        "TCS",
+        "TITAN",
+        "TRENT",
         "ULTRACEMCO",
     ]
-    assert result["pendingEvidenceCount"] == 17
+    assert result["pendingEvidenceCount"] == 6

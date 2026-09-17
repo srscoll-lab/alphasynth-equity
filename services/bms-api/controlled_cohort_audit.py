@@ -64,8 +64,13 @@ def audit_controlled_cohort(
             metric = str(row.get("metric_name") or "").strip().lower()
             current_period = str(row.get("current_period") or "").strip()
             source_type = str(row.get("source_type") or "").strip().lower()
-            source_ref = str(row.get("source_ref") or "").strip()
-            source_host = (urlparse(source_ref).hostname or "").lower()
+            source_refs = list(dict.fromkeys(
+                ref for ref in [
+                    str(row.get("previous_source_ref") or "").strip(),
+                    str(row.get("current_source_ref") or "").strip(),
+                    str(row.get("source_ref") or "").strip(),
+                ] if ref
+            ))
             errors: list[str] = []
             mapping = map_evidence_to_tcs_factor(evidence_type=metric)
             if symbol not in domains:
@@ -79,7 +84,14 @@ def audit_controlled_cohort(
             if source_type not in TRUSTED_SOURCE_TYPES:
                 errors.append("untrusted_source_type")
             approved = domains.get(symbol, set())
-            if not any(source_host == domain or source_host.endswith(f".{domain}") for domain in approved):
+            if not source_refs or not all(
+                any(
+                    (urlparse(ref).hostname or "").lower() == domain
+                    or (urlparse(ref).hostname or "").lower().endswith(f".{domain}")
+                    for domain in approved
+                )
+                for ref in source_refs
+            ):
                 errors.append("unapproved_source_domain")
             try:
                 source_date = date.fromisoformat(str(row.get("source_date") or ""))
@@ -108,6 +120,16 @@ def audit_controlled_cohort(
         symbol for symbol in symbols if len(factors_by_symbol.get(symbol, set())) >= 2
     )
     pending = sorted(set(symbols) - set(candidate_ready))
+    release_policy = cohort.get("releasePolicy") or {}
+    minimum_ready_count = int(release_policy.get("minimumCandidateReadyCount") or 19)
+    minimum_ready_pct = float(release_policy.get("minimumCandidateReadyPct") or 75)
+    candidate_ready_pct = round((len(candidate_ready) / len(symbols)) * 100, 1) if symbols else 0.0
+    release_gate_passed = (
+        len(candidate_ready) >= minimum_ready_count
+        and candidate_ready_pct >= minimum_ready_pct
+        and not structural_errors
+        and not row_errors
+    )
     return {
         "cohortId": cohort.get("cohortId"),
         "freezeDate": cohort.get("freezeDate"),
@@ -117,12 +139,18 @@ def audit_controlled_cohort(
         "structuralErrors": structural_errors,
         "rowErrors": row_errors,
         "candidateReadyCount": len(candidate_ready),
+        "candidateReadyPct": candidate_ready_pct,
         "candidateReadySymbols": candidate_ready,
         "pendingEvidenceCount": len(pending),
         "pendingEvidenceSymbols": pending,
         "supplementalFactors": {
             symbol: sorted(factors_by_symbol.get(symbol, set())) for symbol in symbols
         },
+        "releasePolicy": {
+            "minimumCandidateReadyCount": minimum_ready_count,
+            "minimumCandidateReadyPct": minimum_ready_pct,
+        },
+        "releaseGatePassed": release_gate_passed,
         "note": (
             "Candidate-ready means two supplemental factors passed this file audit. "
             "Final publication still requires the BMS engine's four-factor eligibility check."
@@ -131,4 +159,7 @@ def audit_controlled_cohort(
 
 
 if __name__ == "__main__":
-    print(json.dumps(audit_controlled_cohort(), indent=2))
+    result = audit_controlled_cohort()
+    print(json.dumps(result, indent=2))
+    if not result["releaseGatePassed"]:
+        raise SystemExit(1)

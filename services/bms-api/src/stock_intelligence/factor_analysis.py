@@ -158,11 +158,23 @@ def load_factor_analyses(
                 metric = str(item.get("metric_name") or "").strip().lower()
                 unit = str(item.get("unit") or "").strip()
                 source_ref = str(item.get("source_ref") or "").strip()
-                source_host = (urlparse(source_ref).hostname or "").lower()
+                source_refs = list(dict.fromkeys(
+                    ref for ref in [
+                        str(item.get("previous_source_ref") or "").strip(),
+                        str(item.get("current_source_ref") or "").strip(),
+                        source_ref,
+                    ] if ref
+                ))
+                source_hosts = [
+                    (urlparse(ref).hostname or "").lower() for ref in source_refs
+                ]
                 approved_domains = (official_domains_by_symbol or {}).get(symbol)
-                source_is_official = approved_domains is None or any(
-                    source_host == domain or source_host.endswith(f".{domain}")
-                    for domain in approved_domains
+                sources_are_official = bool(source_refs) and (
+                    approved_domains is None or all(
+                        any(host == domain or host.endswith(f".{domain}")
+                            for domain in approved_domains)
+                        for host in source_hosts
+                    )
                 )
                 mapping = map_evidence_to_tcs_factor(evidence_type=metric)
                 try:
@@ -180,7 +192,7 @@ def load_factor_analyses(
                     )
                     or mapping is None
                     or not unit
-                    or not source_is_official
+                    or not sources_are_official
                     or mapping.factor_name != str(item.get("factor") or "").strip().lower()
                     or str(item.get("source_type") or "").strip().lower() not in trusted_sources
                     or source_date > cutoff_date
@@ -189,7 +201,7 @@ def load_factor_analyses(
                     continue
                 grouped[symbol][mapping.factor_name].append({
                     "change_record_id": None,
-                    "evidence_ref": source_ref,
+                    "evidence_refs": source_refs,
                     "metric_or_topic": metric,
                     "unit": unit,
                     "previous_period": str(item.get("previous_period") or "").strip(),
@@ -213,12 +225,12 @@ def load_factor_analyses(
             current_period = periods_by_symbol[symbol]
 
             for row in admitted:
-                evidence_ref = (
-                    row["evidence_ref"]
+                evidence_refs = (
+                    row.get("evidence_refs", [])
                     if isinstance(row, dict)
-                    else f"change-record-{row['change_record_id']}"
+                    else [f"change-record-{row['change_record_id']}"]
                 )
-                if not evidence_ref:
+                if not evidence_refs:
                     continue
                 metric = str(row["metric_or_topic"])
                 unit = row.get("unit") if isinstance(row, dict) else None
@@ -241,7 +253,7 @@ def load_factor_analyses(
                         "change": _number(row["change_value"]),
                     }
                 )
-                refs.append(evidence_ref)
+                refs.extend(evidence_refs)
                 confidence = row["change_confidence"]
                 if confidence is not None:
                     confidences.append(float(confidence))
@@ -257,7 +269,7 @@ def load_factor_analyses(
                 "factor_score": score if current_metrics else None,
                 "metrics": current_metrics,
             }
-            factor["evidence_refs"] = refs
+            factor["evidence_refs"] = list(dict.fromkeys(refs))
             factor["availability"] = (
                 "complete"
                 if previous_metrics and current_metrics

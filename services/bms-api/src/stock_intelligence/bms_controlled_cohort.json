@@ -1,6 +1,10 @@
 {
   "cohortId": "BMS-CONTROLLED-25-20260917",
   "freezeDate": "2026-08-25",
+  "releasePolicy": {
+    "minimumCandidateReadyCount": 19,
+    "minimumCandidateReadyPct": 75
+  },
   "companies": [
     {"symbol":"RELIANCE","lifecycle":"WATCH","officialDomains":["ril.com"]},
     {"symbol":"BHARTIARTL","lifecycle":"WATCH","officialDomains":["airtel.in"]},
@@ -16,7 +20,7 @@
     {"symbol":"HAL","lifecycle":"BUILDING","officialDomains":["hal-india.co.in"]},
     {"symbol":"HINDZINC","lifecycle":"BUILDING","officialDomains":["hzlindia.com"]},
     {"symbol":"TATASTEEL","lifecycle":"BUILDING","officialDomains":["tatasteel.com"]},
-    {"symbol":"TRENT","lifecycle":"BUILDING","officialDomains":["trentlimited.com"]},
+    {"symbol":"TRENT","lifecycle":"BUILDING","officialDomains":["trentlimited.com","docs.trent-tata.com"]},
     {"symbol":"TITAN","lifecycle":"ESTABLISHED","officialDomains":["titancompany.in"]},
     {"symbol":"ULTRACEMCO","lifecycle":"ESTABLISHED","officialDomains":["ultratechcement.com"]},
     {"symbol":"JSWSTEEL","lifecycle":"ESTABLISHED","officialDomains":["jsw.in","jswsteel.in"]},

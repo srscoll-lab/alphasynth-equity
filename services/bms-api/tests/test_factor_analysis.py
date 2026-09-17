@@ -177,6 +177,47 @@ def test_rejects_supplemental_evidence_from_unapproved_domain(tmp_path):
     assert execution["availability"] == "unavailable"
 
 
+def test_preserves_separate_official_sources_for_previous_and_current_values(tmp_path):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, metric_or_topic TEXT, previous_period TEXT,
+          current_period TEXT, previous_value TEXT, current_value TEXT,
+          change_value TEXT, confidence REAL
+        );
+        INSERT INTO companies VALUES (1, 'TESTCO', 'TESTCO');
+        """
+    )
+    connection.commit()
+    connection.close()
+    evidence = tmp_path / "launch.csv"
+    evidence.write_text(
+        "symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,unit,source_type,source_ref,previous_source_ref,current_source_ref,source_date,cutoff_date,confidence\n"
+        "TESTCO,execution,order_book,Q3 FY25,Q3 FY26,10,12,Rs.Cr,company_results,https://company.example/current.pdf,https://company.example/prior.pdf,https://company.example/current.pdf,2026-02-03,2026-08-25,0.95\n",
+        encoding="utf-8",
+    )
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={"TESTCO": "Q3 FY26"},
+        scores_by_symbol={"TESTCO": {"execution": 1.0}},
+        supplemental_evidence_file=evidence,
+        official_domains_by_symbol={"TESTCO": {"company.example"}},
+    )
+    execution = next(
+        factor for factor in analyses["TESTCO"]["factors"] if factor["id"] == "execution"
+    )
+
+    assert execution["availability"] == "complete"
+    assert execution["evidence_refs"] == [
+        "https://company.example/prior.pdf",
+        "https://company.example/current.pdf",
+    ]
+
+
 def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
     database = tmp_path / "bms.db"
     connection = sqlite3.connect(database)
