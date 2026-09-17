@@ -268,7 +268,33 @@ def bms_provenance_repair(symbol: str):
                 if value is not None
             ) if row["confidence"] is not None or prior["confidence"] is not None else None,
         })
-    return {"symbol": symbol, "found": bool(candidates), "candidates": candidates}
+    known_official_sources = []
+    if BMS_SUPPLEMENTAL_EVIDENCE_FILE.exists():
+        try:
+            supplemental = pd.read_csv(BMS_SUPPLEMENTAL_EVIDENCE_FILE).fillna("")
+            supplemental = supplemental[
+                supplemental["symbol"].astype(str).str.strip().str.upper() == symbol
+            ]
+            seen_sources = set()
+            for _, item in supplemental.iterrows():
+                for column in ("source_ref", "previous_source_ref", "current_source_ref"):
+                    url = str(item.get(column, "")).strip()
+                    if not url.startswith(("https://", "http://")) or url in seen_sources:
+                        continue
+                    seen_sources.add(url)
+                    known_official_sources.append({
+                        "url": url,
+                        "published_at": str(item.get("source_date", "")).strip(),
+                        "source_type": str(item.get("source_type", "")).strip(),
+                    })
+        except (KeyError, ValueError, pd.errors.ParserError):
+            known_official_sources = []
+    return {
+        "symbol": symbol,
+        "found": bool(candidates),
+        "candidates": candidates,
+        "known_official_sources": known_official_sources,
+    }
 
 
 def _period_rank(period: str) -> int:

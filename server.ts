@@ -3566,6 +3566,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       });
       const anchorPayload: any = await anchorResponse.json().catch(() => ({}));
       const anchors = Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates.slice(0, 24) : [];
+      const knownOfficialSources = (Array.isArray(anchorPayload?.known_official_sources)
+        ? anchorPayload.known_official_sources : [])
+        .filter((source: any) => /^https?:\/\//i.test(String(source?.url || "")))
+        .slice(0, 12);
       if (!anchorResponse.ok || !anchors.length) {
         return res.json({ ticker, cutoff, method: "stored_observation_provenance_recovery", rows: [], diagnostics: [
           { outcome: "no_stored_comparison_anchors" },
@@ -3578,21 +3582,28 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         contents: [{ role: "user", parts: [{ text:
           `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
           + `Use only official company documents or NSE/BSE filings (${officialScope}). Locate support for the exact stored comparisons in the ANCHORS below. `
+          + `Check the KNOWN OFFICIAL SOURCES first; they already support other factors for this company and may contain the missing comparisons. `
           + `Do not replace, recalculate, round or reinterpret an anchor value. Return only anchors whose previous and current values are both explicitly supported by a dated official source. `
           + `EARNINGS includes revenue, profit, PAT, EPS, EBITDA and operating profit. ECONOMICS includes margins, spreads, realizations, pricing, yields and unit economics. `
           + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. Sector examples include IT deal TCV and attrition; industrial order inflow/order book; vehicle production, domestic and export volumes; pharmaceutical specialty-product sales; and lender customer-franchise growth or new loans booked. `
           + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
           + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
-          + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. If unavailable, omit it.\n\nANCHORS: ${JSON.stringify(anchors)}`
+          + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. If unavailable, omit it.\n\n`
+          + `KNOWN OFFICIAL SOURCES: ${JSON.stringify(knownOfficialSources)}\n\nANCHORS: ${JSON.stringify(anchors)}`
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
       });
-      const groundedSources = ((grounded as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
+      const searchedSources = ((grounded as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks || [])
         .map((chunk: any) => ({
           title: String(chunk?.web?.title || "").trim(),
           url: String(chunk?.web?.uri || "").trim(),
         }))
         .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
+      const groundedSources = [...knownOfficialSources.map((source: any) => ({
+        title: `Known official ${source.source_type || "filing"}`,
+        url: String(source.url),
+      })), ...searchedSources].filter((source: any, index: number, all: any[]) =>
+        all.findIndex(item => item.url === source.url) === index);
       const factorEvidenceSchema = {
         type: "OBJECT", required: ["rows"], properties: {
           rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
@@ -3659,6 +3670,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         && String(anchor.current_period || "").trim() === String(candidate?.currentPeriod || "").trim()
         && Number(anchor.previous_value) === Number(candidate?.previousValue)
         && Number(anchor.current_value) === Number(candidate?.currentValue));
+      if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) {
+        diagnostics.push({
+          outcome: "model_returned_no_exact_anchor_match",
+          anchorCount: anchors.length,
+          knownOfficialSourceCount: knownOfficialSources.length,
+          searchedSourceCount: searchedSources.length,
+        });
+      }
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
         const mapping = mapBmsFactorMetric(candidate?.metricName);
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();

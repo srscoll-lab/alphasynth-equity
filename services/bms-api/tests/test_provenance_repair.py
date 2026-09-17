@@ -35,6 +35,7 @@ def test_provenance_repair_joins_units_without_publishing(monkeypatch, tmp_path)
     result = bms_api.bms_provenance_repair("test")
 
     assert result["found"] is True
+    assert result["known_official_sources"] == []
     assert result["candidates"][0] == {
         "change_record_id": 1,
         "factor": "earnings",
