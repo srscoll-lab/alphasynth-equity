@@ -60,13 +60,35 @@ def assess_publication_eligibility(factor_analysis: dict) -> PublicationEligibil
         previous_metrics = previous.get("metrics") or []
         current_metrics = current.get("metrics") or []
         refs = factor.get("evidence_refs") or factor.get("evidenceRefs") or []
+        source_details = factor.get("source_details") or factor.get("sourceDetails") or []
         confidence = str(factor.get("confidence") or "unavailable")
+        metrics_have_units = all(
+            str(metric.get("unit") or "").strip()
+            for metric in [*previous_metrics, *current_metrics]
+            if isinstance(metric, dict)
+        )
+        periods_are_dated = bool(previous.get("period") and current.get("period"))
+        observations_are_dated = bool(
+            previous.get("observed_at") or previous.get("observedAt")
+        ) and bool(current.get("observed_at") or current.get("observedAt"))
+        sources_are_auditable = bool(source_details) and all(
+            str(source.get("url") or "").startswith(("https://", "http://"))
+            and bool(source.get("published_at") or source.get("publishedAt"))
+            and bool(source.get("source_type") or source.get("sourceType"))
+            for source in source_details
+            if isinstance(source, dict)
+        )
         if (
             factor.get("availability") == "complete"
             and previous_metrics
             and current_metrics
             and refs
             and confidence != "unavailable"
+            and factor.get("provenance_verified") is True
+            and metrics_have_units
+            and periods_are_dated
+            and observations_are_dated
+            and sources_are_auditable
         ):
             complete.append(factor_id)
 

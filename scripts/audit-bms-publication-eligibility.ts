@@ -29,10 +29,24 @@ const localAssessment = (analysis: any) => {
     const factor = factors.find((candidate: any) => candidate?.id === definition.id);
     const previousObserved = factor?.previous?.metrics?.some((metric: any) => metric?.value !== null && metric?.value !== "");
     const currentObserved = factor?.current?.metrics?.some((metric: any) => metric?.value !== null && metric?.value !== "");
+    const metricsHaveUnits = [...(factor?.previous?.metrics || []), ...(factor?.current?.metrics || [])]
+      .every((metric: any) => typeof metric?.unit === "string" && Boolean(metric.unit.trim()));
+    const evidenceRefs = factor?.evidenceRefs || factor?.evidence_refs || [];
+    const sources = factor?.sourceDetails || factor?.source_details || [];
+    const sourcesAuditable = Array.isArray(sources) && sources.length > 0 && sources.every((source: any) =>
+      /^https?:\/\//.test(source?.url || "")
+      && /^\d{4}-\d{2}-\d{2}/.test(source?.publishedAt || source?.published_at || "")
+      && Boolean(source?.sourceType || source?.source_type));
     const complete = factor?.availability === "complete"
       && factor?.confidence !== "unavailable"
-      && Array.isArray(factor?.evidenceRefs)
-      && factor.evidenceRefs.length > 0
+      && Array.isArray(evidenceRefs)
+      && evidenceRefs.length > 0
+      && (factor?.provenanceVerified === true || factor?.provenance_verified === true)
+      && sourcesAuditable
+      && metricsHaveUnits
+      && Boolean(factor?.previous?.period && factor?.current?.period)
+      && Boolean((factor?.previous?.observedAt || factor?.previous?.observed_at)
+        && (factor?.current?.observedAt || factor?.current?.observed_at))
       && previousObserved
       && currentObserved;
     return complete ? [definition.id] : [];

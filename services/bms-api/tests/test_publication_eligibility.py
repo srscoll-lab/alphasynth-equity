@@ -5,9 +5,22 @@ from stock_intelligence.publication_eligibility import assess_publication_eligib
 def complete(factor: dict) -> None:
     factor["availability"] = "complete"
     factor["confidence"] = "medium"
-    factor["evidence_refs"] = [f"source-{factor['id']}"]
-    factor["previous"]["metrics"] = [{"key": "metric", "value": 1}]
-    factor["current"]["metrics"] = [{"key": "metric", "value": 2}]
+    source_url = f"https://company.example/{factor['id']}.pdf"
+    factor["evidence_refs"] = [source_url]
+    factor["source_details"] = [{
+        "url": source_url,
+        "published_at": "2026-02-01",
+        "source_type": "company_results",
+    }]
+    factor["provenance_verified"] = True
+    factor["previous"].update({
+        "period": "Q3 FY25", "observed_at": "2026-02-01",
+        "metrics": [{"key": "metric", "value": 1, "unit": "INR crore"}],
+    })
+    factor["current"].update({
+        "period": "Q3 FY26", "observed_at": "2026-02-01",
+        "metrics": [{"key": "metric", "value": 2, "unit": "INR crore"}],
+    })
 
 
 def test_requires_all_four_core_factors():

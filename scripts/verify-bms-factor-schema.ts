@@ -151,14 +151,22 @@ const eligibilityFactor = (id: typeof BMS_FACTOR_DEFINITIONS[number]["id"]) => (
   id,
   previous: {
     period: "Q3 FY25",
-    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 10 }],
+    observed_at: "2026-02-01",
+    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 10, unit: "INR crore" }],
   },
   current: {
     period: "Q3 FY26",
+    observed_at: "2026-02-01",
     factor_score: 0.6,
-    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 12 }],
+    metrics: [{ key: `${id}_metric`, label: `${id} metric`, value: 12, unit: "INR crore" }],
   },
-  evidence_refs: [`official-${id}`],
+  evidence_refs: [`https://company.example/${id}.pdf`],
+  source_details: [{
+    url: `https://company.example/${id}.pdf`,
+    published_at: "2026-02-01",
+    source_type: "company_results",
+  }],
+  provenance_verified: true,
   confidence: "medium",
 });
 

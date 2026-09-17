@@ -8,6 +8,7 @@ from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse
 
+from .financial_metrics import ALIASES, METRICS
 from .publication_eligibility import FACTOR_WEIGHTS
 from .tcs_evidence_mapping import map_evidence_to_tcs_factor
 
@@ -59,6 +60,29 @@ def _confidence(values: list[float]) -> str:
     return "low"
 
 
+def _metric_unit(metric: str) -> str | None:
+    normalized = metric.strip().lower().replace(" ", "_")
+    canonical = ALIASES.get(normalized, normalized)
+    definition = METRICS.get(canonical)
+    return definition.default_unit if definition else None
+
+
+def _comparison_basis(previous_period: str | None, current_period: str | None) -> str:
+    previous = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", str(previous_period or "").strip().upper())
+    current = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", str(current_period or "").strip().upper())
+    if previous and current:
+        previous_year = int(previous.group(2))
+        current_year = int(current.group(2))
+        if previous.group(1) == current.group(1) and current_year - previous_year == 1:
+            return "same-quarter-prior-year"
+        if (
+            (previous_year == current_year and int(current.group(1)) - int(previous.group(1)) == 1)
+            or (int(previous.group(1)) == 4 and int(current.group(1)) == 1 and current_year - previous_year == 1)
+        ):
+            return "sequential-quarter"
+    return "period-specific-comparison"
+
+
 def empty_factor_analysis(period: str | None = None) -> dict:
     return {
         "schema_version": "1.0.0",
@@ -72,6 +96,9 @@ def empty_factor_analysis(period: str | None = None) -> dict:
                 "previous": {"period": None, "factor_score": None, "metrics": []},
                 "current": {"period": period, "factor_score": None, "metrics": []},
                 "evidence_refs": [],
+                "source_details": [],
+                "provenance_verified": False,
+                "comparison_basis": "period-specific-comparison",
                 "availability": "unavailable",
                 "confidence": "unavailable",
                 "explanation": None,
@@ -107,8 +134,27 @@ def load_factor_analyses(
     connection = sqlite3.connect(str(db_file))
     connection.row_factory = sqlite3.Row
     try:
+        tables = {
+            str(row[0])
+            for row in connection.execute(
+                "SELECT name FROM sqlite_master WHERE type = 'table'"
+            ).fetchall()
+        }
+        change_columns = {
+            str(row[1]) for row in connection.execute("PRAGMA table_info(change_records)").fetchall()
+        }
+        enriched = {"raw_items", "sources"}.issubset(tables) and "raw_item_id" in change_columns
+        source_projection = """
+                , ri.raw_url AS source_url
+                , ri.published_at AS source_date
+                , s.source_type AS source_type
+            """ if enriched else ""
+        source_joins = """
+            LEFT JOIN raw_items ri ON ri.id = cr.raw_item_id
+            LEFT JOIN sources s ON s.id = ri.source_id
+            """ if enriched else ""
         rows = connection.execute(
-            """
+            f"""
             SELECT
                 UPPER(COALESCE(c.nse_symbol, c.symbol)) AS symbol,
                 cr.id AS change_record_id,
@@ -119,8 +165,10 @@ def load_factor_analyses(
                 cr.current_value,
                 cr.change_value,
                 cr.confidence AS change_confidence
+                {source_projection}
             FROM change_records cr
             JOIN companies c ON c.id = cr.company_id
+            {source_joins}
             ORDER BY c.id, cr.id
             """
         ).fetchall()
@@ -210,6 +258,9 @@ def load_factor_analyses(
                     "current_value": current_value,
                     "change_value": current_value - previous_value,
                     "change_confidence": confidence,
+                    "source_date": source_date.isoformat(),
+                    "source_type": str(item.get("source_type") or "").strip().lower(),
+                    "provenance_verified": True,
                 })
 
     for symbol, factor_rows in grouped.items():
@@ -225,19 +276,33 @@ def load_factor_analyses(
             current_metrics = []
             refs = []
             confidences = []
+            source_details = []
+            provenance_verified = True
             previous_period = None
             current_period = periods_by_symbol[symbol]
 
             for row in admitted:
-                evidence_refs = (
-                    row.get("evidence_refs", [])
-                    if isinstance(row, dict)
-                    else [f"change-record-{row['change_record_id']}"]
-                )
+                if isinstance(row, dict):
+                    evidence_refs = row.get("evidence_refs", [])
+                    source_date = row.get("source_date")
+                    source_type = row.get("source_type")
+                    row_verified = bool(row.get("provenance_verified"))
+                else:
+                    source_url = str(row["source_url"] or "").strip() if enriched else ""
+                    source_date = str(row["source_date"] or "").split("T")[0] if enriched else None
+                    source_type = str(row["source_type"] or "").strip().lower() if enriched else None
+                    evidence_refs = [source_url] if source_url else []
+                    row_verified = bool(
+                        source_url.startswith(("https://", "http://"))
+                        and source_date
+                        and source_type in trusted_sources
+                    )
                 if not evidence_refs:
+                    provenance_verified = False
                     continue
                 metric = str(row["metric_or_topic"])
-                unit = row.get("unit") if isinstance(row, dict) else None
+                unit = row.get("unit") if isinstance(row, dict) else _metric_unit(metric)
+                provenance_verified = provenance_verified and row_verified and bool(unit)
                 previous_period = previous_period or row["previous_period"]
                 current_period = row["current_period"] or current_period
                 previous_metrics.append(
@@ -258,6 +323,11 @@ def load_factor_analyses(
                     }
                 )
                 refs.extend(evidence_refs)
+                source_details.extend({
+                    "url": ref,
+                    "published_at": source_date,
+                    "source_type": source_type,
+                } for ref in evidence_refs)
                 confidence = row["change_confidence"]
                 if confidence is not None:
                     confidences.append(float(confidence))
@@ -265,15 +335,23 @@ def load_factor_analyses(
             score = scores_by_symbol.get(symbol, {}).get(factor_id)
             factor["previous"] = {
                 "period": previous_period,
+                "observed_at": max((item["published_at"] for item in source_details if item["published_at"]), default=None),
                 "factor_score": None,
                 "metrics": previous_metrics,
             }
             factor["current"] = {
                 "period": current_period,
+                "observed_at": max((item["published_at"] for item in source_details if item["published_at"]), default=None),
                 "factor_score": score if current_metrics else None,
                 "metrics": current_metrics,
             }
             factor["evidence_refs"] = list(dict.fromkeys(refs))
+            factor["source_details"] = list({
+                (item["url"], item["published_at"], item["source_type"]): item
+                for item in source_details
+            }.values())
+            factor["provenance_verified"] = provenance_verified and bool(source_details)
+            factor["comparison_basis"] = _comparison_basis(previous_period, current_period)
             factor["availability"] = (
                 "complete"
                 if previous_metrics and current_metrics
@@ -288,5 +366,17 @@ def load_factor_analyses(
                 if current_metrics
                 else None
             )
+
+    for analysis in analyses.values():
+        bases = {
+            factor["comparison_basis"]
+            for factor in analysis["factors"]
+            if factor["availability"] == "complete"
+        }
+        analysis["comparison_basis"] = (
+            "same-quarter-prior-year"
+            if bases == {"same-quarter-prior-year"}
+            else "factor-specific"
+        )
 
     return analyses

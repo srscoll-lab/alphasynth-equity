@@ -39,6 +39,9 @@ export type BmsFactorComparison = {
   weightedChangeContribution: number | null;
   explanation: string | null;
   evidenceRefs: string[];
+  sourceDetails: Array<{ url: string; publishedAt: string; sourceType: string }>;
+  provenanceVerified: boolean;
+  comparisonBasis: "same-quarter-prior-year" | "sequential-quarter" | "period-specific-comparison";
   availability: BmsFactorAvailability;
   confidence: BmsFactorConfidence;
 };
@@ -46,7 +49,7 @@ export type BmsFactorComparison = {
 export type BmsFactorAnalysis = {
   schemaVersion: typeof BMS_FACTOR_SCHEMA_VERSION;
   methodologyVersion: typeof BMS_METHODOLOGY_VERSION;
-  comparisonBasis: "same-quarter-prior-year";
+  comparisonBasis: "same-quarter-prior-year" | "factor-specific";
   generatedAt: string | null;
   factors: BmsFactorComparison[];
 };
@@ -73,6 +76,9 @@ export type BmsPublicationEligibility = {
 const hasObservedMetric = (measurement: BmsFactorMeasurement) =>
   measurement.metrics.some(metric => metric.value !== null && metric.value !== "");
 
+const hasUnits = (measurement: BmsFactorMeasurement) =>
+  measurement.metrics.every(metric => typeof metric.unit === "string" && Boolean(metric.unit.trim()));
+
 /**
  * Fail-closed publication gate for the ranked Signal Tracker.
  *
@@ -93,6 +99,15 @@ export function assessBmsPublicationEligibility(
       && factor.availability === "complete"
       && factor.confidence !== "unavailable"
       && factor.evidenceRefs.length > 0
+      && factor.provenanceVerified
+      && factor.sourceDetails.length > 0
+      && factor.sourceDetails.every(source => /^https?:\/\//.test(source.url)
+        && /^\d{4}-\d{2}-\d{2}/.test(source.publishedAt)
+        && Boolean(source.sourceType))
+      && Boolean(factor.previous.period && factor.current.period)
+      && Boolean(factor.previous.observedAt && factor.current.observedAt)
+      && hasUnits(factor.previous)
+      && hasUnits(factor.current)
       && hasObservedMetric(factor.previous)
       && hasObservedMetric(factor.current),
     );
@@ -254,6 +269,17 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
     const evidenceRefs = Array.isArray(raw.evidenceRefs ?? raw.evidence_refs)
       ? (raw.evidenceRefs ?? raw.evidence_refs).filter((item: unknown): item is string => typeof item === "string" && Boolean(item.trim()))
       : [];
+    const sourceDetails = Array.isArray(raw.sourceDetails ?? raw.source_details)
+      ? (raw.sourceDetails ?? raw.source_details).flatMap((source: any) => {
+          const url = stringOrNull(source?.url);
+          const publishedAt = stringOrNull(source?.publishedAt ?? source?.published_at);
+          const sourceType = stringOrNull(source?.sourceType ?? source?.source_type);
+          return url && publishedAt && sourceType ? [{ url, publishedAt, sourceType }] : [];
+        })
+      : [];
+    const comparisonBasis = ["same-quarter-prior-year", "sequential-quarter", "period-specific-comparison"].includes(raw.comparisonBasis ?? raw.comparison_basis)
+      ? (raw.comparisonBasis ?? raw.comparison_basis)
+      : "period-specific-comparison";
     const confidence = ["high", "medium", "low", "unavailable"].includes(raw.confidence)
       ? raw.confidence as BmsFactorConfidence
       : availability === "unavailable" ? "unavailable" : "low";
@@ -269,6 +295,9 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
       weightedChangeContribution,
       explanation: stringOrNull(raw.explanation),
       evidenceRefs,
+      sourceDetails,
+      provenanceVerified: raw.provenanceVerified === true || raw.provenance_verified === true,
+      comparisonBasis,
       availability,
       confidence,
     };
@@ -277,7 +306,9 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
   return {
     schemaVersion: BMS_FACTOR_SCHEMA_VERSION,
     methodologyVersion: BMS_METHODOLOGY_VERSION,
-    comparisonBasis: "same-quarter-prior-year",
+    comparisonBasis: supplied?.comparisonBasis === "same-quarter-prior-year" || supplied?.comparison_basis === "same-quarter-prior-year"
+      ? "same-quarter-prior-year"
+      : "factor-specific",
     generatedAt: stringOrNull(supplied?.generatedAt ?? supplied?.generated_at),
     factors,
   };

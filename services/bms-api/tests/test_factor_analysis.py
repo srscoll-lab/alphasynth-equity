@@ -5,7 +5,7 @@ from stock_intelligence.factor_analysis import load_factor_analyses
 from stock_intelligence.publication_eligibility import assess_publication_eligibility
 
 
-def test_loads_only_sourced_comparable_promoted_evidence(tmp_path):
+def test_internal_change_record_ids_do_not_qualify_as_official_sources(tmp_path):
     database = tmp_path / "bms.db"
     connection = sqlite3.connect(database)
     connection.executescript(
@@ -46,9 +46,9 @@ def test_loads_only_sourced_comparable_promoted_evidence(tmp_path):
     )
     eligibility = assess_publication_eligibility(analyses["TESTCO"])
 
-    assert eligibility.score_publishable is True
-    assert eligibility.complete_factor_count == 4
-    assert eligibility.coverage_weight == 1.0
+    assert eligibility.score_publishable is False
+    assert eligibility.complete_factor_count == 0
+    assert eligibility.coverage_weight == 0
 
 
 def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
@@ -88,8 +88,8 @@ def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
     )
     eligibility = assess_publication_eligibility(analyses["TESTCO"])
 
-    assert eligibility.score_publishable is True
-    assert eligibility.complete_factor_count == 4
+    assert eligibility.score_publishable is False
+    assert eligibility.complete_factor_count == 2
     factors = {factor["id"]: factor for factor in analyses["TESTCO"]["factors"]}
     assert factors["execution"]["confidence"] == "high"
     assert factors["execution"]["current"]["metrics"][0]["unit"] == "million"
@@ -251,19 +251,14 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
         ),
     )
 
-    expected = {
-        "LT": {"earnings", "economics", "execution", "balance_sheet"},
-        "TATASTEEL": {"earnings", "economics", "execution", "balance_sheet"},
-        "ULTRACEMCO": {"earnings", "economics", "execution", "balance_sheet"},
-    }
-    for symbol, expected_factors in expected.items():
+    for symbol in {"LT", "TATASTEEL", "ULTRACEMCO"}:
         eligibility = assess_publication_eligibility(analyses[symbol])
-        assert eligibility.score_publishable is True
-        assert set(eligibility.complete_factor_ids) == expected_factors
+        assert eligibility.score_publishable is False
+        assert set(eligibility.complete_factor_ids) == {"execution", "balance_sheet"}
 
     adani_eligibility = assess_publication_eligibility(analyses["ADANIENSOL"])
     assert adani_eligibility.score_publishable is False
-    assert set(adani_eligibility.complete_factor_ids) == {
-        "earnings", "economics", "execution"
+    assert set(adani_eligibility.complete_factor_ids) == {"execution"}
+    assert set(adani_eligibility.missing_factor_ids) == {
+        "earnings", "economics", "balance_sheet"
     }
-    assert adani_eligibility.missing_factor_ids == ("balance_sheet",)

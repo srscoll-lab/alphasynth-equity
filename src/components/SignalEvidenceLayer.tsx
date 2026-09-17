@@ -369,7 +369,7 @@ export default function SignalEvidenceLayer({
             <div className="flex min-h-[520px] flex-col items-center justify-center px-6 text-center">
               <LoaderCircle className="h-8 w-8 animate-spin text-teal-300" />
               <h2 className="mt-5 text-xl font-semibold text-white">Building the signal explanation</h2>
-              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">Collecting verified company records, comparable financial history, the five BMS factors, business-quality checks and management's delivery record. This may take a few minutes.</p>
+              <p className="mt-2 max-w-xl text-sm leading-relaxed text-zinc-500">Collecting verified company records, comparable financial history, the four core BMS factors, business-quality checks and management's delivery record. This may take a few minutes.</p>
             </div>
           )}
 
@@ -409,12 +409,12 @@ export default function SignalEvidenceLayer({
                 {activeTab === "methodology" && (
                   <section>
                     <div className="max-w-3xl">
-                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-teal-300"><BarChart3 className="h-4 w-4" /> Five-part signal explanation</div>
+                      <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.16em] text-teal-300"><BarChart3 className="h-4 w-4" /> Four-part signal explanation</div>
                       <h2 className="mt-3 text-2xl font-semibold text-white md:text-3xl">How this signal was built</h2>
                       <p className="mt-3 text-sm leading-relaxed text-zinc-400">A score and confidence answer different questions. The score describes measured direction; confidence describes the completeness and comparability of the evidence supporting it.</p>
                     </div>
                     <div className="mt-7 space-y-4">
-                      {!factors.length && <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5 text-sm leading-relaxed text-zinc-400">The five BMS factors still apply, but comparable previous and current figures are not available for this company.</div>}
+                      {!factors.length && <div className="rounded-2xl border border-amber-400/15 bg-amber-400/[0.035] p-5 text-sm leading-relaxed text-zinc-400">The four core BMS factors still apply, but comparable previous and current figures are not available for this company.</div>}
                       {factors.map(factor => {
                         const definition = BMS_FACTOR_DEFINITIONS.find(item => item.id === factor.id);
                         const score = displayScore(factor.current.factorScore);
@@ -435,6 +435,7 @@ export default function SignalEvidenceLayer({
                               <div>
                                 <p className="text-sm font-semibold text-zinc-200">{definition?.purpose}</p>
                                 <p className="mt-1 text-xs text-zinc-300">What we check: {definition?.evidenceSignals}. Review frequency: {readable(definition?.cadence)}.</p>
+                                <p className="mt-1 text-[10px] text-zinc-500">Comparison used: {readable(factor.comparisonBasis)}.</p>
                                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                                   {([["Previous", factor.previous], ["Current", factor.current]] as const).map(([label, measurement]) => (
                                     <div key={label} className="rounded-xl border border-white/[0.07] bg-black/15 p-3">
@@ -531,7 +532,7 @@ export default function SignalEvidenceLayer({
                     <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[
                       ["Official sources", data.readiness.coverage.officialSources],
                       ["Verified facts", supportedClaims],
-                      ["Comparable factors", `${data.readiness.coverage.completeBmsFactors}/5`],
+                      ["Comparable core factors", `${data.readiness.coverage.completeBmsFactors}/4`],
                       ["Quality checks completed", data.readiness.coverage.observedQualityGates],
                     ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-2xl font-bold text-white">{value}</div><div className="mt-1 text-[9px] font-black uppercase tracking-wider text-zinc-500">{label}</div></div>)}</div>
                     {!data.dossierAvailable && <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5"><div className="text-sm font-semibold text-sky-200">Official dossier evidence unavailable</div><p className="mt-2 text-sm leading-relaxed text-zinc-400">{data.dossierIssue} The methodology and available comparison layers remain visible, but this absence counts as zero official sources and keeps the PDF disabled.</p></div>}
