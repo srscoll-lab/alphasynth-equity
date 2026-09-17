@@ -19,5 +19,8 @@ assert.deepEqual(mapBmsFactorMetric("Cash and Bank Balances"), { metric: "cash_a
 assert.equal(mapBmsFactorMetric("Inventories")?.factor, "balance_sheet");
 assert.deepEqual(mapBmsFactorMetric("Cash Flow from Operations"), { metric: "cash_flow_from_operations", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Number of stores"), { metric: "store_count", factor: "execution" });
-assert.equal(mapBmsFactorMetric("Revenue"), null);
-console.log("PASS: descriptive factor metrics canonicalize without admitting earnings as execution");
+assert.deepEqual(mapBmsFactorMetric("Revenue"), { metric: "revenue", factor: "earnings" });
+assert.deepEqual(mapBmsFactorMetric("PAT"), { metric: "pat", factor: "earnings" });
+assert.deepEqual(mapBmsFactorMetric("EBITDA"), { metric: "ebitda", factor: "economics" });
+assert.deepEqual(mapBmsFactorMetric("Operating Margin"), { metric: "operating_margin", factor: "economics" });
+console.log("PASS: descriptive metrics canonicalize across all four BMS factors");

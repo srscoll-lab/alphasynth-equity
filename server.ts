@@ -3538,10 +3538,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
   });
 
-  // Gemini-grounded fallback for the bounded BMS repair cohort. This route is
-  // deliberately narrower than dossier generation: it admits only explicit
-  // comparable Execution and Balance Sheet measurements from dated official
-  // company or exchange URLs. It does not depend on Firecrawl credits.
+  // Gemini-grounded provenance recovery for the four-factor BMS universe.
+  // Existing deterministic observations are supplied as anchors; Gemini finds
+  // the dated official document instead of inventing or rediscovering values.
   app.post("/api/bms/factor-evidence/research", async (req, res) => {
     const expectedToken = process.env.DOSSIER_INTERNAL_TOKEN;
     if (!expectedToken) return res.status(503).json({ error: "Factor-evidence research is not configured." });
@@ -3561,17 +3560,30 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     try {
       const ai = getGenAI();
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+      const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
+      const anchorResponse = await fetch(`${bmsBaseUrl}/bms/provenance-repair/${encodeURIComponent(ticker)}`, {
+        signal: AbortSignal.timeout(20_000),
+      });
+      const anchorPayload: any = await anchorResponse.json().catch(() => ({}));
+      const anchors = Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates.slice(0, 24) : [];
+      if (!anchorResponse.ok || !anchors.length) {
+        return res.json({ ticker, cutoff, method: "stored_observation_provenance_recovery", rows: [], diagnostics: [
+          { outcome: "no_stored_comparison_anchors" },
+        ] });
+      }
       const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", ...officialDomains]
         .map(domain => `site:${domain}`).join(" OR ");
       const grounded = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
           `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
-          + `Use only official company documents or NSE/BSE filings (${officialScope}). Find explicit numeric previous/current comparisons for two categories. `
+          + `Use only official company documents or NSE/BSE filings (${officialScope}). Locate support for the exact stored comparisons in the ANCHORS below. `
+          + `Do not replace, recalculate, round or reinterpret an anchor value. Return only anchors whose previous and current values are both explicitly supported by a dated official source. `
+          + `EARNINGS includes revenue, profit, PAT, EPS, EBITDA and operating profit. ECONOMICS includes margins, spreads, realizations, pricing, yields and unit economics. `
           + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. Sector examples include IT deal TCV and attrition; industrial order inflow/order book; vehicle production, domestic and export volumes; pharmaceutical specialty-product sales; and lender customer-franchise growth or new loans booked. `
           + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
           + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
-          + `For every comparison state the metric, factor, previous period/value, current period/value, unit, exact publication date and direct official source URL. Prefer at least two comparisons per factor. If unavailable, say so.`
+          + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. If unavailable, omit it.\n\nANCHORS: ${JSON.stringify(anchors)}`
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
       });
@@ -3592,10 +3604,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const structured = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
-          `Convert the research below into JSON. Keep only explicit numeric previous/current comparisons with a direct official-company, NSE or BSE URL and an exact publication date. `
+          `Convert the research below into JSON. Keep only comparisons present in the supplied ANCHORS, with exactly matching numeric values, a direct official-company, NSE or BSE URL and an exact publication date. `
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
           + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
-          + `SOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
+          + `ANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
         }] }],
         config: {
           responseMimeType: "application/json",
@@ -3640,6 +3652,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const compact = text.replace(/[,\s₹$€£%]/g, "").toLowerCase();
         return numericVariants(value).some(variant => compact.includes(variant));
       };
+      const matchingAnchor = (candidate: any, mapping: any) => anchors.find((anchor: any) =>
+        anchor.factor === mapping?.factor
+        && mapBmsFactorMetric(anchor.metric_name)?.metric === mapping?.metric
+        && String(anchor.previous_period || "").trim() === String(candidate?.previousPeriod || "").trim()
+        && String(anchor.current_period || "").trim() === String(candidate?.currentPeriod || "").trim()
+        && Number(anchor.previous_value) === Number(candidate?.previousValue)
+        && Number(anchor.current_value) === Number(candidate?.currentValue));
       for (const candidate of (Array.isArray(parsed.rows) ? parsed.rows : []).slice(0, 20)) {
         const mapping = mapBmsFactorMetric(candidate?.metricName);
         const rawSourceUrl = String(candidate?.sourceUrl || "").trim();
@@ -3653,19 +3672,22 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const previousValue = Number(candidate?.previousValue);
         const currentValue = Number(candidate?.currentValue);
         const unit = String(candidate?.unit || "").trim();
+        const anchor = matchingAnchor(candidate, mapping);
+        const resolvedUnit = unit || String(anchor?.unit || "").trim();
         const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
         let rejection: string | null = null;
         // The deterministic metric taxonomy is authoritative. Model-supplied factor
         // labels are advisory because otherwise valid metrics are often labelled
         // "operating" or "financial strength" instead of our internal IDs.
         if (!mapping) rejection = "factor_mapping_mismatch";
+        else if (!anchor) rejection = "stored_anchor_mismatch";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
         else if (!isOfficialDossierSource(sourceUrl, officialDomains)
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
-        else if (!unit) rejection = "missing_unit";
+        else if (!resolvedUnit) rejection = "missing_unit";
         else if (seen.has(key)) rejection = "duplicate_comparison";
         if (rejection) {
           diagnostics.push({ metric: mapping?.metric || candidate?.metricName || null, sourceUrl, outcome: rejection });
@@ -3721,7 +3743,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           symbol: ticker, factor: mapping.factor, metric_name: mapping.metric,
           previous_period: previousPeriod, current_period: currentPeriod,
           previous_value: previousValue, current_value: currentValue,
-          unit,
+          unit: resolvedUnit,
           source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
           source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff,
           confidence: verificationMethod === "direct_official_document" ? 0.85 : 0.75,

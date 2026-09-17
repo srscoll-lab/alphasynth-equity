@@ -1,6 +1,13 @@
-export type RepairFactorId = "execution" | "balance_sheet";
+export type RepairFactorId = "earnings" | "economics" | "execution" | "balance_sheet";
 
 const DIRECT: Record<string, RepairFactorId> = {
+  revenue: "earnings", sales: "earnings", operating_revenue: "earnings", total_income: "earnings",
+  pat: "earnings", profit: "earnings", net_profit: "earnings", profit_after_tax: "earnings",
+  eps: "earnings", earnings: "earnings",
+  ebitda: "economics", operating_income: "economics", operating_profit: "economics",
+  operating_margin: "economics", ebitda_margin: "economics", gross_margin: "economics",
+  net_interest_margin: "economics", nim: "economics", spread: "economics",
+  realization: "economics", price_realization: "economics", unit_economics: "economics",
   capacity: "execution", capacity_utilization: "execution", commissioning: "execution",
   order_execution: "execution", order_book: "execution", order_inflow: "execution", project_execution: "execution",
   volume_growth: "execution", sales_volume: "execution", total_sales_volume: "execution",
@@ -20,6 +27,9 @@ const DIRECT: Record<string, RepairFactorId> = {
   cash_and_bank_balances: "balance_sheet", provision_coverage: "balance_sheet", reserves: "balance_sheet",
   net_working_capital_cycle: "balance_sheet",
 };
+
+const EARNINGS_PATTERNS = ["revenue", "sales", "net_profit", "profit_after_tax", "pat", "eps", "earnings"];
+const ECONOMICS_PATTERNS = ["ebitda", "operating_income", "operating_profit", "margin", "nim", "spread", "realization", "unit_economic", "pricing", "yield"];
 
 const EXECUTION_PATTERNS = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_deliveries", "_delivered", "_commissioning", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change", "production", "throughput", "wholesale", "gross_merchandise_value", "store_count", "member_count", "ore_mined", "metal_in_concentrate"];
 const BALANCE_PATTERNS = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "cash_flow_from_operations", "cash_and_bank", "operating_cash_flow", "working_capital", "receivable", "inventory", "reserves", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
@@ -55,6 +65,8 @@ export function mapBmsFactorMetric(rawMetric: unknown): { metric: string; factor
     if (pattern.test(metric)) { metric = canonical; break; }
   }
   const factor = DIRECT[metric]
+    || (EARNINGS_PATTERNS.some(pattern => metric.includes(pattern)) ? "earnings" : null)
+    || (ECONOMICS_PATTERNS.some(pattern => metric.includes(pattern)) ? "economics" : null)
     || (EXECUTION_PATTERNS.some(pattern => metric.includes(pattern)) ? "execution" : null)
     || (BALANCE_PATTERNS.some(pattern => metric.includes(pattern)) ? "balance_sheet" : null);
   return factor ? { metric, factor } : null;

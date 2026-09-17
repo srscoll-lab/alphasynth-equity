@@ -115,6 +115,94 @@ def health():
     }
 
 
+@app.get("/bms/provenance-repair/{symbol}")
+def bms_provenance_repair(symbol: str):
+    """Expose stored comparisons as anchors for official-source recovery.
+
+    This endpoint never makes a company publishable and never changes its
+    score.  It returns the exact values already used by BMS so a separate
+    research worker can find the dated official document that supports them.
+    """
+    symbol = symbol.strip().upper()
+    connection = sqlite3.connect(str(BMS_DB_FILE))
+    connection.row_factory = sqlite3.Row
+    try:
+        rows = connection.execute(
+            """
+            SELECT
+                cr.id AS change_record_id,
+                cr.metric_or_topic AS metric_name,
+                cr.previous_period,
+                cr.current_period,
+                cr.previous_value,
+                cr.current_value,
+                cr.change_value,
+                cr.confidence,
+                COALESCE(current_observation.unit, previous_observation.unit) AS unit,
+                previous_observation.period_end_date AS previous_period_end_date,
+                current_observation.period_end_date AS current_period_end_date,
+                COALESCE(current_observation.source_type, previous_observation.source_type) AS legacy_source_type
+            FROM change_records cr
+            JOIN companies c ON c.id = cr.company_id
+            LEFT JOIN financial_observations previous_observation ON
+                previous_observation.id = (
+                    SELECT fo.id FROM financial_observations fo
+                    WHERE fo.company_id = cr.company_id
+                      AND LOWER(REPLACE(fo.metric_name, ' ', '_')) = LOWER(REPLACE(cr.metric_or_topic, ' ', '_'))
+                      AND fo.period_label = cr.previous_period
+                    ORDER BY fo.id DESC LIMIT 1
+                )
+            LEFT JOIN financial_observations current_observation ON
+                current_observation.id = (
+                    SELECT fo.id FROM financial_observations fo
+                    WHERE fo.company_id = cr.company_id
+                      AND LOWER(REPLACE(fo.metric_name, ' ', '_')) = LOWER(REPLACE(cr.metric_or_topic, ' ', '_'))
+                      AND fo.period_label = cr.current_period
+                    ORDER BY fo.id DESC LIMIT 1
+                )
+            WHERE UPPER(COALESCE(c.nse_symbol, c.symbol)) = ?
+            ORDER BY cr.id DESC
+            """,
+            (symbol,),
+        ).fetchall()
+    except sqlite3.Error as error:
+        return {"symbol": symbol, "found": False, "error": str(error), "candidates": []}
+    finally:
+        connection.close()
+
+    candidates = []
+    seen = set()
+    for row in rows:
+        mapping = map_evidence_to_tcs_factor(evidence_type=str(row["metric_name"] or ""))
+        if mapping is None or mapping.factor_name not in FACTOR_WEIGHTS:
+            continue
+        key = (
+            mapping.factor_name,
+            str(row["metric_name"] or "").strip().lower(),
+            str(row["previous_period"] or ""),
+            str(row["current_period"] or ""),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        candidates.append({
+            "change_record_id": row["change_record_id"],
+            "factor": mapping.factor_name,
+            "metric_name": row["metric_name"],
+            "previous_period": row["previous_period"],
+            "current_period": row["current_period"],
+            "previous_value": row["previous_value"],
+            "current_value": row["current_value"],
+            "change_value": row["change_value"],
+            "unit": row["unit"],
+            "previous_period_end_date": row["previous_period_end_date"],
+            "current_period_end_date": row["current_period_end_date"],
+            "legacy_source_type": row["legacy_source_type"],
+            "confidence": float(row["confidence"]) if row["confidence"] is not None else None,
+        })
+    return {"symbol": symbol, "found": bool(candidates), "candidates": candidates}
+
+
 def _period_rank(period: str) -> int:
     """Convert labels such as Q3 FY26 into a sortable number."""
     quarter, fiscal_year = period.split()

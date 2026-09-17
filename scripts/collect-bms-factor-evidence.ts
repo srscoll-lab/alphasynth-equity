@@ -57,6 +57,20 @@ const csv = (value: unknown) => {
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 const diagnosticsOutput = output.replace(/\.csv$/i, "-diagnostics.json");
+if (fs.existsSync(output)) {
+  const existing = fs.readFileSync(output, "utf8").trim().split(/\r?\n/).slice(1);
+  for (const line of existing) {
+    const values = line.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g)?.map(value => value.replace(/^,/, "").replace(/^"|"$/g, "").replaceAll('""', '"')) || [];
+    if (values.length === headers.length) rows.push(Object.fromEntries(headers.map((header, index) => [header, values[index]])));
+  }
+}
+if (fs.existsSync(diagnosticsOutput)) {
+  try {
+    const existing = JSON.parse(fs.readFileSync(diagnosticsOutput, "utf8"));
+    diagnostics.push(...(Array.isArray(existing?.diagnostics) ? existing.diagnostics : []));
+  } catch { /* a partial diagnostics file is safe to ignore */ }
+}
+const completedTickers = new Set(diagnostics.map(item => String(item?.ticker || "").toUpperCase()).filter(Boolean));
 const buildReport = () => ({
   cutoff,
   requestedCompanies: companies.length,
@@ -65,6 +79,8 @@ const buildReport = () => ({
   admittedCompanies: new Set(rows.map(row => row.symbol)).size,
   rowCount: rows.length,
   factorCounts: {
+    earnings: rows.filter(row => row.factor === "earnings").length,
+    economics: rows.filter(row => row.factor === "economics").length,
     execution: rows.filter(row => row.factor === "execution").length,
     balance_sheet: rows.filter(row => row.factor === "balance_sheet").length,
   },
@@ -76,6 +92,10 @@ const checkpoint = () => {
 };
 
 for (const company of companies) {
+  if (completedTickers.has(company.ticker)) {
+    console.log(JSON.stringify({ ticker: company.ticker, skipped: true, reason: "already_checkpointed" }));
+    continue;
+  }
   try {
     const response = await fetch(`${baseUrl}/api/bms/factor-evidence/research`, {
       method: "POST",

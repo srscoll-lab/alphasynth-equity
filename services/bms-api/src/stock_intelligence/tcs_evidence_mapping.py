@@ -26,6 +26,8 @@ EVIDENCE_TYPE_MAP = {
     "sales": "earnings",
     "pat": "earnings",
     "profit": "earnings",
+    "net_profit": "earnings",
+    "profit_after_tax": "earnings",
     "eps": "earnings",
     "earnings": "earnings",
 
@@ -35,6 +37,7 @@ EVIDENCE_TYPE_MAP = {
     "ebitda": "economics",
     "ebitda_margin": "economics",
     "operating_income": "economics",
+    "operating_profit": "economics",
     "operating_margin": "economics",
     "financing_margin": "economics",
     "gross_margin": "economics",
