@@ -1,6 +1,7 @@
 import json
 import math
 import os
+import re
 import sqlite3
 from pathlib import Path
 
@@ -165,6 +166,24 @@ def bms_provenance_repair(symbol: str):
             """,
             (symbol,),
         ).fetchall()
+        observation_rows = connection.execute(
+            """
+            SELECT
+                fo.id AS observation_id,
+                fo.metric_name,
+                fo.metric_value,
+                fo.unit,
+                fo.period_label,
+                fo.period_end_date,
+                fo.source_type,
+                fo.confidence
+            FROM financial_observations fo
+            JOIN companies c ON c.id = fo.company_id
+            WHERE UPPER(COALESCE(c.nse_symbol, c.symbol)) = ?
+            ORDER BY fo.id DESC
+            """,
+            (symbol,),
+        ).fetchall()
     except sqlite3.Error as error:
         return {"symbol": symbol, "found": False, "error": str(error), "candidates": []}
     finally:
@@ -199,6 +218,55 @@ def bms_provenance_repair(symbol: str):
             "current_period_end_date": row["current_period_end_date"],
             "legacy_source_type": row["legacy_source_type"],
             "confidence": float(row["confidence"]) if row["confidence"] is not None else None,
+        })
+
+    # Some legacy imports created observations without ChangeRecords. Pair the
+    # stored values deterministically for the latest reporting period so the
+    # provenance worker can recover their official documents as well.
+    current_period = next(
+        (str(row["current_period"] or "").strip() for row in rows if row["current_period"]),
+        "",
+    )
+    match = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", current_period.upper())
+    previous_period = (
+        f"Q{match.group(1)} FY{int(match.group(2)) - 1:0{len(match.group(2))}d}"
+        if match else ""
+    )
+    observations_by_metric_and_period = {
+        (
+            str(row["metric_name"] or "").strip().lower().replace(" ", "_"),
+            str(row["period_label"] or "").strip().upper(),
+        ): row
+        for row in observation_rows
+    }
+    for row in observation_rows:
+        metric_name = str(row["metric_name"] or "").strip()
+        normalized_metric = metric_name.lower().replace(" ", "_")
+        if str(row["period_label"] or "").strip().upper() != current_period.upper():
+            continue
+        prior = observations_by_metric_and_period.get((normalized_metric, previous_period.upper()))
+        mapping = map_evidence_to_tcs_factor(evidence_type=metric_name)
+        key = (mapping.factor_name if mapping else None, normalized_metric, previous_period, current_period)
+        if mapping is None or mapping.factor_name not in FACTOR_WEIGHTS or prior is None or key in seen:
+            continue
+        seen.add(key)
+        candidates.append({
+            "change_record_id": None,
+            "factor": mapping.factor_name,
+            "metric_name": metric_name,
+            "previous_period": previous_period,
+            "current_period": current_period,
+            "previous_value": prior["metric_value"],
+            "current_value": row["metric_value"],
+            "change_value": None,
+            "unit": row["unit"] or prior["unit"],
+            "previous_period_end_date": prior["period_end_date"],
+            "current_period_end_date": row["period_end_date"],
+            "legacy_source_type": row["source_type"] or prior["source_type"],
+            "confidence": min(
+                float(value) for value in (row["confidence"], prior["confidence"])
+                if value is not None
+            ) if row["confidence"] is not None or prior["confidence"] is not None else None,
         })
     return {"symbol": symbol, "found": bool(candidates), "candidates": candidates}
 
