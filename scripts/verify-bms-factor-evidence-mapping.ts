@@ -11,5 +11,13 @@ assert.deepEqual(mapBmsFactorMetric("Capital Adequacy Ratio (CRAR)"), { metric: 
 assert.deepEqual(mapBmsFactorMetric("Gross NPA"), { metric: "gnpa", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Net NPA"), { metric: "nnpa", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Metal in Concentrate (MIC) production"), { metric: "metal_in_concentrate_production", factor: "execution" });
+assert.equal(mapBmsFactorMetric("Domestic wholesales")?.factor, "execution");
+assert.equal(mapBmsFactorMetric("Wind Turbine Deliveries")?.factor, "execution");
+assert.equal(mapBmsFactorMetric("Kavach Units Delivered (Chittaranjan Locomotive Works)")?.factor, "execution");
+assert.deepEqual(mapBmsFactorMetric("Consolidated Gross Merchandise Value (GMV)"), { metric: "gross_merchandise_value", factor: "execution" });
+assert.deepEqual(mapBmsFactorMetric("Cash and Bank Balances"), { metric: "cash_and_bank_balances", factor: "balance_sheet" });
+assert.equal(mapBmsFactorMetric("Inventories")?.factor, "balance_sheet");
+assert.deepEqual(mapBmsFactorMetric("Cash Flow from Operations"), { metric: "cash_flow_from_operations", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Number of stores"), { metric: "store_count", factor: "execution" });
 assert.equal(mapBmsFactorMetric("Revenue"), null);
 console.log("PASS: descriptive factor metrics canonicalize without admitting earnings as execution");

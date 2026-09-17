@@ -3703,13 +3703,17 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             source.url === sourceUrl
             || (normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl)
               && source.url === indexedUrl));
+          const resolvedOfficialUrl = isOfficialDossierSource(verifiedUrl, officialDomains)
+            ? verifiedUrl
+            : sourceUrl;
           if (!groundedOfficialSource
-            || !isOfficialDossierSource(sourceUrl, officialDomains)
+            || !isOfficialDossierSource(resolvedOfficialUrl, officialDomains)
             || !containsEvidenceValue(grounded.text || "", previousValue)
             || !containsEvidenceValue(grounded.text || "", currentValue)) {
             diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
             continue;
           }
+          verifiedUrl = resolvedOfficialUrl;
           verificationMethod = "gemini_grounded_official_fallback";
         }
         const hostname = new URL(verifiedUrl).hostname.toLowerCase();
