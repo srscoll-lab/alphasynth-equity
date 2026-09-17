@@ -17,7 +17,7 @@ const DIRECT: Record<string, RepairFactorId> = {
   net_cash_from_operating_activities: "balance_sheet", provision_coverage: "balance_sheet",
 };
 
-const EXECUTION_PATTERNS = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change"];
+const EXECUTION_PATTERNS = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change", "production", "throughput", "ore_mined", "metal_in_concentrate"];
 const BALANCE_PATTERNS = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "operating_cash_flow", "working_capital", "receivable", "inventory", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
 
 export function mapBmsFactorMetric(rawMetric: unknown): { metric: string; factor: RepairFactorId } | null {

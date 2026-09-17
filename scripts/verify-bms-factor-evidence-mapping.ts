@@ -10,5 +10,6 @@ assert.deepEqual(mapBmsFactorMetric("Customer Franchise"), { metric: "customer_f
 assert.deepEqual(mapBmsFactorMetric("Capital Adequacy Ratio (CRAR)"), { metric: "capital_adequacy", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Gross NPA"), { metric: "gnpa", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Net NPA"), { metric: "nnpa", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Metal in Concentrate (MIC) production"), { metric: "metal_in_concentrate_production", factor: "execution" });
 assert.equal(mapBmsFactorMetric("Revenue"), null);
 console.log("PASS: descriptive factor metrics canonicalize without admitting earnings as execution");
