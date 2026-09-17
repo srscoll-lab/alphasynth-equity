@@ -127,6 +127,7 @@ EXECUTION_PATTERNS = (
     "_productivity_delivery", "_monetisation_delivery", "_mix_change",
     "market_share_change", "volume_growth", "capacity_utilisation",
     "project_completion_delay", "plant_availability_change",
+    "production", "throughput", "ore_mined", "metal_in_concentrate",
 )
 BALANCE_SHEET_PATTERNS = (
     "debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion",
@@ -147,7 +148,8 @@ def map_evidence_to_tcs_factor(
     evidence_type: str,
 ) -> EvidenceFactorMapping | None:
     """
-    Map one evidence type into one of the five TCS V1 factors.
+    Map one evidence type into a scored BMS V1.1 factor or the separate
+    experimental Management Delivery overlay.
 
     This is intentionally deterministic and explainable.
 

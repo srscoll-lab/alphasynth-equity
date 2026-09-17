@@ -71,3 +71,12 @@ def test_unknown_evidence_returns_none():
     result = map_evidence_to_tcs_factor(evidence_type="unknown_topic")
 
     assert result is None
+
+
+def test_maps_mining_production_to_execution():
+    result = map_evidence_to_tcs_factor(
+        evidence_type="Metal in Concentrate (MIC) production"
+    )
+
+    assert result is not None
+    assert result.factor_name == "execution"
