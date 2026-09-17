@@ -30,6 +30,7 @@ REQUIRED_COLUMNS = {
     "current_period",
     "previous_value",
     "current_value",
+    "unit",
     "source_type",
     "source_ref",
     "source_date",
@@ -129,6 +130,10 @@ def import_factor_evidence_csv(
         if not 0 <= confidence <= 1:
             reject("invalid_confidence")
             continue
+        unit = str(row["unit"]).strip()
+        if not unit or unit.lower() == "nan":
+            reject("missing_unit")
+            continue
 
         previous_period = str(row["previous_period"]).strip()
         current_period = str(row["current_period"]).strip()
@@ -155,8 +160,8 @@ def import_factor_evidence_csv(
             current_value=current_value,
             source_type=source_type,
             evidence_text=(
-                f"{metric} changed from {previous_value} in {previous_period} to "
-                f"{current_value} in {current_period}; source {row['source_ref']}."
+                f"{metric} changed from {previous_value} {unit} in {previous_period} to "
+                f"{current_value} {unit} in {current_period}; source {row['source_ref']}."
             ),
             comparison_type="YoY",
             previous_period=previous_period,

@@ -23,7 +23,7 @@
 
     { "ticker": "TITAN", "company_name": "Titan Company Limited", "lifecycle": "Established", "official_domains": ["titancompany.in"], "exchange": "NSE", "sector": "Consumer Durables" },
     { "ticker": "ULTRACEMCO", "company_name": "UltraTech Cement Limited", "lifecycle": "Established", "official_domains": ["ultratechcement.com"], "exchange": "NSE", "sector": "Cement" },
-    { "ticker": "JSWSTEEL", "company_name": "JSW Steel Limited", "lifecycle": "Established", "official_domains": ["jsw.in"], "exchange": "NSE", "sector": "Steel" },
+    { "ticker": "JSWSTEEL", "company_name": "JSW Steel Limited", "lifecycle": "Established", "official_domains": ["jsw.in", "jswsteel.in"], "exchange": "NSE", "sector": "Steel" },
     { "ticker": "BEL", "company_name": "Bharat Electronics Limited", "lifecycle": "Established", "official_domains": ["bel-india.in"], "exchange": "NSE", "sector": "Defence Electronics" },
     { "ticker": "GRASIM", "company_name": "Grasim Industries Limited", "lifecycle": "Established", "official_domains": ["grasim.com"], "exchange": "NSE", "sector": "Diversified Materials" },
 

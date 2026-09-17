@@ -32,7 +32,7 @@ for (const company of companies) {
   diagnostics.push({ ticker: company.ticker, httpStatus: response.status, error: payload.error || null, rows: payload.rows?.length || 0, evidenceDiagnostics: payload.diagnostics || [] });
   console.log(JSON.stringify(diagnostics.at(-1)));
 }
-const headers = ["symbol", "factor", "metric_name", "previous_period", "current_period", "previous_value", "current_value", "source_type", "source_ref", "source_date", "cutoff_date", "confidence"];
+const headers = ["symbol", "factor", "metric_name", "previous_period", "current_period", "previous_value", "current_value", "unit", "source_type", "source_ref", "source_date", "cutoff_date", "confidence"];
 const csv = (value: unknown) => {
   const text = value === null || value === undefined ? "" : String(value);
   return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;

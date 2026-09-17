@@ -3647,6 +3647,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
         const previousValue = Number(candidate?.previousValue);
         const currentValue = Number(candidate?.currentValue);
+        const unit = String(candidate?.unit || "").trim();
         const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
         let rejection: string | null = null;
         // The deterministic metric taxonomy is authoritative. Model-supplied factor
@@ -3659,6 +3660,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
+        else if (!unit) rejection = "missing_unit";
         else if (seen.has(key)) rejection = "duplicate_comparison";
         if (rejection) {
           diagnostics.push({ metric: mapping?.metric || candidate?.metricName || null, sourceUrl, outcome: rejection });
@@ -3710,6 +3712,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           symbol: ticker, factor: mapping.factor, metric_name: mapping.metric,
           previous_period: previousPeriod, current_period: currentPeriod,
           previous_value: previousValue, current_value: currentValue,
+          unit,
           source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
           source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff,
           confidence: verificationMethod === "direct_official_document" ? 0.85 : 0.75,

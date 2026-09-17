@@ -31,7 +31,7 @@ execFileSync(process.execPath, [
   `--input=${directory}`, `--output=${output}`, "--cutoff=2026-09-11",
 ], { cwd: path.resolve("."), stdio: "pipe" });
 const csv = fs.readFileSync(output, "utf8");
-assert.match(csv, /TEST,execution,capacity_utilization,Q1 FY26,Q1 FY27,70,76,company_filing/);
+assert.match(csv, /TEST,execution,capacity_utilization,Q1 FY26,Q1 FY27,70,76,%,company_filing/);
 const diagnostics = JSON.parse(fs.readFileSync(output.replace(".csv", "-diagnostics.json"), "utf8"));
 assert.equal(diagnostics.rowCount, 1);
 assert.equal(diagnostics.factorCounts.execution, 1);

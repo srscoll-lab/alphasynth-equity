@@ -16,13 +16,13 @@ repair queue, but are absent from the public `companies` array.
 The research workflow should emit one CSV row per comparable measurement:
 
 ```text
-symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,source_type,source_ref,source_date,cutoff_date,confidence
+symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,unit,source_type,source_ref,source_date,cutoff_date,confidence
 ```
 
 Accepted source types are company filings/results/presentations/transcripts,
 NSE or BSE filings, and audited financial statements. `source_date` must not be
 later than `cutoff_date`. The importer rejects unknown companies, untrusted
-sources, post-cutoff material, invalid values, and a declared factor that does
+sources, post-cutoff material, unitless or invalid values, and a declared factor that does
 not match the deterministic taxonomy.
 
 Execution and balance-sheet evidence should normally contain two comparable

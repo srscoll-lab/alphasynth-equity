@@ -48,6 +48,7 @@ for (const filename of fs.readdirSync(inputDirectory).filter(name => name.endsWi
       current_period: evidence.currentPeriod,
       previous_value: evidence.previousValue,
       current_value: evidence.currentValue,
+      unit: evidence.unit || "",
       source_type: admittedSourceType,
       source_ref: source.url,
       source_date: source.publishedAt!,
@@ -67,7 +68,7 @@ for (const filename of fs.readdirSync(inputDirectory).filter(name => name.endsWi
 
 const headers = [
   "symbol", "factor", "metric_name", "previous_period", "current_period",
-  "previous_value", "current_value", "source_type", "source_ref", "source_date",
+  "previous_value", "current_value", "unit", "source_type", "source_ref", "source_date",
   "cutoff_date", "confidence",
 ];
 fs.writeFileSync(outputFile, [headers.join(","), ...rows.map(row => headers.map(header => csv(row[header])).join(","))].join("\n") + "\n");
