@@ -3,19 +3,17 @@
 The public lifecycle endpoint now fails closed. A company is publishable only
 when all of the following are true:
 
-- at least four of the five factors have sourced previous/current evidence;
-- those factors represent at least 75% of model weight;
-- Earnings and Economics are both complete;
+- all four release factors have sourced previous/current evidence;
+- those factors represent 100% of model weight;
+- Earnings, Economics, Execution and Balance Sheet are all complete;
 - a numerical zero is never used as proof that a factor was observed.
 
 Companies that fail remain in the monitored universe and are counted in the
 repair queue, but are absent from the public `companies` array.
 
-Four factors are the fail-closed publication floor, not the coverage target.
-The operating target is five sourced, comparable factors for every published
-company. Management Delivery remains a required repair objective and is
-reported separately in the API coverage summary even when a company already
-meets the four-factor publication floor.
+All four factors are compulsory for BMS V1.1 publication. Management Delivery
+remains available as a separate experimental research overlay, but it does not
+affect this release's score, ranking, lifecycle or publication decision.
 
 ## Evidence input contract
 
@@ -32,9 +30,9 @@ sources, post-cutoff material, unitless or invalid values, and a declared factor
 not match the deterministic taxonomy.
 
 Execution and balance-sheet evidence should normally contain two comparable
-measurements. Management Delivery should be supplied as a comparable composite
-derived from at least four matured, dated commitments across at least two
-reporting periods. A promise with no matured outcome is not a failed promise.
+measurements. Management Delivery may be supplied by the separate guidance
+ledger once sufficient matured commitments exist; it is not part of the BMS
+V1.1 release gate. A promise with no matured outcome is not a failed promise.
 
 Use `stock_intelligence.factor_evidence_importer.import_factor_evidence_csv`
 against the isolated quarterly candidate database before recalculating and

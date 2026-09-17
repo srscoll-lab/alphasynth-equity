@@ -10,7 +10,7 @@ def complete(factor: dict) -> None:
     factor["current"]["metrics"] = [{"key": "metric", "value": 2}]
 
 
-def test_requires_four_factors_and_mandatory_pair():
+def test_requires_all_four_core_factors():
     analysis = empty_factor_analysis("Q3 FY26")
     for factor in analysis["factors"]:
         if factor["id"] in {"earnings", "economics", "execution", "balance_sheet"}:
@@ -20,11 +20,11 @@ def test_requires_four_factors_and_mandatory_pair():
 
     assert result.score_publishable is True
     assert result.complete_factor_count == 4
-    assert result.coverage_weight == 0.90
-    assert result.target_complete is False
+    assert result.coverage_weight == 1.0
+    assert result.target_complete is True
 
 
-def test_all_five_factors_reach_the_coverage_target():
+def test_four_core_factors_reach_the_coverage_target():
     analysis = empty_factor_analysis("Q3 FY26")
     for factor in analysis["factors"]:
         complete(factor)
@@ -32,7 +32,7 @@ def test_all_five_factors_reach_the_coverage_target():
     result = assess_publication_eligibility(analysis)
 
     assert result.score_publishable is True
-    assert result.complete_factor_count == 5
+    assert result.complete_factor_count == 4
     assert result.coverage_weight == 1.0
     assert result.target_complete is True
 

@@ -2872,14 +2872,18 @@ ${rawText}` }] }],
       });
       if (!response.ok) throw new Error(`BMS service returned HTTP ${response.status}`);
       const payload: any = await response.json();
-      const companies = Array.isArray(payload.companies)
-        ? payload.companies.map((company: any) => ({
+      const monitoredUniverse = Array.isArray(payload.monitored_companies)
+        ? payload.monitored_companies
+        : payload.companies;
+      const companies = Array.isArray(monitoredUniverse)
+        ? monitoredUniverse.map((company: any) => ({
             symbol: String(company.symbol || "").toUpperCase(),
             name: String(company.company_name || company.symbol || ""),
             sector: company.sector_profile || company.sector || null,
+            publication_eligibility: company.publication_eligibility || null,
           })).filter((company: any) => company.symbol)
         : [];
-      return res.json({ company_count: companies.length, companies, source: "bms-lifecycle-universe" });
+      return res.json({ company_count: companies.length, companies, source: "bms-monitored-universe" });
     } catch (error: any) {
       console.error("[dossier] company universe unavailable:", error?.message || error);
       return res.status(503).json({ company_count: 0, companies: [], unavailable: true });

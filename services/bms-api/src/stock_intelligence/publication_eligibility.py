@@ -3,16 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 FACTOR_WEIGHTS = {
-    "earnings": 0.25,
-    "economics": 0.25,
-    "execution": 0.25,
-    "balance_sheet": 0.15,
-    "management_delivery": 0.10,
+    "earnings": 0.2778,
+    "economics": 0.2778,
+    "execution": 0.2778,
+    "balance_sheet": 0.1666,
 }
 
-MANDATORY_FACTORS = {"earnings", "economics"}
+MANDATORY_FACTORS = set(FACTOR_WEIGHTS)
 MINIMUM_COMPLETE_FACTORS = 4
-MINIMUM_COVERAGE_WEIGHT = 0.75
+MINIMUM_COVERAGE_WEIGHT = 1.0
 
 
 @dataclass(frozen=True)
@@ -40,7 +39,7 @@ class PublicationEligibility:
 
 
 def assess_publication_eligibility(factor_analysis: dict) -> PublicationEligibility:
-    """Fail closed unless four sourced, comparable factors are present.
+    """Fail closed unless all four sourced, comparable core factors are present.
 
     A numerical zero is never treated as evidence. A factor is complete only
     when the analysis explicitly contains previous and current measurements,
@@ -79,8 +78,8 @@ def assess_publication_eligibility(factor_analysis: dict) -> PublicationEligibil
 
     if len(complete) < MINIMUM_COMPLETE_FACTORS:
         reasons.append(
-            f"Only {len(complete)} of 5 factors have comparable sourced evidence; "
-            f"at least {MINIMUM_COMPLETE_FACTORS} are required."
+            f"Only {len(complete)} of 4 core factors have comparable sourced evidence; "
+            f"all {MINIMUM_COMPLETE_FACTORS} are required."
         )
     if coverage < MINIMUM_COVERAGE_WEIGHT:
         reasons.append(

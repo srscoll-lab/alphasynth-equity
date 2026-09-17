@@ -18,15 +18,13 @@ const legacy = normalizeBmsFactorAnalysis({
   management_delivery: 0,
 });
 
-assert.equal(legacy.factors.length, 5);
+assert.equal(legacy.factors.length, 4);
 assert.equal(legacy.factors[0].current.factorScore, 0.8);
 assert.equal(legacy.factors[0].previous.factorScore, null);
 assert.equal(legacy.factors[0].factorScoreChange, null);
-assert.equal(legacy.factors[0].weightedScoreContribution, 0.2);
+assert.ok(Math.abs((legacy.factors[0].weightedScoreContribution ?? 0) - 0.22224) < 1e-9);
 assert.equal(legacy.factors[0].weightedChangeContribution, null);
 assert.equal(legacy.factors[0].availability, "partial");
-assert.equal(legacy.factors[4].current.factorScore, 0);
-assert.equal(legacy.factors[4].availability, "partial");
 
 const complete = normalizeBmsFactorAnalysis({
   period: "Q1 FY27",
@@ -54,8 +52,8 @@ const complete = normalizeBmsFactorAnalysis({
 const earnings = complete.factors[0];
 assert.equal(earnings.availability, "complete");
 assert.ok(Math.abs((earnings.factorScoreChange ?? 0) - 0.4) < 1e-9);
-assert.ok(Math.abs((earnings.weightedScoreContribution ?? 0) - 0.2) < 1e-9);
-assert.ok(Math.abs((earnings.weightedChangeContribution ?? 0) - 0.1) < 1e-9);
+assert.ok(Math.abs((earnings.weightedScoreContribution ?? 0) - 0.22224) < 1e-9);
+assert.ok(Math.abs((earnings.weightedChangeContribution ?? 0) - 0.11112) < 1e-9);
 assert.equal(earnings.previous.metrics[0].value, 8.2);
 assert.equal(earnings.current.metrics[0].value, 18.6);
 assert.deepEqual(earnings.evidenceRefs, ["official-001"]);
@@ -77,7 +75,7 @@ assert.equal(researchEarnings.previous.metrics[0].unit, "₹ crore");
 assert.equal(researchEarnings.current.metrics[0].value, 3381);
 assert.equal(researchEarnings.current.metrics[0].displayValue, "₹3,381 crore (+16.07% change)");
 assert.equal(researchEarnings.current.factorScore, 0.8);
-assert.equal(researchEarnings.weightedScoreContribution, 0.2);
+assert.ok(Math.abs((researchEarnings.weightedScoreContribution ?? 0) - 0.22224) < 1e-9);
 assert.equal(researchEarnings.weightedChangeContribution, null);
 assert.deepEqual(researchEarnings.evidenceRefs, ["change-record-3860", "change-record-3861"]);
 
@@ -117,13 +115,6 @@ assert.equal(augmentedBalanceSheet?.availability, "partial");
 assert.equal(augmentedBalanceSheet?.previous.metrics.length, 0);
 assert.equal(augmentedBalanceSheet?.current.metrics[0].value, "Meets check");
 assert.deepEqual(augmentedBalanceSheet?.evidenceRefs, ["official-balance-001"]);
-const augmentedManagement = augmented?.factors.find(factor => factor.id === "management_delivery");
-assert.equal(augmentedManagement?.availability, "partial");
-assert.equal(augmentedManagement?.previous.metrics.length, 0);
-assert.equal(augmentedManagement?.current.metrics[0].value, 45.8);
-assert.equal(augmentedManagement?.current.metrics[1].value, 25);
-assert.deepEqual(augmentedManagement?.evidenceRefs, ["official-management-001"]);
-
 const undatedBalance = augmentFactorAnalysisWithDeliveryEvidence(researchContext, {
   input: {
     qualityGates: [{ id: "leverage_coverage", label: "Leverage and coverage", result: "pass", evidenceRefs: ["undated-source"] }],
@@ -182,25 +173,13 @@ const fourFactorAnalysis = normalizeBmsFactorAnalysis({
 const fourFactorEligibility = assessBmsPublicationEligibility(fourFactorAnalysis);
 assert.equal(fourFactorEligibility.scorePublishable, true);
 assert.equal(fourFactorEligibility.completeFactorCount, 4);
-assert.equal(fourFactorEligibility.coverageWeight, 0.9);
-assert.equal(fourFactorEligibility.targetComplete, false);
-
-const fiveFactorAnalysis = normalizeBmsFactorAnalysis({
-  period: "Q3 FY26",
-  factor_analysis: {
-    factors: BMS_FACTOR_DEFINITIONS.map(definition => eligibilityFactor(definition.id)),
-  },
-});
-const fiveFactorEligibility = assessBmsPublicationEligibility(fiveFactorAnalysis);
-assert.equal(fiveFactorEligibility.scorePublishable, true);
-assert.equal(fiveFactorEligibility.completeFactorCount, 5);
-assert.equal(fiveFactorEligibility.coverageWeight, 1);
-assert.equal(fiveFactorEligibility.targetComplete, true);
+assert.equal(fourFactorEligibility.coverageWeight, 1);
+assert.equal(fourFactorEligibility.targetComplete, true);
 
 const missingEarningsAnalysis = normalizeBmsFactorAnalysis({
   period: "Q3 FY26",
   factor_analysis: {
-    factors: ["economics", "execution", "balance_sheet", "management_delivery"].map(id => eligibilityFactor(
+    factors: ["economics", "execution", "balance_sheet"].map(id => eligibilityFactor(
       id as typeof BMS_FACTOR_DEFINITIONS[number]["id"],
     )),
   },
@@ -220,6 +199,6 @@ const unsourcedFourFactorAnalysis = normalizeBmsFactorAnalysis({
 });
 assert.equal(assessBmsPublicationEligibility(unsourcedFourFactorAnalysis).completeFactorCount, 0);
 
-assert.equal(BMS_FACTOR_DEFINITIONS.reduce((sum, factor) => sum + factor.weight, 0), 1);
-assert.equal(BMS_FACTOR_SCHEMA_DESCRIPTION.methodologyVersion, "BMS_V1");
+assert.ok(Math.abs(BMS_FACTOR_DEFINITIONS.reduce((sum, factor) => sum + factor.weight, 0) - 1) < 1e-9);
+assert.equal(BMS_FACTOR_SCHEMA_DESCRIPTION.methodologyVersion, "BMS_V1_1_FOUR_FACTOR");
 console.log("BMS factor schema verification passed.");

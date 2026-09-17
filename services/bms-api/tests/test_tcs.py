@@ -12,10 +12,10 @@ def test_tcs_current_score_only():
         management_delivery=1,
     )
 
-    assert result.current_tcs == 1.1
+    assert result.current_tcs == 1.1112
     assert result.previous_tcs is None
     assert result.delta_tcs is None
-    assert result.model_version == "tcs-v1.0"
+    assert result.model_version == "bms-v1.1-four-factor"
 
 
 def test_tcs_with_previous_scores():
@@ -32,9 +32,9 @@ def test_tcs_with_previous_scores():
         previous_management_delivery=1,
     )
 
-    assert result.current_tcs == 0.85
-    assert result.previous_tcs == 1.25
-    assert result.delta_tcs == -0.4
+    assert result.current_tcs == 0.8334
+    assert result.previous_tcs == 1.2778
+    assert result.delta_tcs == -0.4444
 
 
 def test_factor_deltas_are_preserved():
@@ -60,7 +60,7 @@ def test_factor_deltas_are_preserved():
     assert deltas["economics"] == 0
     assert deltas["execution"] == -2
     assert deltas["balance_sheet"] == -1
-    assert deltas["management_delivery"] == 0
+    assert "management_delivery" not in deltas
 
 
 def test_score_must_be_between_minus_two_and_plus_two():

@@ -48,14 +48,7 @@ def test_loads_only_sourced_comparable_promoted_evidence(tmp_path):
 
     assert eligibility.score_publishable is True
     assert eligibility.complete_factor_count == 4
-    assert eligibility.coverage_weight == 0.90
-    management = next(
-        factor
-        for factor in analyses["TESTCO"]["factors"]
-        if factor["id"] == "management_delivery"
-    )
-    assert management["availability"] == "unavailable"
-    assert management["current"]["factor_score"] is None
+    assert eligibility.coverage_weight == 1.0
 
 
 def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
@@ -260,7 +253,6 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
 
     expected = {
         "LT": {"earnings", "economics", "execution", "balance_sheet"},
-        "ADANIENSOL": {"earnings", "economics", "execution", "management_delivery"},
         "TATASTEEL": {"earnings", "economics", "execution", "balance_sheet"},
         "ULTRACEMCO": {"earnings", "economics", "execution", "balance_sheet"},
     }
@@ -268,3 +260,10 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
         eligibility = assess_publication_eligibility(analyses[symbol])
         assert eligibility.score_publishable is True
         assert set(eligibility.complete_factor_ids) == expected_factors
+
+    adani_eligibility = assess_publication_eligibility(analyses["ADANIENSOL"])
+    assert adani_eligibility.score_publishable is False
+    assert set(adani_eligibility.complete_factor_ids) == {
+        "earnings", "economics", "execution"
+    }
+    assert adani_eligibility.missing_factor_ids == ("balance_sheet",)

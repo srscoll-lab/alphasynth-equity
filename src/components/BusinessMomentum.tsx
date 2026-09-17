@@ -132,9 +132,7 @@ type BmsResponse = {
   monitored_company_count?: number;
   excluded_company_count?: number;
   coverage_summary?: {
-    fourFactorEligibleCompanies: number;
-    fiveFactorCompleteCompanies: number;
-    managementDeliveryCompleteCompanies: number;
+    fourFactorCompleteCompanies: number;
   };
   lifecycle_as_of?: string;
   stage_counts?: {
@@ -1392,9 +1390,9 @@ export default function BusinessMomentum({
               <div className="mt-6 pt-5 border-t border-white/10 flex items-start gap-2 text-xs text-zinc-400">
                 <Sparkles className="w-4 h-4 text-gold" />
                 <span>
-                  Four-factor safety floor · five-factor completion is the target
+                  Four core factors required · incomplete scores remain off the shortlist
                   {data?.coverage_summary
-                    ? ` · ${data.coverage_summary.fiveFactorCompleteCompanies} fully complete, ${data.coverage_summary.managementDeliveryCompleteCompanies} with Management Delivery`
+                    ? ` · ${data.coverage_summary.fourFactorCompleteCompanies} complete`
                     : ""}
                 </span>
               </div>

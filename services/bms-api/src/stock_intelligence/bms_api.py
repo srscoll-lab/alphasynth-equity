@@ -8,8 +8,9 @@ import pandas as pd
 from fastapi import FastAPI
 
 from .factor_analysis import load_factor_analyses
-from .publication_eligibility import assess_publication_eligibility
+from .publication_eligibility import FACTOR_WEIGHTS, assess_publication_eligibility
 from .tcs_evidence_mapping import map_evidence_to_tcs_factor
+from .tcs_state import classify_tcs_state
 from .thesis_direction_rules import infer_thesis_direction
 
 app = FastAPI(
@@ -87,6 +88,11 @@ def _controlled_cohort_domains() -> dict[str, set[str]]:
 BMS_DISPLAY_RANGE = 0.75
 
 
+def _four_factor_score(row: pd.Series) -> float:
+    """Calculate the BMS V1.1 score from the four core factors."""
+    return round(sum(float(row[factor]) * weight for factor, weight in FACTOR_WEIGHTS.items()), 4)
+
+
 def bms_display_score(value: float | None) -> int:
     """Match the 0-100 display conversion used by every AlphaSynth surface."""
     raw = float(value or 0)
@@ -121,8 +127,9 @@ def _prepare_history() -> pd.DataFrame:
     """
     Load expanded Nifty 500 BMS history and calculate trajectory fields.
 
-    The deterministic BMS scores are already calculated upstream.
-    This function does not recalculate BMS.
+    Historical artifacts may contain the retired five-factor score. Recalculate
+    the release score from the four compulsory core factors at the API boundary
+    so every endpoint applies the same BMS V1.1 methodology.
     """
     if not BMS_HISTORY_FILE.exists():
         raise FileNotFoundError(f"BMS history file not found: {BMS_HISTORY_FILE}")
@@ -144,7 +151,6 @@ def _prepare_history() -> pd.DataFrame:
         "economics",
         "execution",
         "balance_sheet",
-        "management_delivery",
     }
 
     missing = required - set(df.columns)
@@ -153,6 +159,8 @@ def _prepare_history() -> pd.DataFrame:
         raise ValueError("BMS history missing columns: " + ", ".join(sorted(missing)))
 
     df["symbol"] = df["symbol"].astype(str).str.strip().str.upper()
+    df["tcs"] = df.apply(_four_factor_score, axis=1)
+    df["state"] = df["tcs"].map(lambda score: classify_tcs_state(tcs_score=float(score)))
 
     df["_period_rank"] = df["period"].map(_period_rank)
     df = df.sort_values(["symbol", "_period_rank"]).copy()
@@ -284,7 +292,7 @@ def _fading_warning(row: pd.Series) -> bool:
 
 @app.get("/bms/watchlist")
 def bms_watchlist():
-    df = pd.read_csv(TCS_FILE)
+    df = _prepare_history()
 
     watchlist = df[df["state"] == "improving"].copy()
 
@@ -299,7 +307,6 @@ def bms_watchlist():
             "economics",
             "execution",
             "balance_sheet",
-            "management_delivery",
         ]
     ]
 
@@ -324,13 +331,10 @@ def bms_watchlist():
 
 @app.get("/bms/watchlist/current")
 def current_bms_watchlist():
-    df = pd.read_csv(TCS_FILE)
-
-    df["_period_rank"] = df["period"].map(_period_rank)
+    df = _prepare_history()
 
     latest = df.sort_values(["symbol", "_period_rank"]).groupby("symbol", as_index=False).tail(1)
 
-    # Frozen qualification rule remains unchanged.
     watchlist = latest[latest["state"] == "improving"].copy()
 
     watchlist = watchlist[
@@ -344,7 +348,6 @@ def current_bms_watchlist():
             "economics",
             "execution",
             "balance_sheet",
-            "management_delivery",
         ]
     ].rename(
         columns={
@@ -373,8 +376,8 @@ def current_bms_lifecycle():
 
     BMS itself is deterministic and calculated upstream.
 
-    Lifecycle interpretation comes from the frozen
-    Nifty 500 BMS V1 product dataset and is NOT recalculated here.
+    Lifecycle interpretation is recalculated from the four-factor BMS V1.1
+    history so retired Management Delivery values cannot affect publication.
     """
 
     if not BMS_PRODUCT_FILE.exists():
@@ -384,6 +387,41 @@ def current_bms_lifecycle():
     history = _prepare_history()
 
     product["symbol"] = product["symbol"].astype(str).str.strip().str.upper()
+
+    latest_history = history.sort_values(["symbol", "_period_rank"]).groupby("symbol", as_index=False).tail(1)
+    latest_by_symbol = latest_history.set_index("symbol")
+    product["bms"] = product["symbol"].map(latest_by_symbol["tcs"])
+    product["state"] = product["symbol"].map(latest_by_symbol["state"])
+    product["previous_bms"] = product["symbol"].map(latest_by_symbol["previous_bms"])
+    product["q1_fy26_bms"] = product["symbol"].map(latest_by_symbol["previous2_bms"])
+    product["bms_change_vs_previous_quarter"] = (
+        product["bms"] - product["previous_bms"]
+    ).round(4)
+    product["bms_change_display"] = product["bms_change_vs_previous_quarter"]
+
+    def four_factor_lifecycle(row):
+        current = float(row["bms"])
+        previous = row["previous_bms"]
+        earlier = row["q1_fy26_bms"]
+        change = row["bms_change_vs_previous_quarter"]
+        evidence = int(row["evidence_count"])
+        if pd.notna(change) and float(change) <= -0.10:
+            return "Fading"
+        if (pd.notna(previous) and pd.notna(earlier) and current >= 0.38
+                and float(previous) >= 0.38 and float(earlier) >= 0.18
+                and evidence >= 6 and float(change) >= -0.03):
+            return "Established"
+        if (pd.notna(previous) and current >= 0.38 and float(previous) >= 0.18
+                and evidence >= 4 and float(change) > 0):
+            return "Building"
+        if pd.notna(change) and current >= 0.18 and float(change) >= 0.18 and evidence >= 2:
+            return "Emerging"
+        return "Watch"
+
+    product["lifecycle_state"] = product.apply(four_factor_lifecycle, axis=1)
+    product["reversal_warning"] = product["bms_change_vs_previous_quarter"].map(
+        lambda change: "High" if change <= -0.12 else "Moderate" if change <= -0.06 else "None"
+    )
 
     # --------------------------------------------------------
     # Historical BMS trajectory
@@ -492,7 +530,6 @@ def current_bms_lifecycle():
                 "economics",
                 "execution",
                 "balance_sheet",
-                "management_delivery",
             ]
         }
         for _, row in product.iterrows()
@@ -534,7 +571,6 @@ def current_bms_lifecycle():
         "economics",
         "execution",
         "balance_sheet",
-        "management_delivery",
         "previous_bms",
         "previous2_bms",
         "bms_change",
@@ -588,13 +624,7 @@ def current_bms_lifecycle():
     repair_output = monitored_output.drop(index=output.index)
     eligible_eligibilities = output["publication_eligibility"].tolist()
     monitored_eligibilities = monitored_output["publication_eligibility"].tolist()
-    factor_ids = [
-        "earnings",
-        "economics",
-        "execution",
-        "balance_sheet",
-        "management_delivery",
-    ]
+    factor_ids = list(FACTOR_WEIGHTS)
     qualified_factor_counts = {
         factor: sum(
             factor in eligibility.get("completeFactorIds", [])
@@ -618,43 +648,39 @@ def current_bms_lifecycle():
             )
             .sum()
         )
-        for factor in [
-            "earnings",
-            "economics",
-            "execution",
-            "balance_sheet",
-            "management_delivery",
-        ]
+        for factor in FACTOR_WEIGHTS
     }
 
     safe_output = output.astype(object).where(pd.notna(output), None)
+    monitored_companies = [
+        {
+            "symbol": row["symbol"],
+            "company_name": row.get("company_name") or row["symbol"],
+            "publication_eligibility": row["publication_eligibility"],
+        }
+        for _, row in monitored_output.iterrows()
+    ]
 
     return {
         "name": "Business Momentum",
         "methodology": "Business Momentum Score (BMS)",
-        "version": "nifty500-bms-v1",
+        "version": "nifty500-bms-v1.1-four-factor",
         "company_count": len(output),
         "monitored_company_count": len(monitored_output),
         "excluded_company_count": len(repair_output),
+        "monitored_companies": monitored_companies,
         "publication_policy": {
             "minimumCompleteFactors": 4,
-            "minimumCoverageWeight": 0.75,
-            "mandatoryFactors": ["earnings", "economics"],
-            "targetCompleteFactors": 5,
+            "minimumCoverageWeight": 1.0,
+            "mandatoryFactors": list(FACTOR_WEIGHTS),
+            "targetCompleteFactors": 4,
             "targetCoverageWeight": 1.0,
         },
         "coverage_summary": {
-            "fourFactorEligibleCompanies": len(output),
-            "fiveFactorCompleteCompanies": sum(
-                bool(eligibility.get("targetComplete"))
-                for eligibility in eligible_eligibilities
-            ),
-            "managementDeliveryCompleteCompanies": qualified_factor_counts[
-                "management_delivery"
-            ],
+            "fourFactorCompleteCompanies": len(output),
             "qualifiedFactorCounts": qualified_factor_counts,
             "monitoredFactorCounts": monitored_factor_counts,
-            "target": "Five sourced, comparable factors for every published company.",
+            "target": "All four sourced, comparable core factors for every published company.",
         },
         "repair_queue_summary": {
             "company_count": len(repair_output),
@@ -827,7 +853,6 @@ def bms_research_context(symbol: str):
             "economics": company_signal.get("economics"),
             "execution": company_signal.get("execution"),
             "balance_sheet": company_signal.get("balance_sheet"),
-            "management_delivery": company_signal.get("management_delivery"),
         },
         # Preserve the same sourced factor record used by the publication gate.
         # Consumers must not reconstruct a narrower view from promoted drivers

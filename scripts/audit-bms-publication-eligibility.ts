@@ -1,14 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
-type FactorId = "earnings" | "economics" | "execution" | "balance_sheet" | "management_delivery";
+type FactorId = "earnings" | "economics" | "execution" | "balance_sheet";
 
 const definitions: Array<{ id: FactorId; weight: number }> = [
-  { id: "earnings", weight: 0.25 },
-  { id: "economics", weight: 0.25 },
-  { id: "execution", weight: 0.25 },
-  { id: "balance_sheet", weight: 0.15 },
-  { id: "management_delivery", weight: 0.10 },
+  { id: "earnings", weight: 0.2778 },
+  { id: "economics", weight: 0.2778 },
+  { id: "execution", weight: 0.2778 },
+  { id: "balance_sheet", weight: 0.1666 },
 ];
 
 const argument = (name: string) => process.argv.find(value => value.startsWith(`${name}=`))?.slice(name.length + 1);
@@ -41,10 +40,10 @@ const localAssessment = (analysis: any) => {
   const complete = new Set(completeFactorIds);
   const coverageWeight = Number(definitions.filter(row => complete.has(row.id)).reduce((sum, row) => sum + row.weight, 0).toFixed(2));
   const missingFactorIds = definitions.map(row => row.id).filter(id => !complete.has(id));
-  const missingMandatory = (["earnings", "economics"] as FactorId[]).filter(id => !complete.has(id));
+  const missingMandatory = definitions.map(row => row.id).filter(id => !complete.has(id));
   const reasons = [
-    ...(completeFactorIds.length < 4 ? [`Only ${completeFactorIds.length} of 5 factors have comparable sourced evidence; at least 4 are required.`] : []),
-    ...(coverageWeight < 0.75 ? [`Comparable evidence covers ${Math.round(coverageWeight * 100)}% of model weight; at least 75% is required.`] : []),
+    ...(completeFactorIds.length < 4 ? [`Only ${completeFactorIds.length} of 4 core factors have comparable sourced evidence; all 4 are required.`] : []),
+    ...(coverageWeight < 1 ? [`Comparable evidence covers ${Math.round(coverageWeight * 100)}% of model weight; 100% is required.`] : []),
     ...(missingMandatory.length ? [`Mandatory factor evidence is missing: ${missingMandatory.join(", ")}.`] : []),
   ];
   return {
@@ -54,7 +53,7 @@ const localAssessment = (analysis: any) => {
     missingFactorIds,
     completeFactorCount: completeFactorIds.length,
     coverageWeight,
-    targetComplete: completeFactorIds.length === 5 && coverageWeight === 1,
+    targetComplete: completeFactorIds.length === 4 && coverageWeight === 1,
     reasons,
   };
 };
@@ -101,9 +100,9 @@ const report = {
   baseUrl,
   policy: {
     minimumCompleteFactors: 4,
-    minimumCoverageWeight: 0.75,
-    mandatoryFactors: ["earnings", "economics"],
-    targetCompleteFactors: 5,
+    minimumCoverageWeight: 1,
+    mandatoryFactors: definitions.map(row => row.id),
+    targetCompleteFactors: 4,
     targetCoverageWeight: 1,
   },
   summary: {
@@ -111,8 +110,7 @@ const report = {
     eligible: eligible.length,
     repairRequired: repairQueue.length,
     technicalFailures: results.filter(row => row.error).length,
-    fiveFactorComplete: eligible.filter(row => row.targetComplete).length,
-    managementDeliveryComplete: eligible.filter(row => row.completeFactorIds.includes("management_delivery")).length,
+    fourFactorComplete: eligible.filter(row => row.targetComplete).length,
     missingFactorCounts,
   },
   eligible,

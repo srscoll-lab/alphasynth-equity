@@ -120,7 +120,8 @@ EVIDENCE_TYPE_MAP = {
 
 # Sector-specific observations arrive from the evidence workflow with more
 # descriptive names than the original narrow financial feed. These suffixes
-# map them to the same frozen five factors without changing factor weights.
+# map them to the four scored release factors. Management Delivery mappings are
+# retained only for the separate experimental guidance overlay.
 EXECUTION_PATTERNS = (
     "_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery",
     "_productivity_delivery", "_monetisation_delivery", "_mix_change",

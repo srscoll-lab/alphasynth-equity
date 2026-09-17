@@ -216,6 +216,10 @@ def load_factor_analyses(
         analysis = analyses[symbol]
         factors = {factor["id"]: factor for factor in analysis["factors"]}
         for factor_id, admitted in factor_rows.items():
+            if factor_id not in factors:
+                # Management Delivery and any future experimental dimensions
+                # are stored separately and do not enter the four-factor build.
+                continue
             factor = factors[factor_id]
             previous_metrics = []
             current_metrics = []

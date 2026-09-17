@@ -3,7 +3,7 @@ Build AlphaSynth-facing Nifty 500 BMS V1 product dataset.
 
 IMPORTANT
 ---------
-This script does NOT alter BMS scores.
+This script applies the BMS V1.1 four-factor release weights.
 
 It converts deterministic BMS history into:
 - rank
@@ -17,6 +17,14 @@ Lifecycle is a presentation / interpretation layer.
 
 from pathlib import Path
 import pandas as pd
+
+
+CORE_FACTOR_WEIGHTS = {
+    "earnings": 0.2778,
+    "economics": 0.2778,
+    "execution": 0.2778,
+    "balance_sheet": 0.1666,
+}
 
 
 BASE = Path(__file__).resolve().parent
@@ -120,7 +128,6 @@ def main():
         "economics",
         "execution",
         "balance_sheet",
-        "management_delivery",
     }
 
     missing = required - set(df.columns)
@@ -130,6 +137,20 @@ def main():
             "Missing columns: "
             + ", ".join(sorted(missing))
         )
+
+    # BMS V1.1 excludes the experimental Management Delivery dimension and
+    # renormalizes the four core factors to 100% before rebuilding lifecycle.
+    df["bms"] = sum(
+        df[factor].astype(float) * weight
+        for factor, weight in CORE_FACTOR_WEIGHTS.items()
+    ).round(4)
+    df["state"] = df["bms"].map(
+        lambda score: "strongly_strengthening" if score >= 1.0
+        else "improving" if score >= 0.4
+        else "mixed" if score > -0.4
+        else "weakening" if score > -1.0
+        else "strongly_weakening"
+    )
 
     # --------------------------------------------------------
     # Pivot BMS history
@@ -290,7 +311,6 @@ def main():
             "economics",
             "execution",
             "balance_sheet",
-            "management_delivery",
         ]
     ].copy()
 

@@ -1,12 +1,11 @@
 export const BMS_FACTOR_SCHEMA_VERSION = "1.0.0" as const;
-export const BMS_METHODOLOGY_VERSION = "BMS_V1" as const;
+export const BMS_METHODOLOGY_VERSION = "BMS_V1_1_FOUR_FACTOR" as const;
 
 export const BMS_FACTOR_DEFINITIONS = [
-  { id: "earnings", label: "Earnings", weight: 0.25, cadence: "quarterly", purpose: "Whether reported earnings momentum is accelerating or weakening.", evidenceSignals: "Revenue, PAT, EPS and margins" },
-  { id: "economics", label: "Economics", weight: 0.25, cadence: "quarterly_or_event_driven", purpose: "Whether the underlying business and industry economics are becoming more or less favourable.", evidenceSignals: "Demand, pricing, input costs, mix and industry capacity" },
-  { id: "execution", label: "Execution", weight: 0.25, cadence: "quarterly", purpose: "Whether operating plans are converting into measurable business outputs.", evidenceSignals: "Volumes, utilisation, order conversion, launches and milestones" },
-  { id: "balance_sheet", label: "Balance sheet", weight: 0.15, cadence: "half_yearly_or_annual", purpose: "Whether growth is supported by financial resilience rather than balance-sheet strain.", evidenceSignals: "Net debt, cash flow, working capital, coverage and capex" },
-  { id: "management_delivery", label: "Management delivery", weight: 0.10, cadence: "rolling_commitment_history", purpose: "Whether management delivers against earlier stated commitments.", evidenceSignals: "Guidance, dated milestones, capital allocation and reported outcomes" },
+  { id: "earnings", label: "Earnings", weight: 0.2778, cadence: "quarterly", purpose: "Whether reported earnings momentum is accelerating or weakening.", evidenceSignals: "Revenue, PAT, EPS and margins" },
+  { id: "economics", label: "Economics", weight: 0.2778, cadence: "quarterly_or_event_driven", purpose: "Whether the underlying business and industry economics are becoming more or less favourable.", evidenceSignals: "Demand, pricing, input costs, mix and industry capacity" },
+  { id: "execution", label: "Execution", weight: 0.2778, cadence: "quarterly", purpose: "Whether operating plans are converting into measurable business outputs.", evidenceSignals: "Volumes, utilisation, order conversion, launches and milestones" },
+  { id: "balance_sheet", label: "Balance sheet", weight: 0.1666, cadence: "half_yearly_or_annual", purpose: "Whether growth is supported by financial resilience rather than balance-sheet strain.", evidenceSignals: "Net debt, cash flow, working capital, coverage and capex" },
 ] as const;
 
 export type BmsFactorId = typeof BMS_FACTOR_DEFINITIONS[number]["id"];
@@ -54,9 +53,9 @@ export type BmsFactorAnalysis = {
 
 export const BMS_PUBLICATION_POLICY = {
   minimumCompleteFactors: 4,
-  minimumCoverageWeight: 0.75,
-  mandatoryFactors: ["earnings", "economics"] as BmsFactorId[],
-  targetCompleteFactors: 5,
+  minimumCoverageWeight: 1,
+  mandatoryFactors: ["earnings", "economics", "execution", "balance_sheet"] as BmsFactorId[],
+  targetCompleteFactors: 4,
   targetCoverageWeight: 1,
 } as const;
 
@@ -113,7 +112,7 @@ export function assessBmsPublicationEligibility(
 
   if (completeFactorIds.length < BMS_PUBLICATION_POLICY.minimumCompleteFactors) {
     reasons.push(
-      `Only ${completeFactorIds.length} of 5 factors have comparable sourced evidence; at least ${BMS_PUBLICATION_POLICY.minimumCompleteFactors} are required.`,
+      `Only ${completeFactorIds.length} of 4 core factors have comparable sourced evidence; all ${BMS_PUBLICATION_POLICY.minimumCompleteFactors} are required.`,
     );
   }
   if (coverageWeight < BMS_PUBLICATION_POLICY.minimumCoverageWeight) {
@@ -416,36 +415,6 @@ export function augmentFactorAnalysisWithDeliveryEvidence(
     }));
   }
 
-  const managementFactor = factors.find(factor => factor.id === "management_delivery");
-  const hasManagementEvidence = Boolean(managementFactor?.previous.metrics.length || managementFactor?.current.metrics.length);
-  const management = deliveryCheck?.managementGuidance?.assessment;
-  const managementEvidenceRefs = [...new Set(deliveryCheck?.managementGuidance?.evidenceRefs || [])] as string[];
-  if (managementFactor && !hasManagementEvidence && Number.isFinite(management?.score) && managementEvidenceRefs.length) {
-    const componentMetrics = [
-      ["matured_delivery", "Matured commitments delivered", management?.components?.maturedDelivery?.score],
-      ["revision_discipline", "Revision discipline", management?.components?.revisionDiscipline?.score],
-      ["disclosure_quality", "Disclosure quality", management?.components?.disclosureQuality?.score],
-    ].flatMap(([key, label, value]) => Number.isFinite(value)
-      ? [{ key: String(key), label: String(label), value: Number(value), unit: "/100", displayValue: null }]
-      : []);
-    factors = factors.map(factor => factor.id !== "management_delivery" ? factor : ({
-      ...factor,
-      current: {
-        ...factor.current,
-        period: factor.current.period || management.asOfDate || null,
-        metrics: [
-          { key: "management_delivery_record", label: "Current delivery record", value: Number(management.score), unit: "/100", displayValue: null },
-          ...componentMetrics,
-        ],
-      },
-      explanation: "The current deterministic management-delivery record is shown separately from BMS V1. A momentum reading requires another comparable, time-stamped management-history assessment.",
-      evidenceRefs: managementEvidenceRefs,
-      availability: "partial" as const,
-      confidence: (["high", "medium", "low"] as const).includes(management.evidenceConfidence)
-        ? management.evidenceConfidence
-        : "low" as const,
-    }));
-  }
   return { ...analysis, factors };
 }
 
@@ -455,7 +424,9 @@ export const BMS_FACTOR_SCHEMA_DESCRIPTION = {
   comparisonBasis: "same-quarter-prior-year",
   factors: BMS_FACTOR_DEFINITIONS,
   rules: [
-    "The deterministic BMS V1 score and weights are unchanged.",
+    "BMS V1.1 uses four core factors with weights renormalized to 100%.",
+    "All four core factors require comparable sourced evidence before publication.",
+    "Management Delivery is an experimental research overlay and does not affect this score, ranking or lifecycle.",
     "Previous and current measurements must be tied to dated reporting periods.",
     "Missing values remain null and must never be converted to zero.",
     "Explanations may describe supplied evidence but cannot alter factor scores.",

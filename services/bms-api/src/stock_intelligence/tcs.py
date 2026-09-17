@@ -5,7 +5,7 @@ from dataclasses import dataclass
 
 # TCS V1.0
 #
-# Five-factor model validated for the Recognition Intelligence MVP.
+# Four-factor BMS V1.1 model.
 #
 # Scores for every factor:
 #   -2 = strongly deteriorating
@@ -19,11 +19,10 @@ from dataclasses import dataclass
 
 
 FACTOR_WEIGHTS = {
-    "earnings": 0.25,
-    "economics": 0.25,
-    "execution": 0.25,
-    "balance_sheet": 0.15,
-    "management_delivery": 0.10,
+    "earnings": 0.2778,
+    "economics": 0.2778,
+    "execution": 0.2778,
+    "balance_sheet": 0.1666,
 }
 
 
@@ -94,13 +93,15 @@ def calculate_tcs(
     """
     Calculate Thesis Confirmation Score (TCS) V1.0.
 
-    Current factor weights:
+    Current core-factor weights:
 
-        Earnings                    25%
-        Economics / margins         25%
-        Execution / conversion      25%
-        Balance sheet / risk        15%
-        Management delivery         10%
+        Earnings                    27.78%
+        Economics / margins         27.78%
+        Execution / conversion      27.78%
+        Balance sheet / risk        16.66%
+
+    Management delivery is retained as an input for backwards-compatible
+    callers but is not part of the BMS V1.1 score.
 
     Each factor uses a -2 to +2 scale.
 
@@ -121,7 +122,6 @@ def calculate_tcs(
         "economics": economics,
         "execution": execution,
         "balance_sheet": balance_sheet,
-        "management_delivery": management_delivery,
     }
 
     previous_scores = {
@@ -129,7 +129,6 @@ def calculate_tcs(
         "economics": previous_economics,
         "execution": previous_execution,
         "balance_sheet": previous_balance_sheet,
-        "management_delivery": previous_management_delivery,
     }
 
     for name, score in current_scores.items():
@@ -187,5 +186,5 @@ def calculate_tcs(
         previous_tcs=previous_tcs,
         delta_tcs=delta_tcs,
         factors=tuple(factor_results),
-        model_version="tcs-v1.0",
+        model_version="bms-v1.1-four-factor",
     )

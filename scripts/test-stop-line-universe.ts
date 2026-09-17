@@ -30,11 +30,12 @@ const selectedTickers = (valueAfter("--tickers=") || "").split(",").map(value =>
 const baseUrl = (valueAfter("--base-url=") || "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app").replace(/\/$/, "");
 const outputRoot = valueAfter("--output=") || "/tmp";
 const listOnly = process.argv.includes("--list");
-const skipManagement = process.argv.includes("--skip-management");
+const includeExperimentalManagement = process.argv.includes("--include-management");
+const skipManagement = !includeExperimentalManagement;
 const managementOnly = process.argv.includes("--management-only");
 const resume = process.argv.includes("--resume");
 
-if (skipManagement && managementOnly) throw new Error("--skip-management and --management-only cannot be combined");
+if (includeExperimentalManagement && managementOnly) throw new Error("--include-management and --management-only cannot be combined");
 
 if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error("--cutoff must be YYYY-MM-DD");
 if (!Number.isInteger(limit) || limit < 0) throw new Error("--limit must be a non-negative integer");
@@ -205,13 +206,19 @@ for (const company of companies) {
       overlay,
       dossier,
     );
+    const fourFactorRaw = (
+      Number(trackerCompany.earnings || 0) * 0.2778
+      + Number(trackerCompany.economics || 0) * 0.2778
+      + Number(trackerCompany.execution || 0) * 0.2778
+      + Number(trackerCompany.balance_sheet || 0) * 0.1666
+    );
     const payload: DossierPdfPayload = {
       dossier,
       financials,
       enrichment: extrasResponse.status === 200 ? extrasResponse.payload : null,
       market: marketResponse.status === 200 ? marketResponse.payload : null,
       bms: {
-        score: score100(trackerCompany.rawBms),
+        score: score100(fourFactorRaw),
         stage: company.lifecycle,
         period: trackerCompany.period || null,
         factorAnalysis,
@@ -220,7 +227,6 @@ for (const company of companies) {
           ["Economics", trackerCompany.economics],
           ["Execution", trackerCompany.execution],
           ["Balance sheet", trackerCompany.balance_sheet],
-          ["Management", trackerCompany.management_delivery],
         ].map(([label, score]) => ({ label: String(label), score: score100(score) })),
       },
       deliveryCheck: overlay?.input && overlay?.assessment
@@ -307,7 +313,7 @@ const summary = {
   thresholds: {
     technicalSuccessPct: 90,
     deliveryUsablePct: 70,
-    managementDeliveryTargetPct: 100,
+    managementDeliveryTargetPct: managementOnly ? 100 : null,
     inventedValuesAllowed: 0,
   },
   outcomes: {
@@ -323,11 +329,11 @@ const summary = {
   acceptance: {
     technical: percent(technicalCount) >= 90,
     delivery: managementOnly ? null : percent(deliveryCount) >= 70,
-    managementTarget: percent(managementCount) === 100,
+    managementTarget: managementOnly ? percent(managementCount) === 100 : null,
     overall: percent(technicalCount) >= 90 && (managementOnly || percent(deliveryCount) >= 70),
     note: managementOnly
       ? "Management-only mode bypasses full-dossier retrieval and tests the Gemini-grounded official-evidence ledger directly. Technical acceptance measures whether the route completed; usable Management Delivery still requires at least three matured, verifiable commitments and remains a separate 100% coverage target."
-      : "Four-factor eligibility is the safety floor. Five-factor completion, including Management Delivery, remains the 100% coverage target and is reported independently rather than weakened to make the release gate pass. PDF readiness is also reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
+      : "BMS V1.1 requires comparable sourced evidence for all four core factors. Management Delivery is an experimental overlay outside this release gate. PDF readiness is reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
   },
   lifecycleBreakdown,
   results,

@@ -58,7 +58,7 @@ export function assessDossierReadiness(payload: DossierPdfPayload): DossierReadi
   if (supportedClaims < 8) reasons.push(`Only ${supportedClaims} company facts were verified; at least 8 are required.`);
   if (populatedNarrativeSections < 3) reasons.push(`Only ${populatedNarrativeSections} of 4 report sections contain verified information; at least 3 are required.`);
   if (!risksPopulated) reasons.push("No verified company-specific risk or watch item was found.");
-  if (completeBmsFactors < 3) reasons.push(`Only ${completeBmsFactors} of 5 BMS factors have comparable previous and current figures; at least 3 are required.`);
+  if (completeBmsFactors < 4) reasons.push(`Only ${completeBmsFactors} of 4 core BMS factors have comparable previous and current figures; all 4 are required.`);
   if (observedQualityGates < 3) reasons.push(`Only ${observedQualityGates} business-quality checks have supporting evidence; at least 3 are required. Checks that are not due this quarter do not count as completed.`);
   if (deliveryComponents < 2 || (payload.deliveryCheck?.assessment.deliveryCoverage || 0) < 60) {
     reasons.push("The later-results comparison needs at least 2 comparable measures covering 60% of the delivery assessment.");
