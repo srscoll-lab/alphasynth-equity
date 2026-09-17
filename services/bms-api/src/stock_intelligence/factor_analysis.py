@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 import sqlite3
 from collections import defaultdict
 from datetime import date
@@ -8,6 +9,33 @@ from pathlib import Path
 
 from .publication_eligibility import FACTOR_WEIGHTS
 from .tcs_evidence_mapping import map_evidence_to_tcs_factor
+
+_REPORTING_PERIOD_EQUIVALENTS = {
+    "3M": "Q1",
+    "6M": "Q2",
+    "H1": "Q2",
+    "9M": "Q3",
+    "FY": "Q4",
+}
+
+
+def _period_matches_reporting_quarter(reporting_period: str, evidence_period: str) -> bool:
+    """Accept a cumulative period only for its matching reporting quarter.
+
+    Companies commonly report Q3 results as nine-month figures. Preserving the
+    source label avoids presenting cumulative evidence as a single quarter,
+    while the equivalence check still prevents evidence from another reporting
+    period from entering the publication gate.
+    """
+
+    reporting = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", reporting_period.strip().upper())
+    evidence = re.fullmatch(r"(3M|6M|9M|H1|FY)\s+FY(\d{2,4})", evidence_period.strip().upper())
+    if not reporting or not evidence:
+        return reporting_period.strip().upper() == evidence_period.strip().upper()
+    return (
+        _REPORTING_PERIOD_EQUIVALENTS[evidence.group(1)] == f"Q{reporting.group(1)}"
+        and evidence.group(2) == reporting.group(2)
+    )
 
 
 def _number(value):
@@ -124,6 +152,7 @@ def load_factor_analyses(
             for item in csv.DictReader(handle):
                 symbol = str(item.get("symbol") or "").strip().upper()
                 current_period = periods_by_symbol.get(symbol)
+                evidence_current_period = str(item.get("current_period") or "").strip()
                 metric = str(item.get("metric_name") or "").strip().lower()
                 mapping = map_evidence_to_tcs_factor(evidence_type=metric)
                 try:
@@ -136,7 +165,9 @@ def load_factor_analyses(
                     continue
                 if (
                     not current_period
-                    or str(item.get("current_period") or "").strip() != current_period
+                    or not _period_matches_reporting_quarter(
+                        current_period, evidence_current_period
+                    )
                     or mapping is None
                     or mapping.factor_name != str(item.get("factor") or "").strip().lower()
                     or str(item.get("source_type") or "").strip().lower() not in trusted_sources
@@ -149,7 +180,7 @@ def load_factor_analyses(
                     "evidence_ref": str(item.get("source_ref") or "").strip(),
                     "metric_or_topic": metric,
                     "previous_period": str(item.get("previous_period") or "").strip(),
-                    "current_period": current_period,
+                    "current_period": evidence_current_period,
                     "previous_value": previous_value,
                     "current_value": current_value,
                     "change_value": current_value - previous_value,

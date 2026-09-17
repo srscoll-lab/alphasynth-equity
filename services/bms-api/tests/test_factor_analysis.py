@@ -102,6 +102,44 @@ def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
     assert factors["balance_sheet"]["evidence_refs"] == ["https://example.com/official.pdf"]
 
 
+def test_preserves_cumulative_period_label_for_matching_reporting_quarter(tmp_path):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, metric_or_topic TEXT, previous_period TEXT,
+          current_period TEXT, previous_value TEXT, current_value TEXT,
+          change_value TEXT, confidence REAL
+        );
+        INSERT INTO companies VALUES (1, 'TESTCO', 'TESTCO');
+        """
+    )
+    connection.commit()
+    connection.close()
+    evidence = tmp_path / "launch.csv"
+    evidence.write_text(
+        "symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,source_type,source_ref,source_date,cutoff_date,confidence\n"
+        "TESTCO,execution,order_book,9M FY25,9M FY26,10,12,company_results,https://example.com/results.pdf,2026-02-03,2026-08-25,0.95\n",
+        encoding="utf-8",
+    )
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={"TESTCO": "Q3 FY26"},
+        scores_by_symbol={"TESTCO": {"execution": 1.0}},
+        supplemental_evidence_file=evidence,
+    )
+    execution = next(
+        factor for factor in analyses["TESTCO"]["factors"] if factor["id"] == "execution"
+    )
+
+    assert execution["availability"] == "complete"
+    assert execution["previous"]["period"] == "9M FY25"
+    assert execution["current"]["period"] == "9M FY26"
+
+
 def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
     database = tmp_path / "bms.db"
     connection = sqlite3.connect(database)
