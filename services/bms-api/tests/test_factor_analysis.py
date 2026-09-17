@@ -51,6 +51,50 @@ def test_internal_change_record_ids_do_not_qualify_as_official_sources(tmp_path)
     assert eligibility.coverage_weight == 0
 
 
+def test_legacy_quarterly_result_provenance_is_recovered_from_raw_item(tmp_path):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE sources (id INTEGER PRIMARY KEY, source_type TEXT);
+        CREATE TABLE raw_items (
+          id INTEGER PRIMARY KEY, source_id INTEGER, raw_url TEXT, published_at TEXT
+        );
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, raw_item_id INTEGER,
+          metric_or_topic TEXT, previous_period TEXT, current_period TEXT,
+          previous_value TEXT, current_value TEXT, change_value TEXT, confidence REAL
+        );
+        INSERT INTO companies VALUES (1, 'TESTCO', 'TESTCO');
+        INSERT INTO sources VALUES (1, 'quarterly_result');
+        INSERT INTO raw_items VALUES (
+          1, 1, 'https://company.example/q3-results.pdf', '2026-02-01T00:00:00'
+        );
+        INSERT INTO change_records VALUES (1, 1, 1, 'revenue', 'Q3 FY25', 'Q3 FY26', '100', '120', '20', 0.9);
+        INSERT INTO change_records VALUES (2, 1, 1, 'operating_margin', 'Q3 FY25', 'Q3 FY26', '10', '12', '2', 0.9);
+        INSERT INTO change_records VALUES (3, 1, 1, 'order_book', 'Q3 FY25', 'Q3 FY26', '50', '60', '10', 0.9);
+        INSERT INTO change_records VALUES (4, 1, 1, 'total_debt', 'Q3 FY25', 'Q3 FY26', '40', '30', '-10', 0.9);
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={"TESTCO": "Q3 FY26"},
+        scores_by_symbol={"TESTCO": {
+            "earnings": 1.0, "economics": 1.0,
+            "execution": 1.0, "balance_sheet": 1.0,
+        }},
+    )
+    eligibility = assess_publication_eligibility(analyses["TESTCO"])
+
+    assert eligibility.score_publishable is True
+    assert eligibility.complete_factor_count == 4
+    assert analyses["TESTCO"]["comparison_basis"] == "same-quarter-prior-year"
+
+
 def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
     database = tmp_path / "bms.db"
     connection = sqlite3.connect(database)

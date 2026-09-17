@@ -195,7 +195,8 @@ def load_factor_analyses(
     trusted_sources = {
         "company_filing", "company_results", "company_presentation",
         "company_transcript", "nse_filing", "bse_filing",
-        "audited_financial_statement",
+        "audited_financial_statement", "quarterly_result",
+        "official_exchange", "exchange_filing", "regulator",
     }
     if supplemental_evidence_file and supplemental_evidence_file.exists():
         with supplemental_evidence_file.open(encoding="utf-8", newline="") as handle:
@@ -277,7 +278,7 @@ def load_factor_analyses(
             refs = []
             confidences = []
             source_details = []
-            provenance_verified = True
+            provenance_verified = False
             previous_period = None
             current_period = periods_by_symbol[symbol]
 
@@ -298,11 +299,15 @@ def load_factor_analyses(
                         and source_type in trusted_sources
                     )
                 if not evidence_refs:
-                    provenance_verified = False
                     continue
                 metric = str(row["metric_or_topic"])
                 unit = row.get("unit") if isinstance(row, dict) else _metric_unit(metric)
-                provenance_verified = provenance_verified and row_verified and bool(unit)
+                # Admit individual metric pairs only when their provenance is
+                # independently auditable. One malformed row must not erase a
+                # different, fully sourced comparison for the same factor.
+                if not row_verified or not unit:
+                    continue
+                provenance_verified = True
                 previous_period = previous_period or row["previous_period"]
                 current_period = row["current_period"] or current_period
                 previous_metrics.append(
