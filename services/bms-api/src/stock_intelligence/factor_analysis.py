@@ -6,6 +6,7 @@ import sqlite3
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
+from urllib.parse import urlparse
 
 from .publication_eligibility import FACTOR_WEIGHTS
 from .tcs_evidence_mapping import map_evidence_to_tcs_factor
@@ -86,6 +87,7 @@ def load_factor_analyses(
     periods_by_symbol: dict[str, str],
     scores_by_symbol: dict[str, dict[str, float | None]],
     supplemental_evidence_file: Path | None = None,
+    official_domains_by_symbol: dict[str, set[str]] | None = None,
 ) -> dict[str, dict]:
     """Build sourced previous/current factor comparisons in one database pass.
 
@@ -154,6 +156,14 @@ def load_factor_analyses(
                 current_period = periods_by_symbol.get(symbol)
                 evidence_current_period = str(item.get("current_period") or "").strip()
                 metric = str(item.get("metric_name") or "").strip().lower()
+                unit = str(item.get("unit") or "").strip()
+                source_ref = str(item.get("source_ref") or "").strip()
+                source_host = (urlparse(source_ref).hostname or "").lower()
+                approved_domains = (official_domains_by_symbol or {}).get(symbol)
+                source_is_official = approved_domains is None or any(
+                    source_host == domain or source_host.endswith(f".{domain}")
+                    for domain in approved_domains
+                )
                 mapping = map_evidence_to_tcs_factor(evidence_type=metric)
                 try:
                     source_date = date.fromisoformat(str(item.get("source_date") or ""))
@@ -169,6 +179,8 @@ def load_factor_analyses(
                         current_period, evidence_current_period
                     )
                     or mapping is None
+                    or not unit
+                    or not source_is_official
                     or mapping.factor_name != str(item.get("factor") or "").strip().lower()
                     or str(item.get("source_type") or "").strip().lower() not in trusted_sources
                     or source_date > cutoff_date
@@ -177,8 +189,9 @@ def load_factor_analyses(
                     continue
                 grouped[symbol][mapping.factor_name].append({
                     "change_record_id": None,
-                    "evidence_ref": str(item.get("source_ref") or "").strip(),
+                    "evidence_ref": source_ref,
                     "metric_or_topic": metric,
+                    "unit": unit,
                     "previous_period": str(item.get("previous_period") or "").strip(),
                     "current_period": evidence_current_period,
                     "previous_value": previous_value,
@@ -208,6 +221,7 @@ def load_factor_analyses(
                 if not evidence_ref:
                     continue
                 metric = str(row["metric_or_topic"])
+                unit = row.get("unit") if isinstance(row, dict) else None
                 previous_period = previous_period or row["previous_period"]
                 current_period = row["current_period"] or current_period
                 previous_metrics.append(
@@ -215,6 +229,7 @@ def load_factor_analyses(
                         "key": metric,
                         "label": metric.replace("_", " "),
                         "value": _number(row["previous_value"]),
+                        "unit": unit,
                     }
                 )
                 current_metrics.append(
@@ -222,6 +237,7 @@ def load_factor_analyses(
                         "key": metric,
                         "label": metric.replace("_", " "),
                         "value": _number(row["current_value"]),
+                        "unit": unit,
                         "change": _number(row["change_value"]),
                     }
                 )

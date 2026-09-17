@@ -1,3 +1,4 @@
+import json
 import math
 import os
 import sqlite3
@@ -62,17 +63,38 @@ BMS_SUPPLEMENTAL_EVIDENCE_FILE = Path(
     )
 )
 
+BMS_CONTROLLED_COHORT_FILE = Path(
+    os.environ.get(
+        "BMS_CONTROLLED_COHORT_FILE",
+        str(_bms_artifact_root / "src" / "stock_intelligence" / "bms_controlled_cohort.json"),
+    )
+)
+
+
+def _controlled_cohort_domains() -> dict[str, set[str]]:
+    if not BMS_CONTROLLED_COHORT_FILE.exists():
+        return {}
+    payload = json.loads(BMS_CONTROLLED_COHORT_FILE.read_text(encoding="utf-8"))
+    return {
+        str(company["symbol"]).strip().upper(): {
+            *(str(domain).strip().lower() for domain in company.get("officialDomains", [])),
+            "nseindia.com",
+            "bseindia.com",
+        }
+        for company in payload.get("companies", [])
+    }
+
 BMS_DISPLAY_RANGE = 0.75
 
 
-def bms_display_score(value: float | int | None) -> int:
+def bms_display_score(value: float | None) -> int:
     """Match the 0-100 display conversion used by every AlphaSynth surface."""
     raw = float(value or 0)
     displayed = math.floor(50 + (raw / BMS_DISPLAY_RANGE) * 50 + 0.50000001)
     return max(0, min(100, displayed))
 
 
-def bms_display_change_points(value: float | int | None) -> int:
+def bms_display_change_points(value: float | None) -> int:
     """Convert raw BMS movement into the same display-point scale as the UI."""
     raw = float(value or 0)
     displayed = math.floor((raw / BMS_DISPLAY_RANGE) * 50 + 0.50000001)
@@ -480,6 +502,7 @@ def current_bms_lifecycle():
         periods_by_symbol=periods_by_symbol,
         scores_by_symbol=scores_by_symbol,
         supplemental_evidence_file=BMS_SUPPLEMENTAL_EVIDENCE_FILE,
+        official_domains_by_symbol=_controlled_cohort_domains(),
     )
     product["factor_analysis"] = product["symbol"].map(analyses)
     product["publication_eligibility"] = product["factor_analysis"].map(
