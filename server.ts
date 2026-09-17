@@ -3670,7 +3670,86 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         && String(anchor.current_period || "").trim() === String(candidate?.currentPeriod || "").trim()
         && Number(anchor.previous_value) === Number(candidate?.previousValue)
         && Number(anchor.current_value) === Number(candidate?.currentValue));
-      if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) {
+      const periodToken = (value: unknown) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
+      const metricLabels = (metric: unknown) => {
+        const canonical = mapBmsFactorMetric(metric)?.metric || String(metric || "").trim().toLowerCase();
+        const aliases: Record<string, string[]> = {
+          pat: ["pat", "profit after tax"],
+          revenue: ["revenue", "operating revenue"],
+          eps: ["eps", "earnings per share"],
+          ebitda: ["ebitda"],
+          operating_margin: ["operating margin"],
+          financing_margin: ["financing margin"],
+          nim: ["nim", "net interest margin"],
+        };
+        return aliases[canonical] || [canonical.replaceAll("_", " ")];
+      };
+      const documentSupportsAnchor = (documentText: string, anchor: any) => {
+        const lower = documentText.toLowerCase().replace(/\s+/g, " ");
+        const previousPeriodToken = periodToken(anchor.previous_period);
+        const currentPeriodToken = periodToken(anchor.current_period);
+        for (const label of metricLabels(anchor.metric_name)) {
+          let index = lower.indexOf(label);
+          while (index >= 0) {
+            const window = lower.slice(Math.max(0, index - 3000), index + label.length + 3000);
+            const compactWindow = periodToken(window);
+            if (containsEvidenceValue(window, Number(anchor.previous_value))
+              && containsEvidenceValue(window, Number(anchor.current_value))
+              && compactWindow.includes(previousPeriodToken)
+              && compactWindow.includes(currentPeriodToken)) return true;
+            index = lower.indexOf(label, index + label.length);
+          }
+        }
+        return false;
+      };
+
+      // Reuse an already verified official filing deterministically. The
+      // document must contain the metric label, both reporting periods and
+      // both exact stored values in the same local context.
+      for (const knownSource of knownOfficialSources) {
+        const sourceUrl = String(knownSource.url || "");
+        const sourceDate = exactEvidenceDate(knownSource.published_at);
+        if (!sourceDate || sourceDate > cutoff || !isOfficialDossierSource(sourceUrl, officialDomains)) continue;
+        try {
+          const verification = await fetch(sourceUrl, {
+            method: "GET", redirect: "follow", signal: AbortSignal.timeout(30_000),
+            headers: { "user-agent": "AlphaSynth-Research/1.0" },
+          });
+          const verifiedUrl = verification.url || sourceUrl;
+          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) throw new Error(`HTTP ${verification.status}`);
+          const maximumBytes = 20 * 1024 * 1024;
+          const declaredBytes = Number(verification.headers.get("content-length") || 0);
+          if (declaredBytes > maximumBytes) throw new Error("document_too_large");
+          const contentType = String(verification.headers.get("content-type") || "").toLowerCase();
+          const bytes = Buffer.from(await verification.arrayBuffer());
+          if (!bytes.length || bytes.length > maximumBytes) throw new Error("invalid_document_size");
+          const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
+            ? await extractPdfTextLocally(bytes, 80)
+            : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
+          let admittedFromSource = 0;
+          for (const anchor of anchors) {
+            const mapping = mapBmsFactorMetric(anchor.metric_name);
+            const unit = String(anchor.unit || "").trim();
+            const key = `${mapping?.factor}|${mapping?.metric}|${anchor.previous_period}|${anchor.current_period}`;
+            if (!mapping || !unit || seen.has(key) || !documentSupportsAnchor(documentText, anchor)) continue;
+            const hostname = new URL(verifiedUrl).hostname.toLowerCase();
+            seen.add(key);
+            admittedFromSource += 1;
+            rows.push({
+              symbol: ticker, factor: mapping.factor, metric_name: mapping.metric,
+              previous_period: String(anchor.previous_period), current_period: String(anchor.current_period),
+              previous_value: Number(anchor.previous_value), current_value: Number(anchor.current_value), unit,
+              source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
+              source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff, confidence: 0.9,
+            });
+            diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "admitted_known_official_document" });
+          }
+          if (!admittedFromSource) diagnostics.push({ sourceUrl: verifiedUrl, outcome: "known_official_document_no_context_match" });
+        } catch (error: any) {
+          diagnostics.push({ sourceUrl, outcome: "known_official_document_not_retrievable", detail: String(error?.message || error) });
+        }
+      }
+      if ((!Array.isArray(parsed.rows) || parsed.rows.length === 0) && rows.length === 0) {
         diagnostics.push({
           outcome: "model_returned_no_exact_anchor_match",
           anchorCount: anchors.length,
