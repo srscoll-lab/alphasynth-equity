@@ -1,4 +1,5 @@
 import sqlite3
+from pathlib import Path
 
 from stock_intelligence.factor_analysis import load_factor_analyses
 from stock_intelligence.publication_eligibility import assess_publication_eligibility
@@ -99,3 +100,55 @@ def test_attaches_cutoff_safe_supplemental_official_evidence(tmp_path):
     factors = {factor["id"]: factor for factor in analyses["TESTCO"]["factors"]}
     assert factors["execution"]["confidence"] == "high"
     assert factors["balance_sheet"]["evidence_refs"] == ["https://example.com/official.pdf"]
+
+
+def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, metric_or_topic TEXT, previous_period TEXT,
+          current_period TEXT, previous_value TEXT, current_value TEXT,
+          change_value TEXT, confidence REAL
+        );
+        """
+    )
+    symbols = ["LT", "ADANIENSOL", "TATASTEEL", "ULTRACEMCO"]
+    for company_id, symbol in enumerate(symbols, start=1):
+        connection.execute("INSERT INTO companies VALUES (?, ?, ?)", (company_id, symbol, symbol))
+        connection.execute(
+            "INSERT INTO change_records VALUES (?, ?, 'revenue', 'Q3 FY25', 'Q3 FY26', '100', '120', '20', 0.9)",
+            (company_id * 10 + 1, company_id),
+        )
+        connection.execute(
+            "INSERT INTO change_records VALUES (?, ?, 'operating_margin', 'Q3 FY25', 'Q3 FY26', '10', '12', '2', 0.9)",
+            (company_id * 10 + 2, company_id),
+        )
+    connection.commit()
+    connection.close()
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={symbol: "Q3 FY26" for symbol in symbols},
+        scores_by_symbol={symbol: {
+            "earnings": 1.0, "economics": 1.0, "execution": 1.0,
+            "balance_sheet": 1.0, "management_delivery": 1.0,
+        } for symbol in symbols},
+        supplemental_evidence_file=(
+            Path(__file__).parents[1]
+            / "src" / "stock_intelligence" / "bms_launch_factor_evidence.csv"
+        ),
+    )
+
+    expected = {
+        "LT": {"earnings", "economics", "execution", "balance_sheet"},
+        "ADANIENSOL": {"earnings", "economics", "execution", "management_delivery"},
+        "TATASTEEL": {"earnings", "economics", "execution", "balance_sheet"},
+        "ULTRACEMCO": {"earnings", "economics", "execution", "balance_sheet"},
+    }
+    for symbol, expected_factors in expected.items():
+        eligibility = assess_publication_eligibility(analyses[symbol])
+        assert eligibility.score_publishable is True
+        assert set(eligibility.complete_factor_ids) == expected_factors

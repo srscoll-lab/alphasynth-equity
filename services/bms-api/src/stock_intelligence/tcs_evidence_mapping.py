@@ -58,6 +58,8 @@ EVIDENCE_TYPE_MAP = {
     "sales_volume": "execution",
     "total_sales_volume": "execution",
     "production_volume": "execution",
+    "transmission_availability": "execution",
+    "distribution_reliability": "execution",
     "export_volume": "execution",
     "market_share": "execution",
     "innovative_medicine_sales": "execution",
@@ -81,6 +83,7 @@ EVIDENCE_TYPE_MAP = {
     # ---------------------------------------------------------
     "debt": "balance_sheet",
     "total_debt": "balance_sheet",
+    "gross_debt": "balance_sheet",
     "working_capital": "balance_sheet",
     "inventory": "balance_sheet",
     "receivables": "balance_sheet",
