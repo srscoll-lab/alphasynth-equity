@@ -45,6 +45,24 @@ GCS. Gemini extracts records but never calculates the score. Silence is not a mi
 receive no delivery points, repeated promises retain one stable commitment key, and contradictory
 same-date outcomes stop scoring for review. Run `npm run verify:management-guidance` before deployment.
 
+The four-factor publication rule is a safety floor, not the operating target. Run the 25-company
+stop-line without `--skip-management` so each admitted dossier updates its durable guidance ledger.
+After the run, export only companies with a deterministic score and at least three matured,
+officially sourced commitments:
+
+```text
+npm run export:bms-management-evidence -- \
+  --input=/tmp/alphasynth-stop-line-YYYYMMDD \
+  --output=/tmp/bms-management-evidence.csv \
+  --cutoff=YYYY-MM-DD \
+  --current-period="Q3 FY26"
+```
+
+The exporter writes a sibling diagnostics JSON and emits no row for insufficient, pending,
+unverifiable or unsupported histories. Review and merge admitted rows through the same isolated
+BMS candidate workflow as other factor evidence. Five-factor completion and Management Delivery
+coverage are reported independently; neither target is reduced to make a release pass.
+
 The orchestrator remains inactive in source control. Activate it only after a dated-official-source
 test succeeds, then configure its production webhook as the application's `DOSSIER_WEBHOOK_URL`.
 The public application route resolves official domains from the reviewed registry in

@@ -183,6 +183,19 @@ const fourFactorEligibility = assessBmsPublicationEligibility(fourFactorAnalysis
 assert.equal(fourFactorEligibility.scorePublishable, true);
 assert.equal(fourFactorEligibility.completeFactorCount, 4);
 assert.equal(fourFactorEligibility.coverageWeight, 0.9);
+assert.equal(fourFactorEligibility.targetComplete, false);
+
+const fiveFactorAnalysis = normalizeBmsFactorAnalysis({
+  period: "Q3 FY26",
+  factor_analysis: {
+    factors: BMS_FACTOR_DEFINITIONS.map(definition => eligibilityFactor(definition.id)),
+  },
+});
+const fiveFactorEligibility = assessBmsPublicationEligibility(fiveFactorAnalysis);
+assert.equal(fiveFactorEligibility.scorePublishable, true);
+assert.equal(fiveFactorEligibility.completeFactorCount, 5);
+assert.equal(fiveFactorEligibility.coverageWeight, 1);
+assert.equal(fiveFactorEligibility.targetComplete, true);
 
 const missingEarningsAnalysis = normalizeBmsFactorAnalysis({
   period: "Q3 FY26",

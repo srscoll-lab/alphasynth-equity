@@ -21,6 +21,20 @@ def test_requires_four_factors_and_mandatory_pair():
     assert result.score_publishable is True
     assert result.complete_factor_count == 4
     assert result.coverage_weight == 0.90
+    assert result.target_complete is False
+
+
+def test_all_five_factors_reach_the_coverage_target():
+    analysis = empty_factor_analysis("Q3 FY26")
+    for factor in analysis["factors"]:
+        complete(factor)
+
+    result = assess_publication_eligibility(analysis)
+
+    assert result.score_publishable is True
+    assert result.complete_factor_count == 5
+    assert result.coverage_weight == 1.0
+    assert result.target_complete is True
 
 
 def test_zero_score_without_evidence_is_not_complete():

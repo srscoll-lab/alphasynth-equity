@@ -195,6 +195,9 @@ for (const company of companies) {
     const deliveryCoverage = Number(overlay?.assessment?.deliveryCoverage || 0);
     const deliveryComponents = Array.isArray(overlay?.assessment?.deliveryComponents)
       ? overlay.assessment.deliveryComponents.length : 0;
+    const managementUsable = managementGuidance.status === "available"
+      && Number.isFinite(managementGuidance.assessment?.score)
+      && Number(managementGuidance.assessment?.commitmentCounts?.matured || 0) >= 3;
     const result = {
       ticker: company.ticker,
       lifecycle: company.lifecycle,
@@ -207,6 +210,7 @@ for (const company of companies) {
       deliveryComponents,
       deliveryUsable: deliveryCoverage >= 60 && deliveryComponents >= 2,
       managementStatus: managementGuidance.status,
+      managementUsable,
       managementScore: managementGuidance.assessment?.score ?? null,
       managementUniqueCommitments: managementGuidance.assessment?.commitmentCounts?.uniqueCommitments ?? 0,
       managementMatured: managementGuidance.assessment?.commitmentCounts?.matured ?? 0,
@@ -245,12 +249,14 @@ const percent = (count: number) => Math.round(count * 1000 / Math.max(results.le
 const technicalCount = results.filter(row => row.technicalSuccess).length;
 const deliveryCount = results.filter(row => row.deliveryUsable).length;
 const pdfCount = results.filter(row => row.pdfReady).length;
+const managementCount = results.filter(row => row.managementUsable).length;
 const lifecycleBreakdown = Object.fromEntries([...new Set(results.map(row => row.lifecycle))].map(lifecycle => {
   const rows = results.filter(row => row.lifecycle === lifecycle);
   return [lifecycle, {
     tested: rows.length,
     technicalSuccess: rows.filter(row => row.technicalSuccess).length,
     deliveryUsable: rows.filter(row => row.deliveryUsable).length,
+    managementUsable: rows.filter(row => row.managementUsable).length,
     pdfReady: rows.filter(row => row.pdfReady).length,
   }];
 }));
@@ -259,20 +265,28 @@ const summary = {
   cutoff,
   baseUrl,
   tested: results.length,
-  thresholds: { technicalSuccessPct: 90, deliveryUsablePct: 70, inventedValuesAllowed: 0 },
+  thresholds: {
+    technicalSuccessPct: 90,
+    deliveryUsablePct: 70,
+    managementDeliveryTargetPct: 100,
+    inventedValuesAllowed: 0,
+  },
   outcomes: {
     technicalSuccess: technicalCount,
     technicalSuccessPct: percent(technicalCount),
     deliveryUsable: deliveryCount,
     deliveryUsablePct: percent(deliveryCount),
+    managementUsable: managementCount,
+    managementUsablePct: percent(managementCount),
     pdfReady: pdfCount,
     pdfReadyPct: percent(pdfCount),
   },
   acceptance: {
     technical: percent(technicalCount) >= 90,
     delivery: percent(deliveryCount) >= 70,
+    managementTarget: percent(managementCount) === 100,
     overall: percent(technicalCount) >= 90 && percent(deliveryCount) >= 70,
-    note: "PDF readiness is reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
+    note: "Four-factor eligibility is the safety floor. Five-factor completion, including Management Delivery, remains the 100% coverage target and is reported independently rather than weakened to make the release gate pass. PDF readiness is also reported separately; blocked PDFs are an intended safety outcome, not a technical failure.",
   },
   lifecycleBreakdown,
   results,

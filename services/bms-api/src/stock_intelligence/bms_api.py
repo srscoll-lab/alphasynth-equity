@@ -586,6 +586,29 @@ def current_bms_lifecycle():
     lifecycle_counts = product.loc[output.index, "lifecycle_state"].value_counts().to_dict()
 
     repair_output = monitored_output.drop(index=output.index)
+    eligible_eligibilities = output["publication_eligibility"].tolist()
+    monitored_eligibilities = monitored_output["publication_eligibility"].tolist()
+    factor_ids = [
+        "earnings",
+        "economics",
+        "execution",
+        "balance_sheet",
+        "management_delivery",
+    ]
+    qualified_factor_counts = {
+        factor: sum(
+            factor in eligibility.get("completeFactorIds", [])
+            for eligibility in eligible_eligibilities
+        )
+        for factor in factor_ids
+    }
+    monitored_factor_counts = {
+        factor: sum(
+            factor in eligibility.get("completeFactorIds", [])
+            for eligibility in monitored_eligibilities
+        )
+        for factor in factor_ids
+    }
     missing_factor_counts = {
         factor: int(
             repair_output["publication_eligibility"]
@@ -617,6 +640,21 @@ def current_bms_lifecycle():
             "minimumCompleteFactors": 4,
             "minimumCoverageWeight": 0.75,
             "mandatoryFactors": ["earnings", "economics"],
+            "targetCompleteFactors": 5,
+            "targetCoverageWeight": 1.0,
+        },
+        "coverage_summary": {
+            "fourFactorEligibleCompanies": len(output),
+            "fiveFactorCompleteCompanies": sum(
+                bool(eligibility.get("targetComplete"))
+                for eligibility in eligible_eligibilities
+            ),
+            "managementDeliveryCompleteCompanies": qualified_factor_counts[
+                "management_delivery"
+            ],
+            "qualifiedFactorCounts": qualified_factor_counts,
+            "monitoredFactorCounts": monitored_factor_counts,
+            "target": "Five sourced, comparable factors for every published company.",
         },
         "repair_queue_summary": {
             "company_count": len(repair_output),

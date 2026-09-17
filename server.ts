@@ -3866,6 +3866,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         managementGuidance: {
           status: assessment.score === null ? "insufficient_history" : "available",
           assessment,
+          history,
           reason: assessment.reasons.join(" ") || null,
           evidenceRefs: [...new Set([
             ...assessment.currentCommentary.flatMap(row => row.evidenceRefs),

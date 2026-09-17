@@ -11,6 +11,12 @@ when all of the following are true:
 Companies that fail remain in the monitored universe and are counted in the
 repair queue, but are absent from the public `companies` array.
 
+Four factors are the fail-closed publication floor, not the coverage target.
+The operating target is five sourced, comparable factors for every published
+company. Management Delivery remains a required repair objective and is
+reported separately in the API coverage summary even when a company already
+meets the four-factor publication floor.
+
 ## Evidence input contract
 
 The research workflow should emit one CSV row per comparable measurement:

@@ -56,6 +56,8 @@ export const BMS_PUBLICATION_POLICY = {
   minimumCompleteFactors: 4,
   minimumCoverageWeight: 0.75,
   mandatoryFactors: ["earnings", "economics"] as BmsFactorId[],
+  targetCompleteFactors: 5,
+  targetCoverageWeight: 1,
 } as const;
 
 export type BmsPublicationEligibility = {
@@ -65,6 +67,7 @@ export type BmsPublicationEligibility = {
   missingFactorIds: BmsFactorId[];
   completeFactorCount: number;
   coverageWeight: number;
+  targetComplete: boolean;
   reasons: string[];
 };
 
@@ -130,6 +133,8 @@ export function assessBmsPublicationEligibility(
     missingFactorIds,
     completeFactorCount: completeFactorIds.length,
     coverageWeight,
+    targetComplete: completeFactorIds.length === BMS_PUBLICATION_POLICY.targetCompleteFactors
+      && coverageWeight === BMS_PUBLICATION_POLICY.targetCoverageWeight,
     reasons,
   };
 }

@@ -23,6 +23,7 @@ class PublicationEligibility:
     missing_factor_ids: tuple[str, ...]
     complete_factor_count: int
     coverage_weight: float
+    target_complete: bool
     reasons: tuple[str, ...]
 
     def as_dict(self) -> dict:
@@ -33,6 +34,7 @@ class PublicationEligibility:
             "missingFactorIds": list(self.missing_factor_ids),
             "completeFactorCount": self.complete_factor_count,
             "coverageWeight": self.coverage_weight,
+            "targetComplete": self.target_complete,
             "reasons": list(self.reasons),
         }
 
@@ -98,5 +100,6 @@ def assess_publication_eligibility(factor_analysis: dict) -> PublicationEligibil
         missing_factor_ids=tuple(missing),
         complete_factor_count=len(complete),
         coverage_weight=coverage,
+        target_complete=len(complete) == len(FACTOR_WEIGHTS) and coverage == 1.0,
         reasons=tuple(reasons),
     )

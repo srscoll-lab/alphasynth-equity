@@ -15,6 +15,7 @@
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
     "export:bms-factor-evidence": "node --import tsx scripts/export-bms-factor-evidence.ts",
+    "export:bms-management-evidence": "node --experimental-strip-types scripts/export-bms-management-evidence.ts",
     "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",
     "verify:bms-factor-evidence-mapping": "node --import tsx scripts/verify-bms-factor-evidence-mapping.ts",
     "collect:bms-factor-evidence": "node --import tsx scripts/collect-bms-factor-evidence.ts",

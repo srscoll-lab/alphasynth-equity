@@ -54,6 +54,7 @@ const localAssessment = (analysis: any) => {
     missingFactorIds,
     completeFactorCount: completeFactorIds.length,
     coverageWeight,
+    targetComplete: completeFactorIds.length === 5 && coverageWeight === 1,
     reasons,
   };
 };
@@ -98,12 +99,20 @@ const report = {
   schemaVersion: "1.0.0",
   generatedAt: new Date().toISOString(),
   baseUrl,
-  policy: { minimumCompleteFactors: 4, minimumCoverageWeight: 0.75, mandatoryFactors: ["earnings", "economics"] },
+  policy: {
+    minimumCompleteFactors: 4,
+    minimumCoverageWeight: 0.75,
+    mandatoryFactors: ["earnings", "economics"],
+    targetCompleteFactors: 5,
+    targetCoverageWeight: 1,
+  },
   summary: {
     monitored: results.length,
     eligible: eligible.length,
     repairRequired: repairQueue.length,
     technicalFailures: results.filter(row => row.error).length,
+    fiveFactorComplete: eligible.filter(row => row.targetComplete).length,
+    managementDeliveryComplete: eligible.filter(row => row.completeFactorIds.includes("management_delivery")).length,
     missingFactorCounts,
   },
   eligible,
@@ -113,4 +122,3 @@ const report = {
 await fs.mkdir(path.dirname(outputPath), { recursive: true });
 await fs.writeFile(outputPath, `${JSON.stringify(report, null, 2)}\n`, "utf8");
 console.log(`Publication audit written to ${outputPath}`);
-
