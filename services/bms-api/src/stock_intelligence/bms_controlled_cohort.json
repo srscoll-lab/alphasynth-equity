@@ -1,9 +1,9 @@
 {
-  "cohortId": "BMS-CONTROLLED-25-20260917",
+  "cohortId": "BMS-CONTROLLED-50-20260918",
   "freezeDate": "2026-08-25",
   "releasePolicy": {
-    "minimumCandidateReadyCount": 19,
-    "minimumCandidateReadyPct": 75
+    "minimumCandidateReadyCount": 50,
+    "minimumCandidateReadyPct": 100
   },
   "companies": [
     {"symbol":"RELIANCE","lifecycle":"WATCH","officialDomains":["ril.com"]},
@@ -30,6 +30,32 @@
     {"symbol":"MARUTI","lifecycle":"FADING","officialDomains":["marutisuzuki.com"]},
     {"symbol":"HCLTECH","lifecycle":"FADING","officialDomains":["hcltech.com"]},
     {"symbol":"BAJAJFINSV","lifecycle":"FADING","officialDomains":["aboutbajajfinserv.com","bajajfinserv.in"]},
-    {"symbol":"NESTLEIND","lifecycle":"FADING","officialDomains":["nestle.in"]}
+    {"symbol":"NESTLEIND","lifecycle":"FADING","officialDomains":["nestle.in"]},
+
+    {"symbol":"INFY","lifecycle":"WATCH","officialDomains":["infosys.com"]},
+    {"symbol":"WIPRO","lifecycle":"WATCH","officialDomains":["wipro.com"]},
+    {"symbol":"TECHM","lifecycle":"BUILDING","officialDomains":["techmahindra.com"]},
+    {"symbol":"ITC","lifecycle":"WATCH","officialDomains":["itcportal.com"]},
+    {"symbol":"M&M","lifecycle":"WATCH","officialDomains":["mahindra.com"]},
+    {"symbol":"ONGC","lifecycle":"WATCH","officialDomains":["ongcindia.com"]},
+    {"symbol":"NTPC","lifecycle":"WATCH","officialDomains":["ntpc.co.in"]},
+    {"symbol":"POWERGRID","lifecycle":"WATCH","officialDomains":["powergrid.in"]},
+    {"symbol":"COALINDIA","lifecycle":"WATCH","officialDomains":["coalindia.in"]},
+    {"symbol":"DRREDDY","lifecycle":"FADING","officialDomains":["drreddys.com"]},
+    {"symbol":"CIPLA","lifecycle":"FADING","officialDomains":["cipla.com"]},
+    {"symbol":"DIVISLAB","lifecycle":"WATCH","officialDomains":["divis.com"]},
+    {"symbol":"EICHERMOT","lifecycle":"WATCH","officialDomains":["eicher.in"]},
+    {"symbol":"HEROMOTOCO","lifecycle":"WATCH","officialDomains":["heromotocorp.com"]},
+    {"symbol":"ASIANPAINT","lifecycle":"WATCH","officialDomains":["asianpaints.com"]},
+    {"symbol":"HINDALCO","lifecycle":"FADING","officialDomains":["hindalco.com"]},
+    {"symbol":"APOLLOHOSP","lifecycle":"WATCH","officialDomains":["apollohospitals.com"]},
+    {"symbol":"HDFCAMC","lifecycle":"ESTABLISHED","officialDomains":["hdfcfund.com"]},
+    {"symbol":"TMCV","lifecycle":"WATCH","officialDomains":["tatamotors.com"]},
+    {"symbol":"IOC","lifecycle":"ESTABLISHED","officialDomains":["iocl.com"]},
+    {"symbol":"BPCL","lifecycle":"ESTABLISHED","officialDomains":["bharatpetroleum.in"]},
+    {"symbol":"HINDPETRO","lifecycle":"ESTABLISHED","officialDomains":["hindustanpetroleum.com"]},
+    {"symbol":"COFORGE","lifecycle":"ESTABLISHED","officialDomains":["coforge.com"]},
+    {"symbol":"SHREECEM","lifecycle":"ESTABLISHED","officialDomains":["shreecement.com"]},
+    {"symbol":"HINDCOPPER","lifecycle":"ESTABLISHED","officialDomains":["hindustancopper.com"]}
   ]
 }

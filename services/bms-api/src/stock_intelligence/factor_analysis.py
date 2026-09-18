@@ -277,9 +277,12 @@ def load_factor_analyses(
                 })
 
     # Restore the frozen BMS V1 financial baseline from the archived,
-    # URL-backed fundamentals extract. These rows are intentionally limited to
-    # Earnings and Economics. They are labelled as secondary-aggregator
-    # evidence and never masquerade as official company filings.
+    # URL-backed fundamentals extract. Most rows are Screener-backed Earnings
+    # and Economics observations. The archive also contains a small set of
+    # lender NIM/GNPA comparisons collected from company investor-relations
+    # pages. Route those rows by metric taxonomy (rather than trusting the old,
+    # occasionally blank factor column) and preserve their weaker cross-check
+    # status in source_tier.
     if (
         legacy_fundamentals_file
         and legacy_fundamentals_file.exists()
@@ -289,18 +292,27 @@ def load_factor_analyses(
         with legacy_fundamentals_file.open(encoding="utf-8-sig", newline="") as handle:
             for item in csv.DictReader(handle):
                 symbol = str(item.get("symbol") or "").strip().upper()
-                factor_id = str(item.get("factor") or "").strip().lower()
                 metric = str(item.get("metric_name") or "").strip().lower()
+                mapping = map_evidence_to_tcs_factor(evidence_type=metric)
+                factor_id = mapping.factor_name if mapping else ""
                 period = str(item.get("period") or "").strip().upper()
                 source_type = str(item.get("source_type") or "").strip().lower()
                 source_status = str(item.get("source_status") or "").strip().lower()
                 source_ref = str(item.get("source_reference") or "").strip()
                 unit = str(item.get("unit") or "").strip()
+                is_archived_financial = (
+                    factor_id in {"earnings", "economics"}
+                    and source_type in {"screener", "official"}
+                    and source_status in {"collected", "validated_official"}
+                )
+                is_lender_crosscheck = (
+                    factor_id in {"economics", "balance_sheet"}
+                    and source_type == "official_or_secondary_crosscheck"
+                    and source_status in {"candidate_secondary", "validated_official"}
+                )
                 if (
                     symbol not in periods_by_symbol
-                    or factor_id not in {"earnings", "economics"}
-                    or source_type not in {"screener", "official"}
-                    or source_status not in {"collected", "validated_official"}
+                    or not (is_archived_financial or is_lender_crosscheck)
                     or not source_ref.startswith(("https://", "http://"))
                     or not metric
                     or not unit
@@ -350,6 +362,9 @@ def load_factor_analyses(
                     "source_tier": (
                         "secondary_aggregator"
                         if current["source_type"] == "screener"
+                        else "official_crosscheck"
+                        if current["source_type"] == "official_or_secondary_crosscheck"
+                        and current["source_status"] != "validated_official"
                         else "official"
                     ),
                     "provenance_verified": True,

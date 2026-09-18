@@ -1,6 +1,6 @@
 {
-  "cohortId": "BMS-STOP-LINE-25-20260911",
-  "purpose": "Stratified final acceptance audit; five companies from each recorded BMS V1 lifecycle.",
+  "cohortId": "BMS-EVIDENCE-50-20260918",
+  "purpose": "Controlled 50-company evidence qualification cohort with known official domains.",
   "lifecycleFreezeDate": "2026-08-25",
   "companies": [
     { "ticker": "RELIANCE", "company_name": "Reliance Industries Limited", "lifecycle": "Watch", "official_domains": ["ril.com"], "exchange": "NSE", "sector": "Diversified Conglomerate" },
@@ -31,6 +31,32 @@
     { "ticker": "MARUTI", "company_name": "Maruti Suzuki India Limited", "lifecycle": "Fading", "official_domains": ["marutisuzuki.com"], "exchange": "NSE", "sector": "Automobiles" },
     { "ticker": "HCLTECH", "company_name": "HCL Technologies Limited", "lifecycle": "Fading", "official_domains": ["hcltech.com"], "exchange": "NSE", "sector": "Information Technology" },
     { "ticker": "BAJAJFINSV", "company_name": "Bajaj Finserv Limited", "lifecycle": "Fading", "official_domains": ["aboutbajajfinserv.com"], "exchange": "NSE", "sector": "Financial Services" },
-    { "ticker": "NESTLEIND", "company_name": "Nestle India Limited", "lifecycle": "Fading", "official_domains": ["nestle.in"], "exchange": "NSE", "sector": "Consumer Staples" }
+    { "ticker": "NESTLEIND", "company_name": "Nestle India Limited", "lifecycle": "Fading", "official_domains": ["nestle.in"], "exchange": "NSE", "sector": "Consumer Staples" },
+
+    { "ticker": "INFY", "company_name": "Infosys Limited", "lifecycle": "Watch", "official_domains": ["infosys.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "WIPRO", "company_name": "Wipro Limited", "lifecycle": "Watch", "official_domains": ["wipro.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "TECHM", "company_name": "Tech Mahindra Limited", "lifecycle": "Building", "official_domains": ["techmahindra.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "ITC", "company_name": "ITC Limited", "lifecycle": "Watch", "official_domains": ["itcportal.com"], "exchange": "NSE", "sector": "Consumer Staples" },
+    { "ticker": "M&M", "company_name": "Mahindra & Mahindra Limited", "lifecycle": "Watch", "official_domains": ["mahindra.com"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "ONGC", "company_name": "Oil and Natural Gas Corporation Limited", "lifecycle": "Watch", "official_domains": ["ongcindia.com"], "exchange": "NSE", "sector": "Oil and Gas" },
+    { "ticker": "NTPC", "company_name": "NTPC Limited", "lifecycle": "Watch", "official_domains": ["ntpc.co.in"], "exchange": "NSE", "sector": "Power Generation" },
+    { "ticker": "POWERGRID", "company_name": "Power Grid Corporation of India Limited", "lifecycle": "Watch", "official_domains": ["powergrid.in"], "exchange": "NSE", "sector": "Power Transmission" },
+    { "ticker": "COALINDIA", "company_name": "Coal India Limited", "lifecycle": "Watch", "official_domains": ["coalindia.in"], "exchange": "NSE", "sector": "Mining" },
+    { "ticker": "DRREDDY", "company_name": "Dr. Reddy's Laboratories Limited", "lifecycle": "Fading", "official_domains": ["drreddys.com"], "exchange": "NSE", "sector": "Pharmaceuticals" },
+    { "ticker": "CIPLA", "company_name": "Cipla Limited", "lifecycle": "Fading", "official_domains": ["cipla.com"], "exchange": "NSE", "sector": "Pharmaceuticals" },
+    { "ticker": "DIVISLAB", "company_name": "Divi's Laboratories Limited", "lifecycle": "Watch", "official_domains": ["divis.com"], "exchange": "NSE", "sector": "Pharmaceuticals" },
+    { "ticker": "EICHERMOT", "company_name": "Eicher Motors Limited", "lifecycle": "Watch", "official_domains": ["eicher.in"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "HEROMOTOCO", "company_name": "Hero MotoCorp Limited", "lifecycle": "Watch", "official_domains": ["heromotocorp.com"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "ASIANPAINT", "company_name": "Asian Paints Limited", "lifecycle": "Watch", "official_domains": ["asianpaints.com"], "exchange": "NSE", "sector": "Consumer Durables" },
+    { "ticker": "HINDALCO", "company_name": "Hindalco Industries Limited", "lifecycle": "Fading", "official_domains": ["hindalco.com"], "exchange": "NSE", "sector": "Metals and Mining" },
+    { "ticker": "APOLLOHOSP", "company_name": "Apollo Hospitals Enterprise Limited", "lifecycle": "Watch", "official_domains": ["apollohospitals.com"], "exchange": "NSE", "sector": "Healthcare" },
+    { "ticker": "HDFCAMC", "company_name": "HDFC Asset Management Company Limited", "lifecycle": "Established", "official_domains": ["hdfcfund.com"], "exchange": "NSE", "sector": "Asset Management" },
+    { "ticker": "TMCV", "company_name": "Tata Motors Limited", "lifecycle": "Watch", "official_domains": ["tatamotors.com"], "exchange": "NSE", "sector": "Automobiles" },
+    { "ticker": "IOC", "company_name": "Indian Oil Corporation Limited", "lifecycle": "Established", "official_domains": ["iocl.com"], "exchange": "NSE", "sector": "Oil and Gas" },
+    { "ticker": "BPCL", "company_name": "Bharat Petroleum Corporation Limited", "lifecycle": "Established", "official_domains": ["bharatpetroleum.in"], "exchange": "NSE", "sector": "Oil and Gas" },
+    { "ticker": "HINDPETRO", "company_name": "Hindustan Petroleum Corporation Limited", "lifecycle": "Established", "official_domains": ["hindustanpetroleum.com"], "exchange": "NSE", "sector": "Oil and Gas" },
+    { "ticker": "COFORGE", "company_name": "Coforge Limited", "lifecycle": "Established", "official_domains": ["coforge.com"], "exchange": "NSE", "sector": "Information Technology" },
+    { "ticker": "SHREECEM", "company_name": "Shree Cement Limited", "lifecycle": "Established", "official_domains": ["shreecement.com"], "exchange": "NSE", "sector": "Cement" },
+    { "ticker": "HINDCOPPER", "company_name": "Hindustan Copper Limited", "lifecycle": "Established", "official_domains": ["hindustancopper.com"], "exchange": "NSE", "sector": "Metals and Mining" }
   ]
 }

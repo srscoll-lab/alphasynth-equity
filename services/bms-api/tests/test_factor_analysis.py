@@ -368,3 +368,49 @@ def test_restored_secondary_financial_baseline_combines_with_official_operating_
     assert factors["earnings"]["source_details"][0]["source_tier"] == "secondary_aggregator"
     assert factors["earnings"]["source_details"][0]["captured_at"] == "2026-08-22"
     assert factors["execution"]["source_details"][0]["source_tier"] == "official"
+
+
+def test_restored_lender_crosscheck_routes_gnpa_to_balance_sheet(tmp_path):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, metric_or_topic TEXT, previous_period TEXT,
+          current_period TEXT, previous_value TEXT, current_value TEXT,
+          change_value TEXT, confidence REAL
+        );
+        INSERT INTO companies VALUES (1, 'TESTBANK', 'TESTBANK');
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    fundamentals = tmp_path / "fundamentals.csv"
+    fundamentals.write_text(
+        "symbol,period,metric_name,value,unit,factor,source_type,source_reference,validation_note,source_status,source_file\n"
+        "TESTBANK,Q3 FY25,gnpa,4.1,percent,,official_or_secondary_crosscheck,https://bank.example/results,Archived lender cross-check,candidate_secondary,bank.csv\n"
+        "TESTBANK,Q3 FY26,gnpa,3.2,percent,,official_or_secondary_crosscheck,https://bank.example/results,Archived lender cross-check,candidate_secondary,bank.csv\n",
+        encoding="utf-8",
+    )
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={"TESTBANK": "Q3 FY26"},
+        scores_by_symbol={
+            "TESTBANK": {
+                "earnings": 0.2,
+                "economics": 0.1,
+                "execution": 0.3,
+                "balance_sheet": 0.4,
+            }
+        },
+        legacy_fundamentals_file=fundamentals,
+        legacy_snapshot_date="2026-08-22",
+    )
+    factors = {factor["id"]: factor for factor in analyses["TESTBANK"]["factors"]}
+
+    assert factors["balance_sheet"]["availability"] == "complete"
+    assert factors["balance_sheet"]["current"]["metrics"][0]["key"] == "gnpa"
+    assert factors["balance_sheet"]["source_details"][0]["source_tier"] == "official_crosscheck"
