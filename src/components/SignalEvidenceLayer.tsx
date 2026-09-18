@@ -142,6 +142,11 @@ const scoreDescription = (score: number | null) => score === null
         : score >= 20 ? "Negative momentum"
           : "Strong negative momentum";
 
+const formatWeight = (weight: number) => new Intl.NumberFormat("en-IN", {
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 2,
+}).format(weight * 100);
+
 const formatDate = (value: string | null | undefined) => {
   if (!value) return "Date unavailable";
   return new Intl.DateTimeFormat("en-IN", { day: "numeric", month: "short", year: "numeric" })
@@ -446,7 +451,7 @@ export default function SignalEvidenceLayer({
                             <div className="grid gap-5 lg:grid-cols-[190px_1fr]">
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
-                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : partial ? (hasCurrent ? "Current evidence only" : "Earlier evidence only") : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{factor.weight * 100}% weight</span></div>
+                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : partial ? (hasCurrent ? "Current evidence only" : "Earlier evidence only") : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{formatWeight(factor.weight)}% weight</span></div>
                                 <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Direction shown; precise score not shown") : partial ? "Shown for context; no momentum comparison calculated" : "Previous and current figures unavailable"}</div>
                                 <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{(comparable || partial) ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
@@ -548,12 +553,12 @@ export default function SignalEvidenceLayer({
                       <p className="mt-3 text-sm leading-relaxed text-zinc-400">This screen shows what is available and what is missing. The PDF becomes available only when the company has enough verified information for a useful report.</p>
                     </div>
                     <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[
-                      ["Official sources", data.readiness.coverage.officialSources],
-                      ["Verified facts", supportedClaims],
+                      ["Dossier official sources", data.readiness.coverage.officialSources],
+                      ["Dossier verified facts", supportedClaims],
                       ["Comparable core factors", `${data.readiness.coverage.completeBmsFactors}/4`],
                       ["Quality checks completed", data.readiness.coverage.observedQualityGates],
                     ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-2xl font-bold text-white">{value}</div><div className="mt-1 text-[9px] font-black uppercase tracking-wider text-zinc-500">{label}</div></div>)}</div>
-                    {!data.dossierAvailable && <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5"><div className="text-sm font-semibold text-sky-200">Official dossier evidence unavailable</div><p className="mt-2 text-sm leading-relaxed text-zinc-400">{data.dossierIssue} The methodology and available comparison layers remain visible, but this absence counts as zero official sources and keeps the PDF disabled.</p></div>}
+                    {!data.dossierAvailable && <div className="mt-5 rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5"><div className="text-sm font-semibold text-sky-200">Optional dossier evidence unavailable</div><p className="mt-2 text-sm leading-relaxed text-zinc-400">{data.dossierIssue} This count applies only to the optional dossier and PDF-readiness layer. The four-factor BMS comparison ledger shown above remains available and separately qualified; the absent dossier evidence keeps only the full PDF disabled.</p></div>}
                     {!data.readiness.ready && <div className="mt-5 rounded-2xl border border-amber-400/20 bg-amber-400/[0.04] p-5"><div className="text-sm font-semibold text-amber-200">Why the PDF is not yet available</div><ul className="mt-3 space-y-2 text-sm leading-relaxed text-zinc-400">{data.readiness.reasons.map(reason => <li key={reason}>• {reason}</li>)}</ul></div>}
                     <div className="mt-6 overflow-hidden rounded-2xl border border-white/10">
                       {data.dossier.sources.map((source, index) => (
