@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit",
     "verify:bms-schema": "node --import tsx scripts/verify-bms-factor-schema.ts",
     "audit:bms-publication": "node --import tsx scripts/audit-bms-publication-eligibility.ts",
+    "audit:bms-publication-local": "python scripts/audit-bms-publication-local.py",
     "verify:expectation-delivery": "node --import tsx scripts/verify-expectation-delivery.ts && node --import tsx scripts/verify-management-guidance-delivery.ts && node scripts/verify-expectation-delivery-workflow.mjs",
     "verify:management-guidance": "node --import tsx scripts/verify-management-guidance-delivery.ts && node --import tsx scripts/management-guidance-ledger-verify.ts && node --import tsx scripts/management-guidance-extraction-verify.ts && node --import tsx scripts/validate-management-guidance-pilot.ts",
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",

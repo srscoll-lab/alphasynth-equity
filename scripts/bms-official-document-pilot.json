@@ -173,6 +173,25 @@
             "sourceType": "company_results",
             "anchors": ["Cash and Cash Equivalents", "10,718"]
           }
+        },
+        {
+          "factor": "economics",
+          "metricName": "ebitda_margin",
+          "previousValue": 28.1,
+          "currentValue": 17.7,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY26%20Press%20Release.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": ["% of Income from Operations", "28.1%", "17.7%"]
+          },
+          "currentSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY26%20Press%20Release.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": ["% of Income from Operations", "28.1%", "17.7%"]
+          }
         }
       ]
     },
@@ -204,6 +223,8 @@
           "previousValue": 1.38,
           "currentValue": 0.89,
           "unit": "times",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
           "previousSource": {
             "url": "https://www.hindustanpetroleum.com/documents/pdf/Investor-Presentation-Q3-FY-2025-26.pdf",
             "publishedAt": "2026-01-21",
@@ -215,6 +236,75 @@
             "publishedAt": "2026-01-21",
             "sourceType": "company_presentation",
             "anchors": ["Total Debt Equity Ratio", "1.38", "0.89"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "ADANIENSOL",
+      "evidence": [
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_balance",
+          "previousValue": 8431,
+          "currentValue": 8266,
+          "unit": "INR crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://www.adani.com/-/media/project/adaniv1/investors/compendium/2026/q3/adani-portfolio-q3fy26-credit-summary-v1.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Adani Energy Solutions Limited", "Cash Balance", "8,431", "8,266"]
+          },
+          "currentSource": {
+            "url": "https://www.adani.com/-/media/project/adaniv1/investors/compendium/2026/q3/adani-portfolio-q3fy26-credit-summary-v1.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Adani Energy Solutions Limited", "Cash Balance", "8,431", "8,266"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "WIPRO",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "deal_tcv",
+          "previousValue": 3514,
+          "currentValue": 3335,
+          "unit": "USD million",
+          "previousSource": {
+            "url": "https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/2024-2025/q3fy25/press-release-q3fy25.pdf",
+            "publishedAt": "2025-01-17",
+            "sourceType": "company_results",
+            "anchors": ["Total bookings", "$3,514 million"]
+          },
+          "currentSource": {
+            "url": "https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/2025-2026/q3fy26/press-release-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_results",
+            "anchors": ["Total bookings", "$3,335 million"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "operating_cash_flow",
+          "previousValue": 49.3,
+          "currentValue": 42.6,
+          "unit": "INR billion",
+          "previousSource": {
+            "url": "https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/2024-2025/q3fy25/press-release-q3fy25.pdf",
+            "publishedAt": "2025-01-17",
+            "sourceType": "company_results",
+            "anchors": ["Operating cash flows", "49.3 billion"]
+          },
+          "currentSource": {
+            "url": "https://www.wipro.com/content/dam/nexus/en/investor/quarterly-results/2025-2026/q3fy26/press-release-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_results",
+            "anchors": ["Operating cash flows", "42.6 billion"]
           }
         }
       ]

@@ -26,6 +26,7 @@ const DIRECT: Record<string, RepairFactorId> = {
   transmission_availability: "execution", distribution_reliability: "execution",
   debt: "balance_sheet", total_debt: "balance_sheet", working_capital: "balance_sheet",
   gross_debt: "balance_sheet", cash_balance: "balance_sheet", net_worth: "balance_sheet",
+  current_ratio: "balance_sheet",
   inventory: "balance_sheet", receivables: "balance_sheet", operating_cash_flow: "balance_sheet",
   cash_flow: "balance_sheet", asset_quality: "balance_sheet", gnpa: "balance_sheet", nnpa: "balance_sheet",
   credit_cost: "balance_sheet", stage_3_assets: "balance_sheet", capital_adequacy: "balance_sheet",

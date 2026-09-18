@@ -1,8 +1,19 @@
 import sqlite3
 from pathlib import Path
 
-from stock_intelligence.factor_analysis import load_factor_analyses
+from stock_intelligence.factor_analysis import (
+    _period_is_usable_for_factor,
+    load_factor_analyses,
+)
 from stock_intelligence.publication_eligibility import assess_publication_eligibility
+
+
+def test_balance_sheet_can_use_latest_formal_reporting_period_only():
+    assert _period_is_usable_for_factor("Q3 FY26", "FY25", "balance_sheet") is True
+    assert _period_is_usable_for_factor("Q3 FY26", "H1 FY26", "balance_sheet") is True
+    assert _period_is_usable_for_factor("Q3 FY26", "9M FY26", "balance_sheet") is True
+    assert _period_is_usable_for_factor("Q3 FY26", "FY24", "balance_sheet") is False
+    assert _period_is_usable_for_factor("Q3 FY26", "FY25", "earnings") is False
 
 
 def test_internal_change_record_ids_do_not_qualify_as_official_sources(tmp_path):
@@ -302,9 +313,9 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
 
     adani_eligibility = assess_publication_eligibility(analyses["ADANIENSOL"])
     assert adani_eligibility.score_publishable is False
-    assert set(adani_eligibility.complete_factor_ids) == {"execution"}
+    assert set(adani_eligibility.complete_factor_ids) == {"execution", "balance_sheet"}
     assert set(adani_eligibility.missing_factor_ids) == {
-        "earnings", "economics", "balance_sheet"
+        "earnings", "economics"
     }
 
 

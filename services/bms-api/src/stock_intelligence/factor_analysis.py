@@ -40,6 +40,41 @@ def _period_matches_reporting_quarter(reporting_period: str, evidence_period: st
     )
 
 
+def _period_is_usable_for_factor(
+    reporting_period: str, evidence_period: str, factor_id: str
+) -> bool:
+    """Allow the latest formally reported balance sheet inside a quarter.
+
+    Earnings, economics and execution must match the reporting quarter (or its
+    cumulative equivalent). Balance-sheet disclosures are often annual or
+    half-yearly even when a company publishes quarterly P&L results. For that
+    factor only, accept the immediately preceding audited fiscal year or an
+    earlier cumulative period in the same fiscal year. The original period
+    label remains visible; no annual or half-year figure is relabelled as a
+    quarterly observation.
+    """
+
+    if _period_matches_reporting_quarter(reporting_period, evidence_period):
+        return True
+    if factor_id != "balance_sheet":
+        return False
+    reporting = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", reporting_period.strip().upper())
+    if not reporting:
+        return False
+    reporting_quarter = int(reporting.group(1))
+    reporting_year = int(reporting.group(2))
+    annual = re.fullmatch(r"FY(\d{2,4})", evidence_period.strip().upper())
+    if annual:
+        return int(annual.group(1)) == reporting_year - 1
+    cumulative = re.fullmatch(
+        r"(3M|6M|9M|H1)\s+FY(\d{2,4})", evidence_period.strip().upper()
+    )
+    if not cumulative or int(cumulative.group(2)) != reporting_year:
+        return False
+    evidence_quarter = int(_REPORTING_PERIOD_EQUIVALENTS[cumulative.group(1)][1])
+    return evidence_quarter <= reporting_quarter
+
+
 def _number(value):
     if value is None or value == "":
         return None
@@ -247,10 +282,10 @@ def load_factor_analyses(
                     continue
                 if (
                     not current_period
-                    or not _period_matches_reporting_quarter(
-                        current_period, evidence_current_period
-                    )
                     or mapping is None
+                    or not _period_is_usable_for_factor(
+                        current_period, evidence_current_period, mapping.factor_name
+                    )
                     or not unit
                     or not sources_are_official
                     or mapping.factor_name != str(item.get("factor") or "").strip().lower()
@@ -471,7 +506,14 @@ def load_factor_analyses(
                 for item in source_details
             }.values())
             factor["provenance_verified"] = provenance_verified and bool(source_details)
-            factor["comparison_basis"] = _comparison_basis(previous_period, current_period)
+            factor["comparison_basis"] = (
+                "latest-reported-balance-sheet"
+                if factor_id == "balance_sheet"
+                and not _period_matches_reporting_quarter(
+                    periods_by_symbol[symbol], str(current_period or "")
+                )
+                else _comparison_basis(previous_period, current_period)
+            )
             factor["availability"] = (
                 "complete"
                 if previous_metrics and current_metrics

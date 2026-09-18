@@ -32,7 +32,7 @@
     {"symbol":"BAJAJFINSV","lifecycle":"FADING","officialDomains":["aboutbajajfinserv.com","bajajfinserv.in"]},
     {"symbol":"NESTLEIND","lifecycle":"FADING","officialDomains":["nestle.in"]},
 
-    {"symbol":"INFY","lifecycle":"WATCH","officialDomains":["infosys.com"]},
+    {"symbol":"INFY","lifecycle":"WATCH","officialDomains":["infosys.com","sec.gov"]},
     {"symbol":"WIPRO","lifecycle":"WATCH","officialDomains":["wipro.com"]},
     {"symbol":"TECHM","lifecycle":"BUILDING","officialDomains":["techmahindra.com"]},
     {"symbol":"ITC","lifecycle":"WATCH","officialDomains":["itcportal.com"]},

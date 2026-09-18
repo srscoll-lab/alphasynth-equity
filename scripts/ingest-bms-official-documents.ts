@@ -11,7 +11,7 @@ type Source = {
   anchors: string[];
 };
 type Evidence = {
-  factor: "execution" | "balance_sheet";
+  factor: "earnings" | "economics" | "execution" | "balance_sheet";
   metricName: string;
   previousValue: number;
   currentValue: number;
