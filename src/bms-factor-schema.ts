@@ -272,7 +272,14 @@ export function normalizeBmsFactorAnalysis(company: any): BmsFactorAnalysis {
     const sourceDetails = Array.isArray(raw.sourceDetails ?? raw.source_details)
       ? (raw.sourceDetails ?? raw.source_details).flatMap((source: any) => {
           const url = stringOrNull(source?.url);
-          const publishedAt = stringOrNull(source?.publishedAt ?? source?.published_at);
+          // Frozen legacy observations have an auditable snapshot capture date
+          // even when the upstream page did not expose a publication date.
+          // The Python publication gate accepts that date; preserve the same
+          // contract when the AlphaSynth proxy independently revalidates it.
+          const publishedAt = stringOrNull(
+            source?.publishedAt ?? source?.published_at
+              ?? source?.capturedAt ?? source?.captured_at,
+          );
           const sourceType = stringOrNull(source?.sourceType ?? source?.source_type);
           return url && publishedAt && sourceType ? [{ url, publishedAt, sourceType }] : [];
         })

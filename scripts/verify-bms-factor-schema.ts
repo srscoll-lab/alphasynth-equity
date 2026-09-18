@@ -184,6 +184,25 @@ assert.equal(fourFactorEligibility.completeFactorCount, 4);
 assert.equal(fourFactorEligibility.coverageWeight, 1);
 assert.equal(fourFactorEligibility.targetComplete, true);
 
+const capturedSnapshotAnalysis = normalizeBmsFactorAnalysis({
+  period: "Q3 FY26",
+  factor_analysis: {
+    factors: ["earnings", "economics", "execution", "balance_sheet"].map(id => ({
+      ...eligibilityFactor(id as typeof BMS_FACTOR_DEFINITIONS[number]["id"]),
+      source_details: [{
+        url: `https://company.example/${id}.pdf`,
+        published_at: null,
+        captured_at: "2026-08-22",
+        source_type: "company_results",
+      }],
+    })),
+  },
+});
+const capturedSnapshotEligibility = assessBmsPublicationEligibility(capturedSnapshotAnalysis);
+assert.equal(capturedSnapshotEligibility.scorePublishable, true);
+assert.equal(capturedSnapshotEligibility.completeFactorCount, 4);
+assert.equal(capturedSnapshotAnalysis.factors[0].sourceDetails[0].publishedAt, "2026-08-22");
+
 const missingEarningsAnalysis = normalizeBmsFactorAnalysis({
   period: "Q3 FY26",
   factor_analysis: {
