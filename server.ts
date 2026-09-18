@@ -3569,7 +3569,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         signal: AbortSignal.timeout(20_000),
       });
       const anchorPayload: any = await anchorResponse.json().catch(() => ({}));
-      const anchors = Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates.slice(0, 24) : [];
+      const anchors = (Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates : [])
+        .filter((anchor: any) => requestedFactors.includes(String(anchor?.factor || "").trim().toLowerCase()))
+        .slice(0, 24);
       const knownOfficialSources = (Array.isArray(anchorPayload?.known_official_sources)
         ? anchorPayload.known_official_sources : [])
         .filter((source: any) => /^https?:\/\//i.test(String(source?.url || "")))
@@ -3785,7 +3787,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       if ((!Array.isArray(parsed.rows) || parsed.rows.length === 0) && rows.length === 0) {
         diagnostics.push({
-          outcome: "model_returned_no_exact_anchor_match",
+          outcome: anchors.length ? "model_returned_no_exact_anchor_match" : "model_returned_no_verified_factor_comparison",
           anchorCount: anchors.length,
           knownOfficialSourceCount: knownOfficialSources.length,
           searchedSourceCount: searchedSources.length,
