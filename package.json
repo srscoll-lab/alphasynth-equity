@@ -19,6 +19,7 @@
     "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",
     "verify:bms-factor-evidence-mapping": "node --import tsx scripts/verify-bms-factor-evidence-mapping.ts",
     "collect:bms-factor-evidence": "node --import tsx scripts/collect-bms-factor-evidence.ts",
+    "ingest:bms-official-documents": "node --import tsx scripts/ingest-bms-official-documents.ts",
     "merge:bms-factor-evidence": "node --import tsx scripts/merge-bms-factor-evidence.ts",
     "verify:dossier-readiness": "node --import tsx scripts/verify-dossier-readiness.ts",
     "verify:peer-metrics": "node --experimental-strip-types scripts/verify-peer-metric-validation.ts",

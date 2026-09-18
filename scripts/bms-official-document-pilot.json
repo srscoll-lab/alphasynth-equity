@@ -1,0 +1,223 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "INFY",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "large_deal_tcv",
+          "previousValue": 2.5,
+          "currentValue": 4.8,
+          "unit": "USD billion",
+          "previousSource": {
+            "url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749125000004/exv99w02.htm",
+            "publishedAt": "2025-01-16",
+            "sourceType": "company_filing",
+            "anchors": ["2.5 billion", "large deal", "TCV"]
+          },
+          "currentSource": {
+            "url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749126000004/exv99w02.htm",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_filing",
+            "anchors": ["4.8 billion", "Large Deal Wins"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "free_cash_flow",
+          "previousValue": 1263,
+          "currentValue": 915,
+          "unit": "USD million",
+          "previousSource": {
+            "url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749125000004/exv99w02.htm",
+            "publishedAt": "2025-01-16",
+            "sourceType": "company_filing",
+            "anchors": ["free cash flow", "1,263 million"]
+          },
+          "currentSource": {
+            "url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749126000004/exv99w02.htm",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_filing",
+            "anchors": ["free cash flow", "915 million"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "M&M",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "total_sales_volume",
+          "previousValue": 245499,
+          "currentValue": 302238,
+          "unit": "vehicles",
+          "previousSource": {
+            "url": "https://www.mahindra.com/news-room/press-release/en/m-and-m-results-q3-f26",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_results",
+            "anchors": ["245,499", "302,238", "Total Vehicles Sold"]
+          },
+          "currentSource": {
+            "url": "https://www.mahindra.com/news-room/press-release/en/m-and-m-results-q3-f26",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_results",
+            "anchors": ["245,499", "302,238", "Total Vehicles Sold"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_equity_ratio",
+          "previousValue": 0.07,
+          "currentValue": 0.05,
+          "unit": "times",
+          "previousSource": {
+            "url": "https://www.mahindra.com/sites/default/files/documents/Q3FY2026/M%26M_Quarterly_Financial_Results_Q3FY26.pdf",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_filing",
+            "anchors": ["Debt-Equity Ratio", "0.05", "0.07"]
+          },
+          "currentSource": {
+            "url": "https://www.mahindra.com/sites/default/files/documents/Q3FY2026/M%26M_Quarterly_Financial_Results_Q3FY26.pdf",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_filing",
+            "anchors": ["Debt-Equity Ratio", "0.05", "0.07"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "NTPC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "production_volume",
+          "previousValue": 278,
+          "currentValue": 261,
+          "unit": "billion units",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://ntpc.co.in/sites/default/files/inline-files/Final%20Transcript%20Q3FY26_0.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_transcript",
+            "anchors": ["261 billion units", "278 billion units", "stand-alone generation"]
+          },
+          "currentSource": {
+            "url": "https://ntpc.co.in/sites/default/files/inline-files/Final%20Transcript%20Q3FY26_0.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_transcript",
+            "anchors": ["261 billion units", "278 billion units", "stand-alone generation"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_equity_ratio",
+          "previousValue": 1.15,
+          "currentValue": 1.09,
+          "unit": "times",
+          "previousSource": {
+            "url": "https://ntpc.co.in/sites/default/files/financial_returns/2026/Q3FY26.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_filing",
+            "anchors": ["Debt equity ratio", "1.09", "1.15"]
+          },
+          "currentSource": {
+            "url": "https://ntpc.co.in/sites/default/files/financial_returns/2026/Q3FY26.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_filing",
+            "anchors": ["Debt equity ratio", "1.09", "1.15"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "CIPLA",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "market_share",
+          "previousValue": 21,
+          "currentValue": 22,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY25-Press-Release_0.pdf",
+            "publishedAt": "2025-01-28",
+            "sourceType": "company_results",
+            "anchors": ["Albuterol", "21%", "market share"]
+          },
+          "currentSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY26%20Press%20Release.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": ["Albuterol", "22%", "market share"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_and_cash_equivalents_consolidated",
+          "previousValue": 9413,
+          "currentValue": 10718,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY25-Press-Release_0.pdf",
+            "publishedAt": "2025-01-28",
+            "sourceType": "company_results",
+            "anchors": ["Cash and Cash Equivalents", "9,413"]
+          },
+          "currentSource": {
+            "url": "https://www.cipla.com/sites/default/files/Cipla_Q3FY26%20Press%20Release.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": ["Cash and Cash Equivalents", "10,718"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HINDPETRO",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "throughput",
+          "previousValue": 6.47,
+          "currentValue": 6.38,
+          "unit": "MMT",
+          "previousSource": {
+            "url": "https://www.hindustanpetroleum.com/documents/pdf/Earnings_Concall_Transcript_Q3_FY_2025.pdf",
+            "publishedAt": "2025-01-24",
+            "sourceType": "company_transcript",
+            "anchors": ["crude throughput", "6.47 million metric tons"]
+          },
+          "currentSource": {
+            "url": "https://www.hindustanpetroleum.com/documents/pdf/Post%20Earning%20Concall%20Transript%20-%20Q3FY26.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_transcript",
+            "anchors": ["Refinery throughput", "6.38"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_equity_ratio",
+          "previousValue": 1.38,
+          "currentValue": 0.89,
+          "unit": "times",
+          "previousSource": {
+            "url": "https://www.hindustanpetroleum.com/documents/pdf/Investor-Presentation-Q3-FY-2025-26.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_presentation",
+            "anchors": ["Total Debt Equity Ratio", "1.38", "0.89"]
+          },
+          "currentSource": {
+            "url": "https://www.hindustanpetroleum.com/documents/pdf/Investor-Presentation-Q3-FY-2025-26.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_presentation",
+            "anchors": ["Total Debt Equity Ratio", "1.38", "0.89"]
+          }
+        }
+      ]
+    }
+  ]
+}
