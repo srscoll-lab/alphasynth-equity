@@ -37,7 +37,7 @@ if (selected.size) {
       official_domains: [],
       publication_eligibility: monitored?.publication_eligibility,
     };
-  });
+  }).filter((company: any) => company?.publication_eligibility?.scorePublishable !== true);
 } else {
   companies = universe.companies
     .filter((company: any) => company?.publication_eligibility?.scorePublishable !== true)
@@ -80,7 +80,8 @@ if (fs.existsSync(diagnosticsOutput)) {
   } catch { /* a partial diagnostics file is safe to ignore */ }
 }
 const completedTickers = new Set(diagnostics
-  .filter(item => item?.completed === true || (item?.httpStatus >= 200 && item?.httpStatus < 300 && !item?.error))
+  .filter(item => Number(item?.rows || 0) > 0
+    && (item?.completed === true || (item?.httpStatus >= 200 && item?.httpStatus < 300 && !item?.error)))
   .map(item => String(item?.ticker || "").toUpperCase()).filter(Boolean));
 const buildReport = () => ({
   cutoff,

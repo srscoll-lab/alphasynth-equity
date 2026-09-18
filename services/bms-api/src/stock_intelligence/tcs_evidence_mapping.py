@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import re
 
 
 VALID_TCS_FACTORS = {
@@ -78,6 +79,12 @@ EVIDENCE_TYPE_MAP = {
     "deal_tcv": "execution",
     "deal_wins": "execution",
     "large_deal_wins": "execution",
+    "large_deal_tcv": "execution",
+    "new_deal_wins_total_contract_value_tcv": "execution",
+    "automotive_quarterly_volumes": "execution",
+    "coal_offtake": "execution",
+    "aluminium_upstream_shipments_india": "execution",
+    "voluntary_attrition_trailing_twelve_months": "execution",
     "client_additions": "execution",
     "client_growth": "execution",
     "customer_franchise": "execution",
@@ -121,6 +128,10 @@ EVIDENCE_TYPE_MAP = {
     "reserves": "balance_sheet",
     "net_worth": "balance_sheet",
     "provision_coverage": "balance_sheet",
+    "total_equity": "balance_sheet",
+    "free_cash_flow": "balance_sheet",
+    "consolidated_cash_and_investments": "balance_sheet",
+    "cash_and_cash_equivalents_consolidated": "balance_sheet",
 
     # ---------------------------------------------------------
     # Management delivery / credibility
@@ -144,6 +155,8 @@ EXECUTION_PATTERNS = (
     "production", "throughput", "wholesale", "_delivery", "_deliveries",
     "_delivered", "_commissioning", "gross_merchandise_value",
     "store_count", "member_count", "ore_mined", "metal_in_concentrate",
+    "deal_tcv", "deal_wins", "attrition", "_volume", "_volumes",
+    "offtake", "shipment",
 )
 BALANCE_SHEET_PATTERNS = (
     "debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion",
@@ -152,6 +165,8 @@ BALANCE_SHEET_PATTERNS = (
     "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage",
     "credit_cost", "loan_deposit_ratio", "refinancing_risk",
     "contingent_liability", "capitalised_development_cost",
+    "free_cash_flow", "cash_and_cash_equivalent", "cash_and_investment",
+    "total_equity",
 )
 MANAGEMENT_DELIVERY_PATTERNS = (
     "guidance_accuracy", "commitment_delivery", "target_delivery",
@@ -174,13 +189,9 @@ def map_evidence_to_tcs_factor(
     into an arbitrary factor.
     """
 
-    normalized = (
-        evidence_type
-        .strip()
-        .lower()
-        .replace(" ", "_")
-        .replace("-", "_")
-    )
+    normalized = re.sub(
+        r"[^a-z0-9]+", "_", evidence_type.strip().lower()
+    ).strip("_")
 
     factor_name = EVIDENCE_TYPE_MAP.get(normalized)
 

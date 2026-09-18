@@ -3729,6 +3729,16 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           operating_margin: ["operating margin"],
           financing_margin: ["financing margin"],
           nim: ["nim", "net interest margin"],
+          large_deal_tcv: ["large deal tcv", "large deal wins", "large deals"],
+          new_deal_wins_total_contract_value_tcv: ["new deal wins", "total contract value", "tcv"],
+          automotive_quarterly_volumes: ["automotive quarterly volumes", "automotive volumes", "volumes"],
+          coal_offtake: ["coal offtake", "offtake"],
+          aluminium_upstream_shipments_india: ["aluminium upstream shipments", "upstream shipments", "shipments"],
+          voluntary_attrition_trailing_twelve_months: ["voluntary attrition", "attrition"],
+          total_equity: ["total equity", "shareholders equity"],
+          free_cash_flow: ["free cash flow", "fcf"],
+          consolidated_cash_and_investments: ["consolidated cash and investments", "cash and investments"],
+          cash_and_cash_equivalents_consolidated: ["cash and cash equivalents", "cash equivalents"],
         };
         return aliases[canonical] || [canonical.replaceAll("_", " ")];
       };
@@ -3754,6 +3764,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       // Reuse an already verified official filing deterministically. The
       // document must contain the metric label, both reporting periods and
       // both exact stored values in the same local context.
+      const knownDocumentContexts: Array<{ sourceUrl: string; sourceDate: string; documentText: string }> = [];
       for (const knownSource of knownOfficialSources) {
         const sourceUrl = String(knownSource.url || "");
         const sourceDate = exactEvidenceDate(knownSource.published_at);
@@ -3774,6 +3785,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 80)
             : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
+          if (documentText.trim()) knownDocumentContexts.push({ sourceUrl: verifiedUrl, sourceDate, documentText });
           let admittedFromSource = 0;
           for (const anchor of anchors) {
             const mapping = mapBmsFactorMetric(anchor.metric_name);
@@ -3792,9 +3804,46 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             });
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "admitted_known_official_document" });
           }
-          if (!admittedFromSource) diagnostics.push({ sourceUrl: verifiedUrl, outcome: "known_official_document_no_context_match" });
+          if (anchors.length && !admittedFromSource) diagnostics.push({ sourceUrl: verifiedUrl, outcome: "known_official_document_no_context_match" });
         } catch (error: any) {
           diagnostics.push({ sourceUrl, outcome: "known_official_document_not_retrievable", detail: String(error?.message || error) });
+        }
+      }
+      // Google Search grounding is useful for discovery but can return no usable
+      // comparison even after an official filing was fetched successfully. In
+      // that case, extract directly from a small bounded set of those documents.
+      // The normal deterministic mapping and source-value verification below
+      // still apply, so this fallback cannot publish unsupported model output.
+      if ((!Array.isArray(parsed.rows) || parsed.rows.length === 0)
+        && rows.length === 0 && knownDocumentContexts.length) {
+        const documentBudget = knownDocumentContexts.slice(0, 3).map(context => ({
+          sourceUrl: context.sourceUrl,
+          sourceDate: context.sourceDate,
+          text: context.documentText.slice(0, 30_000),
+        }));
+        try {
+          const extracted = await ai.models.generateContent({
+            model,
+            contents: [{ role: "user", parts: [{ text:
+              `Extract explicit, like-for-like numeric comparisons for ${companyName} (${ticker}) from the official documents below. `
+              + `Return at most one strong comparison for each requested factor (${requestedFactors.join(", ")}). `
+              + `Both values, both reporting periods and the unit must appear in the same supplied document. `
+              + `Use the document's sourceUrl and sourceDate exactly as supplied. Do not infer, calculate, annualize, or use a metric outside the requested factors. `
+              + `Return an empty rows array when the text does not provide an exact comparison.\n\nDOCUMENTS: ${JSON.stringify(documentBudget)}`
+            }] }],
+            config: {
+              responseMimeType: "application/json",
+              maxOutputTokens: 8192,
+              responseSchema: factorEvidenceSchema,
+            },
+          });
+          const directParsed: any = JSON.parse(sanitizeJsonShell(extracted.text || "{}"));
+          if (Array.isArray(directParsed?.rows) && directParsed.rows.length) {
+            parsed.rows = directParsed.rows;
+            diagnostics.push({ outcome: "direct_official_document_extraction", candidateCount: directParsed.rows.length });
+          }
+        } catch (error: any) {
+          diagnostics.push({ outcome: "direct_official_document_extraction_failed", detail: String(error?.message || error) });
         }
       }
       if ((!Array.isArray(parsed.rows) || parsed.rows.length === 0) && rows.length === 0) {

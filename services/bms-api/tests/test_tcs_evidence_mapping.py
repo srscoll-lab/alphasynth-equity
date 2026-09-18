@@ -80,3 +80,22 @@ def test_maps_mining_production_to_execution():
 
     assert result is not None
     assert result.factor_name == "execution"
+
+
+def test_maps_observed_universe_metric_variants():
+    expected = {
+        "Large Deal TCV": "execution",
+        "New Deal Wins (Total Contract Value - TCV)": "execution",
+        "Automotive Quarterly Volumes": "execution",
+        "Coal Offtake": "execution",
+        "Aluminium Upstream Shipments (India)": "execution",
+        "Voluntary Attrition (Trailing Twelve Months)": "execution",
+        "Total Equity": "balance_sheet",
+        "Free Cash Flow": "balance_sheet",
+        "Consolidated cash and investments": "balance_sheet",
+        "Cash and Cash Equivalents (Consolidated)": "balance_sheet",
+    }
+    for metric, factor in expected.items():
+        result = map_evidence_to_tcs_factor(evidence_type=metric)
+        assert result is not None, metric
+        assert result.factor_name == factor, metric

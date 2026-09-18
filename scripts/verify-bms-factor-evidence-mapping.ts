@@ -29,4 +29,14 @@ assert.deepEqual(mapBmsFactorMetric("Gross Debt"), { metric: "gross_debt", facto
 assert.deepEqual(mapBmsFactorMetric("Cash Balance"), { metric: "cash_balance", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Net Debt to EBITDA Ratio"), { metric: "net_debt_to_ebitda_ratio", factor: "balance_sheet" });
 assert.deepEqual(mapBmsFactorMetric("Net Worth"), { metric: "net_worth", factor: "balance_sheet" });
+for (const metric of [
+  "Large Deal TCV", "New Deal Wins (Total Contract Value - TCV)",
+  "Automotive Quarterly Volumes", "Coal Offtake",
+  "Aluminium Upstream Shipments (India)",
+  "Voluntary Attrition (Trailing Twelve Months)",
+]) assert.equal(mapBmsFactorMetric(metric)?.factor, "execution", metric);
+for (const metric of [
+  "Total Equity", "Free Cash Flow", "Consolidated cash and investments",
+  "Cash and Cash Equivalents (Consolidated)",
+]) assert.equal(mapBmsFactorMetric(metric)?.factor, "balance_sheet", metric);
 console.log("PASS: descriptive metrics canonicalize across all four BMS factors");

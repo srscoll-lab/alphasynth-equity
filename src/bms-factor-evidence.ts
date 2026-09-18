@@ -15,7 +15,12 @@ const DIRECT: Record<string, RepairFactorId> = {
   domestic_wholesales: "execution", wind_turbine_deliveries: "execution", project_commissioning: "execution",
   units_delivered: "execution", gross_merchandise_value: "execution", store_count: "execution", member_count: "execution",
   innovative_medicine_sales: "execution", deal_tcv: "execution", deal_wins: "execution",
-  large_deal_wins: "execution", client_additions: "execution", client_growth: "execution",
+  large_deal_wins: "execution", large_deal_tcv: "execution",
+  new_deal_wins_total_contract_value_tcv: "execution",
+  automotive_quarterly_volumes: "execution", coal_offtake: "execution",
+  aluminium_upstream_shipments_india: "execution",
+  voluntary_attrition_trailing_twelve_months: "execution",
+  client_additions: "execution", client_growth: "execution",
   customer_franchise: "execution", customer_franchise_growth: "execution", new_loans_booked: "execution",
   assets_under_management: "execution", aum_growth: "execution", utilization: "execution", attrition: "execution",
   transmission_availability: "execution", distribution_reliability: "execution",
@@ -29,13 +34,16 @@ const DIRECT: Record<string, RepairFactorId> = {
   net_debt_to_ebitda_ratio: "balance_sheet",
   cash_and_bank_balances: "balance_sheet", provision_coverage: "balance_sheet", reserves: "balance_sheet",
   net_working_capital_cycle: "balance_sheet",
+  total_equity: "balance_sheet", free_cash_flow: "balance_sheet",
+  consolidated_cash_and_investments: "balance_sheet",
+  cash_and_cash_equivalents_consolidated: "balance_sheet",
 };
 
 const EARNINGS_PATTERNS = ["revenue", "sales", "net_profit", "profit_after_tax", "pat", "eps", "earnings"];
 const ECONOMICS_PATTERNS = ["ebitda", "operating_income", "operating_profit", "margin", "nim", "spread", "realization", "unit_economic", "pricing", "yield"];
 
-const EXECUTION_PATTERNS = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_deliveries", "_delivered", "_commissioning", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change", "production", "throughput", "wholesale", "gross_merchandise_value", "store_count", "member_count", "ore_mined", "metal_in_concentrate"];
-const BALANCE_PATTERNS = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "cash_flow_from_operations", "cash_and_bank", "operating_cash_flow", "working_capital", "receivable", "inventory", "reserves", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost"];
+const EXECUTION_PATTERNS = ["_vs_plan", "_vs_guidance", "_conversion", "_ramp", "_delivery", "_deliveries", "_delivered", "_commissioning", "_mix_change", "market_share_change", "volume_growth", "capacity_utilisation", "project_completion_delay", "plant_availability_change", "production", "throughput", "wholesale", "gross_merchandise_value", "store_count", "member_count", "ore_mined", "metal_in_concentrate", "deal_tcv", "deal_wins", "attrition", "_volume", "_volumes", "offtake", "shipment"];
+const BALANCE_PATTERNS = ["debt_", "net_debt", "net_cash", "interest_coverage", "cash_conversion", "cash_flow_from_operations", "cash_and_bank", "operating_cash_flow", "working_capital", "receivable", "inventory", "reserves", "liquidity", "cet1", "crar", "gnpa", "nnpa", "provision_coverage", "credit_cost", "loan_deposit_ratio", "refinancing_risk", "contingent_liability", "capitalised_development_cost", "free_cash_flow", "cash_and_cash_equivalent", "cash_and_investment", "total_equity"];
 
 export function mapBmsFactorMetric(rawMetric: unknown): { metric: string; factor: RepairFactorId } | null {
   let metric = String(rawMetric || "").trim().toLowerCase()
