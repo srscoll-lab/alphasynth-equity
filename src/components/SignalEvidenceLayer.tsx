@@ -142,6 +142,43 @@ const scoreDescription = (score: number | null) => score === null
         : score >= 20 ? "Negative momentum"
           : "Strong negative momentum";
 
+type FactorComparison = BmsFactorAnalysis["factors"][number];
+
+const hasConflictingEarningsEvidence = (factor: FactorComparison) => {
+  if (factor.id !== "earnings") return false;
+  const previousByKey = new Map(factor.previous.metrics.map(metric => [metric.key, metric]));
+  const directions = factor.current.metrics.flatMap(metric => {
+    const previous = previousByKey.get(metric.key);
+    if (typeof previous?.value !== "number" || typeof metric.value !== "number") return [];
+    if (metric.value > previous.value) return [1];
+    if (metric.value < previous.value) return [-1];
+    return [0];
+  });
+  return directions.includes(1) && directions.includes(-1);
+};
+
+const factorReading = (factor: FactorComparison, score: number | null) => {
+  const conflictingEarnings = hasConflictingEarningsEvidence(factor);
+  if (conflictingEarnings) {
+    return {
+      label: "Mixed earnings evidence",
+      detail: "Revenue and profit measures moved in different directions; a uniformly positive earnings conclusion is not supported.",
+      color: "text-amber-300",
+    };
+  }
+  return {
+    label: scoreDescription(score),
+    detail: "Direction shown; precise score not shown",
+    color: score === null
+      ? "text-zinc-400"
+      : score >= 60
+        ? "text-teal-300"
+        : score > 40
+          ? "text-amber-300"
+          : "text-red-300",
+  };
+};
+
 const formatWeight = (weight: number) => new Intl.NumberFormat("en-IN", {
   minimumFractionDigits: 0,
   maximumFractionDigits: 2,
@@ -367,8 +404,9 @@ export default function SignalEvidenceLayer({
               <div className="max-w-3xl">
                 <div className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-300">Signal evidence workspace · {company.symbol}</div>
                 <h1 className="mt-3 text-3xl font-semibold text-white md:text-5xl">Why this signal?</h1>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400 md:text-base">
-                  {company.name.replace(/[.\s]+$/, "")}. The BMS V1 record is preserved as of {formatDate(lifecycleAsOf)}; this workspace explains its evidence through {formatDate(effectiveEvidenceCutoff)} and subsequent confirmation checks without rewriting it.
+                <p className="mt-3 text-sm leading-relaxed text-zinc-300 md:text-base">
+                  <span className="font-semibold text-white">{company.name.replace(/[.\s]+$/, "")}.</span>{" "}
+                  The BMS V1 record is preserved as of {formatDate(lifecycleAsOf)}; this workspace explains its evidence through {formatDate(effectiveEvidenceCutoff)} and subsequent confirmation checks without rewriting it.
                 </p>
               </div>
               <div className="grid min-w-[290px] grid-cols-2 gap-3">
@@ -446,13 +484,14 @@ export default function SignalEvidenceLayer({
                         const comparable = hasPrevious && hasCurrent;
                         const partial = hasPrevious !== hasCurrent;
                         const exactScoreVisible = comparable && score !== null && factor.confidence === "high";
+                        const reading = factorReading(factor, score);
                         return (
                           <article key={factor.id} className="rounded-2xl border border-white/10 bg-white/[0.025] p-5 md:p-6">
                             <div className="grid gap-5 lg:grid-cols-[190px_1fr]">
                               <div>
                                 <div className="text-lg font-semibold text-white">{factor.label}</div>
-                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold text-teal-300`}>{comparable ? (exactScoreVisible ? `${score}/100` : scoreDescription(score)) : partial ? (hasCurrent ? "Current evidence only" : "Earlier evidence only") : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{formatWeight(factor.weight)}% weight</span></div>
-                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (exactScoreVisible ? scoreDescription(score) : "Direction shown; precise score not shown") : partial ? "Shown for context; no momentum comparison calculated" : "Previous and current figures unavailable"}</div>
+                                <div className="mt-3 flex items-end gap-3"><span className={`${exactScoreVisible ? "text-3xl font-mono" : "text-xl"} font-bold ${reading.color}`}>{comparable ? (hasConflictingEarningsEvidence(factor) ? reading.label : exactScoreVisible ? `${score}/100` : reading.label) : partial ? (hasCurrent ? "Current evidence only" : "Earlier evidence only") : "N/A"}</span><span className="pb-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{formatWeight(factor.weight)}% weight</span></div>
+                                <div className="mt-2 text-xs font-semibold text-zinc-200">{comparable ? (hasConflictingEarningsEvidence(factor) ? reading.detail : exactScoreVisible ? reading.label : reading.detail) : partial ? "Shown for context; no momentum comparison calculated" : "Previous and current figures unavailable"}</div>
                                 <div className="mt-1 text-[10px] font-black uppercase tracking-wider text-zinc-400">{(comparable || partial) ? `Evidence confidence: ${factor.confidence}` : "Evidence confidence: unavailable"}</div>
                               </div>
                               <div>
