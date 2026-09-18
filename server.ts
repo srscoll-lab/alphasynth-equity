@@ -3593,9 +3593,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const sourceScopeGuidance = trustedOfficialDomains.length
         ? `Use only official company documents or NSE/BSE filings (${officialScope}).`
         : `Use only the company's own investor-relations website or NSE/BSE filings. Find the company's official investor-relations domain when necessary; never use an aggregator, news site, broker report or search-result page.`;
-      const researchMode = anchors.length ? "anchor_recovery" : "factor_discovery";
+      const researchMode = anchors.length ? "anchor_or_factor_discovery" : "factor_discovery";
       const researchInstruction = anchors.length
-        ? `Locate support for the exact stored comparisons in the ANCHORS below. Check the KNOWN OFFICIAL SOURCES first; they already support other factors for this company and may contain the missing comparisons. Do not replace, recalculate, round or reinterpret an anchor value. Return only anchors whose previous and current values are both explicitly supported by a dated official source.`
+        ? `First locate support for the exact stored comparisons in the ANCHORS below. Check the KNOWN OFFICIAL SOURCES first. Do not replace, recalculate, round or reinterpret an anchor value. If an anchor cannot be verified, discover one alternate, sector-appropriate, like-for-like comparison for the same requested factor. Both values and periods must be explicit in a dated official source.`
         : `No stored comparison anchors are available. Discover one strong, sector-appropriate, like-for-like comparison for each of these missing factors: ${requestedFactors.join(", ")}. Both numeric values, both reporting periods, the unit, the publication date and the direct official URL must be explicit in the same official document. Prefer the same quarter year-on-year; otherwise use two clearly comparable consecutive reporting periods. Do not manufacture an anchor and do not return a factor when an exact comparison is unavailable.`;
       const grounded = await ai.models.generateContent({
         model,
@@ -3651,7 +3651,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const structured = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
-          `Convert the research below into JSON. ${anchors.length ? "Keep only comparisons present in the supplied ANCHORS, with exactly matching numeric values." : `Keep only explicit like-for-like comparisons for the requested factors (${requestedFactors.join(", ")}).`} Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
+          `Convert the research below into JSON. ${anchors.length ? "Prefer comparisons present in the supplied ANCHORS with exactly matching values; when an anchor was unavailable, an alternate explicit comparison for the same requested factor is allowed." : `Keep only explicit like-for-like comparisons for the requested factors (${requestedFactors.join(", ")}).`} Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
           + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
           + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
@@ -3706,6 +3706,18 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         && String(anchor.current_period || "").trim() === String(candidate?.currentPeriod || "").trim()
         && Number(anchor.previous_value) === Number(candidate?.previousValue)
         && Number(anchor.current_value) === Number(candidate?.currentValue));
+      const groundedSourceIdentifiesCompany = (sourceUrl: string) => searchedSources.some((source: any) =>
+        source.url === sourceUrl
+        && identityTokens.some(token => String(source.title || "").toLowerCase().includes(token)));
+      const admitGroundedRedirectDomain = (sourceUrl: string, finalUrl: string) => {
+        if (!groundedSourceIdentifiesCompany(sourceUrl)) return;
+        try {
+          const host = new URL(finalUrl).hostname.toLowerCase().replace(/^www\./, "");
+          const excluded = ["google.com", "googleusercontent.com"]
+            .some(domain => host === domain || host.endsWith(`.${domain}`));
+          if (!excluded) trustedOfficialDomains = [...new Set([...trustedOfficialDomains, host])];
+        } catch { /* malformed redirects remain untrusted */ }
+      };
       const periodToken = (value: unknown) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
       const metricLabels = (metric: unknown) => {
         const canonical = mapBmsFactorMetric(metric)?.metric || String(metric || "").trim().toLowerCase();
@@ -3787,7 +3799,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       if ((!Array.isArray(parsed.rows) || parsed.rows.length === 0) && rows.length === 0) {
         diagnostics.push({
-          outcome: anchors.length ? "model_returned_no_exact_anchor_match" : "model_returned_no_verified_factor_comparison",
+          outcome: "model_returned_no_verified_factor_comparison",
           anchorCount: anchors.length,
           knownOfficialSourceCount: knownOfficialSources.length,
           searchedSourceCount: searchedSources.length,
@@ -3814,8 +3826,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         // labels are advisory because otherwise valid metrics are often labelled
         // "operating" or "financial strength" instead of our internal IDs.
         if (!mapping) rejection = "factor_mapping_mismatch";
-        else if (anchors.length && !anchor) rejection = "stored_anchor_mismatch";
-        else if (!anchors.length && !requestedFactors.includes(mapping.factor)) rejection = "factor_not_requested";
+        else if (!anchor && !requestedFactors.includes(mapping.factor)) rejection = "factor_not_requested";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
         else if (!isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
@@ -3837,6 +3848,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             headers: { "user-agent": "AlphaSynth-Research/1.0" },
           });
           verifiedUrl = verification.url || sourceUrl;
+          admitGroundedRedirectDomain(sourceUrl, verifiedUrl);
           if (!verification.ok || !isOfficialDossierSource(verifiedUrl, trustedOfficialDomains)) throw new Error(`HTTP ${verification.status}`);
           const maximumBytes = 20 * 1024 * 1024;
           const declaredBytes = Number(verification.headers.get("content-length") || 0);
