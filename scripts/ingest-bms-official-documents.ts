@@ -31,6 +31,9 @@ const valueAfter = (prefix: string) => process.argv.find(arg => arg.startsWith(p
 const manifestPath = path.resolve(valueAfter("--manifest=") || "scripts/bms-official-document-pilot.json");
 const outputPath = path.resolve(valueAfter("--output=") || "output/bms-official-document-pilot.csv");
 const archiveDir = path.resolve(valueAfter("--archive-dir=") || "output/bms-official-document-archive");
+const requestTimeoutMs = Number(valueAfter("--request-timeout-ms=") || "120000");
+const downloadConcurrency = Math.max(1, Number(valueAfter("--concurrency=") || "4"));
+const maxDownloadAttempts = Math.max(1, Number(valueAfter("--max-download-attempts=") || "3"));
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")) as Manifest;
 const trustedSourceTypes = new Set([
   "company_filing", "company_results", "company_presentation", "company_transcript",
@@ -77,14 +80,30 @@ const sourceCache = new Map<string, Promise<{ text: string; file: string; hash: 
 async function acquire(source: Source) {
   if (!sourceCache.has(source.url)) {
     sourceCache.set(source.url, (async () => {
-      const response = await fetch(source.url, {
-        redirect: "follow",
-        headers: {
-          "User-Agent": "Mozilla/5.0 (compatible; AlphaSynthEvidenceBot/1.0; +https://alphasynth.ai)",
-          Accept: "application/pdf,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
-        },
-        signal: AbortSignal.timeout(120_000),
-      });
+      let response: Response | undefined;
+      let lastError: unknown;
+      for (let attempt = 1; attempt <= maxDownloadAttempts; attempt += 1) {
+        try {
+          response = await fetch(source.url, {
+            redirect: "follow",
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/140 Safari/537.36",
+              Accept: "application/pdf,text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+              Referer: source.url.includes("nseindia.com") ? "https://www.nseindia.com/" : new URL(source.url).origin,
+              "Accept-Language": "en-IN,en;q=0.9",
+            },
+            signal: AbortSignal.timeout(requestTimeoutMs),
+          });
+          if (response.ok) break;
+          lastError = new Error(`HTTP ${response.status} for ${source.url}`);
+        } catch (error) {
+          lastError = error;
+        }
+        if (attempt < maxDownloadAttempts) {
+          await new Promise(resolve => setTimeout(resolve, 750 * attempt));
+        }
+      }
+      if (!response?.ok) throw lastError instanceof Error ? lastError : new Error(`fetch failed for ${source.url}`);
       if (!response.ok) throw new Error(`HTTP ${response.status} for ${source.url}`);
       const bytes = new Uint8Array(await response.arrayBuffer());
       const hash = sha256(bytes);
@@ -105,6 +124,34 @@ async function acquire(source: Source) {
 const errors: Array<Record<string, unknown>> = [];
 const rows: Array<Record<string, string | number>> = [];
 const documents: Array<Record<string, unknown>> = [];
+
+// Start independent official-document downloads in a small bounded pool. A
+// slow or blocking issuer site must not serialize the entire cohort pass.
+const uniqueSources = new Map<string, Source>();
+for (const company of manifest.companies) {
+  for (const evidence of company.evidence) {
+    uniqueSources.set(evidence.previousSource.url, evidence.previousSource);
+    uniqueSources.set(evidence.currentSource.url, evidence.currentSource);
+  }
+}
+const pendingSources = [...uniqueSources.values()];
+let nextSource = 0;
+await Promise.all(Array.from(
+  { length: Math.min(downloadConcurrency, pendingSources.length) },
+  async () => {
+    while (nextSource < pendingSources.length) {
+      const source = pendingSources[nextSource++];
+      try {
+        await acquire(source);
+      } catch {
+        // The evidence loop below records the URL-specific failure once per
+        // affected metric. Prefetching only removes cohort-wide head-of-line
+        // blocking; it does not relax any admission check.
+      }
+    }
+  },
+));
+
 for (const company of manifest.companies) {
   for (const evidence of company.evidence) {
     const mapping = mapBmsFactorMetric(evidence.metricName);

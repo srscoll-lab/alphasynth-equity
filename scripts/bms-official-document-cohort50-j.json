@@ -1,0 +1,73 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "SHREECEM",
+      "evidence": [{
+        "factor": "balance_sheet", "metricName": "operating_cash_flow",
+        "previousPeriod": "FY24", "currentPeriod": "FY25",
+        "previousValue": 3303.62, "currentValue": 5063.01, "unit": "INR crore",
+        "previousSource": {"url": "https://www.shreecement.com/uploads/investors/shareholder/March_2025.pdf", "publishedAt": "2025-05-14", "sourceType": "audited_financial_statement", "anchors": ["Net Cash Flow from Operating Activities", "3303.62", "5063.01", "31.03.2024", "31.03.2025"]},
+        "currentSource": {"url": "https://www.shreecement.com/uploads/investors/shareholder/March_2025.pdf", "publishedAt": "2025-05-14", "sourceType": "audited_financial_statement", "anchors": ["Net Cash Flow from Operating Activities", "3303.62", "5063.01", "31.03.2024", "31.03.2025"]}
+      }]
+    },
+    {
+      "symbol": "POONAWALLA",
+      "evidence": [
+        {
+          "factor": "execution", "metricName": "assets_under_management",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 30984, "currentValue": 55017, "unit": "INR crore",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/POONAWALLA_18012026105522_4PFLInvestorPresentation17012026.pdf", "publishedAt": "2026-01-18", "sourceType": "nse_filing", "anchors": ["Assets under Management", "30,984", "55,017", "Q3FY25", "Q3FY26"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/POONAWALLA_18012026105522_4PFLInvestorPresentation17012026.pdf", "publishedAt": "2026-01-18", "sourceType": "nse_filing", "anchors": ["Assets under Management", "30,984", "55,017", "Q3FY25", "Q3FY26"]}
+        },
+        {
+          "factor": "balance_sheet", "metricName": "gnpa",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 1.85, "currentValue": 1.51, "unit": "percent",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/POONAWALLA_18012026105522_4PFLInvestorPresentation17012026.pdf", "publishedAt": "2026-01-18", "sourceType": "nse_filing", "anchors": ["Gross NPA (%)", "1.85%", "1.51%", "Q3FY25", "Q3FY26"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/POONAWALLA_18012026105522_4PFLInvestorPresentation17012026.pdf", "publishedAt": "2026-01-18", "sourceType": "nse_filing", "anchors": ["Gross NPA (%)", "1.85%", "1.51%", "Q3FY25", "Q3FY26"]}
+        }
+      ]
+    },
+    {
+      "symbol": "APTUS",
+      "evidence": [
+        {
+          "factor": "execution", "metricName": "assets_under_management",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 10226, "currentValue": 12330, "unit": "INR crore",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/APTUS_04022026141326_Aptus_Value_Investor_Presentation__Q3_FY26_sd.pdf", "publishedAt": "2026-02-04", "sourceType": "nse_filing", "anchors": ["AUM", "12,330", "10,226", "Q3 FY26", "Q3 FY25"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/APTUS_04022026141326_Aptus_Value_Investor_Presentation__Q3_FY26_sd.pdf", "publishedAt": "2026-02-04", "sourceType": "nse_filing", "anchors": ["AUM", "12,330", "10,226", "Q3 FY26", "Q3 FY25"]}
+        },
+        {
+          "factor": "balance_sheet", "metricName": "gnpa",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 1.3, "currentValue": 1.6, "unit": "percent",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/APTUS_04022026141326_Aptus_Value_Investor_Presentation__Q3_FY26_sd.pdf", "publishedAt": "2026-02-04", "sourceType": "nse_filing", "anchors": ["Gross NPA (%)", "1.6%", "1.3%", "Q3 FY26", "Q3 FY25"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/APTUS_04022026141326_Aptus_Value_Investor_Presentation__Q3_FY26_sd.pdf", "publishedAt": "2026-02-04", "sourceType": "nse_filing", "anchors": ["Gross NPA (%)", "1.6%", "1.3%", "Q3 FY26", "Q3 FY25"]}
+        }
+      ]
+    },
+    {
+      "symbol": "SHRIRAMFIN",
+      "evidence": [
+        {
+          "factor": "execution", "metricName": "assets_under_management",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 254469.69, "currentValue": 291709.03, "unit": "INR crore",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/Mathew_28012026174755_BSENSE_Transcript_Earnings_call_Q3.pdf", "publishedAt": "2026-01-28", "sourceType": "nse_filing", "anchors": ["asset under management", "2,54,469.69", "2,91,709.03", "Q3 FY '25", "Q3 FY '26"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/Mathew_28012026174755_BSENSE_Transcript_Earnings_call_Q3.pdf", "publishedAt": "2026-01-28", "sourceType": "nse_filing", "anchors": ["asset under management", "2,54,469.69", "2,91,709.03", "Q3 FY '25", "Q3 FY '26"]}
+        },
+        {
+          "factor": "balance_sheet", "metricName": "stage_3_assets",
+          "previousPeriod": "Q3 FY25", "currentPeriod": "Q3 FY26",
+          "previousValue": 5.38, "currentValue": 4.54, "unit": "percent",
+          "previousSource": {"url": "https://nsearchives.nseindia.com/corporate/Mathew_28012026174755_BSENSE_Transcript_Earnings_call_Q3.pdf", "publishedAt": "2026-01-28", "sourceType": "nse_filing", "anchors": ["Gross Stage 3", "5.38%", "4.54%", "Q3 FY '25", "Q3 FY '26"]},
+          "currentSource": {"url": "https://nsearchives.nseindia.com/corporate/Mathew_28012026174755_BSENSE_Transcript_Earnings_call_Q3.pdf", "publishedAt": "2026-01-28", "sourceType": "nse_filing", "anchors": ["Gross Stage 3", "5.38%", "4.54%", "Q3 FY '25", "Q3 FY '26"]}
+        }
+      ]
+    }
+  ]
+}

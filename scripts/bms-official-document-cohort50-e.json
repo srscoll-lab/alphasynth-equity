@@ -1,0 +1,92 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "SUZLON",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "wind_turbine_deliveries",
+          "previousValue": 447,
+          "currentValue": 617,
+          "unit": "MW",
+          "previousSource": {
+            "url": "https://newsroom.suzlon.com/wp-content/uploads/2026/03/IPR_05-02-2026.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_presentation",
+            "anchors": ["Q3 FY26 Stellar growth continues", "Deliveries (MW)", "447", "617"]
+          },
+          "currentSource": {
+            "url": "https://newsroom.suzlon.com/wp-content/uploads/2026/03/IPR_05-02-2026.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_presentation",
+            "anchors": ["Q3 FY26 Stellar growth continues", "Deliveries (MW)", "447", "617"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_cash",
+          "previousValue": 1107,
+          "currentValue": 1556,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://newsroom.suzlon.com/wp-content/uploads/2025/04/IR-Presentation-Q3-FY25.pdf",
+            "publishedAt": "2025-01-28",
+            "sourceType": "company_presentation",
+            "anchors": ["Net Cash/(Net Debt)", "1,107"]
+          },
+          "currentSource": {
+            "url": "https://newsroom.suzlon.com/wp-content/uploads/2026/03/IPR_05-02-2026.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_presentation",
+            "anchors": ["Net cash improves", "1,556", "Dec’25"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "POLYCAB",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "project_execution",
+          "previousValue": 2513,
+          "currentValue": 3400,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://cms.polycab.com/media/i54l13sm/earnings-presentation-q3-fy25.pdf",
+            "publishedAt": "2025-01-21",
+            "sourceType": "company_presentation",
+            "anchors": ["Capex Spends", "Q3 FY25", "2,513"]
+          },
+          "currentSource": {
+            "url": "https://cms.polycab.com/media/rwgkmee2/earnings-call-transcript-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_transcript",
+            "anchors": ["Capital expenditure for the quarter", "3.4 billion"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_cash",
+          "previousValue": 17100,
+          "currentValue": 30300,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://cms.polycab.com/media/z3vlrd25/earnings-call-transcript-q3-fy25.pdf",
+            "publishedAt": "2025-01-23",
+            "sourceType": "company_transcript",
+            "anchors": ["net cash position stood", "17.1 billion"]
+          },
+          "currentSource": {
+            "url": "https://cms.polycab.com/media/rwgkmee2/earnings-call-transcript-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_transcript",
+            "anchors": ["net cash position", "30.3 billion"]
+          }
+        }
+      ]
+    }
+  ]
+}

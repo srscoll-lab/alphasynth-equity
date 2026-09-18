@@ -56,6 +56,32 @@
     {"symbol":"HINDPETRO","lifecycle":"ESTABLISHED","officialDomains":["hindustanpetroleum.com"]},
     {"symbol":"COFORGE","lifecycle":"ESTABLISHED","officialDomains":["coforge.com"]},
     {"symbol":"SHREECEM","lifecycle":"ESTABLISHED","officialDomains":["shreecement.com"]},
-    {"symbol":"HINDCOPPER","lifecycle":"ESTABLISHED","officialDomains":["hindustancopper.com"]}
+    {"symbol":"APTUS","lifecycle":"WATCH","officialDomains":["aptusindia.com"]},
+    {"symbol":"POONAWALLA","lifecycle":"WATCH","officialDomains":["poonawallafincorp.com"]},
+    {"symbol":"SHRIRAMFIN","lifecycle":"WATCH","officialDomains":["shriramfinance.in"]},
+    {"symbol":"HINDCOPPER","lifecycle":"ESTABLISHED","officialDomains":["hindustancopper.com"]},
+
+    {"symbol":"SBIN","lifecycle":"WATCH","officialDomains":["sbi.co.in"]},
+    {"symbol":"AXISBANK","lifecycle":"WATCH","officialDomains":["axisbank.com"]},
+    {"symbol":"KOTAKBANK","lifecycle":"WATCH","officialDomains":["kotak.bank.in"]},
+    {"symbol":"SBILIFE","lifecycle":"WATCH","officialDomains":["sbilife.co.in"]},
+    {"symbol":"HDFCBANK","lifecycle":"WATCH","officialDomains":["hdfc.bank.in"]},
+    {"symbol":"ICICIBANK","lifecycle":"WATCH","officialDomains":["icici.bank.in"]},
+    {"symbol":"PERSISTENT","lifecycle":"WATCH","officialDomains":["persistent.com"]},
+    {"symbol":"YESBANK","lifecycle":"WATCH","officialDomains":["yes.bank.in","nseindia.com"]},
+    {"symbol":"UNIONBANK","lifecycle":"WATCH","officialDomains":["unionbankofindia.bank.in"]},
+    {"symbol":"SUZLON","lifecycle":"WATCH","officialDomains":["suzlon.com","newsroom.suzlon.com"]},
+    {"symbol":"POLYCAB","lifecycle":"WATCH","officialDomains":["polycab.com","cms.polycab.com"]},
+    {"symbol":"HOMEFIRST","lifecycle":"WATCH","officialDomains":["homefirstindia.com"]},
+    {"symbol":"BAJAJHFL","lifecycle":"WATCH","officialDomains":["bajajhousingfinance.in"]},
+    {"symbol":"PNBHOUSING","lifecycle":"WATCH","officialDomains":["pnbhousing.com"]},
+    {"symbol":"FIVESTAR","lifecycle":"WATCH","officialDomains":["fivestargroup.in"]},
+    {"symbol":"LTF","lifecycle":"WATCH","officialDomains":["ltfinance.com"]},
+    {"symbol":"CREDITACC","lifecycle":"WATCH","officialDomains":["creditaccessgrameen.in"]},
+    {"symbol":"MUTHOOTFIN","lifecycle":"WATCH","officialDomains":["muthootfinance.com","cdn.muthootfinance.com"]},
+    {"symbol":"CANFINHOME","lifecycle":"WATCH","officialDomains":["canfinhomes.com"]},
+    {"symbol":"MANAPPURAM","lifecycle":"WATCH","officialDomains":["manappuram.com"]},
+    {"symbol":"CHOLAFIN","lifecycle":"WATCH","officialDomains":["cholamandalam.com","files.cholamandalam.com"]},
+    {"symbol":"SUNDARMFIN","lifecycle":"WATCH","officialDomains":["sundaramfinance.in"]}
   ]
 }

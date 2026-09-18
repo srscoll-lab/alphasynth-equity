@@ -1,0 +1,116 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "DRREDDY",
+      "evidence": [
+        {
+          "factor": "economics",
+          "metricName": "gross_margin",
+          "previousValue": 58.7,
+          "currentValue": 53.6,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2026-01/EarningsRelease_Q3FY26_210126_0.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_results",
+            "anchors": ["Gross Margin", "53.6%", "Q3FY25", "58.7%"]
+          },
+          "currentSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2026-01/EarningsRelease_Q3FY26_210126_0.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_results",
+            "anchors": ["Gross Margin", "53.6%", "Q3FY25", "58.7%"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HOMEFIRST",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 11949,
+          "currentValue": 14925,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://homefirstindia.com/files/Investor%20Deck%20Q3FY26.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["AUM", "Q3FY26", "14,925", "Q3FY25", "11,949"]
+          },
+          "currentSource": {
+            "url": "https://homefirstindia.com/files/Investor%20Deck%20Q3FY26.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["AUM", "Q3FY26", "14,925", "Q3FY25", "11,949"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.7,
+          "currentValue": 2.0,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://homefirstindia.com/files/Investor%20Deck%20Q3FY26.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Stage 3", "Q3FY26", "2.0%", "Q3FY25", "1.7%"]
+          },
+          "currentSource": {
+            "url": "https://homefirstindia.com/files/Investor%20Deck%20Q3FY26.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Stage 3", "Q3FY26", "2.0%", "Q3FY25", "1.7%"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "BAJAJHFL",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 108314,
+          "currentValue": 133412,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.bajajhousingfinance.in/telugu/documents/37350/7572502/BHFL%20Outcome%20of%20BM%2002.02.2026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["Assets under Management", "1,33,412", "1,08,314"]
+          },
+          "currentSource": {
+            "url": "https://www.bajajhousingfinance.in/telugu/documents/37350/7572502/BHFL%20Outcome%20of%20BM%2002.02.2026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["Assets under Management", "1,33,412", "1,08,314"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 0.29,
+          "currentValue": 0.27,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.bajajhousingfinance.in/telugu/documents/37350/7572502/BHFL%20Outcome%20of%20BM%2002.02.2026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["GNPA", "0.27%", "0.29%", "Q3 FY25"]
+          },
+          "currentSource": {
+            "url": "https://www.bajajhousingfinance.in/telugu/documents/37350/7572502/BHFL%20Outcome%20of%20BM%2002.02.2026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["GNPA", "0.27%", "0.29%", "Q3 FY25"]
+          }
+        }
+      ]
+    }
+  ]
+}

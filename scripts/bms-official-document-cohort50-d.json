@@ -1,0 +1,92 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "YESBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "net_advances_volume",
+          "previousValue": 244833,
+          "currentValue": 257451,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.yes.bank.in/sites/web/content/published/api/v1.1/assets/CONT137B336023B14B908A0F041F96A1BDB4/native/yes_bank_investor_presentation_feb_2026.pdf?download=false",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": ["Total Net Advances", "244,833", "257,451"]
+          },
+          "currentSource": {
+            "url": "https://www.yes.bank.in/sites/web/content/published/api/v1.1/assets/CONT137B336023B14B908A0F041F96A1BDB4/native/yes_bank_investor_presentation_feb_2026.pdf?download=false",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": ["Total Net Advances", "244,833", "257,451"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.6,
+          "currentValue": 1.5,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.yes.bank.in/sites/web/content/published/api/v1.1/assets/CONT137B336023B14B908A0F041F96A1BDB4/native/yes_bank_investor_presentation_feb_2026.pdf?download=false",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": ["Asset Quality Parameters", "Gross NPA (%)", "1.6%", "1.5%"]
+          },
+          "currentSource": {
+            "url": "https://www.yes.bank.in/sites/web/content/published/api/v1.1/assets/CONT137B336023B14B908A0F041F96A1BDB4/native/yes_bank_investor_presentation_feb_2026.pdf?download=false",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": ["Asset Quality Parameters", "Gross NPA (%)", "1.6%", "1.5%"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "UNIONBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "advances_volume",
+          "previousValue": 949164,
+          "currentValue": 1016884,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.unionbankofindia.bank.in/pdf/Final-Investor-Presentation-Q3FY26.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": ["Global Advances", "9,49,164", "10,16,884"]
+          },
+          "currentSource": {
+            "url": "https://www.unionbankofindia.bank.in/pdf/Final-Investor-Presentation-Q3FY26.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": ["Global Advances", "9,49,164", "10,16,884"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 3.85,
+          "currentValue": 3.06,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.unionbankofindia.bank.in/pdf/Final-Investor-Presentation-Q3FY26.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": ["GNPA %", "3.85", "3.06"]
+          },
+          "currentSource": {
+            "url": "https://www.unionbankofindia.bank.in/pdf/Final-Investor-Presentation-Q3FY26.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": ["GNPA %", "3.85", "3.06"]
+          }
+        }
+      ]
+    }
+  ]
+}

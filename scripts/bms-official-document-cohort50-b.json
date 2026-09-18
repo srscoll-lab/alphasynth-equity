@@ -1,0 +1,542 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "ONGC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "production_volume",
+          "previousValue": 4.653,
+          "currentValue": 4.592,
+          "unit": "MMT",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ONGC_12022026215401_PressRelease12022026.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Crude Oil - ONGC Standalone",
+              "4.592",
+              "4.653"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ONGC_12022026215401_PressRelease12022026.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Crude Oil - ONGC Standalone",
+              "4.592",
+              "4.653"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_equity_ratio",
+          "previousValue": 0.36,
+          "currentValue": 0.34,
+          "unit": "times",
+          "previousPeriod": "H1 FY26",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_125835_10112025231812_iXBRL_WEB.html",
+            "publishedAt": "2025-11-10",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "NSE Symbol",
+              "ONGC",
+              "Debt equity ratio",
+              "0.36"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_142738_12022026214422_iXBRL_WEB.html",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "NSE Symbol",
+              "ONGC",
+              "Debt equity ratio",
+              "0.3400"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "POWERGRID",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "transmission_availability",
+          "previousValue": 99.82,
+          "currentValue": 99.84,
+          "unit": "percent",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/POWERGRID1_02022026115016_BSENSEReg30Presentation02022026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "AVAILABILITY",
+              "FY25",
+              "Upto Dec'25",
+              "99.82%",
+              "99.84%"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/POWERGRID1_02022026115016_BSENSEReg30Presentation02022026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "AVAILABILITY",
+              "FY25",
+              "Upto Dec'25",
+              "99.82%",
+              "99.84%"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_worth",
+          "previousValue": 91620,
+          "currentValue": 98906,
+          "unit": "INR crore",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/POWERGRID1_02022026115016_BSENSEReg30Presentation02022026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Net Worth",
+              "98,906",
+              "91,620",
+              "As on 31.12.25",
+              "As on 31.12.24"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/POWERGRID1_02022026115016_BSENSEReg30Presentation02022026.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Net Worth",
+              "98,906",
+              "91,620",
+              "As on 31.12.25",
+              "As on 31.12.24"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "COALINDIA",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "coal_offtake",
+          "previousValue": 194.53,
+          "currentValue": 188.66,
+          "unit": "million tonnes",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/COALINDIA_12022026190314_Presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Coal Offtake of Q3 2025-26",
+              "Overall CIL",
+              "188.66",
+              "194.53"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/COALINDIA_12022026190314_Presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Coal Offtake of Q3 2025-26",
+              "Overall CIL",
+              "188.66",
+              "194.53"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_equity_ratio",
+          "previousValue": 0.09,
+          "currentValue": 0.14,
+          "unit": "times",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/COALINDIA_12022026190314_Presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Debt Equity Ratio",
+              "0.14",
+              "0.09",
+              "31.12.25",
+              "31.03.25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/COALINDIA_12022026190314_Presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Debt Equity Ratio",
+              "0.14",
+              "0.09",
+              "31.12.25",
+              "31.03.25"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "DRREDDY",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "new_product_launch_volume",
+          "previousValue": 4,
+          "currentValue": 6,
+          "unit": "products",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2025-01/Earnings%20Release_Q3FY25_230125_Final_1.pdf",
+            "publishedAt": "2025-01-23",
+            "sourceType": "company_results",
+            "anchors": [
+              "North America",
+              "launched four new products",
+              "Q3FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2026-01/EarningsRelease_Q3FY26_210126_0.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_results",
+            "anchors": [
+              "North America",
+              "launched six new products",
+              "Q3FY26"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "consolidated_cash_and_investments",
+          "previousValue": 64198,
+          "currentValue": 87191,
+          "unit": "INR million",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2026-01/EarningsRelease_Q3FY26_210126_0.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_results",
+            "anchors": [
+              "Cash and Cash Equivalents and Other Investments",
+              "87,191",
+              "64,198"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.drreddys.com/cms/sites/default/files/2026-01/EarningsRelease_Q3FY26_210126_0.pdf",
+            "publishedAt": "2026-01-21",
+            "sourceType": "company_results",
+            "anchors": [
+              "Cash and Cash Equivalents and Other Investments",
+              "87,191",
+              "64,198"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "DIVISLAB",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "export_mix_change",
+          "previousValue": 87,
+          "currentValue": 89,
+          "unit": "percent of sales",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://www.divislabs.com/wp-content/uploads/2025/07/04.-Transcript-of-Q3FY25-Earnings-Call-held-on-February-03-2025-1.pdf",
+            "publishedAt": "2025-02-07",
+            "sourceType": "company_transcript",
+            "anchors": [
+              "Exports",
+              "87%",
+              "total sales revenue"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.divislabs.com/wp-content/uploads/2026/02/Transcript-of-Q3FY26-Earnings-Conference-Call-held-on-11.02.2026.pdf",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_transcript",
+            "anchors": [
+              "Exports for the 9-month period",
+              "approximately 89%",
+              "total sales revenue"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_balance",
+          "previousValue": 3659,
+          "currentValue": 3686,
+          "unit": "INR crore",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/DIVISLAB_07022025170040_Q3FY25_EarningsCallTranscript.pdf",
+            "publishedAt": "2025-02-07",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "As of December 31, 2024",
+              "cash on books",
+              "3,659 crores"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.divislabs.com/wp-content/uploads/2026/02/Transcript-of-Q3FY26-Earnings-Conference-Call-held-on-11.02.2026.pdf",
+            "publishedAt": "2026-02-11",
+            "sourceType": "company_transcript",
+            "anchors": [
+              "As of December 31, 2025",
+              "cash and cash equivalents",
+              "3,686 crores"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "EICHERMOT",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "total_sales_volume",
+          "previousValue": 21010,
+          "currentValue": 26086,
+          "unit": "vehicles",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/EICHERMOT_10022026173347_EMLInvestorPresentationFebruary102026Signed.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Q3 FY26 & YTD FY26 SALES & MARKET-SHARE",
+              "VECV",
+              "26,086",
+              "21,010"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/EICHERMOT_10022026173347_EMLInvestorPresentationFebruary102026Signed.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Q3 FY26 & YTD FY26 SALES & MARKET-SHARE",
+              "VECV",
+              "26,086",
+              "21,010"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_balance",
+          "previousValue": 219,
+          "currentValue": 238.6,
+          "unit": "INR crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/EICHERMOT_10022026173347_EMLInvestorPresentationFebruary102026Signed.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Cash and cash equivalents at the end of the period",
+              "FY25",
+              "219.0",
+              "H1FY26",
+              "238.6"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/EICHERMOT_10022026173347_EMLInvestorPresentationFebruary102026Signed.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Cash and cash equivalents at the end of the period",
+              "FY25",
+              "219.0",
+              "H1FY26",
+              "238.6"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HEROMOTOCO",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "total_sales_volume",
+          "previousValue": 14.64,
+          "currentValue": 16.97,
+          "unit": "lakh vehicles",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.heromotocorp.com/content/dam/hero-aem-website/in/en-in/company-section/press-releases/2026/february-pdfs/press_release_hero_motocorp_q3fy26_results_feb_5_2026_i.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_results",
+            "anchors": [
+              "Volume",
+              "16.97 lakh units",
+              "14.64 lakh units"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.heromotocorp.com/content/dam/hero-aem-website/in/en-in/company-section/press-releases/2026/february-pdfs/press_release_hero_motocorp_q3fy26_results_feb_5_2026_i.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_results",
+            "anchors": [
+              "Volume",
+              "16.97 lakh units",
+              "14.64 lakh units"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_balance",
+          "previousValue": 289.08,
+          "currentValue": 198.17,
+          "unit": "INR crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_90580_13052025204546_iXBRL_WEB.html",
+            "publishedAt": "2025-05-13",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "NSE Symbol",
+              "HEROMOTOCO",
+              "Cash and cash equivalents",
+              "2890800000"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_127601_13112025204715_iXBRL_WEB.html",
+            "publishedAt": "2025-11-13",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "NSE Symbol",
+              "HEROMOTOCO",
+              "Cash and cash equivalents",
+              "19,817.00"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "ASIANPAINT",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "volume_growth",
+          "previousValue": 1.6,
+          "currentValue": 7.9,
+          "unit": "percent",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ASIANPAINT_27012026172825_SEINTIMATIONIPQ3FY26.pdf",
+            "publishedAt": "2026-01-27",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Decorative Business (India)",
+              "Volume Gr%",
+              "Q3 FY25",
+              "1.6%",
+              "Q3 FY26",
+              "7.9%"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ASIANPAINT_27012026172825_SEINTIMATIONIPQ3FY26.pdf",
+            "publishedAt": "2026-01-27",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Decorative Business (India)",
+              "Volume Gr%",
+              "Q3 FY25",
+              "1.6%",
+              "Q3 FY26",
+              "7.9%"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_balance",
+          "previousValue": 445.28,
+          "currentValue": 599.04,
+          "unit": "INR crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ASIANPAINT_12112025150413_SEINTIMATIONFSH12025.pdf",
+            "publishedAt": "2025-11-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Unaudited Consolidated Balance Sheet",
+              "Cash and Cash Equivalents",
+              "599.04",
+              "445.28"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ASIANPAINT_12112025150413_SEINTIMATIONFSH12025.pdf",
+            "publishedAt": "2025-11-12",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Unaudited Consolidated Balance Sheet",
+              "Cash and Cash Equivalents",
+              "599.04",
+              "445.28"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

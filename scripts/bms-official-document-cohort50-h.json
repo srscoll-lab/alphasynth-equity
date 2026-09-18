@@ -1,0 +1,139 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "LTF",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 92224,
+          "currentValue": 111990,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.ltfinance.com/docs/default-source/default-document-library/press-release/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_presentation",
+            "anchors": ["Retail Book", "92,224", "1,11,990", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.ltfinance.com/docs/default-source/default-document-library/press-release/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_presentation",
+            "anchors": ["Retail Book", "92,224", "1,11,990", "Q3 FY25", "Q3 FY26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "nnpa",
+          "previousValue": 0.97,
+          "currentValue": 0.92,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.ltfinance.com/docs/default-source/default-document-library/press-release/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_presentation",
+            "anchors": ["NS3%", "0.97%", "0.92%", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.ltfinance.com/docs/default-source/default-document-library/press-release/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_presentation",
+            "anchors": ["NS3%", "0.97%", "0.92%", "Q3 FY25", "Q3 FY26"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "CREDITACC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 24810,
+          "currentValue": 26566,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.creditaccessgrameen.in/wp-content/uploads/2026/01/CreditAccess-Grameen_Investor-Presentation_Q3_FY-2025-26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Loan Portfolio", "24,810", "26,566", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.creditaccessgrameen.in/wp-content/uploads/2026/01/CreditAccess-Grameen_Investor-Presentation_Q3_FY-2025-26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Loan Portfolio", "24,810", "26,566", "Q3 FY25", "Q3 FY26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 3.99,
+          "currentValue": 4.04,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.creditaccessgrameen.in/wp-content/uploads/2026/01/CreditAccess-Grameen_Investor-Presentation_Q3_FY-2025-26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": ["GNPA", "3.99%", "4.04%", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.creditaccessgrameen.in/wp-content/uploads/2026/01/CreditAccess-Grameen_Investor-Presentation_Q3_FY-2025-26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": ["GNPA", "3.99%", "4.04%", "Q3 FY25", "Q3 FY26"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousValue": 27196,
+          "currentValue": 33802,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://cdn.muthootfinance.com/sites/default/files/files/2026-02/MFIN-Q3-FY26-investor-presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_presentation",
+            "anchors": ["Loan AUM", "27,196", "33,802", "9M FY 2025", "9M FY 2026"]
+          },
+          "currentSource": {
+            "url": "https://cdn.muthootfinance.com/sites/default/files/files/2026-02/MFIN-Q3-FY26-investor-presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_presentation",
+            "anchors": ["Loan AUM", "27,196", "33,802", "9M FY 2025", "9M FY 2026"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "capital_adequacy",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousValue": 27.70,
+          "currentValue": 29.89,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://cdn.muthootfinance.com/sites/default/files/files/2026-02/MFIN-Q3-FY26-investor-presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_presentation",
+            "anchors": ["Capital Adequacy Ratio", "27.70", "29.89", "9M FY 2025", "9M FY 2026"]
+          },
+          "currentSource": {
+            "url": "https://cdn.muthootfinance.com/sites/default/files/files/2026-02/MFIN-Q3-FY26-investor-presentation.pdf",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_presentation",
+            "anchors": ["Capital Adequacy Ratio", "27.70", "29.89", "9M FY 2025", "9M FY 2026"]
+          }
+        }
+      ]
+    }
+  ]
+}

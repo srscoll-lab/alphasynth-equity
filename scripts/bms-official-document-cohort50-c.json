@@ -1,0 +1,623 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "HINDALCO",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "aluminium_upstream_shipments_india",
+          "previousValue": 338,
+          "currentValue": 345,
+          "unit": "KT",
+          "previousSource": {
+            "url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_results",
+            "anchors": [
+              "Aluminium Upstream",
+              "Shipments",
+              "Q3 FY25",
+              "338",
+              "Q3 FY26",
+              "345"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_results",
+            "anchors": [
+              "Aluminium Upstream",
+              "Shipments",
+              "Q3 FY25",
+              "338",
+              "Q3 FY26",
+              "345"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_debt_to_ebitda_ratio",
+          "previousValue": 1.33,
+          "currentValue": 1.73,
+          "unit": "times",
+          "previousSource": {
+            "url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_results",
+            "anchors": [
+              "Consolidated Net Debt to EBITDA",
+              "1.73x",
+              "December 31, 2025",
+              "1.33x",
+              "a year ago"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+            "publishedAt": "2026-02-12",
+            "sourceType": "company_results",
+            "anchors": [
+              "Consolidated Net Debt to EBITDA",
+              "1.73x",
+              "December 31, 2025",
+              "1.33x",
+              "a year ago"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "APOLLOHOSP",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "admissions_volume",
+          "previousValue": 150986,
+          "currentValue": 157777,
+          "unit": "patients",
+          "previousSource": {
+            "url": "https://www.apollohospitals.com/sites/default/files/2026-02/ahel-investor-presentation-december25-inr.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Pan India",
+              "Q3FY26",
+              "Q3FY25",
+              "Inpatient volume",
+              "157,777",
+              "150,986"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.apollohospitals.com/sites/default/files/2026-02/ahel-investor-presentation-december25-inr.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Pan India",
+              "Q3FY26",
+              "Q3FY25",
+              "Inpatient volume",
+              "157,777",
+              "150,986"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_cash",
+          "previousValue": 1374,
+          "currentValue": 2996,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://www.apollohospitals.com/sites/default/files/2025-03/ahel-q3fy25-earnings-update.pdf",
+            "publishedAt": "2025-02-10",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Consolidated Financials YTD Dec24",
+              "Consol Net Debt",
+              "-1,374",
+              "INR Mio"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.apollohospitals.com/sites/default/files/2026-02/ahel-investor-presentation-december25-inr.pdf",
+            "publishedAt": "2026-02-10",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Consolidated Financials YTD Dec25",
+              "Consol Net Debt",
+              "-2,996",
+              "INR Mio"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HDFCAMC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 7764,
+          "currentValue": 9206,
+          "unit": "INR billion",
+          "previousSource": {
+            "url": "https://files.hdfcfund.com/s3fs-public/2026-01/Shareholders%20Presentation%20Q3%20FY26.pdf?VersionId=Tr0c0m0tWyHe304m2PY_NrlQDfRRx8Xw",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Total AUM & Market Share",
+              "Closing AUM",
+              "Dec-24",
+              "7,764",
+              "Dec-25",
+              "9,206"
+            ]
+          },
+          "currentSource": {
+            "url": "https://files.hdfcfund.com/s3fs-public/2026-01/Shareholders%20Presentation%20Q3%20FY26.pdf?VersionId=Tr0c0m0tWyHe304m2PY_NrlQDfRRx8Xw",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Total AUM & Market Share",
+              "Closing AUM",
+              "Dec-24",
+              "7,764",
+              "Dec-25",
+              "9,206"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "reserves",
+          "previousValue": 80272,
+          "currentValue": 83596,
+          "unit": "INR million",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://files.hdfcfund.com/s3fs-public/2026-01/Shareholders%20Presentation%20Q3%20FY26.pdf?VersionId=Tr0c0m0tWyHe304m2PY_NrlQDfRRx8Xw",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Statement of Assets and Liabilities",
+              "Other Equity",
+              "As at Mar 31, 2025",
+              "80,272"
+            ]
+          },
+          "currentSource": {
+            "url": "https://files.hdfcfund.com/s3fs-public/2026-01/Shareholders%20Presentation%20Q3%20FY26.pdf?VersionId=Tr0c0m0tWyHe304m2PY_NrlQDfRRx8Xw",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Statement of Assets and Liabilities",
+              "Other Equity",
+              "As at Dec 31, 2025",
+              "83,596"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "TMCV",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "total_sales_volume",
+          "previousValue": 97.4,
+          "currentValue": 116.8,
+          "unit": "thousand vehicles",
+          "previousSource": {
+            "url": "https://cv.tatamotors.com/assets/cv/files/2026-01/Tata%20Motors%20Limited%20Q3FY26%20Investor%20Presentation_0.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 FY25",
+              "97.4",
+              "Q3 FY26",
+              "116.8"
+            ]
+          },
+          "currentSource": {
+            "url": "https://cv.tatamotors.com/assets/cv/files/2026-01/Tata%20Motors%20Limited%20Q3FY26%20Investor%20Presentation_0.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 FY25",
+              "97.4",
+              "Q3 FY26",
+              "116.8"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "net_cash",
+          "previousValue": 1.6,
+          "currentValue": 3.9,
+          "unit": "INR thousand crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://cv.tatamotors.com/assets/cv/files/2026-01/Tata%20Motors%20Limited%20Q3FY26%20Investor%20Presentation_0.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Net Cash/ (Debt)",
+              "Mar'25",
+              "1.6"
+            ]
+          },
+          "currentSource": {
+            "url": "https://cv.tatamotors.com/assets/cv/files/2026-01/Tata%20Motors%20Limited%20Q3FY26%20Investor%20Presentation_0.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Net Cash/ (Debt)",
+              "Dec'25",
+              "3.9"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "IOC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "throughput",
+          "previousValue": 18.1,
+          "currentValue": 19.4,
+          "unit": "MMT",
+          "previousSource": {
+            "url": "https://iocl.com/admin/img/UploadedFiles/IntimationStockExchanges/Images/6a56dc5256894ca5aa2db3fe8048a645.pdf",
+            "publishedAt": "2025-01-27",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 2024-25",
+              "Refinery Operations",
+              "Throughput (MMT)",
+              "18.1"
+            ]
+          },
+          "currentSource": {
+            "url": "https://iocl.com/uploads/IOCL_Investor_Presentation_FY25-26Q3.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 2025-26",
+              "Refinery Operations",
+              "Throughput (MMT)",
+              "19.4"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gross_debt",
+          "previousValue": 131480,
+          "currentValue": 115948,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://iocl.com/admin/img/UploadedFiles/IntimationStockExchanges/Images/6a56dc5256894ca5aa2db3fe8048a645.pdf",
+            "publishedAt": "2025-01-27",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 2024-25",
+              "Debt level",
+              "131480"
+            ]
+          },
+          "currentSource": {
+            "url": "https://iocl.com/uploads/IOCL_Investor_Presentation_FY25-26Q3.pdf",
+            "publishedAt": "2026-02-05",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 2025-26",
+              "Debt Level",
+              "115948"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "BPCL",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "throughput",
+          "previousValue": 9.54,
+          "currentValue": 10.51,
+          "unit": "MMT",
+          "previousSource": {
+            "url": "https://www.bharatpetroleum.in/images/files/23012026-press-release-bpcl-reports-62-percentage-surge-in-profit-after-tax-delivers-stellar-all-round-performance-in-q3-fy26.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": [
+              "Refinery Throughput",
+              "10.51 million metric tonnes",
+              "compared to 9.54 MMT in Q3 FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.bharatpetroleum.in/images/files/23012026-press-release-bpcl-reports-62-percentage-surge-in-profit-after-tax-delivers-stellar-all-round-performance-in-q3-fy26.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_results",
+            "anchors": [
+              "Refinery Throughput",
+              "10.51 million metric tonnes",
+              "compared to 9.54 MMT in Q3 FY25"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gross_debt",
+          "previousValue": 19.62,
+          "currentValue": 5.29,
+          "unit": "INR thousand crore",
+          "previousSource": {
+            "url": "https://www.bharatpetroleum.in/images/files/investor-presentation-q3-2024-25.pdf",
+            "publishedAt": "2025-01-23",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "9M FY25",
+              "Total standalone borrowings",
+              "INR 19.62k Cr"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.bharatpetroleum.in/images/files/BPCL-Investor-Presentation-Q3-2026.pdf",
+            "publishedAt": "2026-01-23",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Q3 FY26",
+              "Total standalone borrowings",
+              "INR 5.29 k Cr"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "COFORGE",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "order_inflow",
+          "previousValue": 501,
+          "currentValue": 593,
+          "unit": "USD million",
+          "previousSource": {
+            "url": "https://www.coforge.com/hubfs/Q3fy26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Fresh Order Intake",
+              "Q3FY25",
+              "501",
+              "Q3FY26",
+              "593"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.coforge.com/hubfs/Q3fy26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Fresh Order Intake",
+              "Q3FY25",
+              "501",
+              "Q3FY26",
+              "593"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "cash_and_cash_equivalents_consolidated",
+          "previousValue": 6104,
+          "currentValue": 8424,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://www.coforge.com/hubfs/Q3fy26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Consolidated Balance Sheet",
+              "Cash and Cash Equivalent",
+              "As at Dec 31 2024",
+              "6,104"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.coforge.com/hubfs/Q3fy26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Consolidated Balance Sheet",
+              "Cash and Cash Equivalent",
+              "As at Dec 31 2025",
+              "8,424"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "SHREECEM",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "premium_product_mix_change",
+          "previousValue": 15,
+          "currentValue": 22,
+          "unit": "percent of total trade volume",
+          "previousSource": {
+            "url": "https://www.shreecement.com/uploads/cleanupload/SCLPressReleaseQ3FY26.pdf",
+            "publishedAt": "2026-02-06",
+            "sourceType": "company_results",
+            "anchors": [
+              "Sales of premium products",
+              "22% of total trade volume",
+              "15% in the corresponding previous quarter"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.shreecement.com/uploads/cleanupload/SCLPressReleaseQ3FY26.pdf",
+            "publishedAt": "2026-02-06",
+            "sourceType": "company_results",
+            "anchors": [
+              "Sales of premium products",
+              "22% of total trade volume",
+              "15% in the corresponding previous quarter"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "current_ratio",
+          "previousValue": 2.1,
+          "currentValue": 2.19,
+          "unit": "times",
+          "previousPeriod": "FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_155879_06052026195712_iXBRL_WEB.html",
+            "publishedAt": "2026-05-06",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Current Ratio",
+              "31.03.2025",
+              "2.10"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_155879_06052026195712_iXBRL_WEB.html",
+            "publishedAt": "2026-05-06",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Current Ratio",
+              "31.12.2025",
+              "2.19"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HINDCOPPER",
+      "evidence": [
+        {
+          "factor": "balance_sheet",
+          "metricName": "total_equity",
+          "previousValue": 2664.3,
+          "currentValue": 2987.5,
+          "unit": "INR crore",
+          "previousPeriod": "FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/HINDCOPPERMKD_11112025135901_Reg33Financial_Result11112025.pdf",
+            "publishedAt": "2025-11-11",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Statement of Standalone Assets and Liabilities",
+              "31st Mar 2025",
+              "Total Equity",
+              "2664.30"
+            ]
+          },
+          "currentSource": {
+            "url": "https://nsearchives.nseindia.com/corporate/HINDCOPPERMKD_11112025135901_Reg33Financial_Result11112025.pdf",
+            "publishedAt": "2025-11-11",
+            "sourceType": "nse_filing",
+            "anchors": [
+              "Statement of Standalone Assets and Liabilities",
+              "30th Sep 2025",
+              "Total Equity",
+              "2987.50"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "PERSISTENT",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "utilization",
+          "previousValue": 87.4,
+          "currentValue": 88.4,
+          "unit": "percent including trainees",
+          "previousSource": {
+            "url": "https://www.persistent.com/wp-content/uploads/2026/01/analyst-presentation-and-factsheet-q3fy26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Utilization",
+              "Including Trainees",
+              "Q3FY25",
+              "87.4%",
+              "Q3FY26",
+              "88.4%"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.persistent.com/wp-content/uploads/2026/01/analyst-presentation-and-factsheet-q3fy26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Utilization",
+              "Including Trainees",
+              "Q3FY25",
+              "87.4%",
+              "Q3FY26",
+              "88.4%"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "consolidated_cash_and_investments",
+          "previousValue": 19056.7,
+          "currentValue": 29046.5,
+          "unit": "INR million",
+          "previousSource": {
+            "url": "https://www.persistent.com/wp-content/uploads/2026/01/analyst-presentation-and-factsheet-q3fy26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Balance Sheet",
+              "Cash and Investments",
+              "As on December 31, 2024",
+              "19,056.7"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.persistent.com/wp-content/uploads/2026/01/analyst-presentation-and-factsheet-q3fy26.pdf",
+            "publishedAt": "2026-01-20",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Balance Sheet",
+              "Cash and Investments",
+              "As on December 31, 2025",
+              "29,046.5"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

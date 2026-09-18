@@ -1,0 +1,516 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "SBIN",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "store_count",
+          "previousValue": 22405,
+          "currentValue": 23125,
+          "unit": "branches",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://sbi.bank.in/documents/17836/1275616/07022026_SBI%2BAnalyst%2BPresentation%2BQ3FY26%2BFinal.pdf/0a2df0ed-996f-354b-dd7f-74b4f976e313?t=1770453864849",
+            "publishedAt": "2026-02-07",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Unmatched Liability Franchise",
+              "Number of Branches",
+              "22,405",
+              "Dec 24"
+            ]
+          },
+          "currentSource": {
+            "url": "https://sbi.bank.in/documents/17836/1275616/07022026_SBI%2BAnalyst%2BPresentation%2BQ3FY26%2BFinal.pdf/0a2df0ed-996f-354b-dd7f-74b4f976e313?t=1770453864849",
+            "publishedAt": "2026-02-07",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Unmatched Liability Franchise",
+              "Number of Branches",
+              "23,125",
+              "Dec 25"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 2.07,
+          "currentValue": 1.57,
+          "unit": "percent",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://sbi.bank.in/documents/17836/1275616/07022026_SBI%2BAnalyst%2BPresentation%2BQ3FY26%2BFinal.pdf/0a2df0ed-996f-354b-dd7f-74b4f976e313?t=1770453864849",
+            "publishedAt": "2026-02-07",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Key indicators",
+              "Gross NPA",
+              "2.07",
+              "Q3FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://sbi.bank.in/documents/17836/1275616/07022026_SBI%2BAnalyst%2BPresentation%2BQ3FY26%2BFinal.pdf/0a2df0ed-996f-354b-dd7f-74b4f976e313?t=1770453864849",
+            "publishedAt": "2026-02-07",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Key indicators",
+              "Gross NPA",
+              "1.57",
+              "Q3FY26"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "ICICIAMC",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 8739.58,
+          "currentValue": 10763.8,
+          "unit": "INR billion",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.icicipruamc.com/blob/investor-relations/IR_Documents/Press_Release_Q3.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_results",
+            "anchors": [
+              "MF QAAUM",
+              "₹8,739.58 billion",
+              "quarter ended December 31, 2024"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.icicipruamc.com/blob/investor-relations/IR_Documents/Press_Release_Q3.pdf",
+            "publishedAt": "2026-01-14",
+            "sourceType": "company_results",
+            "anchors": [
+              "MF QAAUM",
+              "₹10,763.80 billion",
+              "quarter ended December 31, 2025"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "total_equity",
+          "previousValue": 32722.8,
+          "currentValue": 39215.6,
+          "unit": "INR million",
+          "previousPeriod": "H1 FY25",
+          "currentPeriod": "H1 FY26",
+          "previousSource": {
+            "url": "https://www.icicipruamc.com/blob/investor-relations/IR_Documents/RHP_Document.pdf",
+            "publishedAt": "2025-12-05",
+            "sourceType": "company_filing",
+            "anchors": [
+              "Summary of Restated Financial Information",
+              "Net Worth",
+              "32,722.8",
+              "September 30, 2024"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.icicipruamc.com/blob/investor-relations/IR_Documents/RHP_Document.pdf",
+            "publishedAt": "2025-12-05",
+            "sourceType": "company_filing",
+            "anchors": [
+              "Summary of Restated Financial Information",
+              "Net Worth",
+              "39,215.6",
+              "September 30, 2025"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "AXISBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "net_advances_volume",
+          "previousValue": 10146,
+          "currentValue": 11590,
+          "unit": "INR billion",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.axis.bank.in/docs/default-source/shareholders/financial-results-and-other-information/investor-presentations/2025---2026/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-26",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Deposit and Loan growth performance",
+              "All figures in ₹ billion",
+              "10,146",
+              "Dec-24"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.axis.bank.in/docs/default-source/shareholders/financial-results-and-other-information/investor-presentations/2025---2026/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-26",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Deposit and Loan growth performance",
+              "All figures in ₹ billion",
+              "11,590",
+              "Dec-25"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.46,
+          "currentValue": 1.4,
+          "unit": "percent",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.axis.bank.in/docs/default-source/shareholders/financial-results-and-other-information/investor-presentations/2025---2026/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-26",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "GNPA at 1.40% & NNPA at 0.42%",
+              "GNPA %",
+              "1.46%",
+              "Q3FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.axis.bank.in/docs/default-source/shareholders/financial-results-and-other-information/investor-presentations/2025---2026/investor-presentation-q3fy26.pdf",
+            "publishedAt": "2026-01-26",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "GNPA at 1.40% & NNPA at 0.42%",
+              "GNPA %",
+              "1.40%",
+              "Q3FY26"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "KOTAKBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 685134,
+          "currentValue": 787950,
+          "unit": "INR crore",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.kotak.bank.in/content/dam/Kotak/investor-relation/Financial-Result/QuarterlyReport/FY-2026/q3/investor-presentation/Q3FY26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-24",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Customer AUM",
+              "₹ 685,134 cr",
+            "Q3FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.kotak.bank.in/content/dam/Kotak/investor-relation/Financial-Result/QuarterlyReport/FY-2026/q3/investor-presentation/Q3FY26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-24",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Customer AUM",
+              "₹ 787,950 cr",
+            "Q3FY26"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.5,
+          "currentValue": 1.3,
+          "unit": "percent",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.kotak.bank.in/content/dam/Kotak/investor-relation/Financial-Result/QuarterlyReport/FY-2026/q3/investor-presentation/Q3FY26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-24",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Asset Quality",
+              "GNPA (%)",
+              "1.50%",
+              "31-Dec-24"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.kotak.bank.in/content/dam/Kotak/investor-relation/Financial-Result/QuarterlyReport/FY-2026/q3/investor-presentation/Q3FY26-Investor-Presentation.pdf",
+            "publishedAt": "2026-01-24",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Asset Quality",
+              "GNPA (%)",
+              "1.30%",
+              "31-Dec-25"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "SBILIFE",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 4416.8,
+          "currentValue": 5117.1,
+          "unit": "INR billion",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://www.sbilife.co.in/documents/20118/691782/News%2BRelease%2BInvestor%2BPresentation%2BDec25.pdf/d3a85054-3419-0661-c8f1-9e63229fba95?download=true&t=1774587675381&version=1.1",
+            "publishedAt": "2026-01-28",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Assets under Management (AuM)",
+              "4,416.8",
+              "9M FY 2025"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.sbilife.co.in/documents/20118/691782/News%2BRelease%2BInvestor%2BPresentation%2BDec25.pdf/d3a85054-3419-0661-c8f1-9e63229fba95?download=true&t=1774587675381&version=1.1",
+            "publishedAt": "2026-01-28",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Assets under Management (AuM)",
+              "5,117.1",
+              "9M FY 2026"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "capital_adequacy_solvency_ratio",
+          "previousValue": 2.04,
+          "currentValue": 1.91,
+          "unit": "ratio",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousSource": {
+            "url": "https://www.sbilife.co.in/documents/20118/691782/News%2BRelease%2BInvestor%2BPresentation%2BDec25.pdf/d3a85054-3419-0661-c8f1-9e63229fba95?download=true&t=1774587675381&version=1.1",
+            "publishedAt": "2026-01-28",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Solvency: Cushioned to support future growth prospects",
+              "2.04",
+              "9M FY25"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.sbilife.co.in/documents/20118/691782/News%2BRelease%2BInvestor%2BPresentation%2BDec25.pdf/d3a85054-3419-0661-c8f1-9e63229fba95?download=true&t=1774587675381&version=1.1",
+            "publishedAt": "2026-01-28",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Solvency: Cushioned to support future growth prospects",
+              "1.91",
+              "9M FY26"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "TECHM",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "deal_tcv",
+          "previousValue": 745,
+          "currentValue": 1096,
+          "unit": "USD million",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.techmahindra.com/insights/press-releases/techmahindra-q3-fy25-results/",
+            "publishedAt": "2025-01-17",
+            "sourceType": "company_results",
+            "anchors": [
+              "Financial highlights for the quarter (USD)",
+              "New deal wins TCV USD 745 mn"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.techmahindra.com/insights/press-releases/techmahindra-q3-fy26-results/",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_results",
+            "anchors": [
+              "Financial highlights for the quarter (USD)",
+              "New deal wins TCV USD 1,096 mn"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "free_cash_flow",
+          "previousValue": 199,
+          "currentValue": 194,
+          "unit": "USD million",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.techmahindra.com/insights/press-releases/techmahindra-q3-fy25-results/",
+            "publishedAt": "2025-01-17",
+            "sourceType": "company_results",
+            "anchors": [
+              "Financial highlights for the quarter (USD)",
+              "Free cash flow USD 199 mn"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.techmahindra.com/insights/press-releases/techmahindra-q3-fy26-results/",
+            "publishedAt": "2026-01-16",
+            "sourceType": "company_results",
+            "anchors": [
+              "Financial highlights for the quarter (USD)",
+              "Free cash flow USD 194 mn"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "HDFCBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "store_count",
+          "previousValue": 9143,
+          "currentValue": 9616,
+          "unit": "branches",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/pdf/about-us/financial-results/2025-2026/quarter-3/Q3FY26-earnings-presentation.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Branch expansion and customer relationships",
+              "Branch network",
+              "9,143",
+              "Dec'24"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/pdf/about-us/financial-results/2025-2026/quarter-3/Q3FY26-earnings-presentation.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Branch expansion and customer relationships",
+              "Branch network",
+              "9,616",
+              "Dec'25"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "total_equity",
+          "previousValue": 4831,
+          "currentValue": 5424,
+          "unit": "INR billion",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/pdf/about-us/financial-results/2025-2026/quarter-3/Q3FY26-earnings-presentation.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Balance sheet (₹ bn)",
+              "Equity & reserves",
+              "4,831"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.hdfc.bank.in/content/dam/hdfcbankpws/in/en/pdf/about-us/financial-results/2025-2026/quarter-3/Q3FY26-earnings-presentation.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_presentation",
+            "anchors": [
+              "Balance sheet (₹ bn)",
+              "Equity & reserves",
+              "5,424"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "ICICIBANK",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "store_count",
+          "previousValue": 6742,
+          "currentValue": 7385,
+          "unit": "branches",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.icici.bank.in/about-us/article/performance-review-quarter-ended-december-31-2024",
+            "publishedAt": "2025-01-25",
+            "sourceType": "company_results",
+            "anchors": [
+              "network of 6,742 branches",
+              "December 31, 2024"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.icici.bank.in/about-us/news-room/2026/performance-review-quarter-ended-december-31-2025",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": [
+              "network of 7,385 branches",
+              "December 31, 2025"
+            ]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.96,
+          "currentValue": 1.53,
+          "unit": "percent",
+          "previousPeriod": "Q3 FY25",
+          "currentPeriod": "Q3 FY26",
+          "previousSource": {
+            "url": "https://www.icici.bank.in/about-us/article/performance-review-quarter-ended-december-31-2024",
+            "publishedAt": "2025-01-25",
+            "sourceType": "company_results",
+            "anchors": [
+              "The gross NPA ratio was 1.96%",
+              "December 31, 2024"
+            ]
+          },
+          "currentSource": {
+            "url": "https://www.icici.bank.in/about-us/news-room/2026/performance-review-quarter-ended-december-31-2025",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": [
+              "The gross NPA ratio was 1.53%",
+              "December 31, 2025"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "CANFINHOME",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 37155,
+          "currentValue": 40693,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://canfinhomes.com/admin/UploadedFiles/Investors/7f91f9120a1d4bacb22f7e75f3d57558.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": ["Loan Assets", "37155", "40693", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://canfinhomes.com/admin/UploadedFiles/Investors/7f91f9120a1d4bacb22f7e75f3d57558.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": ["Loan Assets", "37155", "40693", "Q3 FY25", "Q3 FY26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "debt_to_equity",
+          "previousValue": 7.08,
+          "currentValue": 6.55,
+          "unit": "ratio",
+          "previousSource": {
+            "url": "https://canfinhomes.com/admin/UploadedFiles/Investors/7f91f9120a1d4bacb22f7e75f3d57558.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": ["D/E Ratio", "7.08", "6.55", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://canfinhomes.com/admin/UploadedFiles/Investors/7f91f9120a1d4bacb22f7e75f3d57558.pdf",
+            "publishedAt": "2026-01-17",
+            "sourceType": "company_results",
+            "anchors": ["D/E Ratio", "7.08", "6.55", "Q3 FY25", "Q3 FY26"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "MANAPPURAM",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 44217,
+          "currentValue": 52125,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.manappuram.com/sites/default/files/2026-01/MGFL%20Investor%20Presentation%20_Q3%20FY26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Consolidated AUM", "44,217", "52,125", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.manappuram.com/sites/default/files/2026-01/MGFL%20Investor%20Presentation%20_Q3%20FY26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Consolidated AUM", "44,217", "52,125", "Q3 FY25", "Q3 FY26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "capital_adequacy",
+          "previousValue": 30,
+          "currentValue": 25,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.manappuram.com/sites/default/files/2026-01/MGFL%20Investor%20Presentation%20_Q3%20FY26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["CAPITAL ADEQUACY RATIO", "30%", "25%", "Q3 FY25", "Q3 FY26"]
+          },
+          "currentSource": {
+            "url": "https://www.manappuram.com/sites/default/files/2026-01/MGFL%20Investor%20Presentation%20_Q3%20FY26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["CAPITAL ADEQUACY RATIO", "30%", "25%", "Q3 FY25", "Q3 FY26"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "CHOLAFIN",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 189141,
+          "currentValue": 227770,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://files.cholamandalam.com/OUTCOME_7c631009ea.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_results",
+            "anchors": ["Total AUM", "1,89,141", "2,27,770", "Q3 FY 25", "Q3 FY 26"]
+          },
+          "currentSource": {
+            "url": "https://files.cholamandalam.com/OUTCOME_7c631009ea.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_results",
+            "anchors": ["Total AUM", "1,89,141", "2,27,770", "Q3 FY 25", "Q3 FY 26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousPeriod": "Q2 FY26",
+          "currentPeriod": "Q3 FY26",
+          "previousValue": 3.35,
+          "currentValue": 3.36,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://files.cholamandalam.com/OUTCOME_7c631009ea.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_results",
+            "anchors": ["Stage 3 levels", "3.35%", "3.36%", "September 25", "December 25"]
+          },
+          "currentSource": {
+            "url": "https://files.cholamandalam.com/OUTCOME_7c631009ea.pdf",
+            "publishedAt": "2026-01-30",
+            "sourceType": "company_results",
+            "anchors": ["Stage 3 levels", "3.35%", "3.36%", "September 25", "December 25"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "SUNDARMFIN",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousPeriod": "9M FY25",
+          "currentPeriod": "9M FY26",
+          "previousValue": 50199,
+          "currentValue": 58236,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.sundaramfinance.in/assets/app_docs/investor-info/press_release/fy25/press_release_31122024.pdf",
+            "publishedAt": "2025-02-03",
+            "sourceType": "company_results",
+            "anchors": ["AUM", "50,199", "9MFY25"]
+          },
+          "currentSource": {
+            "url": "https://sundaramfinance.in/assets/app_docs/investor-info/press_release/fy26/press_release_31122025.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["AUM", "58,236", "9MFY26"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "stage_3_assets",
+          "previousValue": 1.70,
+          "currentValue": 1.91,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://sundaramfinance.in/assets/app_docs/investor-info/press_release/fy26/press_release_31122025.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["Gross Stage 3 assets", "1.70%", "1.91%"]
+          },
+          "currentSource": {
+            "url": "https://sundaramfinance.in/assets/app_docs/investor-info/press_release/fy26/press_release_31122025.pdf",
+            "publishedAt": "2026-02-02",
+            "sourceType": "company_results",
+            "anchors": ["Gross Stage 3 assets", "1.70%", "1.91%"]
+          }
+        }
+      ]
+    }
+  ]
+}

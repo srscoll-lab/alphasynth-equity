@@ -1,0 +1,92 @@
+{
+  "cutoffDate": "2026-08-25",
+  "currentPeriod": "Q3 FY26",
+  "companies": [
+    {
+      "symbol": "PNBHOUSING",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "retail_loan_assets_volume",
+          "previousValue": 70675,
+          "currentValue": 81931,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://www.pnbhousing.com/documents/d/guest/Investor%20Presentation-22-jan-2026",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Retail Loan Asset", "81,931", "70,675", "Q3 FY26", "Q3 FY25"]
+          },
+          "currentSource": {
+            "url": "https://www.pnbhousing.com/documents/d/guest/Investor%20Presentation-22-jan-2026",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Retail Loan Asset", "81,931", "70,675", "Q3 FY26", "Q3 FY25"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.19,
+          "currentValue": 1.04,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://www.pnbhousing.com/documents/d/guest/Investor%20Presentation-22-jan-2026",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross NPA", "1.04%", "1.19%", "Dec-25", "Dec-24"]
+          },
+          "currentSource": {
+            "url": "https://www.pnbhousing.com/documents/d/guest/Investor%20Presentation-22-jan-2026",
+            "publishedAt": "2026-01-22",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross NPA", "1.04%", "1.19%", "Dec-25", "Dec-24"]
+          }
+        }
+      ]
+    },
+    {
+      "symbol": "FIVESTAR",
+      "evidence": [
+        {
+          "factor": "execution",
+          "metricName": "assets_under_management",
+          "previousValue": 11178,
+          "currentValue": 12964,
+          "unit": "INR crore",
+          "previousSource": {
+            "url": "https://fivestargroup.in/wp-content/uploads/2026/01/Press-Release-Q3-FY-26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Assets under Management", "12,964", "11,178", "Q3FY26", "Q3FY25"]
+          },
+          "currentSource": {
+            "url": "https://fivestargroup.in/wp-content/uploads/2026/01/Press-Release-Q3-FY-26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Assets under Management", "12,964", "11,178", "Q3FY26", "Q3FY25"]
+          }
+        },
+        {
+          "factor": "balance_sheet",
+          "metricName": "gnpa",
+          "previousValue": 1.62,
+          "currentValue": 3.18,
+          "unit": "percent",
+          "previousSource": {
+            "url": "https://fivestargroup.in/wp-content/uploads/2026/01/Press-Release-Q3-FY-26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Stage 3", "3.18%", "1.62%", "Q3FY26", "Q3FY25"]
+          },
+          "currentSource": {
+            "url": "https://fivestargroup.in/wp-content/uploads/2026/01/Press-Release-Q3-FY-26.pdf",
+            "publishedAt": "2026-01-29",
+            "sourceType": "company_presentation",
+            "anchors": ["Gross Stage 3", "3.18%", "1.62%", "Q3FY26", "Q3FY25"]
+          }
+        }
+      ]
+    }
+  ]
+}
