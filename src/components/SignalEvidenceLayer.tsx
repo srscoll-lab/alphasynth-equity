@@ -196,34 +196,53 @@ export default function SignalEvidenceLayer({
     setError("");
     setData(null);
 
-    const post = (url: string, body: unknown) => fetch(url, {
+    // The four-factor BMS record is already available on the selected company.
+    // Dossier, market and report-extra services are enrichment layers and must
+    // never keep that evidence screen in a loading state when a provider is
+    // unavailable, out of credits or not enabled for a company.
+    const optionalJson = async (
+      url: string,
+      init: RequestInit = {},
+      timeoutMs = 15_000,
+    ) => {
+      const requestController = new AbortController();
+      const abortRequest = () => requestController.abort();
+      controller.signal.addEventListener("abort", abortRequest, { once: true });
+      const timeout = window.setTimeout(abortRequest, timeoutMs);
+      try {
+        const response = await fetch(url, { ...init, signal: requestController.signal });
+        const payload = await response.json().catch(() => null);
+        return response.ok ? payload : payload ?? null;
+      } catch {
+        return null;
+      } finally {
+        window.clearTimeout(timeout);
+        controller.signal.removeEventListener("abort", abortRequest);
+      }
+    };
+
+    const optionalPost = (url: string, body: unknown) => optionalJson(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: controller.signal,
     });
 
     (async () => {
       try {
         const basicRequest = { ticker: company.symbol, information_cutoff: effectiveEvidenceCutoff };
-        const [dossierResponse, financialPayload, enrichmentPayload, marketPayload, factorPayload] = await Promise.all([
-          post("/api/dossier/generate", {
+        const [dossierResult, financialPayload, enrichmentPayload, marketPayload, factorPayload] = await Promise.all([
+          optionalPost("/api/dossier/generate", {
             ticker: company.symbol,
             company_name: company.name,
             reporting_period: company.period,
             information_cutoff: effectiveEvidenceCutoff,
           }),
-          post("/api/pipeline/quarterly-performance", basicRequest)
-            .then(response => response.ok ? response.json() : null).catch(() => null),
-          post("/api/pipeline/report-extras", { ticker: company.symbol, signal: company.lifecycle })
-            .then(response => response.ok ? response.json() : null).catch(() => null),
-          post("/api/bms/market-context", basicRequest)
-            .then(response => response.ok ? response.json() : null).catch(() => null),
-          fetch(`/api/bms/factor-analysis/${encodeURIComponent(company.symbol)}`, { signal: controller.signal })
-            .then(response => response.ok ? response.json() : null).catch(() => null),
+          optionalPost("/api/pipeline/quarterly-performance", basicRequest),
+          optionalPost("/api/pipeline/report-extras", { ticker: company.symbol, signal: company.lifecycle }),
+          optionalPost("/api/bms/market-context", basicRequest),
+          optionalJson(`/api/bms/factor-analysis/${encodeURIComponent(company.symbol)}`),
         ]);
-        const dossierResult = await dossierResponse.json().catch(() => null);
-        const dossierAvailable = dossierResponse.ok;
+        const dossierAvailable = Boolean(dossierResult?.schemaVersion && dossierResult?.company);
         const dossierPayload: ResearchDossier = dossierAvailable
           ? dossierResult
           : emptyEvidenceDossier(company, effectiveEvidenceCutoff);
@@ -231,12 +250,11 @@ export default function SignalEvidenceLayer({
           ? null
           : dossierResult?.error || "Official dossier evidence is not currently available for this company.";
         const financials = Array.isArray(financialPayload?.rows) ? financialPayload.rows : [];
-        const deliveryResponse = await post("/api/bms/delivery-check", {
+        const deliveryPayload = await optionalPost("/api/bms/delivery-check", {
           dossier: dossierPayload,
           lifecycle: company.lifecycle,
           financials,
-        });
-        const deliveryPayload = deliveryResponse.ok ? await deliveryResponse.json() as DeliveryCheck : null;
+        }) as DeliveryCheck | null;
         const factorAnalysis = augmentFactorAnalysisWithDeliveryEvidence(
           factorPayload?.factor_analysis ?? company.factorAnalysis ?? null,
           deliveryPayload,
