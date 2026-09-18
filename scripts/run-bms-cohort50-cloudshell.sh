@@ -9,7 +9,7 @@ set -u
 PROJECT="${PROJECT:-my-nse-research-app}"
 REGION="${REGION:-us-central1}"
 BRANCH="${BRANCH:-codex/server-dossier-pdf}"
-REPO_ROOT="${REPO_ROOT:-$HOME/alphasynth-dossier-deploy-20260904}"
+REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"
 CUTOFF="${CUTOFF:-2026-08-25}"
 STAMP="$(date -u +%m%d%H%M%S)"
 BMS_PILOT_URL="https://bms-evidence-pilot---bms-api-oqc2y4ogda-uc.a.run.app"
