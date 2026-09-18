@@ -3553,6 +3553,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const officialDomains = Array.isArray(req.body?.official_domains)
       ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
       : [];
+    const requestedFactors = [...new Set((Array.isArray(req.body?.missing_factor_ids)
+      ? req.body.missing_factor_ids : ["execution", "balance_sheet"])
+      .map((value: unknown) => String(value).trim().toLowerCase())
+      .filter((value: string) => ["earnings", "economics", "execution", "balance_sheet"].includes(value)))];
     if (!/^[A-Z0-9&.-]{1,24}$/.test(ticker) || !/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) {
       return res.status(400).json({ error: "A valid ticker and information cutoff are required." });
     }
@@ -3570,26 +3574,38 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         ? anchorPayload.known_official_sources : [])
         .filter((source: any) => /^https?:\/\//i.test(String(source?.url || "")))
         .slice(0, 12);
-      if (!anchorResponse.ok || !anchors.length) {
+      if (!anchorResponse.ok) {
         return res.json({ ticker, cutoff, method: "stored_observation_provenance_recovery", rows: [], diagnostics: [
-          { outcome: "no_stored_comparison_anchors" },
+          { outcome: "stored_comparison_service_unavailable", httpStatus: anchorResponse.status },
         ] });
       }
-      const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", ...officialDomains]
+      const knownCompanyDomains = knownOfficialSources
+        .filter((source: any) => String(source?.source_type || "").toLowerCase() === "company_filing")
+        .flatMap((source: any) => {
+          try { return [new URL(String(source.url)).hostname.toLowerCase().replace(/^www\./, "")]; }
+          catch { return []; }
+        });
+      let trustedOfficialDomains = [...new Set([...officialDomains, ...knownCompanyDomains])];
+      const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", ...trustedOfficialDomains]
         .map(domain => `site:${domain}`).join(" OR ");
+      const sourceScopeGuidance = trustedOfficialDomains.length
+        ? `Use only official company documents or NSE/BSE filings (${officialScope}).`
+        : `Use only the company's own investor-relations website or NSE/BSE filings. Find the company's official investor-relations domain when necessary; never use an aggregator, news site, broker report or search-result page.`;
+      const researchMode = anchors.length ? "anchor_recovery" : "factor_discovery";
+      const researchInstruction = anchors.length
+        ? `Locate support for the exact stored comparisons in the ANCHORS below. Check the KNOWN OFFICIAL SOURCES first; they already support other factors for this company and may contain the missing comparisons. Do not replace, recalculate, round or reinterpret an anchor value. Return only anchors whose previous and current values are both explicitly supported by a dated official source.`
+        : `No stored comparison anchors are available. Discover one strong, sector-appropriate, like-for-like comparison for each of these missing factors: ${requestedFactors.join(", ")}. Both numeric values, both reporting periods, the unit, the publication date and the direct official URL must be explicit in the same official document. Prefer the same quarter year-on-year; otherwise use two clearly comparable consecutive reporting periods. Do not manufacture an anchor and do not return a factor when an exact comparison is unavailable.`;
       const grounded = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
           `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
-          + `Use only official company documents or NSE/BSE filings (${officialScope}). Locate support for the exact stored comparisons in the ANCHORS below. `
-          + `Check the KNOWN OFFICIAL SOURCES first; they already support other factors for this company and may contain the missing comparisons. `
-          + `Do not replace, recalculate, round or reinterpret an anchor value. Return only anchors whose previous and current values are both explicitly supported by a dated official source. `
+          + `${sourceScopeGuidance} ${researchInstruction} `
           + `EARNINGS includes revenue, profit, PAT, EPS, EBITDA and operating profit. ECONOMICS includes margins, spreads, realizations, pricing, yields and unit economics. `
           + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. Sector examples include IT deal TCV and attrition; industrial order inflow/order book; vehicle production, domestic and export volumes; pharmaceutical specialty-product sales; and lender customer-franchise growth or new loans booked. `
           + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
           + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
           + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. If unavailable, omit it.\n\n`
-          + `KNOWN OFFICIAL SOURCES: ${JSON.stringify(knownOfficialSources)}\n\nANCHORS: ${JSON.stringify(anchors)}`
+          + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nKNOWN OFFICIAL SOURCES: ${JSON.stringify(knownOfficialSources)}\n\nANCHORS: ${JSON.stringify(anchors)}`
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
       });
@@ -3599,6 +3615,24 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           url: String(chunk?.web?.uri || "").trim(),
         }))
         .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
+      // When a company was not part of the hand-reviewed seed cohort, admit a
+      // company domain only when Google Grounding returned a direct HTTPS URL
+      // whose title identifies this company. The URL is still fetched and its
+      // evidence context verified below; this only expands the domain allowlist.
+      const identityTokens = [...new Set(`${ticker} ${companyName}`.toLowerCase()
+        .replace(/\b(limited|ltd|company|india|industries|corporation|plc)\b/g, " ")
+        .split(/[^a-z0-9]+/).filter(token => token.length >= 4))];
+      const discoveredCompanyDomains = searchedSources.flatMap((source: any) => {
+        try {
+          const parsed = new URL(source.url);
+          const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+          const title = String(source.title || "").toLowerCase();
+          const excluded = ["nseindia.com", "bseindia.com", "google.com", "googleusercontent.com"]
+            .some(domain => host === domain || host.endsWith(`.${domain}`));
+          return !excluded && identityTokens.some(token => title.includes(token)) ? [host] : [];
+        } catch { return []; }
+      });
+      trustedOfficialDomains = [...new Set([...trustedOfficialDomains, ...discoveredCompanyDomains])];
       const groundedSources = [...knownOfficialSources.map((source: any) => ({
         title: `Known official ${source.source_type || "filing"}`,
         url: String(source.url),
@@ -3615,10 +3649,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const structured = await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
-          `Convert the research below into JSON. Keep only comparisons present in the supplied ANCHORS, with exactly matching numeric values, a direct official-company, NSE or BSE URL and an exact publication date. `
+          `Convert the research below into JSON. ${anchors.length ? "Keep only comparisons present in the supplied ANCHORS, with exactly matching numeric values." : `Keep only explicit like-for-like comparisons for the requested factors (${requestedFactors.join(", ")}).`} Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
           + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
-          + `ANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
+          + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
         }] }],
         config: {
           responseMimeType: "application/json",
@@ -3709,14 +3743,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       for (const knownSource of knownOfficialSources) {
         const sourceUrl = String(knownSource.url || "");
         const sourceDate = exactEvidenceDate(knownSource.published_at);
-        if (!sourceDate || sourceDate > cutoff || !isOfficialDossierSource(sourceUrl, officialDomains)) continue;
+        if (!sourceDate || sourceDate > cutoff || !isOfficialDossierSource(sourceUrl, trustedOfficialDomains)) continue;
         try {
           const verification = await fetch(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(30_000),
             headers: { "user-agent": "AlphaSynth-Research/1.0" },
           });
           const verifiedUrl = verification.url || sourceUrl;
-          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) throw new Error(`HTTP ${verification.status}`);
+          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, trustedOfficialDomains)) throw new Error(`HTTP ${verification.status}`);
           const maximumBytes = 20 * 1024 * 1024;
           const declaredBytes = Number(verification.headers.get("content-length") || 0);
           if (declaredBytes > maximumBytes) throw new Error("document_too_large");
@@ -3770,7 +3804,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const previousValue = Number(candidate?.previousValue);
         const currentValue = Number(candidate?.currentValue);
         const unit = String(candidate?.unit || "").trim();
-        const anchor = matchingAnchor(candidate, mapping);
+        const anchor = anchors.length ? matchingAnchor(candidate, mapping) : null;
         const resolvedUnit = unit || String(anchor?.unit || "").trim();
         const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
         let rejection: string | null = null;
@@ -3778,10 +3812,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         // labels are advisory because otherwise valid metrics are often labelled
         // "operating" or "financial strength" instead of our internal IDs.
         if (!mapping) rejection = "factor_mapping_mismatch";
-        else if (!anchor) rejection = "stored_anchor_mismatch";
+        else if (anchors.length && !anchor) rejection = "stored_anchor_mismatch";
+        else if (!anchors.length && !requestedFactors.includes(mapping.factor)) rejection = "factor_not_requested";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
-        else if (!isOfficialDossierSource(sourceUrl, officialDomains)
+        else if (!isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
@@ -3800,7 +3835,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             headers: { "user-agent": "AlphaSynth-Research/1.0" },
           });
           verifiedUrl = verification.url || sourceUrl;
-          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, officialDomains)) throw new Error(`HTTP ${verification.status}`);
+          if (!verification.ok || !isOfficialDossierSource(verifiedUrl, trustedOfficialDomains)) throw new Error(`HTTP ${verification.status}`);
           const maximumBytes = 20 * 1024 * 1024;
           const declaredBytes = Number(verification.headers.get("content-length") || 0);
           if (declaredBytes > maximumBytes) throw new Error("document_too_large");
@@ -3810,8 +3845,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 40)
             : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
-          if (!containsEvidenceValue(documentText, previousValue)
-            || !containsEvidenceValue(documentText, currentValue)) {
+          if (!documentSupportsAnchor(documentText, {
+            metric_name: mapping.metric,
+            previous_period: previousPeriod,
+            current_period: currentPeriod,
+            previous_value: previousValue,
+            current_value: currentValue,
+          })) {
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified" });
             continue;
           }
@@ -3823,13 +3863,15 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             source.url === sourceUrl
             || (normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl)
               && source.url === indexedUrl));
-          const resolvedOfficialUrl = isOfficialDossierSource(verifiedUrl, officialDomains)
+          const resolvedOfficialUrl = isOfficialDossierSource(verifiedUrl, trustedOfficialDomains)
             ? verifiedUrl
             : sourceUrl;
           if (!groundedOfficialSource
-            || !isOfficialDossierSource(resolvedOfficialUrl, officialDomains)
+            || !isOfficialDossierSource(resolvedOfficialUrl, trustedOfficialDomains)
             || !containsEvidenceValue(grounded.text || "", previousValue)
-            || !containsEvidenceValue(grounded.text || "", currentValue)) {
+            || !containsEvidenceValue(grounded.text || "", currentValue)
+            || !periodToken(grounded.text || "").includes(periodToken(previousPeriod))
+            || !periodToken(grounded.text || "").includes(periodToken(currentPeriod))) {
             diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
             continue;
           }
@@ -3849,7 +3891,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl,
           outcome: verificationMethod === "direct_official_document" ? "admitted" : "admitted_grounded_official_fallback" });
       }
-      return res.json({ ticker, cutoff, method: "gemini_grounded_official_evidence", modelJsonRepaired, rows, diagnostics });
+      return res.json({ ticker, cutoff, method: `gemini_grounded_official_evidence_${researchMode}`, modelJsonRepaired, rows, diagnostics });
     } catch (error: any) {
       console.error(`[factor-evidence/${ticker}]`, error?.message || error);
       return res.status(502).json({ error: "Grounded factor-evidence research failed.", ticker, rows: [] });

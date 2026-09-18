@@ -23,4 +23,10 @@ assert.deepEqual(mapBmsFactorMetric("Revenue"), { metric: "revenue", factor: "ea
 assert.deepEqual(mapBmsFactorMetric("PAT"), { metric: "pat", factor: "earnings" });
 assert.deepEqual(mapBmsFactorMetric("EBITDA"), { metric: "ebitda", factor: "economics" });
 assert.deepEqual(mapBmsFactorMetric("Operating Margin"), { metric: "operating_margin", factor: "economics" });
+assert.deepEqual(mapBmsFactorMetric("Transmission Availability"), { metric: "transmission_availability", factor: "execution" });
+assert.deepEqual(mapBmsFactorMetric("Distribution Reliability"), { metric: "distribution_reliability", factor: "execution" });
+assert.deepEqual(mapBmsFactorMetric("Gross Debt"), { metric: "gross_debt", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Cash Balance"), { metric: "cash_balance", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Net Debt to EBITDA Ratio"), { metric: "net_debt_to_ebitda_ratio", factor: "balance_sheet" });
+assert.deepEqual(mapBmsFactorMetric("Net Worth"), { metric: "net_worth", factor: "balance_sheet" });
 console.log("PASS: descriptive metrics canonicalize across all four BMS factors");

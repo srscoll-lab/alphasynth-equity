@@ -6,9 +6,13 @@ const valueAfter = (prefix: string) => process.argv.find(arg => arg.startsWith(p
 const baseUrl = (valueAfter("--base-url=") || "").replace(/\/$/, "");
 const cutoff = valueAfter("--cutoff=") || "";
 const selected = new Set((valueAfter("--tickers=") || "").split(",").map(value => value.trim().toUpperCase()).filter(Boolean));
+const allUniverse = process.argv.includes("--all");
 const offset = Math.max(0, Number(valueAfter("--offset=") || 0));
-const limit = Math.max(1, Math.min(100, Number(valueAfter("--limit=") || 25)));
+const limit = allUniverse ? Number.MAX_SAFE_INTEGER : Math.max(1, Math.min(100, Number(valueAfter("--limit=") || 25)));
 const requestTimeoutMs = Math.max(30_000, Number(valueAfter("--request-timeout-ms=") || 360_000));
+const maxAttempts = Math.max(1, Math.min(5, Number(valueAfter("--max-attempts=") || 3)));
+const retryDelayMs = Math.max(1_000, Number(valueAfter("--retry-delay-ms=") || 5_000));
+const concurrency = Math.max(1, Math.min(5, Number(valueAfter("--concurrency=") || 3)));
 const output = path.resolve(valueAfter("--output=") || "/tmp/bms-factor-evidence.csv");
 if (!baseUrl.startsWith("https://")) throw new Error("--base-url must be an HTTPS URL");
 if (!/^\d{4}-\d{2}-\d{2}$/.test(cutoff)) throw new Error("--cutoff must be YYYY-MM-DD");
@@ -26,11 +30,12 @@ if (selected.size) {
   companies = [...selected].map(ticker => {
     const reviewed: any = reviewedByTicker.get(ticker);
     const monitored: any = universeByTicker.get(ticker);
-    return reviewed || {
+    return reviewed ? { ...reviewed, publication_eligibility: monitored?.publication_eligibility } : {
       ticker,
       company_name: monitored?.name || ticker,
       sector: monitored?.sector || "Unclassified",
       official_domains: [],
+      publication_eligibility: monitored?.publication_eligibility,
     };
   });
 } else {
@@ -39,16 +44,20 @@ if (selected.size) {
     .slice(offset, offset + limit)
     .map((company: any) => {
       const reviewed: any = reviewedByTicker.get(String(company.symbol).toUpperCase());
-      return reviewed || {
+      return reviewed ? { ...reviewed, publication_eligibility: company.publication_eligibility } : {
         ticker: String(company.symbol).toUpperCase(),
         company_name: company.name || company.symbol,
         sector: company.sector || "Unclassified",
         official_domains: [],
+        publication_eligibility: company.publication_eligibility,
       };
     });
 }
 if (!companies.length) throw new Error("The selected repair batch is empty");
-const token = execFileSync("gcloud", ["secrets", "versions", "access", "latest", "--secret=dossier-internal-token", "--project=my-nse-research-app"], { encoding: "utf8" }).trim();
+const secretArgs = ["secrets", "versions", "access", "latest", "--secret=dossier-internal-token", "--project=my-nse-research-app"];
+const token = process.env.DOSSIER_INTERNAL_TOKEN?.trim() || (process.platform === "win32"
+  ? execFileSync("cmd.exe", ["/d", "/s", "/c", "gcloud.cmd", ...secretArgs], { encoding: "utf8" }).trim()
+  : execFileSync("gcloud", secretArgs, { encoding: "utf8" }).trim());
 const rows: any[] = [];
 const diagnostics: any[] = [];
 const headers = ["symbol", "factor", "metric_name", "previous_period", "current_period", "previous_value", "current_value", "unit", "source_type", "source_ref", "source_date", "cutoff_date", "confidence"];
@@ -70,12 +79,16 @@ if (fs.existsSync(diagnosticsOutput)) {
     diagnostics.push(...(Array.isArray(existing?.diagnostics) ? existing.diagnostics : []));
   } catch { /* a partial diagnostics file is safe to ignore */ }
 }
-const completedTickers = new Set(diagnostics.map(item => String(item?.ticker || "").toUpperCase()).filter(Boolean));
+const completedTickers = new Set(diagnostics
+  .filter(item => item?.completed === true || (item?.httpStatus >= 200 && item?.httpStatus < 300 && !item?.error))
+  .map(item => String(item?.ticker || "").toUpperCase()).filter(Boolean));
 const buildReport = () => ({
   cutoff,
+  monitoredUniverse: universe.companies.length,
   requestedCompanies: companies.length,
-  completedCompanies: diagnostics.length,
-  remainingCompanies: companies.length - diagnostics.length,
+  completedCompanies: companies.filter(company => completedTickers.has(company.ticker)).length,
+  remainingCompanies: companies.filter(company => !completedTickers.has(company.ticker)).length,
+  retryableFailures: diagnostics.filter(item => item?.retryable === true).length,
   admittedCompanies: new Set(rows.map(row => row.symbol)).size,
   rowCount: rows.length,
   factorCounts: {
@@ -87,40 +100,68 @@ const buildReport = () => ({
   diagnostics,
 });
 const checkpoint = () => {
-  fs.writeFileSync(output, [headers.join(","), ...rows.map(row => headers.map(header => csv(row[header])).join(","))].join("\n") + "\n");
-  fs.writeFileSync(diagnosticsOutput, JSON.stringify(buildReport(), null, 2));
+  const csvTemp = `${output}.tmp`;
+  const diagnosticsTemp = `${diagnosticsOutput}.tmp`;
+  fs.writeFileSync(csvTemp, [headers.join(","), ...rows.map(row => headers.map(header => csv(row[header])).join(","))].join("\n") + "\n");
+  fs.writeFileSync(diagnosticsTemp, JSON.stringify(buildReport(), null, 2));
+  fs.renameSync(csvTemp, output);
+  fs.renameSync(diagnosticsTemp, diagnosticsOutput);
 };
 
-for (const company of companies) {
+const processCompany = async (company: any) => {
   if (completedTickers.has(company.ticker)) {
     console.log(JSON.stringify({ ticker: company.ticker, skipped: true, reason: "already_checkpointed" }));
-    continue;
+    return;
   }
-  try {
-    const response = await fetch(`${baseUrl}/api/bms/factor-evidence/research`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-dossier-token": token },
-      body: JSON.stringify({
-        ticker: company.ticker, company_name: company.company_name, sector: company.sector,
-        official_domains: company.official_domains, information_cutoff: cutoff,
-      }),
-      signal: AbortSignal.timeout(requestTimeoutMs),
-    });
-    const payload: any = await response.json().catch(() => ({ error: "Non-JSON response" }));
-    rows.push(...(Array.isArray(payload.rows) ? payload.rows : []));
-    diagnostics.push({ ticker: company.ticker, httpStatus: response.status, error: payload.error || null, rows: payload.rows?.length || 0, evidenceDiagnostics: payload.diagnostics || [] });
-  } catch (error) {
-    const timeout = error instanceof DOMException && error.name === "TimeoutError";
-    diagnostics.push({
-      ticker: company.ticker,
-      httpStatus: 0,
-      error: timeout ? `Timed out after ${Math.round(requestTimeoutMs / 1000)} seconds` : (error instanceof Error ? error.message : String(error)),
-      rows: 0,
-      evidenceDiagnostics: [],
-    });
+  let result: any = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(`${baseUrl}/api/bms/factor-evidence/research`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-dossier-token": token },
+        body: JSON.stringify({
+          ticker: company.ticker, company_name: company.company_name, sector: company.sector,
+          official_domains: company.official_domains,
+          missing_factor_ids: company?.publication_eligibility?.missingFactorIds || ["execution", "balance_sheet"],
+          information_cutoff: cutoff,
+        }),
+        signal: AbortSignal.timeout(requestTimeoutMs),
+      });
+      const payload: any = await response.json().catch(() => ({ error: "Non-JSON response" }));
+      const retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+      result = { ticker: company.ticker, attempt, httpStatus: response.status, error: payload.error || null,
+        rows: payload.rows?.length || 0, evidenceDiagnostics: payload.diagnostics || [],
+        completed: response.ok, retryable };
+      if (response.ok) {
+        rows.push(...(Array.isArray(payload.rows) ? payload.rows : []));
+        completedTickers.add(company.ticker);
+        break;
+      }
+      if (!retryable || attempt === maxAttempts) break;
+    } catch (error) {
+      const timeout = error instanceof DOMException && error.name === "TimeoutError";
+      result = { ticker: company.ticker, attempt, httpStatus: 0,
+        error: timeout ? `Timed out after ${Math.round(requestTimeoutMs / 1000)} seconds` : (error instanceof Error ? error.message : String(error)),
+        rows: 0, evidenceDiagnostics: [], completed: false, retryable: true };
+      if (attempt === maxAttempts) break;
+    }
+    await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
   }
-  console.log(JSON.stringify(diagnostics.at(-1)));
+  const priorIndex = diagnostics.findIndex(item => String(item?.ticker || "").toUpperCase() === company.ticker);
+  if (priorIndex >= 0) diagnostics.splice(priorIndex, 1, result);
+  else diagnostics.push(result);
+  console.log(JSON.stringify(result));
   checkpoint();
-}
+};
+const pendingCompanies = companies.filter(company => !completedTickers.has(company.ticker));
+let nextCompany = 0;
+const workers = Array.from({ length: Math.min(concurrency, pendingCompanies.length) }, async () => {
+  while (nextCompany < pendingCompanies.length) {
+    const company = pendingCompanies[nextCompany];
+    nextCompany += 1;
+    await processCompany(company);
+  }
+});
+await Promise.all(workers);
 const report = buildReport();
 console.log(JSON.stringify(report, null, 2));
