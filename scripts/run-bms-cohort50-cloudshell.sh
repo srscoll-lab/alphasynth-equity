@@ -27,6 +27,11 @@ git checkout "$BRANCH" 2>/dev/null || git checkout -b "$BRANCH" FETCH_HEAD \
   || fail "Unable to check out $BRANCH"
 git pull --ff-only origin "$BRANCH" || fail "Local branch cannot fast-forward; preserve local changes and resolve before rerunning"
 
+if [ ! -x "$REPO_ROOT/node_modules/.bin/tsx" ]; then
+  printf '\nInstalling the repository dependencies required by the evidence runner...\n'
+  npm ci || fail "Dependency installation failed"
+fi
+
 printf '\n[1/6] Deploying the restored BMS baseline with the 50-company source registry...\n'
 gcloud run deploy bms-api \
   --source=services/bms-api \
