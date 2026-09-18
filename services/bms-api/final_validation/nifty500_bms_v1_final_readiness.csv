@@ -1,0 +1,501 @@
+symbol,company_name,sector,benchmark,already_tested,include,bms_v1_excluded,bms_v1_exclusion_reason,bms_v1_eligible,valid_observations,periods,metrics,bms_ready,bms_v1_status,bms_v1_score_now
+360ONE,360 ONE WAM Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+3MINDIA,3M India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABB,ABB India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ACC,ACC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ACMESOLAR,ACME Solar Holdings Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AIAENG,AIA Engineering Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+APLAPOLLO,APL Apollo Tubes Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+AUBANK,AU Small Finance Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+AWL,AWL Agri Business Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AADHARHFC,Aadhar Housing Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AARTIIND,Aarti Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AAVAS,Aavas Financiers Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABBOTINDIA,Abbott India Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ACE,Action Construction Equipment Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ACUTAAS,Acutaas Chemicals Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ADANIENSOL,Adani Energy Solutions Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ADANIENT,Adani Enterprises Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ADANIGREEN,Adani Green Energy Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ADANIPORTS,Adani Ports and Special Economic Zone Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ADANIPOWER,Adani Power Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ATGL,Adani Total Gas Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABCAPITAL,Aditya Birla Capital Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABFRL,Aditya Birla Fashion and Retail Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABLBL,Aditya Birla Lifestyle Brands Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABREL,Aditya Birla Real Estate Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ABSLAMC,Aditya Birla Sun Life AMC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CPPLUS,Aditya Infotech Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AEGISLOG,Aegis Logistics Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AEGISVOPAK,Aegis Vopak Terminals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AFCONS,Afcons Infrastructure Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AFFLE,Affle 3i Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AJANTPHARM,Ajanta Pharmaceuticals Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ALKEM,Alkem Laboratories Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+ABDL,Allied Blenders and Distillers Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ARE&M,Amara Raja Energy & Mobility Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AMBER,Amber Enterprises India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+AMBUJACEM,Ambuja Cements Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ANANDRATHI,Anand Rathi Wealth Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ANANTRAJ,Anant Raj Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ANGELONE,Angel One Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ANTHEM,Anthem Biosciences Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ANURAS,Anupam Rasayan India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+APARINDS,Apar Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+APOLLOHOSP,Apollo Hospitals Enterprise Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+APOLLOTYRE,Apollo Tyres Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+APTUS,Aptus Value Housing Finance India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ASAHIINDIA,Asahi India Glass Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ASHOKLEY,Ashok Leyland Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ASIANPAINT,Asian Paints Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ASTERDM,Aster DM Quality Care Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ASTRAL,Astral Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ATHERENERG,Ather Energy Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ATUL,Atul Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+AUROPHARMA,Aurobindo Pharma Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+AIIL,Authum Investment & Infrastructure Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DMART,Avenue Supermarts Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+AXISBANK,Axis Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+BEML,BEML Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BLS,BLS International Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BSE,BSE Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BAJAJ-AUTO,Bajaj Auto Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BAJFINANCE,Bajaj Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BAJAJFINSV,Bajaj Finserv Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BAJAJHLDNG,Bajaj Holdings & Investment Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BAJAJHFL,Bajaj Housing Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BALKRISIND,Balkrishna Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BALRAMCHIN,Balrampur Chini Mills Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BANDHANBNK,Bandhan Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+BANKBARODA,Bank of Baroda,,,True,False,False,,True,12,6,2,True,ready,True
+BANKINDIA,Bank of India,,,True,False,False,,True,12,6,2,True,ready,True
+MAHABANK,Bank of Maharashtra,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+BATAINDIA,Bata India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BAYERCROP,Bayer Cropscience Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BELRISE,Belrise Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BERGEPAINT,Berger Paints India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BDL,Bharat Dynamics Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BEL,Bharat Electronics Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BHARATFORG,Bharat Forge Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BHEL,Bharat Heavy Electricals Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BPCL,Bharat Petroleum Corporation Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BHARTIARTL,Bharti Airtel Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BHARTIHEXA,Bharti Hexacom Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BIKAJI,Bikaji Foods International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GROWW,Billionbrains Garage Ventures Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+BIOCON,Biocon Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+BSOFT,Birlasoft Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BLUEDART,Blue Dart Express Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BLUEJET,Blue Jet Healthcare Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+BLUESTARCO,Blue Star Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+BBTC,Bombay Burmah Trading Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BOSCHLTD,Bosch Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+FIRSTCRY,Brainbees Solutions Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BRIGADE,Brigade Enterprises Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+BRITANNIA,Britannia Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MAPMYINDIA,C.E. Info Systems Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CCL,CCL Products (I) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CESC,CESC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CGPOWER,CG Power and Industrial Solutions Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CIEINDIA,CIE Automotive India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CRISIL,CRISIL Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CANFINHOME,Can Fin Homes Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CANBK,Canara Bank,,,True,False,False,,True,12,6,2,True,ready,True
+CANHLIFE,Canara HSBC Life Insurance Company Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,0,0,0,False,deferred_insurance,False
+CAPLIPOINT,Caplin Point Laboratories Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+CGCL,Capri Global Capital Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CARBORUNIV,Carborundum Universal Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CARTRADE,Cartrade Tech Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CASTROLIND,Castrol India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CEATLTD,Ceat Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CEMPRO,Cemindia Projects Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CENTRALBK,Central Bank of India,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+CDSL,Central Depository Services (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CHALET,Chalet Hotels Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CHAMBLFERT,Chambal Fertilizers & Chemicals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CHENNPETRO,Chennai Petroleum Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CHOICEIN,Choice International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CHOLAHLDNG,Cholamandalam Financial Holdings Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CHOLAFIN,Cholamandalam Investment and Finance Company Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CIPLA,Cipla Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+CUB,City Union Bank Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+CLEAN,Clean Science and Technology Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+COALINDIA,Coal India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+COCHINSHIP,Cochin Shipyard Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+COFORGE,Coforge Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+COHANCE,Cohance Lifesciences Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+COLPAL,Colgate Palmolive (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CAMS,Computer Age Management Services Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CONCORDBIO,Concord Biotech Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+CONCOR,Container Corporation of India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+COROMANDEL,Coromandel International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CRAFTSMAN,Craftsman Automation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CREDITACC,CreditAccess Grameen Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+CROMPTON,Crompton Greaves Consumer Electricals Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CUMMINSIND,Cummins India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+CYIENT,Cyient Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DCMSHRIRAM,DCM Shriram Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DLF,DLF Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+DOMS,DOMS Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DABUR,Dabur India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+DALBHARAT,Dalmia Bharat Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+DATAPATTNS,Data Patterns (India) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DEEPAKFERT,Deepak Fertilisers & Petrochemicals Corp. Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DEEPAKNTR,Deepak Nitrite Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DELHIVERY,Delhivery Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+DEVYANI,Devyani International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+DIVISLAB,Divi's Laboratories Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+DIXON,Dixon Technologies (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+LALPATHLAB,Dr. Lal Path Labs Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+DRREDDY,Dr. Reddy's Laboratories Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+EIDPARRY,E.I.D. Parry (India) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+EIHOTEL,EIH Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+EICHERMOT,Eicher Motors Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ELECON,Elecon Engineering Co. Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ELGIEQUIP,Elgi Equipments Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+EMAMILTD,Emami Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+EMCURE,Emcure Pharmaceuticals Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+EMMVEE,Emmvee Photovoltaic Power Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+ENDURANCE,Endurance Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ENGINERSIN,Engineers India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ERIS,Eris Lifesciences Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+ESCORTS,Escorts Kubota Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ETERNAL,Eternal Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+EXIDEIND,Exide Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NYKAA,FSN E-Commerce Ventures Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+FEDERALBNK,Federal Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+FACT,Fertilisers and Chemicals Travancore Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+FINCABLES,Finolex Cables Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+FSL,Firstsource Solutions Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+FIVESTAR,Five-Star Business Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+FORCEMOT,Force Motors Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+FORTIS,Fortis Healthcare Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+GAIL,GAIL (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GVT&D,GE Vernova T&D India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GMRAIRPORT,GMR Airports Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GABRIEL,Gabriel India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GALLANTT,Gallantt Ispat Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GRSE,Garden Reach Shipbuilders & Engineers Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GICRE,General Insurance Corporation of India,,,False,True,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+GILLETTE,Gillette India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GLAND,Gland Pharma Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+GLAXO,Glaxosmithkline Pharmaceuticals Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+GLENMARK,Glenmark Pharmaceuticals Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+MEDANTA,Global Health Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+GODIGIT,Go Digit General Insurance Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,0,0,0,False,deferred_insurance,False
+GPIL,Godawari Power & Ispat Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GODFRYPHLP,Godfrey Phillips India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GODREJCP,Godrej Consumer Products Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GODREJIND,Godrej Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GODREJPROP,Godrej Properties Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+GRANULES,Granules India Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+GRAPHITE,Graphite India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GRASIM,Grasim Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GRAVITA,Gravita India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GESHIP,Great Eastern Shipping Co. Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+FLUOROCHEM,Gujarat Fluorochemicals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+GMDCLTD,Gujarat Mineral Development Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HEG,H.E.G. Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HBLENGINE,HBL Engineering Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HCLTECH,HCL Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HDBFS,HDB Financial Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HDFCAMC,HDFC Asset Management Company Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HDFCBANK,HDFC Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+HDFCLIFE,HDFC Life Insurance Company Ltd.,,,True,False,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+HFCL,HFCL Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HAVELLS,Havells India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HEROMOTOCO,Hero MotoCorp Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HEXT,Hexaware Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HSCL,Himadri Speciality Chemical Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HINDALCO,Hindalco Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HAL,Hindustan Aeronautics Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HINDCOPPER,Hindustan Copper Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HINDPETRO,Hindustan Petroleum Corporation Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HINDUNILVR,Hindustan Unilever Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HINDZINC,Hindustan Zinc Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+POWERINDIA,Hitachi Energy India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+HOMEFIRST,Home First Finance Company India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HONASA,Honasa Consumer Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HONAUT,Honeywell Automation India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HUDCO,Housing & Urban Development Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+HYUNDAI,Hyundai Motor India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ICICIBANK,ICICI Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+ICICIGI,ICICI Lombard General Insurance Company Ltd.,,,True,False,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+ICICIAMC,ICICI Prudential Asset Management Company Ltd.,,,False,True,False,,True,12,4,3,True,ready,True
+ICICIPRULI,ICICI Prudential Life Insurance Company Ltd.,,,True,False,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+IDBI,IDBI Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+IDFCFIRSTB,IDFC First Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+IFCI,IFCI Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IIFL,IIFL Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IRB,IRB Infrastructure Developers Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IRCON,IRCON International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ITCHOTELS,ITC Hotels Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ITC,ITC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ITI,ITI Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INDGN,Indegene Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+INDIACEM,India Cements Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INDIAMART,Indiamart Intermesh Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INDIANB,Indian Bank,,,True,False,False,,True,12,6,2,True,ready,True
+IEX,Indian Energy Exchange Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+INDHOTEL,Indian Hotels Co. Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+IOC,Indian Oil Corporation Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+IOB,Indian Overseas Bank,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+IRCTC,Indian Railway Catering And Tourism Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IRFC,Indian Railway Finance Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IREDA,Indian Renewable Energy Development Agency Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IGL,Indraprastha Gas Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INDUSTOWER,Indus Towers Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+INDUSINDBK,IndusInd Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+NAUKRI,Info Edge (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+INFY,Infosys Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INOXWIND,Inox Wind Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+INTELLECT,Intellect Design Arena Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+INDIGO,InterGlobe Aviation Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+IGIL,International Gemological Institute Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IKS,Inventurus Knowledge Solutions Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+IPCALAB,Ipca Laboratories Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+JKCEMENT,J.K. Cement Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JBMA,JBM Auto Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JKTYRE,JK Tyre & Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JMFINANCIL,JM Financial Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JSWCEMENT,JSW Cement Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JSWDULUX,JSW Dulux Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JSWENERGY,JSW Energy Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+JSWINFRA,JSW Infrastructure Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JSWSTEEL,JSW Steel Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JAINREC,Jain Resource Recycling Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JPPOWER,Jaiprakash Power Ventures Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+J&KBANK,Jammu & Kashmir Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+JINDALSAW,Jindal Saw Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JSL,Jindal Stainless Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JINDALSTEL,Jindal Steel Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+JIOFIN,Jio Financial Services Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+JUBLFOOD,Jubilant Foodworks Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+JUBLINGREA,Jubilant Ingrevia Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JUBLPHARMA,Jubilant Pharmova Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+JWL,Jupiter Wagons Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+JYOTICNC,Jyoti CNC Automation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KPRMILL,K.P.R. Mill Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KEI,KEI Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+KPITTECH,KPIT Technologies Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+KAJARIACER,Kajaria Ceramics Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KPIL,Kalpataru Projects International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KALYANKJIL,Kalyan Jewellers India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+KARURVYSYA,Karur Vysya Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+KAYNES,Kaynes Technology India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+KEC,Kec International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KFINTECH,Kfin Technologies Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+KIRLOSENG,Kirloskar Oil Eng Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+KOTAKBANK,Kotak Mahindra Bank Ltd.,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+KIMS,Krishna Institute of Medical Sciences Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+LTF,L&T Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LTTS,L&T Technology Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LGEINDIA,LG Electronics India Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+LICHSGFIN,LIC Housing Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LTFOODS,LT Foods Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LTM,LTM Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+LT,Larsen & Toubro Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LATENTVIEW,Latent View Analytics Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LAURUSLABS,Laurus Labs Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+THELEELA,Leela Palaces Hotels & Resorts Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LEMONTREE,Lemon Tree Hotels Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LENSKART,Lenskart Solutions Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+LICI,Life Insurance Corporation of India,,,True,False,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+LINDEINDIA,Linde India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LLOYDSME,Lloyds Metals And Energy Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+LODHA,Lodha Developers Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+LUPIN,Lupin Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+MMTC,MMTC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MRF,MRF Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MGL,Mahanagar Gas Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+M&MFIN,Mahindra & Mahindra Financial Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+M&M,Mahindra & Mahindra Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MANAPPURAM,Manappuram Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MRPL,Mangalore Refinery & Petrochemicals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MANKIND,Mankind Pharma Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+MARICO,Marico Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MARUTI,Maruti Suzuki India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MFSL,Max Financial Services Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MAXHEALTH,Max Healthcare Institute Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+MAZDOCK,Mazagoan Dock Shipbuilders Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MEESHO,Meesho Ltd.,,,False,True,False,,True,12,4,3,True,ready,True
+MINDACORP,Minda Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MSUMI,Motherson Sumi Wiring India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MOTILALOFS,Motilal Oswal Financial Services Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MPHASIS,MphasiS Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MCX,Multi Commodity Exchange of India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+MUTHOOTFIN,Muthoot Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NATCOPHARM,NATCO Pharma Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+NBCC,NBCC (India) Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+NCC,NCC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NHPC,NHPC Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+NLCINDIA,NLC India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NMDC,NMDC Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+NSLNISP,NMDC Steel Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NTPCGREEN,NTPC Green Energy Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NTPC,NTPC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NH,Narayana Hrudayalaya Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+NATIONALUM,National Aluminium Co. Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+NAVA,Nava Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NAVINFLUOR,Navin Fluorine International Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NESTLEIND,Nestle India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NETWEB,Netweb Technologies India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NEULANDLAB,Neuland Laboratories Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+NEWGEN,Newgen Software Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NAM-INDIA,Nippon Life India Asset Management Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+NIVABUPA,Niva Bupa Health Insurance Company Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,0,0,0,False,deferred_insurance,False
+NUVAMA,Nuvama Wealth Management Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+NUVOCO,Nuvoco Vistas Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+OBEROIRLTY,Oberoi Realty Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ONGC,Oil & Natural Gas Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+OIL,Oil India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+OLAELEC,Ola Electric Mobility Ltd.,,,False,True,False,,True,17,6,3,True,ready,True
+OLECTRA,Olectra Greentech Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PAYTM,One 97 Communications Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+ONESOURCE,Onesource Specialty Pharma Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+OFSS,Oracle Financial Services Software Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+POLICYBZR,PB Fintech Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PCBL,PCBL Chemical Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PGEL,PG Electroplast Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PIIND,PI Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PNBHOUSING,PNB Housing Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PTCIL,PTC Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PVRINOX,PVR INOX Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PAGEIND,Page Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PARADEEP,Paradeep Phosphates Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PATANJALI,Patanjali Foods Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PERSISTENT,Persistent Systems Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PETRONET,Petronet LNG Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PFIZER,Pfizer Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+PHOENIXLTD,Phoenix Mills Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PWL,Physicswallah Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+PIDILITIND,Pidilite Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PINELABS,Pine Labs Ltd.,,,False,True,False,,True,12,4,3,True,ready,True
+PIRAMALFIN,Piramal Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PPLPHARMA,Piramal Pharma Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+POLYMED,Poly Medicure Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+POLYCAB,Polycab India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+POONAWALLA,Poonawalla Fincorp Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PFC,Power Finance Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+POWERGRID,Power Grid Corporation of India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PREMIERENE,Premier Energies Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PRESTIGE,Prestige Estates Projects Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+PFOCUS,Prime Focus Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+PNB,Punjab National Bank,,,True,False,False,,True,12,6,2,True,ready,True
+RRKABEL,R R Kabel Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RBLBANK,RBL Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+RECLTD,REC Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RHIM,RHI MAGNESITA INDIA LTD.,,,False,True,False,,True,18,6,3,True,ready,True
+RITES,RITES Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RADICO,Radico Khaitan Ltd,,,True,False,False,,True,18,6,3,True,ready,True
+RVNL,Rail Vikas Nigam Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+RAILTEL,Railtel Corporation Of India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RAINBOW,Rainbow Childrens Medicare Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+RKFORGE,Ramkrishna Forgings Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+REDINGTON,Redington Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RELIANCE,Reliance Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+RPOWER,Reliance Power Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SBFC,SBFC Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SBICARD,SBI Cards and Payment Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SBILIFE,SBI Life Insurance Company Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,0,0,0,False,deferred_insurance,False
+SJVN,SJVN Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SRF,SRF Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SAGILITY,Sagility Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SAILIFE,Sai Life Sciences Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+SAMMAANCAP,Sammaan Capital Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+MOTHERSON,Samvardhana Motherson International Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SAPPHIRE,Sapphire Foods India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SARDAEN,Sarda Energy and Minerals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SAREGAMA,Saregama India Ltd,,,False,True,False,,True,18,6,3,True,ready,True
+SCHAEFFLER,Schaeffler India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SCHNEIDER,Schneider Electric Infrastructure Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SCI,Shipping Corporation of India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SHREECEM,Shree Cement Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SHRIRAMFIN,Shriram Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SHYAMMETL,Shyam Metalics and Energy Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ENRIN,Siemens Energy India Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+SIEMENS,Siemens Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SIGNATURE,Signatureglobal (India) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SOBHA,Sobha Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SOLARINDS,Solar Industries India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SONACOMS,Sona BLW Precision Forgings Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SONATSOFTW,Sonata Software Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+STARHEALTH,Star Health and Allied Insurance Company Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,0,0,0,False,deferred_insurance,False
+SBIN,State Bank of India,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+SAIL,Steel Authority of India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SUMICHEM,Sumitomo Chemical India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SUNPHARMA,Sun Pharmaceutical Industries Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+SUNTV,Sun TV Network Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SUNDARMFIN,Sundaram Finance Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SUPREMEIND,Supreme Industries Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SPLPETRO,Supreme Petrochem Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SUZLON,Suzlon Energy Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SWANCORP,Swan Corp Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+SWIGGY,Swiggy Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+SYNGENE,Syngene International Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+SYRMA,Syrma SGS Technology Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TBOTEK,TBO Tek Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TVSMOTOR,TVS Motor Company Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+TATACAP,Tata Capital Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+TATACHEM,Tata Chemicals Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TATACOMM,Tata Communications Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TCS,Tata Consultancy Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TATACONSUM,Tata Consumer Products Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+TATAELXSI,Tata Elxsi Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TATAINVEST,Tata Investment Corporation Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TMCV,Tata Motors Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+TMPV,Tata Motors Passenger Vehicles Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+TATAPOWER,Tata Power Co. Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+TATASTEEL,Tata Steel Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TATATECH,Tata Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TTML,Tata Teleservices (Maharashtra) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TECHM,Tech Mahindra Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TECHNOE,Techno Electric & Engineering Company Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TEGA,Tega Industries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TEJASNET,Tejas Networks Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TENNIND,Tenneco Clean Air India Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+NIACL,The New India Assurance Company Ltd.,,,False,True,True,insurance_specialist_model_deferred,False,18,6,3,True,deferred_insurance,False
+RAMCOCEM,The Ramco Cements Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+THERMAX,Thermax Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TIMKEN,Timken India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TITAGARH,Titagarh Rail Systems Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TITAN,Titan Company Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TORNTPHARM,Torrent Pharmaceuticals Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+TORNTPOWER,Torrent Power Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TARIL,Transformers And Rectifiers (India) Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TRAVELFOOD,Travel Food Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TRENT,Trent Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+TRIDENT,Trident Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TRITURBINE,Triveni Turbine Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+TIINDIA,Tube Investments of India Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+UCOBANK,UCO Bank,,,False,True,False,,True,0,0,0,False,pending_bank_data,False
+UNOMINDA,UNO Minda Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+UPL,UPL Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+UTIAMC,UTI Asset Management Company Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ULTRACEMCO,UltraTech Cement Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+UNIONBANK,Union Bank of India,,,True,False,False,,True,12,6,2,True,ready,True
+UBL,United Breweries Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+UNITDSPR,United Spirits Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+URBANCO,Urban Company Ltd.,,,False,True,False,,True,15,5,3,True,ready,True
+USHAMART,Usha Martin Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+VTL,Vardhman Textiles Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+VBL,Varun Beverages Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+VEDL,Vedanta Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+VIJAYA,Vijaya Diagnostic Centre Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+VMM,Vishal Mega Mart Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+IDEA,Vodafone Idea Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+VOLTAS,Voltas Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+WAAREEENER,Waaree Energies Ltd.,,,True,False,False,,True,18,6,3,True,ready,True
+WELCORP,Welspun Corp Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+WELSPUNLIV,Welspun Living Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+WHIRLPOOL,Whirlpool of India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+WIPRO,Wipro Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+WOCKPHARMA,Wockhardt Ltd.,,,False,True,False,,True,12,6,2,True,ready,True
+YESBANK,Yes Bank Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+ZFCVINDIA,ZF Commercial Vehicle Control Systems India Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ZEEL,Zee Entertainment Enterprises Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ZENTEC,Zen Technologies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ZENSARTECH,Zensar Technolgies Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ZYDUSLIFE,Zydus Lifesciences Ltd.,,,True,False,False,,True,12,6,2,True,ready,True
+ZYDUSWELL,Zydus Wellness Ltd.,,,False,True,False,,True,18,6,3,True,ready,True
+ECLERX,eClerx Services Ltd.,,,False,True,False,,True,18,6,3,True,ready,True

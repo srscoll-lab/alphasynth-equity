@@ -1,0 +1,18 @@
+{
+  "artifactSet": "nifty500-bms-v1-frozen-baseline",
+  "snapshotDate": "2026-08-22",
+  "recoveredFromRevision": "bms-api-fourfactor-0917b",
+  "recoveredFromRevisionAlias": "bms-api-evidencegate1",
+  "companyCount": 477,
+  "evidencePolicy": {
+    "earningsAndEconomics": "URL-backed frozen secondary financial extract",
+    "executionAndBalanceSheet": "Official-source supplemental evidence",
+    "secondaryEvidenceIsOfficial": false
+  },
+  "sha256": {
+    "nifty500_bms_v1_candidate.db": "8A9E45490BDCC84D93D1CE4AD617B8B01B4BBED43732DECEE3DC6618E5033B3A",
+    "nifty500_bms_v1_results.csv": "F450137343B59AF2CB40512AC56A9834C3C96A0A327B3DF30716E6FC3A8C5EB1",
+    "nifty500_bms_v1_product_view_final.csv": "72630058E743708CBBE26DC8334C9C9F1D00D9E35B63FCDA06454AE12FFAC5C6",
+    "final_validation/nifty500_bms_v1_fundamentals.csv": "977EE47C08B8A03472751FEE7305F586E4A9AD5A22B43453E1FA432E6D249693"
+  }
+}

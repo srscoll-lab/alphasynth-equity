@@ -83,6 +83,15 @@ def _comparison_basis(previous_period: str | None, current_period: str | None) -
     return "period-specific-comparison"
 
 
+def _same_quarter_previous_year(period: str) -> str | None:
+    match = re.fullmatch(r"Q([1-4])\s+FY(\d{2,4})", period.strip().upper())
+    if not match:
+        return None
+    year_text = match.group(2)
+    previous_year = int(year_text) - 1
+    return f"Q{match.group(1)} FY{previous_year:0{len(year_text)}d}"
+
+
 def empty_factor_analysis(period: str | None = None) -> dict:
     return {
         "schema_version": "1.0.0",
@@ -115,6 +124,8 @@ def load_factor_analyses(
     scores_by_symbol: dict[str, dict[str, float | None]],
     supplemental_evidence_file: Path | None = None,
     official_domains_by_symbol: dict[str, set[str]] | None = None,
+    legacy_fundamentals_file: Path | None = None,
+    legacy_snapshot_date: str | None = None,
 ) -> dict[str, dict]:
     """Build sourced previous/current factor comparisons in one database pass.
 
@@ -262,6 +273,86 @@ def load_factor_analyses(
                     "source_date": source_date.isoformat(),
                     "source_type": str(item.get("source_type") or "").strip().lower(),
                     "provenance_verified": True,
+                    "source_tier": "official",
+                })
+
+    # Restore the frozen BMS V1 financial baseline from the archived,
+    # URL-backed fundamentals extract. These rows are intentionally limited to
+    # Earnings and Economics. They are labelled as secondary-aggregator
+    # evidence and never masquerade as official company filings.
+    if (
+        legacy_fundamentals_file
+        and legacy_fundamentals_file.exists()
+        and legacy_snapshot_date
+    ):
+        legacy_rows: dict[tuple[str, str, str, str], dict] = {}
+        with legacy_fundamentals_file.open(encoding="utf-8-sig", newline="") as handle:
+            for item in csv.DictReader(handle):
+                symbol = str(item.get("symbol") or "").strip().upper()
+                factor_id = str(item.get("factor") or "").strip().lower()
+                metric = str(item.get("metric_name") or "").strip().lower()
+                period = str(item.get("period") or "").strip().upper()
+                source_type = str(item.get("source_type") or "").strip().lower()
+                source_status = str(item.get("source_status") or "").strip().lower()
+                source_ref = str(item.get("source_reference") or "").strip()
+                unit = str(item.get("unit") or "").strip()
+                if (
+                    symbol not in periods_by_symbol
+                    or factor_id not in {"earnings", "economics"}
+                    or source_type not in {"screener", "official"}
+                    or source_status not in {"collected", "validated_official"}
+                    or not source_ref.startswith(("https://", "http://"))
+                    or not metric
+                    or not unit
+                ):
+                    continue
+                try:
+                    value = float(str(item.get("value") or ""))
+                except (TypeError, ValueError):
+                    continue
+                legacy_rows[(symbol, factor_id, metric, period)] = {
+                    "value": value,
+                    "unit": unit,
+                    "source_ref": source_ref,
+                    "source_type": source_type,
+                    "source_status": source_status,
+                }
+
+        for symbol, current_period in periods_by_symbol.items():
+            previous_period = _same_quarter_previous_year(current_period)
+            if not previous_period:
+                continue
+            keys = [
+                key for key in legacy_rows
+                if key[0] == symbol and key[3] == current_period.strip().upper()
+            ]
+            for _, factor_id, metric, _ in keys:
+                current = legacy_rows[(symbol, factor_id, metric, current_period.strip().upper())]
+                previous = legacy_rows.get((symbol, factor_id, metric, previous_period))
+                if not previous:
+                    continue
+                refs = list(dict.fromkeys([previous["source_ref"], current["source_ref"]]))
+                grouped[symbol][factor_id].append({
+                    "change_record_id": None,
+                    "evidence_refs": refs,
+                    "metric_or_topic": metric,
+                    "unit": current["unit"],
+                    "previous_period": previous_period,
+                    "current_period": current_period,
+                    "previous_value": previous["value"],
+                    "current_value": current["value"],
+                    "change_value": current["value"] - previous["value"],
+                    "change_confidence": 0.6 if current["source_type"] == "screener" else 0.85,
+                    "source_date": None,
+                    "captured_at": legacy_snapshot_date,
+                    "source_type": current["source_type"],
+                    "source_status": current["source_status"],
+                    "source_tier": (
+                        "secondary_aggregator"
+                        if current["source_type"] == "screener"
+                        else "official"
+                    ),
+                    "provenance_verified": True,
                 })
 
     for symbol, factor_rows in grouped.items():
@@ -287,11 +378,17 @@ def load_factor_analyses(
                     evidence_refs = row.get("evidence_refs", [])
                     source_date = row.get("source_date")
                     source_type = row.get("source_type")
+                    captured_at = row.get("captured_at")
+                    source_status = row.get("source_status")
+                    source_tier = row.get("source_tier", "official")
                     row_verified = bool(row.get("provenance_verified"))
                 else:
                     source_url = str(row["source_url"] or "").strip() if enriched else ""
                     source_date = str(row["source_date"] or "").split("T")[0] if enriched else None
                     source_type = str(row["source_type"] or "").strip().lower() if enriched else None
+                    captured_at = None
+                    source_status = None
+                    source_tier = "official"
                     evidence_refs = [source_url] if source_url else []
                     row_verified = bool(
                         source_url.startswith(("https://", "http://"))
@@ -331,7 +428,10 @@ def load_factor_analyses(
                 source_details.extend({
                     "url": ref,
                     "published_at": source_date,
+                    "captured_at": captured_at,
                     "source_type": source_type,
+                    "source_status": source_status,
+                    "source_tier": source_tier,
                 } for ref in evidence_refs)
                 confidence = row["change_confidence"]
                 if confidence is not None:
@@ -340,13 +440,13 @@ def load_factor_analyses(
             score = scores_by_symbol.get(symbol, {}).get(factor_id)
             factor["previous"] = {
                 "period": previous_period,
-                "observed_at": max((item["published_at"] for item in source_details if item["published_at"]), default=None),
+                "observed_at": max((item["published_at"] or item["captured_at"] for item in source_details if item["published_at"] or item["captured_at"]), default=None),
                 "factor_score": None,
                 "metrics": previous_metrics,
             }
             factor["current"] = {
                 "period": current_period,
-                "observed_at": max((item["published_at"] for item in source_details if item["published_at"]), default=None),
+                "observed_at": max((item["published_at"] or item["captured_at"] for item in source_details if item["published_at"] or item["captured_at"]), default=None),
                 "factor_score": score if current_metrics else None,
                 "metrics": current_metrics,
             }

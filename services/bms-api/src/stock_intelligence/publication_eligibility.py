@@ -73,8 +73,18 @@ def assess_publication_eligibility(factor_analysis: dict) -> PublicationEligibil
         ) and bool(current.get("observed_at") or current.get("observedAt"))
         sources_are_auditable = bool(source_details) and all(
             str(source.get("url") or "").startswith(("https://", "http://"))
-            and bool(source.get("published_at") or source.get("publishedAt"))
+            and bool(
+                source.get("published_at")
+                or source.get("publishedAt")
+                or source.get("captured_at")
+                or source.get("capturedAt")
+            )
             and bool(source.get("source_type") or source.get("sourceType"))
+            and (
+                str(source.get("source_tier") or source.get("sourceTier") or "official")
+                != "secondary_aggregator"
+                or factor_id in {"earnings", "economics"}
+            )
             for source in source_details
             if isinstance(source, dict)
         )

@@ -1,0 +1,478 @@
+bms_rank,symbol,company_name,bms,previous_bms,bms_change_vs_previous_quarter,bms_change_display,bms_change_reliability,lifecycle_state,reversal_warning,evidence_count,previous_evidence_count,evidence_strength,period,q1_fy26_bms,bms_change_rank,state,earnings,economics,execution,balance_sheet,management_delivery,q1_fy26_evidence_count
+1,SAMMAANCAP,Sammaan Capital Ltd.,0.4475,0.4475,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,0.0,285,improving,0.9,0.89,0.0,0.0,0.0,0
+2,HINDCOPPER,Hindustan Copper Ltd.,0.4425,0.4275,0.015,+0.0150,Reliable change,Established,,7,4,High,Q3 FY26,0.19,146,improving,0.91,0.86,0.0,0.0,0.0,1
+3,TATASTEEL,Tata Steel Ltd.,0.435,0.4225,0.0125,+0.0125,Reliable change,Building,,5,3,Moderate,Q3 FY26,0.1975,159,improving,0.88,0.86,0.0,0.0,0.0,1
+4,FORCEMOT,Force Motors Ltd.,0.4325,0.4175,0.015,+0.0150,Reliable change,Established,,7,4,High,Q3 FY26,0.19,146,improving,0.83,0.9,0.0,0.0,0.0,2
+5,SUZLON,Suzlon Energy Ltd.,0.43,0.4325,-0.0025,-0.0025,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.1925,331,improving,0.83,0.89,0.0,0.0,0.0,1
+6,HBLENGINE,HBL Engineering Ltd.,0.4275,0.42,0.0075,+0.0075,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,195,improving,0.87,0.84,0.0,0.0,0.0,2
+7,IOC,Indian Oil Corporation Ltd.,0.425,0.4325,-0.0075,-0.0075,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.1975,367,improving,0.82,0.88,0.0,0.0,0.0,1
+8,ATHERENERG,Ather Energy Ltd.,0.4225,0.4025,0.02,+0.0200,Reliable change,Established,,8,5,High,Q3 FY26,0.3875,139,improving,0.85,0.84,0.0,0.0,0.0,2
+9,HOMEFIRST,Home First Finance Company India Ltd.,0.4225,0.41,0.0125,+0.0125,Reliable change,Established,,8,5,High,Q3 FY26,0.195,159,improving,0.8,0.89,0.0,0.0,0.0,2
+10,NYKAA,FSN E-Commerce Ventures Ltd.,0.4225,0.2,0.2225,+0.2225,Reliable change,Building,,7,4,High,Q3 FY26,0.19,20,improving,0.83,0.86,0.0,0.0,0.0,2
+11,KAJARIACER,Kajaria Ceramics Ltd.,0.4225,0.4275,-0.005,-0.0050,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,356,improving,0.81,0.88,0.0,0.0,0.0,0
+12,MRF,MRF Ltd.,0.4225,0.0,0.4225,New signal,New signal,Emerging,,3,0,Limited,Q3 FY26,0.0,2,improving,0.87,0.82,0.0,0.0,0.0,0
+13,POLICYBZR,PB Fintech Ltd.,0.42,0.41,0.01,+0.0100,Reliable change,Established,,9,6,High,Q3 FY26,0.385,178,improving,0.84,0.84,0.0,0.0,0.0,3
+14,GMRAIRPORT,GMR Airports Ltd.,0.42,0.41,0.01,+0.0100,Reliable change,Established,,7,5,High,Q3 FY26,0.19,178,improving,0.83,0.85,0.0,0.0,0.0,2
+15,LLOYDSME,Lloyds Metals And Energy Ltd.,0.42,0.405,0.015,+0.0150,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.19,146,improving,0.88,0.8,0.0,0.0,0.0,1
+16,HINDZINC,Hindustan Zinc Ltd.,0.42,0.3875,0.0325,+0.0325,Reliable change,Building,,5,2,Moderate,Q3 FY26,0.0,130,improving,0.83,0.85,0.0,0.0,0.0,0
+17,AEGISLOG,Aegis Logistics Ltd.,0.42,0.2175,0.2025,+0.2025,Reliable change,Building,,4,2,Moderate,Q3 FY26,0.0,36,improving,0.89,0.79,0.0,0.0,0.0,0
+18,BAYERCROP,Bayer Cropscience Ltd.,0.42,0.3825,0.0375,+0.0375,Reliable change,Building,,4,2,Moderate,Q3 FY26,0.0,125,improving,0.86,0.82,0.0,0.0,0.0,0
+19,LENSKART,Lenskart Solutions Ltd.,0.42,0.19,0.23,+0.2300 (limited history),Limited history,Building,,4,1,Moderate,Q3 FY26,0.0,17,improving,0.86,0.82,0.0,0.0,0.0,0
+20,BSE,BSE Ltd.,0.4175,0.3925,0.025,+0.0250,Reliable change,Established,,9,6,High,Q3 FY26,0.39,134,improving,0.83,0.84,0.0,0.0,0.0,3
+21,JSWENERGY,JSW Energy Ltd.,0.4175,0.4,0.0175,+0.0175,Reliable change,Established,,8,5,High,Q3 FY26,0.39,143,improving,0.82,0.85,0.0,0.0,0.0,3
+22,CHOICEIN,Choice International Ltd.,0.4175,0.3825,0.035,+0.0350,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,126,improving,0.86,0.81,0.0,0.0,0.0,2
+23,RRKABEL,R R Kabel Ltd.,0.4175,0.4175,0.0,+0.0000,Reliable change,Established,,7,4,High,Q3 FY26,0.1975,285,improving,0.85,0.82,0.0,0.0,0.0,1
+24,BAJAJ-AUTO,Bajaj Auto Ltd.,0.4175,0.415,0.0025,+0.0025,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.0,246,improving,0.85,0.82,0.0,0.0,0.0,0
+25,HONASA,Honasa Consumer Ltd.,0.4175,0.425,-0.0075,-0.0075,Reliable change,Watch,,6,3,Moderate,Q3 FY26,0.0,367,improving,0.84,0.83,0.0,0.0,0.0,0
+26,LINDEINDIA,Linde India Ltd.,0.4175,0.415,0.0025,+0.0025,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.195,246,improving,0.83,0.84,0.0,0.0,0.0,1
+27,NAUKRI,Info Edge (India) Ltd.,0.4175,0.42,-0.0025,-0.0025,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.1875,331,improving,0.78,0.89,0.0,0.0,0.0,1
+28,TATAINVEST,Tata Investment Corporation Ltd.,0.4175,0.19,0.2275,+0.2275,Reliable change,Building,,5,2,Moderate,Q3 FY26,0.0,18,improving,0.85,0.82,0.0,0.0,0.0,0
+29,GVT&D,GE Vernova T&D India Ltd.,0.415,0.4,0.015,+0.0150,Reliable change,Established,,9,6,High,Q3 FY26,0.39,146,improving,0.83,0.83,0.0,0.0,0.0,3
+30,MUTHOOTFIN,Muthoot Finance Ltd.,0.415,0.4,0.015,+0.0150,Reliable change,Established,,9,6,High,Q3 FY26,0.39,146,improving,0.83,0.83,0.0,0.0,0.0,3
+31,WAAREEENER,Waaree Energies Ltd.,0.415,0.405,0.01,+0.0100,Reliable change,Established,,9,6,High,Q3 FY26,0.385,178,improving,0.85,0.81,0.0,0.0,0.0,3
+32,IKS,Inventurus Knowledge Solutions Ltd.,0.415,0.405,0.01,+0.0100,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,178,improving,0.83,0.83,0.0,0.0,0.0,2
+33,PIRAMALFIN,Piramal Finance Ltd.,0.415,0.395,0.02,+0.0200,Reliable change,Established,,8,6,High,Q3 FY26,0.39,139,improving,0.81,0.85,0.0,0.0,0.0,3
+34,JAINREC,Jain Resource Recycling Ltd.,0.415,0.4025,0.0125,+0.0125,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.0,159,improving,0.88,0.78,0.0,0.0,0.0,0
+35,RITES,RITES Ltd.,0.415,0.43,-0.015,-0.0150,Reliable change,Watch,,5,2,Moderate,Q3 FY26,0.0,389,improving,0.8,0.86,0.0,0.0,0.0,0
+36,CGCL,Capri Global Capital Ltd.,0.4125,0.4025,0.01,+0.0100,Reliable change,Established,,9,6,High,Q3 FY26,0.39,178,improving,0.83,0.82,0.0,0.0,0.0,3
+37,GRSE,Garden Reach Shipbuilders & Engineers Ltd.,0.4125,0.3975,0.015,+0.0150,Reliable change,Established,,9,6,High,Q3 FY26,0.38,146,improving,0.84,0.81,0.0,0.0,0.0,3
+38,NAVINFLUOR,Navin Fluorine International Ltd.,0.4125,0.4025,0.01,+0.0100,Reliable change,Established,,9,6,High,Q3 FY26,0.39,178,improving,0.83,0.82,0.0,0.0,0.0,3
+39,CRAFTSMAN,Craftsman Automation Ltd.,0.4125,0.3875,0.025,+0.0250,Reliable change,Established,,8,5,High,Q3 FY26,0.185,134,improving,0.83,0.82,0.0,0.0,0.0,2
+40,POLYCAB,Polycab India Ltd.,0.4125,0.4025,0.01,+0.0100,Reliable change,Established,,7,5,High,Q3 FY26,0.38,178,improving,0.83,0.82,0.0,0.0,0.0,3
+41,MCX,Multi Commodity Exchange of India Ltd.,0.41,0.38,0.03,+0.0300,Reliable change,Established,,9,6,High,Q3 FY26,0.39,131,improving,0.83,0.81,0.0,0.0,0.0,3
+42,NSLNISP,NMDC Steel Ltd.,0.41,0.4025,0.0075,+0.0075,Reliable change,Established,,9,6,High,Q3 FY26,0.39,195,improving,0.82,0.82,0.0,0.0,0.0,3
+43,IIFL,IIFL Finance Ltd.,0.41,0.3975,0.0125,+0.0125,Reliable change,Established,,8,5,High,Q3 FY26,0.195,159,improving,0.85,0.79,0.0,0.0,0.0,2
+44,APLAPOLLO,APL Apollo Tubes Ltd.,0.41,0.42,-0.01,-0.0100,Reliable change,Established,,7,4,High,Q3 FY26,0.1875,377,improving,0.81,0.83,0.0,0.0,0.0,1
+45,HEG,H.E.G. Ltd.,0.41,0.3975,0.0125,+0.0125,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,159,improving,0.84,0.8,0.0,0.0,0.0,2
+46,NUVOCO,Nuvoco Vistas Corporation Ltd.,0.41,0.405,0.005,+0.0050,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,214,improving,0.82,0.82,0.0,0.0,0.0,2
+47,POWERINDIA,Hitachi Energy India Ltd.,0.4075,0.395,0.0125,+0.0125,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,159,improving,0.82,0.81,0.0,0.0,0.0,2
+48,SYRMA,Syrma SGS Technology Ltd.,0.4075,0.395,0.0125,+0.0125,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,159,improving,0.83,0.8,0.0,0.0,0.0,2
+49,CUMMINSIND,Cummins India Ltd.,0.4075,0.4125,-0.005,-0.0050,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.185,356,improving,0.79,0.84,0.0,0.0,0.0,2
+50,GILLETTE,Gillette India Ltd.,0.4075,0.3725,0.035,+0.0350,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.3775,126,improving,0.84,0.79,0.0,0.0,0.0,2
+51,SHREECEM,Shree Cement Ltd.,0.4075,0.405,0.0025,+0.0025,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.3925,246,improving,0.83,0.8,0.0,0.0,0.0,2
+52,CANFINHOME,Can Fin Homes Ltd.,0.4075,0.395,0.0125,+0.0125,Reliable change,Building,,5,2,Moderate,Q3 FY26,0.0,159,improving,0.8,0.83,0.0,0.0,0.0,0
+53,LTM,LTM Ltd.,0.4075,0.1875,0.22,+0.2200,Reliable change,Building,,4,2,Moderate,Q3 FY26,0.0,22,improving,0.77,0.86,0.0,0.0,0.0,0
+54,ASIANPAINT,Asian Paints Ltd.,0.4075,0.4075,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,0.0,285,improving,0.83,0.8,0.0,0.0,0.0,0
+55,DALBHARAT,Dalmia Bharat Ltd.,0.405,0.41,-0.005,-0.0050,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,356,improving,0.83,0.79,0.0,0.0,0.0,2
+56,ULTRACEMCO,UltraTech Cement Ltd.,0.405,0.4025,0.0025,+0.0025,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,246,improving,0.83,0.79,0.0,0.0,0.0,2
+57,AEGISVOPAK,Aegis Vopak Terminals Ltd.,0.405,0.195,0.21,+0.2100,Reliable change,Building,,7,4,High,Q3 FY26,0.195,29,improving,0.82,0.8,0.0,0.0,0.0,2
+58,BPCL,Bharat Petroleum Corporation Ltd.,0.405,0.4,0.005,+0.0050,Reliable change,Established,,7,4,High,Q3 FY26,0.3875,214,improving,0.81,0.81,0.0,0.0,0.0,2
+59,SRF,SRF Ltd.,0.405,0.41,-0.005,-0.0050,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,356,improving,0.81,0.81,0.0,0.0,0.0,2
+60,ONGC,Oil & Natural Gas Corporation Ltd.,0.405,0.405,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.19,285,improving,0.83,0.79,0.0,0.0,0.0,1
+61,CARTRADE,Cartrade Tech Ltd.,0.4025,0.4,0.0025,+0.0025,Reliable change,Established,,9,6,High,Q3 FY26,0.385,246,improving,0.79,0.82,0.0,0.0,0.0,3
+62,RADICO,Radico Khaitan Ltd,0.4025,0.38,0.0225,+0.0225,Reliable change,Established,,8,5,High,Q3 FY26,0.19,136,improving,0.79,0.82,0.0,0.0,0.0,2
+63,CCL,CCL Products (I) Ltd.,0.4025,0.1975,0.205,+0.2050,Reliable change,Building,,7,4,High,Q3 FY26,0.185,33,improving,0.84,0.77,0.0,0.0,0.0,2
+64,ECLERX,eClerx Services Ltd.,0.4025,0.385,0.0175,+0.0175,Reliable change,Established,,7,4,High,Q3 FY26,0.3775,143,improving,0.83,0.78,0.0,0.0,0.0,2
+65,PVRINOX,PVR INOX Ltd.,0.4025,0.3975,0.005,+0.0050,Reliable change,Established,,7,5,High,Q3 FY26,0.385,214,improving,0.82,0.79,0.0,0.0,0.0,3
+66,GRAVITA,Gravita India Ltd.,0.4025,0.3925,0.01,+0.0100,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.1975,178,improving,0.78,0.83,0.0,0.0,0.0,1
+67,HINDPETRO,Hindustan Petroleum Corporation Ltd.,0.4025,0.405,-0.0025,-0.0025,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.3925,331,improving,0.85,0.76,0.0,0.0,0.0,2
+68,JYOTICNC,Jyoti CNC Automation Ltd.,0.4025,0.19,0.2125,+0.2125,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.1975,24,improving,0.79,0.82,0.0,0.0,0.0,1
+69,LODHA,Lodha Developers Ltd.,0.4025,0.405,-0.0025,-0.0025,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.19,331,improving,0.81,0.8,0.0,0.0,0.0,2
+70,AIAENG,AIA Engineering Ltd.,0.4025,0.2,0.2025,+0.2025 (limited history),Limited history,Emerging,,2,1,Limited,Q3 FY26,0.0,36,improving,0.81,0.8,0.0,0.0,0.0,0
+71,BAJAJHLDNG,Bajaj Holdings & Investment Ltd.,0.4,0.39,0.01,+0.0100,Reliable change,Established,,9,6,High,Q3 FY26,0.39,178,improving,0.79,0.81,0.0,0.0,0.0,3
+72,PREMIERENE,Premier Energies Ltd.,0.4,0.405,-0.005,-0.0050,Reliable change,Established,,8,5,High,Q3 FY26,0.3925,356,improving,0.83,0.77,0.0,0.0,0.0,2
+73,TITAN,Titan Company Ltd.,0.4,0.3875,0.0125,+0.0125,Reliable change,Established,,8,5,High,Q3 FY26,0.19,159,improving,0.82,0.78,0.0,0.0,0.0,2
+74,BIKAJI,Bikaji Foods International Ltd.,0.4,0.195,0.205,+0.2050,Reliable change,Building,,5,2,Moderate,Q3 FY26,0.0,33,improving,0.81,0.79,0.0,0.0,0.0,0
+75,PHOENIXLTD,Phoenix Mills Ltd.,0.4,0.4125,-0.0125,-0.0125,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.0,385,improving,0.83,0.77,0.0,0.0,0.0,0
+76,SCHAEFFLER,Schaeffler India Ltd.,0.4,0.3875,0.0125,+0.0125,Reliable change,Building,,5,3,Moderate,Q3 FY26,0.0,159,improving,0.85,0.75,0.0,0.0,0.0,0
+77,DCMSHRIRAM,DCM Shriram Ltd.,0.4,0.4025,-0.0025,-0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.0,331,improving,0.8,0.8,0.0,0.0,0.0,0
+78,IRFC,Indian Railway Finance Corporation Ltd.,0.4,0.4075,-0.0075,-0.0075,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,367,improving,0.77,0.83,0.0,0.0,0.0,0
+79,COFORGE,Coforge Ltd.,0.3975,0.39,0.0075,+0.0075,Reliable change,Established,,9,6,High,Q3 FY26,0.385,195,improving,0.78,0.81,0.0,0.0,0.0,3
+80,THELEELA,Leela Palaces Hotels & Resorts Ltd.,0.3975,0.395,0.0025,+0.0025,Reliable change,Established,,8,5,High,Q3 FY26,0.385,246,improving,0.83,0.76,0.0,0.0,0.0,3
+81,ANANDRATHI,Anand Rathi Wealth Ltd.,0.3975,0.3925,0.005,+0.0050,Reliable change,Established,,7,5,High,Q3 FY26,0.3825,214,improving,0.81,0.78,0.0,0.0,0.0,2
+82,WELCORP,Welspun Corp Ltd.,0.3975,0.3925,0.005,+0.0050,Reliable change,Established,,7,5,High,Q3 FY26,0.3875,214,improving,0.83,0.76,0.0,0.0,0.0,2
+83,BEL,Bharat Electronics Ltd.,0.3975,0.39,0.0075,+0.0075,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.3825,195,improving,0.81,0.78,0.0,0.0,0.0,2
+84,ITCHOTELS,ITC Hotels Ltd.,0.3975,0.4075,-0.01,-0.0100,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.1975,377,improving,0.82,0.77,0.0,0.0,0.0,1
+85,ABDL,Allied Blenders and Distillers Ltd.,0.3975,0.19,0.2075,+0.2075,Reliable change,Building,,5,3,Moderate,Q3 FY26,0.19,31,improving,0.77,0.82,0.0,0.0,0.0,2
+86,MINDACORP,Minda Corporation Ltd.,0.3975,0.195,0.2025,+0.2025,Reliable change,Building,,5,2,Moderate,Q3 FY26,0.0,36,improving,0.83,0.76,0.0,0.0,0.0,0
+87,JSL,Jindal Stainless Ltd.,0.3975,0.2025,0.195,+0.1950,Reliable change,Building,,4,2,Moderate,Q3 FY26,0.0,47,improving,0.83,0.76,0.0,0.0,0.0,0
+88,ABSLAMC,Aditya Birla Sun Life AMC Ltd.,0.3975,0.185,0.2125,+0.2125 (limited history),Limited history,Emerging,,2,1,Limited,Q3 FY26,0.0,24,improving,0.85,0.74,0.0,0.0,0.0,0
+89,JSWSTEEL,JSW Steel Ltd.,0.395,0.39,0.005,+0.0050,Reliable change,Established,,8,5,High,Q3 FY26,0.3875,214,improving,0.84,0.74,0.0,0.0,0.0,2
+90,CHOLAHLDNG,Cholamandalam Financial Holdings Ltd.,0.395,0.385,0.01,+0.0100,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.39,178,improving,0.8,0.78,0.0,0.0,0.0,3
+91,ESCORTS,Escorts Kubota Ltd.,0.395,0.41,-0.015,-0.0150,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.1975,389,improving,0.75,0.83,0.0,0.0,0.0,1
+92,PNBHOUSING,PNB Housing Finance Ltd.,0.395,0.395,0.0,+0.0000,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.3775,285,improving,0.77,0.81,0.0,0.0,0.0,2
+93,BRITANNIA,Britannia Industries Ltd.,0.395,0.4075,-0.0125,-0.0125,Reliable change,Watch,,5,2,Moderate,Q3 FY26,0.0,385,improving,0.82,0.76,0.0,0.0,0.0,0
+94,FLUOROCHEM,Gujarat Fluorochemicals Ltd.,0.395,0.4025,-0.0075,-0.0075,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.3925,367,improving,0.8,0.78,0.0,0.0,0.0,2
+95,NATIONALUM,National Aluminium Co. Ltd.,0.395,0.395,0.0,+0.0000,Reliable change,Watch,,5,5,Moderate,Q3 FY26,0.385,285,improving,0.78,0.8,0.0,0.0,0.0,3
+96,RAMCOCEM,The Ramco Cements Ltd.,0.395,0.3925,0.0025,+0.0025,Reliable change,Building,,5,4,Moderate,Q3 FY26,0.3875,246,improving,0.84,0.74,0.0,0.0,0.0,2
+97,TRENT,Trent Ltd.,0.395,0.1875,0.2075,+0.2075,Reliable change,Building,,4,2,Moderate,Q3 FY26,0.0,31,improving,0.76,0.82,0.0,0.0,0.0,0
+98,ANANTRAJ,Anant Raj Ltd.,0.3925,0.395,-0.0025,-0.0025,Reliable change,Established,,9,6,High,Q3 FY26,0.38,331,improving,0.79,0.78,0.0,0.0,0.0,3
+99,PERSISTENT,Persistent Systems Ltd.,0.3925,0.3975,-0.005,-0.0050,Reliable change,Established,,8,5,High,Q3 FY26,0.19,356,improving,0.8,0.77,0.0,0.0,0.0,2
+100,IGIL,International Gemological Institute Ltd.,0.3925,0.3875,0.005,+0.0050,Reliable change,Established,,7,4,High,Q3 FY26,0.3925,214,improving,0.79,0.78,0.0,0.0,0.0,2
+101,KALYANKJIL,Kalyan Jewellers India Ltd.,0.3925,0.1975,0.195,+0.1950,Reliable change,Building,,7,4,High,Q3 FY26,0.19,47,improving,0.83,0.74,0.0,0.0,0.0,2
+102,CESC,CESC Ltd.,0.3925,0.3975,-0.005,-0.0050,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.195,356,improving,0.79,0.78,0.0,0.0,0.0,1
+103,HSCL,Himadri Speciality Chemical Ltd.,0.3925,0.39,0.0025,+0.0025,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.3925,246,improving,0.81,0.76,0.0,0.0,0.0,2
+104,SARDAEN,Sarda Energy and Minerals Ltd.,0.3925,0.3925,0.0,+0.0000,Reliable change,Established,,6,6,Moderate,Q3 FY26,0.39,285,improving,0.78,0.79,0.0,0.0,0.0,3
+105,PINELABS,Pine Labs Ltd.,0.3925,0.3925,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,0.0,285,improving,0.79,0.78,0.0,0.0,0.0,0
+106,SUNDARMFIN,Sundaram Finance Ltd.,0.39,0.3775,0.0125,+0.0125,Reliable change,Building,,7,4,High,Q3 FY26,0.38,159,improving,0.76,0.8,0.0,0.0,0.0,3
+107,TECHNOE,Techno Electric & Engineering Company Ltd.,0.39,0.3875,0.0025,+0.0025,Reliable change,Established,,7,5,High,Q3 FY26,0.385,246,improving,0.8,0.76,0.0,0.0,0.0,3
+108,ABLBL,Aditya Birla Lifestyle Brands Ltd.,0.39,0.225,0.165,+0.1650 (limited history),Limited history,Building,,4,1,Moderate,Q3 FY26,0.0,67,improving,0.82,0.74,0.0,0.0,0.0,0
+109,KAYNES,Kaynes Technology India Ltd.,0.3875,0.3875,0.0,+0.0000,Reliable change,Established,,9,6,High,Q3 FY26,0.38,285,improving,0.81,0.74,0.0,0.0,0.0,3
+110,CHALET,Chalet Hotels Ltd.,0.3875,0.1975,0.19,+0.1900,Reliable change,Building,,7,4,High,Q3 FY26,0.195,54,improving,0.8,0.75,0.0,0.0,0.0,2
+111,GRASIM,Grasim Industries Ltd.,0.3875,0.3875,0.0,+0.0000,Reliable change,Established,,7,4,High,Q3 FY26,0.3775,285,improving,0.81,0.74,0.0,0.0,0.0,2
+112,PARADEEP,Paradeep Phosphates Ltd.,0.3875,0.39,-0.0025,-0.0025,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.39,331,improving,0.77,0.78,0.0,0.0,0.0,3
+113,BBTC,Bombay Burmah Trading Corporation Ltd.,0.3875,0.385,0.0025,+0.0025,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,246,improving,0.76,0.79,0.0,0.0,0.0,0
+114,ACMESOLAR,ACME Solar Holdings Ltd.,0.385,0.2,0.185,+0.1850,Reliable change,Building,,6,4,Moderate,Q3 FY26,0.195,59,improving,0.81,0.73,0.0,0.0,0.0,2
+115,JKCEMENT,J.K. Cement Ltd.,0.385,0.3825,0.0025,+0.0025,Reliable change,Established,,6,5,Moderate,Q3 FY26,0.3875,246,improving,0.75,0.79,0.0,0.0,0.0,2
+116,HAL,Hindustan Aeronautics Ltd.,0.385,0.375,0.01,+0.0100,Reliable change,Building,,5,3,Moderate,Q3 FY26,0.19,178,improving,0.78,0.76,0.0,0.0,0.0,1
+117,LTF,L&T Finance Ltd.,0.385,0.19,0.195,+0.1950 (limited history),Limited history,Building,,4,1,Moderate,Q3 FY26,0.0,47,improving,0.81,0.73,0.0,0.0,0.0,0
+118,BAJAJHFL,Bajaj Housing Finance Ltd.,0.3825,0.185,0.1975,+0.1975,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.1875,45,improving,0.77,0.76,0.0,0.0,0.0,1
+119,ENRIN,Siemens Energy India Ltd.,0.3825,0.385,-0.0025,-0.0025,Reliable change,Established,,6,3,Moderate,Q3 FY26,0.385,331,improving,0.78,0.75,0.0,0.0,0.0,3
+120,FSL,Firstsource Solutions Ltd.,0.3825,0.1925,0.19,+0.1900,Reliable change,Building,,6,4,Moderate,Q3 FY26,0.185,54,improving,0.76,0.77,0.0,0.0,0.0,2
+121,HDFCAMC,HDFC Asset Management Company Ltd.,0.3825,0.38,0.0025,+0.0025,Reliable change,Established,,6,4,Moderate,Q3 FY26,0.375,246,improving,0.77,0.76,0.0,0.0,0.0,3
+122,TECHM,Tech Mahindra Ltd.,0.38,0.37,0.01,+0.0100,Reliable change,Building,,6,3,Moderate,Q3 FY26,0.1875,178,improving,0.75,0.77,0.0,0.0,0.0,1
+123,ICICIAMC,ICICI Prudential Asset Management Company Ltd.,0.38,0.0,0.38,New signal,New signal,Emerging,,3,0,Limited,Q3 FY26,0.0,4,improving,0.76,0.76,0.0,0.0,0.0,0
+124,PAGEIND,Page Industries Ltd.,0.38,0.3775,0.0025,+0.0025,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.3775,246,improving,0.76,0.76,0.0,0.0,0.0,2
+125,AFFLE,Affle 3i Ltd.,0.3775,0.3725,0.005,+0.0050,Reliable change,Watch,,8,5,High,Q3 FY26,0.3775,214,improving,0.77,0.74,0.0,0.0,0.0,2
+126,JUBLINGREA,Jubilant Ingrevia Ltd.,0.3775,0.3775,0.0,+0.0000,Reliable change,Watch,,4,4,Moderate,Q3 FY26,0.3875,285,improving,0.75,0.76,0.0,0.0,0.0,2
+127,RECLTD,REC Ltd.,0.3775,0.3775,0.0,+0.0000,Reliable change,Watch,,4,4,Moderate,Q3 FY26,0.3825,285,improving,0.73,0.78,0.0,0.0,0.0,2
+128,CASTROLIND,Castrol India Ltd.,0.3775,0.3875,-0.01,-0.0100,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,377,improving,0.76,0.75,0.0,0.0,0.0,0
+129,TATACAP,Tata Capital Ltd.,0.375,0.0,0.375,New signal,New signal,Emerging,,2,0,Limited,Q3 FY26,0.0,5,improving,0.75,0.75,0.0,0.0,0.0,0
+130,CPPLUS,Aditya Infotech Ltd.,0.35,0.2925,0.0575,+0.0575,Reliable change,Watch,,7,4,High,Q3 FY26,0.1975,115,improving,0.53,0.87,0.0,0.0,0.0,1
+131,PAYTM,One 97 Communications Ltd.,0.345,0.2975,0.0475,+0.0475,Reliable change,Watch,,9,6,High,Q3 FY26,0.385,121,improving,0.54,0.84,0.0,0.0,0.0,3
+132,BHARTIARTL,Bharti Airtel Ltd.,0.3325,0.395,-0.0625,-0.0625,Reliable change,Watch,Moderate,9,6,High,Q3 FY26,0.385,406,improving,0.53,0.8,0.0,0.0,0.0,3
+133,UPL,UPL Ltd.,0.3325,0.4075,-0.075,-0.0750,Reliable change,Watch,Moderate,8,5,High,Q3 FY26,0.3875,410,improving,0.51,0.82,0.0,0.0,0.0,2
+134,DELHIVERY,Delhivery Ltd.,0.3325,0.0625,0.27,+0.2700,Reliable change,Emerging,,6,3,Moderate,Q3 FY26,0.1975,13,improving,0.47,0.86,0.0,0.0,0.0,1
+135,CEATLTD,Ceat Ltd.,0.33,0.2575,0.0725,+0.0725,Reliable change,Watch,,7,4,High,Q3 FY26,-0.1875,100,improving,0.52,0.8,0.0,0.0,0.0,1
+136,NTPCGREEN,NTPC Green Energy Ltd.,0.33,0.405,-0.075,-0.0750,Reliable change,Watch,Moderate,6,4,Moderate,Q3 FY26,0.1975,410,improving,0.52,0.8,0.0,0.0,0.0,1
+137,JSWCEMENT,JSW Cement Ltd.,0.3275,0.27,0.0575,+0.0575,Reliable change,Watch,,8,5,High,Q3 FY26,-0.0025,115,improving,0.47,0.84,0.0,0.0,0.0,2
+138,IRB,IRB Infrastructure Developers Ltd.,0.315,0.4175,-0.1025,-0.1025,Reliable change,Fading,Moderate,6,4,Moderate,Q3 FY26,0.1975,423,improving,0.38,0.88,0.0,0.0,0.0,1
+139,3MINDIA,3M India Ltd.,0.3075,0.4025,-0.095,-0.0950,Reliable change,Watch,Moderate,6,3,Moderate,Q3 FY26,0.0,418,improving,0.39,0.84,0.0,0.0,0.0,0
+140,JMFINANCIL,JM Financial Ltd.,0.305,0.2775,0.0275,+0.0275,Reliable change,Watch,,7,5,High,Q3 FY26,0.3925,132,improving,0.43,0.79,0.0,0.0,0.0,2
+141,FINCABLES,Finolex Cables Ltd.,0.305,0.2025,0.1025,+0.1025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.1875,85,improving,0.42,0.8,0.0,0.0,0.0,1
+142,YESBANK,Yes Bank Ltd.,0.292,0.0,0.292,New signal,New signal,Emerging,,2,0,Limited,Q3 FY26,0.0,10,improving,0.0,0.73,0.0,0.73,0.0,0
+143,ENGINERSIN,Engineers India Ltd.,0.285,0.205,0.08,+0.0800,Reliable change,Watch,,8,5,High,Q3 FY26,0.0025,97,improving,0.3,0.84,0.0,0.0,0.0,2
+144,TORNTPOWER,Torrent Power Ltd.,0.285,0.0075,0.2775,+0.2775,Reliable change,Emerging,,4,2,Moderate,Q3 FY26,-0.1875,12,improving,0.29,0.85,0.0,0.0,0.0,1
+145,IFCI,IFCI Ltd.,0.2825,0.4,-0.1175,-0.1175,Reliable change,Fading,Moderate,8,5,High,Q3 FY26,0.385,428,improving,0.84,0.29,0.0,0.0,0.0,3
+146,GALLANTT,Gallantt Ispat Ltd.,0.2825,0.4075,-0.125,-0.1250,Reliable change,Fading,High,5,4,Moderate,Q3 FY26,0.3875,430,improving,0.83,0.3,0.0,0.0,0.0,2
+147,BHARTIHEXA,Bharti Hexacom Ltd.,0.275,0.2075,0.0675,+0.0675,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.0075,108,improving,0.32,0.78,0.0,0.0,0.0,2
+148,ITI,ITI Ltd.,0.2675,0.055,0.2125,+0.2125,Reliable change,Emerging,,6,3,Moderate,Q3 FY26,0.1875,24,improving,0.13,0.94,0.0,0.0,0.0,1
+149,NEWGEN,Newgen Software Technologies Ltd.,0.265,0.3975,-0.1325,-0.1325,Reliable change,Fading,High,4,3,Moderate,Q3 FY26,0.0,432,improving,0.27,0.79,0.0,0.0,0.0,0
+150,NLCINDIA,NLC India Ltd.,0.26,0.1875,0.0725,+0.0725,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.0025,100,improving,0.76,0.28,0.0,0.0,0.0,2
+151,ADANIENT,Adani Enterprises Ltd.,0.26,0.0025,0.2575,+0.2575,Reliable change,Emerging,,4,2,Moderate,Q3 FY26,-0.1975,15,improving,0.3,0.74,0.0,0.0,0.0,1
+152,TARIL,Transformers And Rectifiers (India) Ltd.,0.2575,0.1975,0.06,+0.0600,Reliable change,Watch,,7,4,High,Q3 FY26,0.385,113,improving,0.78,0.25,0.0,0.0,0.0,3
+153,TRAVELFOOD,Travel Food Services Ltd.,0.2575,0.19,0.0675,+0.0675,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.3925,108,improving,0.24,0.79,0.0,0.0,0.0,2
+154,BAJAJFINSV,Bajaj Finserv Ltd.,0.2525,0.3675,-0.115,-0.1150,Reliable change,Fading,Moderate,7,5,High,Q3 FY26,0.3775,426,improving,0.77,0.24,0.0,0.0,0.0,2
+155,GLAXO,Glaxosmithkline Pharmaceuticals Ltd.,0.2275,0.0,0.2275,New signal,New signal,Watch,,1,0,Very Limited,Q3 FY26,0.0,18,mixed,0.91,0.0,0.0,0.0,0.0,0
+156,SWIGGY,Swiggy Ltd.,0.2225,0.0,0.2225,+0.2225,Reliable change,Emerging,,7,4,High,Q3 FY26,-0.0025,20,mixed,0.0,0.89,0.0,0.0,0.0,2
+157,POONAWALLA,Poonawalla Fincorp Ltd.,0.2175,0.1025,0.115,+0.1150,Reliable change,Watch,,9,6,High,Q3 FY26,-0.2025,80,mixed,0.57,0.3,0.0,0.0,0.0,3
+158,APTUS,Aptus Value Housing Finance India Ltd.,0.2125,0.4175,-0.205,-0.2050,Reliable change,Fading,High,7,4,High,Q3 FY26,0.1875,459,mixed,0.79,0.06,0.0,0.0,0.0,1
+159,KIRLOSENG,Kirloskar Oil Eng Ltd.,0.2125,0.2025,0.01,+0.0100,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,178,mixed,0.85,0.0,0.0,0.0,0.0,0
+160,AFCONS,Afcons Infrastructure Ltd.,0.2125,0.1975,0.015,+0.0150 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.1975,146,mixed,0.0,0.85,0.0,0.0,0.0,1
+161,ZYDUSLIFE,Zydus Lifesciences Ltd.,0.2125,0.2075,0.005,+0.0050,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,214,mixed,0.85,0.0,0.0,0.0,0.0,0
+162,360ONE,360 ONE WAM Ltd.,0.21,0.015,0.195,+0.1950,Reliable change,Emerging,,6,3,Moderate,Q3 FY26,-0.195,47,mixed,0.85,-0.01,0.0,0.0,0.0,1
+163,ACUTAAS,Acutaas Chemicals Ltd.,0.21,0.2,0.01,+0.0100,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,178,mixed,0.84,0.0,0.0,0.0,0.0,1
+164,LUPIN,Lupin Ltd.,0.21,0.2075,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,246,mixed,0.84,0.0,0.0,0.0,0.0,1
+165,TVSMOTOR,TVS Motor Company Ltd.,0.21,0.2025,0.0075,+0.0075,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1875,195,mixed,0.84,0.0,0.0,0.0,0.0,1
+166,MRPL,Mangalore Refinery & Petrochemicals Ltd.,0.2075,0.1425,0.065,+0.0650,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.19,110,mixed,0.02,0.81,0.0,0.0,0.0,2
+167,ENDURANCE,Endurance Technologies Ltd.,0.2075,0.195,0.0125,+0.0125,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,159,mixed,0.83,0.0,0.0,0.0,0.0,0
+168,GRANULES,Granules India Ltd.,0.2075,0.2075,0.0,+0.0000,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,285,mixed,0.83,0.0,0.0,0.0,0.0,0
+169,TATAPOWER,Tata Power Co. Ltd.,0.2075,0.2,0.0075,+0.0075 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,195,mixed,0.03,0.8,0.0,0.0,0.0,0
+170,CHENNPETRO,Chennai Petroleum Corporation Ltd.,0.205,0.0775,0.1275,+0.1275,Reliable change,Watch,,8,5,High,Q3 FY26,-0.3875,75,mixed,0.5,0.32,0.0,0.0,0.0,2
+171,ERIS,Eris Lifesciences Ltd.,0.205,0.2025,0.0025,+0.0025,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.1975,246,mixed,0.82,0.0,0.0,0.0,0.0,1
+172,TORNTPHARM,Torrent Pharmaceuticals Ltd.,0.205,0.2,0.005,+0.0050,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,214,mixed,0.82,0.0,0.0,0.0,0.0,0
+173,IPCALAB,Ipca Laboratories Ltd.,0.205,0.185,0.02,+0.0200 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,139,mixed,0.82,0.0,0.0,0.0,0.0,0
+174,LAURUSLABS,Laurus Labs Ltd.,0.2025,0.1975,0.005,+0.0050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.19,214,mixed,0.81,0.0,0.0,0.0,0.0,2
+175,NETWEB,Netweb Technologies India Ltd.,0.2025,0.19,0.0125,+0.0125,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.195,159,mixed,0.81,0.0,0.0,0.0,0.0,2
+176,THERMAX,Thermax Ltd.,0.2025,0.1275,0.075,+0.0750,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.3875,99,mixed,0.04,0.77,0.0,0.0,0.0,2
+177,EMCURE,Emcure Pharmaceuticals Ltd.,0.2025,0.19,0.0125,+0.0125,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,159,mixed,0.81,0.0,0.0,0.0,0.0,1
+178,JUBLFOOD,Jubilant Foodworks Ltd.,0.2025,0.2025,0.0,+0.0000,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,285,mixed,0.81,0.0,0.0,0.0,0.0,1
+179,M&MFIN,Mahindra & Mahindra Financial Services Ltd.,0.2025,0.4025,-0.2,-0.2000,Reliable change,Fading,High,5,3,Moderate,Q3 FY26,0.0,456,mixed,0.8,0.01,0.0,0.0,0.0,0
+180,SOLARINDS,Solar Industries India Ltd.,0.2025,0.1875,0.015,+0.0150,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,146,mixed,0.81,0.0,0.0,0.0,0.0,1
+181,AJANTPHARM,Ajanta Pharmaceuticals Ltd.,0.2025,0.2,0.0025,+0.0025,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,246,mixed,0.81,0.0,0.0,0.0,0.0,0
+182,ATUL,Atul Ltd.,0.2025,0.195,0.0075,+0.0075,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,195,mixed,0.81,0.0,0.0,0.0,0.0,0
+183,CEMPRO,Cemindia Projects Ltd.,0.2025,0.2025,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1975,285,mixed,0.81,0.0,0.0,0.0,0.0,1
+184,GLAND,Gland Pharma Ltd.,0.2025,0.1875,0.015,+0.0150,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.1975,146,mixed,0.81,0.0,0.0,0.0,0.0,1
+185,TATACONSUM,Tata Consumer Products Ltd.,0.2025,0.1875,0.015,+0.0150,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,146,mixed,0.81,0.0,0.0,0.0,0.0,0
+186,VIJAYA,Vijaya Diagnostic Centre Ltd.,0.2025,0.185,0.0175,+0.0175,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.185,143,mixed,0.81,0.0,0.0,0.0,0.0,2
+187,IDEA,Vodafone Idea Ltd.,0.2025,0.2,0.0025,+0.0025 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,246,mixed,0.81,0.0,0.0,0.0,0.0,0
+188,INDIACEM,India Cements Ltd.,0.2,0.1925,0.0075,+0.0075,Reliable change,Watch,,7,4,High,Q3 FY26,-0.0025,195,mixed,-0.01,0.81,0.0,0.0,0.0,2
+189,SJVN,SJVN Ltd.,0.2,-0.0125,0.2125,+0.2125,Reliable change,Emerging,,7,4,High,Q3 FY26,-0.0075,24,mixed,0.04,0.76,0.0,0.0,0.0,2
+190,GODFRYPHLP,Godfrey Phillips India Ltd.,0.2,0.395,-0.195,-0.1950,Reliable change,Fading,High,6,4,Moderate,Q3 FY26,0.195,449,mixed,0.76,0.04,0.0,0.0,0.0,2
+191,M&M,Mahindra & Mahindra Ltd.,0.2,0.1875,0.0125,+0.0125,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,159,mixed,0.8,0.0,0.0,0.0,0.0,2
+192,SAILIFE,Sai Life Sciences Ltd.,0.2,0.1975,0.0025,+0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.195,246,mixed,0.8,0.0,0.0,0.0,0.0,2
+193,CGPOWER,CG Power and Industrial Solutions Ltd.,0.2,0.195,0.005,+0.0050,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,214,mixed,0.8,0.0,0.0,0.0,0.0,1
+194,DIXON,Dixon Technologies (India) Ltd.,0.2,0.195,0.005,+0.0050,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.195,214,mixed,0.8,0.0,0.0,0.0,0.0,2
+195,SOBHA,Sobha Ltd.,0.2,0.2,0.0,+0.0000,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.195,285,mixed,0.8,0.0,0.0,0.0,0.0,2
+196,BELRISE,Belrise Industries Ltd.,0.2,0.2,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.19,285,mixed,0.8,0.0,0.0,0.0,0.0,2
+197,FORTIS,Fortis Healthcare Ltd.,0.2,0.2,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1975,285,mixed,0.8,0.0,0.0,0.0,0.0,1
+198,KEC,Kec International Ltd.,0.2,0.2025,-0.0025,-0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1975,331,mixed,0.8,0.0,0.0,0.0,0.0,1
+199,CIEINDIA,CIE Automotive India Ltd.,0.2,0.2,0.0,+0.0000 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,285,mixed,0.8,0.0,0.0,0.0,0.0,0
+200,POLYMED,Poly Medicure Ltd.,0.2,0.1875,0.0125,+0.0125 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.1875,159,mixed,0.8,0.0,0.0,0.0,0.0,1
+201,RAINBOW,Rainbow Childrens Medicare Ltd.,0.2,0.1975,0.0025,+0.0025 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.1975,246,mixed,0.8,0.0,0.0,0.0,0.0,1
+202,SUNPHARMA,Sun Pharmaceutical Industries Ltd.,0.2,0.0,0.2,New signal,New signal,Emerging,,2,0,Limited,Q3 FY26,0.0,40,mixed,0.8,0.0,0.0,0.0,0.0,0
+203,TIINDIA,Tube Investments of India Ltd.,0.2,0.18,0.02,+0.0200 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,139,mixed,0.8,0.0,0.0,0.0,0.0,0
+204,HAVELLS,Havells India Ltd.,0.2,0.0,0.2,New signal,New signal,Watch,,1,0,Very Limited,Q3 FY26,0.0,40,mixed,0.8,0.0,0.0,0.0,0.0,0
+205,MAXHEALTH,Max Healthcare Institute Ltd.,0.1975,0.195,0.0025,+0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,246,mixed,0.79,0.0,0.0,0.0,0.0,2
+206,SBFC,SBFC Finance Ltd.,0.1975,0.1925,0.005,+0.0050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,214,mixed,0.79,0.0,0.0,0.0,0.0,2
+207,APOLLOHOSP,Apollo Hospitals Enterprise Ltd.,0.1975,0.19,0.0075,+0.0075,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,195,mixed,0.79,0.0,0.0,0.0,0.0,1
+208,NAM-INDIA,Nippon Life India Asset Management Ltd.,0.1975,0.1825,0.015,+0.0150,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.185,146,mixed,0.79,0.0,0.0,0.0,0.0,1
+209,SHYAMMETL,Shyam Metalics and Energy Ltd.,0.1975,0.1975,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.185,285,mixed,0.79,0.0,0.0,0.0,0.0,1
+210,USHAMART,Usha Martin Ltd.,0.1975,-0.19,0.3875,+0.3875 (limited history),Limited history,Emerging,,4,1,Moderate,Q3 FY26,-0.19,3,mixed,0.79,0.0,0.0,0.0,0.0,1
+211,ASHOKLEY,Ashok Leyland Ltd.,0.1975,0.1925,0.005,+0.0050 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,214,mixed,0.79,0.0,0.0,0.0,0.0,0
+212,LTFOODS,LT Foods Ltd.,0.1975,0.2025,-0.005,-0.0050 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,356,mixed,0.79,0.0,0.0,0.0,0.0,0
+213,ZENSARTECH,Zensar Technolgies Ltd.,0.1975,0.19,0.0075,+0.0075 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,195,mixed,0.79,0.0,0.0,0.0,0.0,0
+214,KEI,KEI Industries Ltd.,0.195,0.1875,0.0075,+0.0075,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,195,mixed,0.78,0.0,0.0,0.0,0.0,2
+215,VMM,Vishal Mega Mart Ltd.,0.195,0.1975,-0.0025,-0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.19,331,mixed,0.78,0.0,0.0,0.0,0.0,2
+216,COROMANDEL,Coromandel International Ltd.,0.195,0.1925,0.0025,+0.0025,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.195,246,mixed,0.78,0.0,0.0,0.0,0.0,2
+217,HEROMOTOCO,Hero MotoCorp Ltd.,0.195,0.19,0.005,+0.0050,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,214,mixed,0.78,0.0,0.0,0.0,0.0,1
+218,PFC,Power Finance Corporation Ltd.,0.195,-0.005,0.2,+0.2000,Reliable change,Emerging,,5,2,Moderate,Q3 FY26,0.1875,40,mixed,0.79,-0.01,0.0,0.0,0.0,1
+219,DIVISLAB,Divi's Laboratories Ltd.,0.195,0.1975,-0.0025,-0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,331,mixed,0.78,0.0,0.0,0.0,0.0,1
+220,INDGN,Indegene Ltd.,0.195,0.1875,0.0075,+0.0075,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,195,mixed,0.78,0.0,0.0,0.0,0.0,1
+221,ZFCVINDIA,ZF Commercial Vehicle Control Systems India Ltd.,0.195,0.1875,0.0075,+0.0075 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.1875,195,mixed,0.78,0.0,0.0,0.0,0.0,1
+222,ANTHEM,Anthem Biosciences Ltd.,0.195,0.195,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,0.195,285,mixed,0.78,0.0,0.0,0.0,0.0,2
+223,PIDILITIND,Pidilite Industries Ltd.,0.195,0.0,0.195,New signal,New signal,Emerging,,2,0,Limited,Q3 FY26,0.0,47,mixed,0.78,0.0,0.0,0.0,0.0,0
+224,ABBOTINDIA,Abbott India Ltd.,0.195,0.195,0.0,+0.0000 (limited history),Limited history,Watch,,1,1,Very Limited,Q3 FY26,0.0,285,mixed,0.78,0.0,0.0,0.0,0.0,0
+225,SONATSOFTW,Sonata Software Ltd.,0.1925,0.015,0.1775,+0.1775,Reliable change,Watch,,7,4,High,Q3 FY26,-0.19,65,mixed,0.45,0.32,0.0,0.0,0.0,1
+226,APARINDS,Apar Industries Ltd.,0.1925,0.1925,0.0,+0.0000,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,285,mixed,0.77,0.0,0.0,0.0,0.0,2
+227,CAPLIPOINT,Caplin Point Laboratories Ltd.,0.1925,0.19,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1875,246,mixed,0.77,0.0,0.0,0.0,0.0,1
+228,UNOMINDA,UNO Minda Ltd.,0.1925,0.19,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,246,mixed,0.77,0.0,0.0,0.0,0.0,1
+229,AAVAS,Aavas Financiers Ltd.,0.1925,0.185,0.0075,+0.0075,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,195,mixed,0.77,0.0,0.0,0.0,0.0,0
+230,CRISIL,CRISIL Ltd.,0.1925,0.19,0.0025,+0.0025,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,246,mixed,0.77,0.0,0.0,0.0,0.0,0
+231,MEDANTA,Global Health Ltd.,0.1925,0.19,0.0025,+0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1975,246,mixed,0.77,0.0,0.0,0.0,0.0,1
+232,PFIZER,Pfizer Ltd.,0.1925,0.1825,0.01,+0.0100,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.1875,178,mixed,0.77,0.0,0.0,0.0,0.0,1
+233,REDINGTON,Redington Ltd.,0.1925,0.1925,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.185,285,mixed,0.77,0.0,0.0,0.0,0.0,1
+234,RELIANCE,Reliance Industries Ltd.,0.1925,0.1875,0.005,+0.0050,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1975,214,mixed,0.77,0.0,0.0,0.0,0.0,1
+235,DMART,Avenue Supermarts Ltd.,0.1925,0.18,0.0125,+0.0125 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,159,mixed,0.77,0.0,0.0,0.0,0.0,0
+236,MPHASIS,MphasiS Ltd.,0.1925,0.1875,0.005,+0.0050,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,214,mixed,0.77,0.0,0.0,0.0,0.0,0
+237,NTPC,NTPC Ltd.,0.1925,0.2,-0.0075,-0.0075 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,367,mixed,0.0,0.77,0.0,0.0,0.0,0
+238,AUROPHARMA,Aurobindo Pharma Ltd.,0.1925,0.0,0.1925,New signal,New signal,Watch,,1,0,Very Limited,Q3 FY26,0.0,52,mixed,0.77,0.0,0.0,0.0,0.0,0
+239,EIDPARRY,E.I.D. Parry (India) Ltd.,0.19,0.1925,-0.0025,-0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.19,331,mixed,0.76,0.0,0.0,0.0,0.0,2
+240,KPIL,Kalpataru Projects International Ltd.,0.19,0.1925,-0.0025,-0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.19,331,mixed,0.76,0.0,0.0,0.0,0.0,2
+241,LATENTVIEW,Latent View Analytics Ltd.,0.19,0.185,0.005,+0.0050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,214,mixed,0.76,0.0,0.0,0.0,0.0,2
+242,ADANIENSOL,Adani Energy Solutions Ltd.,0.19,0.0,0.19,+0.1900,Reliable change,Emerging,,5,3,Moderate,Q3 FY26,0.0,54,mixed,0.77,-0.01,0.0,0.0,0.0,3
+243,UNITDSPR,United Spirits Ltd.,0.19,0.19,0.0,+0.0000,Reliable change,Watch,,5,4,Moderate,Q3 FY26,-0.195,285,mixed,0.79,-0.03,0.0,0.0,0.0,1
+244,AADHARHFC,Aadhar Housing Finance Ltd.,0.19,0.1825,0.0075,+0.0075,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,195,mixed,0.76,0.0,0.0,0.0,0.0,0
+245,DABUR,Dabur India Ltd.,0.19,0.1875,0.0025,+0.0025,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,246,mixed,0.76,0.0,0.0,0.0,0.0,0
+246,BOSCHLTD,Bosch Ltd.,0.19,0.1975,-0.0075,-0.0075 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.1975,367,mixed,0.76,0.0,0.0,0.0,0.0,1
+247,GABRIEL,Gabriel India Ltd.,0.19,0.19,0.0,+0.0000,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.19,285,mixed,0.76,0.0,0.0,0.0,0.0,2
+248,INFY,Infosys Ltd.,0.19,0.195,-0.005,-0.0050 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,356,mixed,0.76,0.0,0.0,0.0,0.0,0
+249,IREDA,Indian Renewable Energy Development Agency Ltd.,0.1875,0.0875,0.1,+0.1000,Reliable change,Watch,,9,6,High,Q3 FY26,-0.2025,86,mixed,0.52,0.23,0.0,0.0,0.0,3
+250,AMBUJACEM,Ambuja Cements Ltd.,0.1875,0.3925,-0.205,-0.2050,Reliable change,Fading,High,8,6,High,Q3 FY26,0.375,459,mixed,0.48,0.27,0.0,0.0,0.0,3
+251,CHOLAFIN,Cholamandalam Investment and Finance Company Ltd.,0.1875,0.185,0.0025,+0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.185,246,mixed,0.75,0.0,0.0,0.0,0.0,2
+252,ELECON,Elecon Engineering Co. Ltd.,0.1875,0.385,-0.1975,-0.1975,Reliable change,Fading,High,5,4,Moderate,Q3 FY26,0.39,451,mixed,0.76,-0.01,0.0,0.0,0.0,3
+253,ALKEM,Alkem Laboratories Ltd.,0.1875,0.1875,0.0,+0.0000,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,285,mixed,0.75,0.0,0.0,0.0,0.0,1
+254,LT,Larsen & Toubro Ltd.,0.1875,0.1825,0.005,+0.0050,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1875,214,mixed,0.75,0.0,0.0,0.0,0.0,1
+255,LALPATHLAB,Dr. Lal Path Labs Ltd.,0.185,0.1825,0.0025,+0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,246,mixed,0.74,0.0,0.0,0.0,0.0,1
+256,HYUNDAI,Hyundai Motor India Ltd.,0.185,0.185,0.0,+0.0000 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,285,mixed,0.74,0.0,0.0,0.0,0.0,0
+257,CONCOR,Container Corporation of India Ltd.,0.185,0.0,0.185,New signal,New signal,Watch,,1,0,Very Limited,Q3 FY26,0.0,59,mixed,0.74,0.0,0.0,0.0,0.0,0
+258,ADANIGREEN,Adani Green Energy Ltd.,0.1825,0.1975,-0.015,-0.0150,Reliable change,Watch,,8,5,High,Q3 FY26,-0.005,389,mixed,0.45,0.28,0.0,0.0,0.0,3
+259,MMTC,MMTC Ltd.,0.1825,0.075,0.1075,+0.1075,Reliable change,Watch,,7,5,High,Q3 FY26,0.3825,82,mixed,0.44,0.29,0.0,0.0,0.0,2
+260,ZYDUSWELL,Zydus Wellness Ltd.,0.18,-0.0075,0.1875,+0.1875,Reliable change,Emerging,,5,2,Moderate,Q3 FY26,0.0,58,mixed,-0.02,0.74,0.0,0.0,0.0,0
+261,SCI,Shipping Corporation of India Ltd.,0.17,-0.015,0.185,+0.1850,Reliable change,Watch,,7,4,High,Q3 FY26,0.3775,59,mixed,0.4,0.28,0.0,0.0,0.0,2
+262,PRESTIGE,Prestige Estates Projects Ltd.,0.155,0.2125,-0.0575,-0.0575,Reliable change,Watch,,7,4,High,Q3 FY26,-0.005,405,mixed,0.88,-0.26,0.0,0.0,0.0,2
+263,TTML,Tata Teleservices (Maharashtra) Ltd.,0.155,0.0075,0.1475,+0.1475,Reliable change,Watch,,6,3,Moderate,Q3 FY26,0.195,71,mixed,-0.22,0.84,0.0,0.0,0.0,1
+264,PFOCUS,Prime Focus Ltd.,0.145,0.1,0.045,+0.0450,Reliable change,Watch,,9,6,High,Q3 FY26,-0.005,124,mixed,-0.26,0.84,0.0,0.0,0.0,3
+265,JKTYRE,JK Tyre & Industries Ltd.,0.145,-0.12,0.265,+0.2650,Reliable change,Watch,,7,4,High,Q3 FY26,-0.3775,14,mixed,0.51,0.07,0.0,0.0,0.0,2
+266,SAGILITY,Sagility Ltd.,0.135,0.385,-0.25,-0.2500,Reliable change,Fading,High,8,5,High,Q3 FY26,0.385,468,mixed,0.51,0.03,0.0,0.0,0.0,3
+267,ANURAS,Anupam Rasayan India Ltd.,0.1325,0.2,-0.0675,-0.0675,Reliable change,Watch,Moderate,9,6,High,Q3 FY26,0.39,407,mixed,0.8,-0.27,0.0,0.0,0.0,3
+268,INTELLECT,Intellect Design Arena Ltd.,0.13,0.4175,-0.2875,-0.2875,Reliable change,Fading,High,7,4,High,Q3 FY26,0.1875,473,mixed,0.5,0.02,0.0,0.0,0.0,1
+269,CANBK,Canara Bank,0.123,0.1185,0.0045,+0.0045,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1155,240,mixed,0.0,0.0,0.0,0.82,0.0,1
+270,HDBFS,HDB Financial Services Ltd.,0.1225,-0.015,0.1375,+0.1375,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.19,72,mixed,0.77,-0.28,0.0,0.0,0.0,1
+271,BANKINDIA,Bank of India,0.1215,0.1185,0.003,+0.0030,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1155,242,mixed,0.0,0.0,0.0,0.81,0.0,1
+272,CUB,City Union Bank Ltd.,0.1215,0.1155,0.006,+0.0060,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1095,213,mixed,0.0,0.0,0.0,0.81,0.0,1
+273,BAJFINANCE,Bajaj Finance Ltd.,0.12,0.28,-0.16,-0.1600,Reliable change,Fading,High,8,5,High,Q3 FY26,0.185,438,mixed,0.51,-0.03,0.0,0.0,0.0,2
+274,INDIANB,Indian Bank,0.12,0.1155,0.0045,+0.0045,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1095,240,mixed,0.0,0.0,0.0,0.8,0.0,1
+275,RBLBANK,RBL Bank Ltd.,0.12,0.1095,0.0105,+0.0105 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,177,mixed,0.0,0.0,0.0,0.8,0.0,0
+276,IDFCFIRSTB,IDFC First Bank Ltd.,0.1185,0.0,0.1185,New signal,New signal,Watch,,1,0,Very Limited,Q3 FY26,0.0,78,mixed,0.0,0.0,0.0,0.79,0.0,0
+277,BALRAMCHIN,Balrampur Chini Mills Ltd.,0.1175,-0.0475,0.165,+0.1650,Reliable change,Watch,,8,5,High,Q3 FY26,-0.3775,67,mixed,0.2,0.27,0.0,0.0,0.0,2
+278,FACT,Fertilisers and Chemicals Travancore Ltd.,0.1175,0.3925,-0.275,-0.2750,Reliable change,Fading,High,7,4,High,Q3 FY26,0.39,471,mixed,0.49,-0.02,0.0,0.0,0.0,3
+279,NMDC,NMDC Ltd.,0.1175,0.19,-0.0725,-0.0725,Reliable change,Watch,Moderate,7,5,High,Q3 FY26,-0.01,409,mixed,0.78,-0.31,0.0,0.0,0.0,2
+280,GLENMARK,Glenmark Pharmaceuticals Ltd.,0.1175,0.07,0.0475,+0.0475,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.1975,121,mixed,0.47,0.0,0.0,0.0,0.0,1
+281,UNIONBANK,Union Bank of India,0.117,0.114,0.003,+0.0030,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1095,242,mixed,0.0,0.0,0.0,0.78,0.0,1
+282,PNB,Punjab National Bank,0.1155,0.1125,0.003,+0.0030,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.1095,242,mixed,0.0,0.0,0.0,0.77,0.0,1
+283,FEDERALBNK,Federal Bank Ltd.,0.1155,0.114,0.0015,+0.0015 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,284,mixed,0.0,0.0,0.0,0.77,0.0,0
+284,INDHOTEL,Indian Hotels Co. Ltd.,0.115,0.0575,0.0575,+0.0575,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,115,mixed,0.46,0.0,0.0,0.0,0.0,2
+285,BANKBARODA,Bank of Baroda,0.1125,0.1095,0.003,+0.0030 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.1095,242,mixed,0.0,0.0,0.0,0.75,0.0,1
+286,BDL,Bharat Dynamics Ltd.,0.11,0.395,-0.285,-0.2850,Reliable change,Fading,High,7,5,High,Q3 FY26,0.385,472,mixed,0.49,-0.05,0.0,0.0,0.0,3
+287,SHRIRAMFIN,Shriram Finance Ltd.,0.11,0.1875,-0.0775,-0.0775,Reliable change,Watch,Moderate,5,3,Moderate,Q3 FY26,0.185,413,mixed,0.44,0.0,0.0,0.0,0.0,1
+288,NH,Narayana Hrudayalaya Ltd.,0.105,0.2,-0.095,-0.0950,Reliable change,Watch,Moderate,4,2,Moderate,Q3 FY26,0.0,418,mixed,0.42,0.0,0.0,0.0,0.0,0
+289,ONESOURCE,Onesource Specialty Pharma Ltd.,0.1,0.1975,-0.0975,-0.0975,Reliable change,Watch,Moderate,4,3,Moderate,Q3 FY26,0.1975,421,mixed,0.4,0.0,0.0,0.0,0.0,1
+290,WOCKPHARMA,Wockhardt Ltd.,0.0975,0.0,0.0975,+0.0975,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1975,89,mixed,0.39,0.0,0.0,0.0,0.0,1
+291,FIRSTCRY,Brainbees Solutions Ltd.,0.0925,0.1875,-0.095,-0.0950,Reliable change,Watch,Moderate,4,2,Moderate,Q3 FY26,0.0,418,mixed,0.37,0.0,0.0,0.0,0.0,0
+292,MANKIND,Mankind Pharma Ltd.,0.0925,0.0575,0.035,+0.0350,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.185,126,mixed,0.37,0.0,0.0,0.0,0.0,1
+293,ACC,ACC Ltd.,0.0875,0.42,-0.3325,-0.3325,Reliable change,Fading,High,5,3,Moderate,Q3 FY26,0.0,474,mixed,0.33,0.02,0.0,0.0,0.0,0
+294,VEDL,Vedanta Ltd.,0.08,-0.205,0.285,+0.2850,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.1925,11,mixed,-0.42,0.74,0.0,0.0,0.0,1
+295,RPOWER,Reliance Power Ltd.,0.07,0.07,0.0,+0.0000,Reliable change,Watch,,7,5,High,Q3 FY26,0.0075,285,mixed,-0.01,0.29,0.0,0.0,0.0,2
+296,ASTERDM,Aster DM Quality Care Ltd.,0.0675,-0.0025,0.07,+0.0700,Reliable change,Watch,,3,2,Limited,Q3 FY26,-0.1975,103,mixed,0.27,0.0,0.0,0.0,0.0,1
+297,SUMICHEM,Sumitomo Chemical India Ltd.,0.0675,0.19,-0.1225,-0.1225,Reliable change,Fading,High,3,2,Limited,Q3 FY26,0.19,429,mixed,0.27,0.0,0.0,0.0,0.0,2
+298,BLUEDART,Blue Dart Express Ltd.,0.065,0.2,-0.135,-0.1350 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,435,mixed,0.26,0.0,0.0,0.0,0.0,0
+299,ASTRAL,Astral Ltd.,0.06,-0.0025,0.0625,+0.0625,Reliable change,Watch,,3,2,Limited,Q3 FY26,-0.1875,112,mixed,0.24,0.0,0.0,0.0,0.0,1
+300,MAZDOCK,Mazagoan Dock Shipbuilders Ltd.,0.0575,-0.0125,0.07,+0.0700,Reliable change,Watch,,5,4,Moderate,Q3 FY26,-0.3925,103,mixed,0.25,-0.02,0.0,0.0,0.0,2
+301,EICHERMOT,Eicher Motors Ltd.,0.03,0.0325,-0.0025,-0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.19,331,mixed,0.86,-0.74,0.0,0.0,0.0,1
+302,KIMS,Krishna Institute of Medical Sciences Ltd.,0.0275,0.05,-0.0225,-0.0225,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,399,mixed,0.11,0.0,0.0,0.0,0.0,1
+303,OLECTRA,Olectra Greentech Ltd.,0.025,0.02,0.005,+0.0050,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,214,mixed,0.85,-0.75,0.0,0.0,0.0,0
+304,HINDUNILVR,Hindustan Unilever Ltd.,0.0225,0.0,0.0225,New signal,New signal,Watch,,3,0,Limited,Q3 FY26,0.0,136,mixed,0.85,-0.76,0.0,0.0,0.0,0
+305,SONACOMS,Sona BLW Precision Forgings Ltd.,0.02,0.01,0.01,+0.0100,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.19,178,mixed,0.83,-0.75,0.0,0.0,0.0,1
+306,SAREGAMA,Saregama India Ltd,0.02,0.2225,-0.2025,-0.2025 (limited history),Limited history,Fading,High,4,1,Moderate,Q3 FY26,0.0,457,mixed,-0.84,0.92,0.0,0.0,0.0,0
+307,GESHIP,Great Eastern Shipping Co. Ltd.,0.0175,-0.185,0.2025,+0.2025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.385,36,mixed,-0.21,0.28,0.0,0.0,0.0,3
+308,VBL,Varun Beverages Ltd.,0.0175,0.2025,-0.185,-0.1850 (limited history),Limited history,Fading,High,4,1,Moderate,Q3 FY26,0.0,442,mixed,0.84,-0.77,0.0,0.0,0.0,0
+309,IRCTC,Indian Railway Catering And Tourism Corporation Ltd.,0.015,0.19,-0.175,-0.1750,Reliable change,Fading,High,5,2,Moderate,Q3 FY26,0.0,439,mixed,0.8,-0.74,0.0,0.0,0.0,0
+310,LEMONTREE,Lemon Tree Hotels Ltd.,0.0125,0.2025,-0.19,-0.1900 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,447,mixed,0.85,-0.8,0.0,0.0,0.0,0
+311,MSUMI,Motherson Sumi Wiring India Ltd.,0.0125,0.1925,-0.18,-0.1800 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,441,mixed,0.82,-0.77,0.0,0.0,0.0,0
+312,BHARATFORG,Bharat Forge Ltd.,0.01,0.195,-0.185,-0.1850,Reliable change,Fading,High,5,2,Moderate,Q3 FY26,0.1975,442,mixed,0.8,-0.76,0.0,0.0,0.0,1
+313,OFSS,Oracle Financial Services Software Ltd.,0.01,-0.195,0.205,+0.2050,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.19,33,mixed,0.82,-0.78,0.0,0.0,0.0,1
+314,SBICARD,SBI Cards and Payment Services Ltd.,0.01,-0.005,0.015,+0.0150,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.19,146,mixed,0.8,-0.76,0.0,0.0,0.0,1
+315,JBMA,JBM Auto Ltd.,0.01,0.0,0.01,New signal,New signal,Watch,,3,0,Limited,Q3 FY26,0.0,178,mixed,0.79,-0.75,0.0,0.0,0.0,0
+316,TENNIND,Tenneco Clean Air India Ltd.,0.01,0.1975,-0.1875,-0.1875 (limited history),Limited history,Fading,High,2,1,Limited,Q3 FY26,0.0,446,mixed,0.79,-0.75,0.0,0.0,0.0,0
+317,TRITURBINE,Triveni Turbine Ltd.,0.01,-0.1875,0.1975,+0.1975 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,-0.1875,45,mixed,0.04,0.0,0.0,0.0,0.0,1
+318,ADANIPORTS,Adani Ports and Special Economic Zone Ltd.,0.0075,0.0025,0.005,+0.0050,Reliable change,Watch,,7,5,High,Q3 FY26,-0.005,214,mixed,0.82,-0.79,0.0,0.0,0.0,2
+319,IEX,Indian Energy Exchange Ltd.,0.0075,0.1825,-0.175,-0.1750,Reliable change,Fading,High,5,2,Moderate,Q3 FY26,0.1875,439,mixed,0.76,-0.73,0.0,0.0,0.0,1
+320,NBCC,NBCC (India) Ltd.,0.0075,0.1925,-0.185,-0.1850,Reliable change,Fading,High,5,3,Moderate,Q3 FY26,0.1875,442,mixed,0.8,-0.77,0.0,0.0,0.0,1
+321,LTTS,L&T Technology Services Ltd.,0.0075,0.005,0.0025,+0.0025,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,246,mixed,0.78,-0.75,0.0,0.0,0.0,0
+322,MARICO,Marico Ltd.,0.005,-0.0025,0.0075,+0.0075,Reliable change,Watch,,7,4,High,Q3 FY26,-0.005,195,mixed,0.8,-0.78,0.0,0.0,0.0,2
+323,PTCIL,PTC Industries Ltd.,0.005,-0.0025,0.0075,+0.0075,Reliable change,Watch,,7,4,High,Q3 FY26,-0.0025,195,mixed,0.83,-0.81,0.0,0.0,0.0,2
+324,TBOTEK,TBO Tek Ltd.,0.005,0.0,0.005,+0.0050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.01,214,mixed,0.8,-0.78,0.0,0.0,0.0,2
+325,TEGA,Tega Industries Ltd.,0.005,0.21,-0.205,-0.2050,Reliable change,Fading,High,6,4,Moderate,Q3 FY26,-0.19,459,mixed,0.27,-0.25,0.0,0.0,0.0,1
+326,APOLLOTYRE,Apollo Tyres Ltd.,0.005,-0.1875,0.1925,+0.1925,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1975,52,mixed,0.02,0.0,0.0,0.0,0.0,1
+327,MOTHERSON,Samvardhana Motherson International Ltd.,0.005,-0.065,0.07,+0.0700,Reliable change,Watch,,4,3,Moderate,Q3 FY26,-0.1975,103,mixed,0.02,0.0,0.0,0.0,0.0,1
+328,GODREJIND,Godrej Industries Ltd.,0.005,-0.2075,0.2125,+0.2125 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,24,mixed,0.85,-0.83,0.0,0.0,0.0,0
+329,BLS,BLS International Services Ltd.,0.0025,0.005,-0.0025,-0.0025,Reliable change,Watch,,8,5,High,Q3 FY26,0.195,331,mixed,0.81,-0.8,0.0,0.0,0.0,2
+330,TATACOMM,Tata Communications Ltd.,0.0025,-0.1875,0.19,+0.1900,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1975,54,mixed,0.01,0.0,0.0,0.0,0.0,1
+331,MEESHO,Meesho Ltd.,0.0025,0.0,0.0025,New signal,New signal,Watch,,2,0,Limited,Q3 FY26,0.0,246,mixed,0.01,0.0,0.0,0.0,0.0,0
+332,TCS,Tata Consultancy Services Ltd.,0.0025,0.0,0.0025,New signal,New signal,Watch,,2,0,Limited,Q3 FY26,0.0,246,mixed,0.01,0.0,0.0,0.0,0.0,0
+333,INOXWIND,Inox Wind Ltd.,0.0,0.0,0.0,+0.0000,Reliable change,Watch,,7,5,High,Q3 FY26,0.19,285,mixed,0.8,-0.8,0.0,0.0,0.0,2
+334,DOMS,DOMS Industries Ltd.,0.0,0.19,-0.19,-0.1900,Reliable change,Fading,High,6,3,Moderate,Q3 FY26,0.185,447,mixed,0.77,-0.77,0.0,0.0,0.0,1
+335,BIOCON,Biocon Ltd.,0.0,0.0675,-0.0675,-0.0675,Reliable change,Watch,Moderate,4,3,Moderate,Q3 FY26,-0.1975,407,mixed,0.0,0.0,0.0,0.0,0.0,1
+336,ACE,Action Construction Equipment Ltd.,0.0,0.0,0.0,New signal,New signal,Watch,,0,0,Very Limited,Q3 FY26,0.0,285,mixed,0.0,0.0,0.0,0.0,0.0,0
+337,LICHSGFIN,LIC Housing Finance Ltd.,0.0,0.0,0.0,New signal,New signal,Watch,,0,0,Very Limited,Q3 FY26,0.0,285,mixed,0.0,0.0,0.0,0.0,0.0,0
+338,NUVAMA,Nuvama Wealth Management Ltd.,0.0,0.0,0.0,New signal,New signal,Watch,,0,0,Very Limited,Q3 FY26,0.0,285,mixed,0.0,0.0,0.0,0.0,0.0,0
+339,ABCAPITAL,Aditya Birla Capital Ltd.,-0.0025,0.0,-0.0025,-0.0025,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.0,331,mixed,0.77,-0.78,0.0,0.0,0.0,3
+340,JIOFIN,Jio Financial Services Ltd.,-0.0025,-0.0075,0.005,+0.0050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.0025,214,mixed,0.83,-0.84,0.0,0.0,0.0,2
+341,BLUEJET,Blue Jet Healthcare Ltd.,-0.0025,0.195,-0.1975,-0.1975,Reliable change,Fading,High,4,2,Moderate,Q3 FY26,0.195,451,mixed,-0.01,0.0,0.0,0.0,0.0,2
+342,JUBLPHARMA,Jubilant Pharmova Ltd.,-0.0025,-0.0025,0.0,+0.0000,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1975,285,mixed,-0.01,0.0,0.0,0.0,0.0,1
+343,RAILTEL,Railtel Corporation Of India Ltd.,-0.0025,-0.005,0.0025,+0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,-0.005,246,mixed,0.75,-0.76,0.0,0.0,0.0,3
+344,GODREJCP,Godrej Consumer Products Ltd.,-0.0025,-0.185,0.1825,+0.1825,Reliable change,Watch,,3,2,Limited,Q3 FY26,-0.19,64,mixed,0.73,-0.74,0.0,0.0,0.0,1
+345,NHPC,NHPC Ltd.,-0.0025,0.0125,-0.015,-0.0150,Reliable change,Watch,,3,2,Limited,Q3 FY26,-0.19,389,mixed,0.81,-0.82,0.0,0.0,0.0,1
+346,JSWINFRA,JSW Infrastructure Ltd.,-0.005,-0.0025,-0.0025,-0.0025,Reliable change,Watch,,7,5,High,Q3 FY26,-0.005,331,mixed,0.76,-0.78,0.0,0.0,0.0,3
+347,IRCON,IRCON International Ltd.,-0.005,-0.19,0.185,+0.1850,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.185,59,mixed,-0.76,0.74,0.0,0.0,0.0,2
+348,BRIGADE,Brigade Enterprises Ltd.,-0.005,-0.0075,0.0025,+0.0025,Reliable change,Watch,,5,4,Moderate,Q3 FY26,0.1975,246,mixed,0.8,-0.82,0.0,0.0,0.0,1
+349,TRIDENT,Trident Ltd.,-0.005,0.3875,-0.3925,-0.3925,Reliable change,Fading,High,4,2,Moderate,Q3 FY26,0.3875,475,mixed,0.02,-0.04,0.0,0.0,0.0,2
+350,UBL,United Breweries Ltd.,-0.005,-0.43,0.425,+0.4250,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,1,mixed,0.03,-0.05,0.0,0.0,0.0,0
+351,ELGIEQUIP,Elgi Equipments Ltd.,-0.005,-0.215,0.21,+0.2100 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,29,mixed,0.84,-0.86,0.0,0.0,0.0,0
+352,MARUTI,Maruti Suzuki India Ltd.,-0.0075,0.19,-0.1975,-0.1975,Reliable change,Fading,High,4,2,Moderate,Q3 FY26,0.0,451,mixed,0.81,-0.84,0.0,0.0,0.0,0
+353,CAMS,Computer Age Management Services Ltd.,-0.0075,-0.2075,0.2,+0.2000 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,40,mixed,0.75,-0.78,0.0,0.0,0.0,0
+354,KFINTECH,Kfin Technologies Ltd.,-0.0075,0.0,-0.0075,New signal,New signal,Watch,,2,0,Limited,Q3 FY26,0.0,367,mixed,0.89,-0.92,0.0,0.0,0.0,0
+355,PWL,Physicswallah Ltd.,-0.01,-0.005,-0.005,-0.0050,Reliable change,Watch,,4,2,Moderate,Q3 FY26,0.0,356,mixed,0.78,-0.82,0.0,0.0,0.0,0
+356,CIPLA,Cipla Ltd.,-0.01,0.185,-0.195,-0.1950 (limited history),Limited history,Fading,High,2,1,Limited,Q3 FY26,0.0,449,mixed,-0.04,0.0,0.0,0.0,0.0,0
+357,ITC,ITC Ltd.,-0.01,-0.01,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,-0.01,285,mixed,0.74,-0.78,0.0,0.0,0.0,2
+358,CHAMBLFERT,Chambal Fertilizers & Chemicals Ltd.,-0.0125,-0.0175,0.005,+0.0050,Reliable change,Watch,,7,4,High,Q3 FY26,0.1875,214,mixed,0.78,-0.83,0.0,0.0,0.0,1
+359,HEXT,Hexaware Technologies Ltd.,-0.0125,0.0025,-0.015,-0.0150,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.0075,389,mixed,0.77,-0.82,0.0,0.0,0.0,2
+360,WIPRO,Wipro Ltd.,-0.015,0.0,-0.015,New signal,New signal,Watch,,2,0,Limited,Q3 FY26,0.0,389,mixed,0.8,-0.86,0.0,0.0,0.0,0
+361,ZENTEC,Zen Technologies Ltd.,-0.0175,-0.185,0.1675,+0.1675,Reliable change,Watch,,7,5,High,Q3 FY26,-0.38,66,mixed,-0.38,0.31,0.0,0.0,0.0,3
+362,FIVESTAR,Five-Star Business Finance Ltd.,-0.0175,-0.015,-0.0025,-0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.195,331,mixed,0.75,-0.82,0.0,0.0,0.0,1
+363,DLF,DLF Ltd.,-0.02,-0.01,-0.01,-0.0100,Reliable change,Watch,,6,3,Moderate,Q3 FY26,0.0025,377,mixed,0.75,-0.83,0.0,0.0,0.0,2
+364,HUDCO,Housing & Urban Development Corporation Ltd.,-0.0325,-0.035,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,246,mixed,0.78,-0.91,0.0,0.0,0.0,1
+365,NEULANDLAB,Neuland Laboratories Ltd.,-0.035,0.0075,-0.0425,-0.0425,Reliable change,Watch,,5,4,Moderate,Q3 FY26,-0.19,403,mixed,-0.14,0.0,0.0,0.0,0.0,2
+366,PATANJALI,Patanjali Foods Ltd.,-0.0525,0.0975,-0.15,-0.1500,Reliable change,Fading,High,7,4,High,Q3 FY26,-0.0025,437,mixed,0.53,-0.74,0.0,0.0,0.0,2
+367,CREDITACC,CreditAccess Grameen Ltd.,-0.0625,-0.3925,0.33,+0.3300,Reliable change,Watch,,7,4,High,Q3 FY26,-0.3925,7,mixed,0.0,-0.25,0.0,0.0,0.0,2
+368,AARTIIND,Aarti Industries Ltd.,-0.065,-0.1225,0.0575,+0.0575,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3875,115,mixed,0.5,-0.76,0.0,0.0,0.0,2
+369,HFCL,HFCL Ltd.,-0.065,-0.385,0.32,+0.3200,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.385,8,mixed,-0.26,-0.0,0.0,0.0,0.0,3
+370,GRAPHITE,Graphite India Ltd.,-0.0675,-0.41,0.3425,+0.3425,Reliable change,Watch,,7,4,High,Q3 FY26,-0.3925,6,mixed,0.0,-0.27,0.0,0.0,0.0,2
+371,TMCV,Tata Motors Ltd.,-0.0675,-0.1975,0.13,+0.1300 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,73,mixed,-0.27,0.0,0.0,0.0,0.0,0
+372,BHEL,Bharat Heavy Electricals Ltd.,-0.07,-0.125,0.055,+0.0550,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3925,120,mixed,0.5,-0.78,0.0,0.0,0.0,2
+373,BANDHANBNK,Bandhan Bank Ltd.,-0.0725,-0.185,0.1125,+0.1125 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,0.0,81,mixed,0.0,-0.74,0.0,0.75,0.0,0
+374,HINDALCO,Hindalco Industries Ltd.,-0.0775,0.1875,-0.265,-0.2650,Reliable change,Fading,High,6,3,Moderate,Q3 FY26,0.1875,469,mixed,0.45,-0.76,0.0,0.0,0.0,1
+375,MOTILALOFS,Motilal Oswal Financial Services Ltd.,-0.0775,-0.0775,0.0,+0.0000,Reliable change,Watch,,5,5,Moderate,Q3 FY26,0.3775,285,mixed,-0.28,-0.03,0.0,0.0,0.0,2
+376,DATAPATTNS,Data Patterns (India) Ltd.,-0.0825,-0.13,0.0475,+0.0475,Reliable change,Watch,,7,5,High,Q3 FY26,-0.3775,121,mixed,0.49,-0.82,0.0,0.0,0.0,2
+377,SAIL,Steel Authority of India Ltd.,-0.0825,-0.1825,0.1,+0.1000,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.1975,86,mixed,0.42,-0.75,0.0,0.0,0.0,1
+378,ABFRL,Aditya Birla Fashion and Retail Ltd.,-0.09,-0.015,-0.075,-0.0750,Reliable change,Watch,Moderate,3,2,Limited,Q3 FY26,0.0,410,mixed,-0.36,0.0,0.0,0.0,0.0,0
+379,ASAHIINDIA,Asahi India Glass Ltd.,-0.0925,-0.39,0.2975,+0.2975,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.1875,9,mixed,-0.39,0.02,0.0,0.0,0.0,1
+380,JINDALSTEL,Jindal Steel Ltd.,-0.0925,-0.005,-0.0875,-0.0875,Reliable change,Watch,Moderate,5,2,Moderate,Q3 FY26,0.19,416,mixed,-0.3,-0.07,0.0,0.0,0.0,1
+381,NATCOPHARM,NATCO Pharma Ltd.,-0.095,-0.1925,0.0975,+0.0975,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1875,89,mixed,-0.38,0.0,0.0,0.0,0.0,1
+382,INDIAMART,Indiamart Intermesh Ltd.,-0.105,-0.1625,0.0575,+0.0575,Reliable change,Watch,,7,4,High,Q3 FY26,0.1975,115,mixed,0.48,-0.9,0.0,0.0,0.0,1
+383,NESTLEIND,Nestle India Ltd.,-0.105,0.0,-0.105,-0.1050,Reliable change,Fading,Moderate,5,2,Moderate,Q3 FY26,0.0,424,mixed,0.42,-0.84,0.0,0.0,0.0,0
+384,SIEMENS,Siemens Ltd.,-0.1075,-0.2025,0.095,+0.0950,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1875,91,mixed,-0.43,0.0,0.0,0.0,0.0,1
+385,ETERNAL,Eternal Ltd.,-0.1125,-0.1825,0.07,+0.0700,Reliable change,Watch,,7,5,High,Q3 FY26,-0.0025,103,mixed,0.29,-0.74,0.0,0.0,0.0,2
+386,ATGL,Adani Total Gas Ltd.,-0.1125,-0.1475,0.035,+0.0350,Reliable change,Watch,,6,5,Moderate,Q3 FY26,-0.01,126,mixed,0.36,-0.81,0.0,0.0,0.0,2
+387,BSOFT,Birlasoft Ltd.,-0.1125,-0.185,0.0725,+0.0725,Reliable change,Watch,,4,3,Moderate,Q3 FY26,-0.3775,100,mixed,-0.75,0.3,0.0,0.0,0.0,2
+388,AUBANK,AU Small Finance Bank Ltd.,-0.114,-0.114,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,-0.1155,285,mixed,0.0,0.0,0.0,-0.76,0.0,1
+389,INDUSINDBK,IndusInd Bank Ltd.,-0.1215,-0.117,-0.0045,-0.0045,Reliable change,Watch,,3,2,Limited,Q3 FY26,-0.1155,355,mixed,0.0,0.0,0.0,-0.81,0.0,1
+390,EXIDEIND,Exide Industries Ltd.,-0.1225,-0.1875,0.065,+0.0650,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,110,mixed,0.26,-0.75,0.0,0.0,0.0,1
+391,HCLTECH,HCL Technologies Ltd.,-0.1325,-0.0075,-0.125,-0.1250,Reliable change,Fading,High,5,2,Moderate,Q3 FY26,0.0,430,mixed,0.24,-0.77,0.0,0.0,0.0,0
+392,GMDCLTD,Gujarat Mineral Development Corporation Ltd.,-0.135,-0.195,0.06,+0.0600,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.19,113,mixed,-0.24,-0.3,0.0,0.0,0.0,1
+393,IGL,Indraprastha Gas Ltd.,-0.135,-0.39,0.255,+0.2550,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.19,16,mixed,0.24,-0.78,0.0,0.0,0.0,1
+394,MAPMYINDIA,C.E. Info Systems Ltd.,-0.1375,-0.005,-0.1325,-0.1325,Reliable change,Fading,High,6,4,Moderate,Q3 FY26,0.3925,432,mixed,-0.26,-0.29,0.0,0.0,0.0,2
+395,SIGNATURE,Signatureglobal (India) Ltd.,-0.14,-0.0025,-0.1375,-0.1375,Reliable change,Fading,High,9,6,High,Q3 FY26,0.385,436,mixed,-0.27,-0.29,0.0,0.0,0.0,3
+396,MGL,Mahanagar Gas Ltd.,-0.145,-0.23,0.085,+0.0850,Reliable change,Watch,,5,3,Moderate,Q3 FY26,0.185,94,mixed,0.23,-0.81,0.0,0.0,0.0,1
+397,AIIL,Authum Investment & Infrastructure Ltd.,-0.1575,-0.025,-0.1325,-0.1325,Reliable change,Fading,High,6,3,Moderate,Q3 FY26,0.195,432,mixed,-0.88,0.25,0.0,0.0,0.0,1
+398,AMBER,Amber Enterprises India Ltd.,-0.1625,-0.14,-0.0225,-0.0225,Reliable change,Watch,,6,4,Moderate,Q3 FY26,0.195,399,mixed,0.15,-0.8,0.0,0.0,0.0,2
+399,SCHNEIDER,Schneider Electric Infrastructure Ltd.,-0.1825,-0.19,0.0075,+0.0075 (limited history),Limited history,Watch,,3,1,Limited,Q3 FY26,-0.19,195,mixed,0.03,-0.76,0.0,0.0,0.0,1
+400,HONAUT,Honeywell Automation India Ltd.,-0.185,0.0,-0.185,-0.1850,Reliable change,Fading,High,4,3,Moderate,Q3 FY26,-0.005,442,mixed,0.0,-0.74,0.0,0.0,0.0,2
+401,PETRONET,Petronet LNG Ltd.,-0.19,-0.19,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,-0.1875,285,mixed,-0.76,0.0,0.0,0.0,0.0,1
+402,COLPAL,Colgate Palmolive (India) Ltd.,-0.195,-0.195,0.0,+0.0000 (limited history),Limited history,Watch,,1,1,Very Limited,Q3 FY26,0.0,285,mixed,-0.78,0.0,0.0,0.0,0.0,0
+403,SWANCORP,Swan Corp Ltd.,-0.1975,-0.275,0.0775,+0.0775,Reliable change,Watch,,8,5,High,Q3 FY26,-0.3925,98,mixed,-0.51,-0.28,0.0,0.0,0.0,2
+404,AWL,AWL Agri Business Ltd.,-0.1975,0.0,-0.1975,-0.1975,Reliable change,Fading,High,7,4,High,Q3 FY26,-0.0025,451,mixed,-0.02,-0.77,0.0,0.0,0.0,2
+405,CARBORUNIV,Carborundum Universal Ltd.,-0.1975,-0.2675,0.07,+0.0700,Reliable change,Watch,,7,5,High,Q3 FY26,-0.3925,103,mixed,-0.01,-0.78,0.0,0.0,0.0,2
+406,PGEL,PG Electroplast Ltd.,-0.1975,-0.4175,0.22,+0.2200,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.1875,22,mixed,0.0,-0.79,0.0,0.0,0.0,1
+407,GPIL,Godawari Power & Ispat Ltd.,-0.1975,-0.3825,0.185,+0.1850,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.3825,59,mixed,-0.77,-0.02,0.0,0.0,0.0,2
+408,KPRMILL,K.P.R. Mill Ltd.,-0.1975,-0.3975,0.2,+0.2000,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.19,40,mixed,-0.05,-0.74,0.0,0.0,0.0,1
+409,TIMKEN,Timken India Ltd.,-0.1975,0.0,-0.1975,New signal,New signal,Fading,High,3,0,Limited,Q3 FY26,0.0,451,mixed,-0.0,-0.79,0.0,0.0,0.0,0
+410,CONCORDBIO,Concord Biotech Ltd.,-0.2,-0.2025,0.0025,+0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,-0.1875,246,mixed,-0.8,0.0,0.0,0.0,0.0,1
+411,OBEROIRLTY,Oberoi Realty Ltd.,-0.2025,-0.2,-0.0025,-0.0025,Reliable change,Watch,,7,6,High,Q3 FY26,-0.38,331,mixed,-0.0,-0.81,0.0,0.0,0.0,3
+412,POWERGRID,Power Grid Corporation of India Ltd.,-0.2025,-0.2025,0.0,+0.0000,Reliable change,Watch,,2,2,Limited,Q3 FY26,-0.19,285,mixed,0.0,-0.81,0.0,0.0,0.0,1
+413,DRREDDY,Dr. Reddy's Laboratories Ltd.,-0.2025,0.0,-0.2025,New signal,New signal,Fading,High,1,0,Very Limited,Q3 FY26,0.0,457,mixed,-0.81,0.0,0.0,0.0,0.0,0
+414,PPLPHARMA,Piramal Pharma Ltd.,-0.205,-0.1975,-0.0075,-0.0075,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,367,mixed,-0.82,0.0,0.0,0.0,0.0,0
+415,WHIRLPOOL,Whirlpool of India Ltd.,-0.205,-0.195,-0.01,-0.0100,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,377,mixed,-0.82,0.0,0.0,0.0,0.0,0
+416,BLUESTARCO,Blue Star Ltd.,-0.205,-0.1875,-0.0175,-0.0175 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,-0.1875,397,mixed,-0.82,0.0,0.0,0.0,0.0,1
+417,URBANCO,Urban Company Ltd.,-0.2075,-0.1975,-0.01,-0.0100,Reliable change,Watch,,6,3,Moderate,Q3 FY26,0.0,377,mixed,-0.0,-0.83,0.0,0.0,0.0,0
+418,COCHINSHIP,Cochin Shipyard Ltd.,-0.21,-0.215,0.005,+0.0050,Reliable change,Watch,,6,3,Moderate,Q3 FY26,0.1925,214,mixed,-0.01,-0.83,0.0,0.0,0.0,1
+419,OIL,Oil India Ltd.,-0.21,-0.2075,-0.0025,-0.0025,Reliable change,Watch,,5,4,Moderate,Q3 FY26,-0.195,331,mixed,-0.03,-0.81,0.0,0.0,0.0,1
+420,COHANCE,Cohance Lifesciences Ltd.,-0.21,-0.2075,-0.0025,-0.0025,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1975,331,mixed,-0.84,0.0,0.0,0.0,0.0,1
+421,GROWW,Billionbrains Garage Ventures Ltd.,-0.2125,0.195,-0.4075,-0.4075 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,476,mixed,-0.83,-0.02,0.0,0.0,0.0,0
+422,SYNGENE,Syngene International Ltd.,-0.215,-0.2075,-0.0075,-0.0075 (limited history),Limited history,Watch,,2,1,Limited,Q3 FY26,0.0,367,mixed,-0.86,0.0,0.0,0.0,0.0,0
+423,ZEEL,Zee Entertainment Enterprises Ltd.,-0.22,-0.2175,-0.0025,-0.0025,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.1875,331,mixed,-0.04,-0.84,0.0,0.0,0.0,1
+424,BEML,BEML Ltd.,-0.22,0.0,-0.22,New signal,New signal,Fading,High,3,0,Limited,Q3 FY26,0.0,463,mixed,-0.06,-0.82,0.0,0.0,0.0,0
+425,DEEPAKFERT,Deepak Fertilisers & Petrochemicals Corp. Ltd.,-0.235,-0.0275,-0.2075,-0.2075,Reliable change,Fading,High,4,2,Moderate,Q3 FY26,0.1875,462,mixed,-0.04,-0.9,0.0,0.0,0.0,1
+426,DEVYANI,Devyani International Ltd.,-0.2375,-0.265,0.0275,+0.0275,Reliable change,Watch,,7,5,High,Q3 FY26,-0.3875,132,mixed,-0.2,-0.75,0.0,0.0,0.0,2
+427,GODREJPROP,Godrej Properties Ltd.,-0.255,-0.2675,0.0125,+0.0125,Reliable change,Watch,,8,5,High,Q3 FY26,-0.3875,159,weakening,-0.15,-0.87,0.0,0.0,0.0,2
+428,RHIM,RHI MAGNESITA INDIA LTD.,-0.255,-0.255,0.0,+0.0000,Reliable change,Watch,,4,4,Moderate,Q3 FY26,-0.3925,285,weakening,-0.24,-0.78,0.0,0.0,0.0,2
+429,INDIGO,InterGlobe Aviation Ltd.,-0.26,-0.2825,0.0225,+0.0225,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.1875,136,weakening,-0.21,-0.83,0.0,0.0,0.0,1
+430,CDSL,Central Depository Services (India) Ltd.,-0.2625,-0.38,0.1175,+0.1175,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3825,79,weakening,-0.24,-0.81,0.0,0.0,0.0,2
+431,RKFORGE,Ramkrishna Forgings Ltd.,-0.2675,-0.39,0.1225,+0.1225,Reliable change,Watch,,7,5,High,Q3 FY26,-0.3875,77,weakening,-0.8,-0.27,0.0,0.0,0.0,2
+432,TATACHEM,Tata Chemicals Ltd.,-0.2675,0.005,-0.2725,-0.2725,Reliable change,Fading,High,4,2,Moderate,Q3 FY26,0.1975,470,weakening,-0.28,-0.79,0.0,0.0,0.0,1
+433,ABB,ABB India Ltd.,-0.27,-0.1925,-0.0775,-0.0775,Reliable change,Watch,Moderate,6,4,Moderate,Q3 FY26,-0.3825,413,weakening,-0.26,-0.82,0.0,0.0,0.0,2
+434,SUNTV,Sun TV Network Ltd.,-0.27,-0.1925,-0.0775,-0.0775,Reliable change,Watch,Moderate,5,3,Moderate,Q3 FY26,-0.195,413,weakening,-0.26,-0.82,0.0,0.0,0.0,1
+435,CROMPTON,Crompton Greaves Consumer Electricals Ltd.,-0.2725,-0.435,0.1625,+0.1625,Reliable change,Watch,,5,2,Moderate,Q3 FY26,0.0,69,weakening,-0.29,-0.8,0.0,0.0,0.0,0
+436,NAVA,Nava Ltd.,-0.275,-0.4325,0.1575,+0.1575,Reliable change,Watch,,5,2,Moderate,Q3 FY26,0.0,70,weakening,-0.28,-0.82,0.0,0.0,0.0,0
+437,EIHOTEL,EIH Ltd.,-0.28,-0.38,0.1,+0.1000,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.1975,86,weakening,-0.37,-0.75,0.0,0.0,0.0,1
+438,SUPREMEIND,Supreme Industries Ltd.,-0.285,-0.3775,0.0925,+0.0925,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3775,93,weakening,-0.4,-0.74,0.0,0.0,0.0,2
+439,MANAPPURAM,Manappuram Finance Ltd.,-0.2875,-0.4175,0.13,+0.1300,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.195,73,weakening,-0.3,-0.85,0.0,0.0,0.0,1
+440,KPITTECH,KPIT Technologies Ltd.,-0.2875,-0.19,-0.0975,-0.0975 (limited history),Limited history,Watch,Moderate,4,1,Moderate,Q3 FY26,0.0,421,weakening,-0.31,-0.84,0.0,0.0,0.0,0
+441,JPPOWER,Jaiprakash Power Ventures Ltd.,-0.29,-0.2,-0.09,-0.0900,Reliable change,Watch,Moderate,5,3,Moderate,Q3 FY26,-0.3825,417,weakening,-0.33,-0.83,0.0,0.0,0.0,2
+442,BALKRISIND,Balkrishna Industries Ltd.,-0.295,-0.39,0.095,+0.0950,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3925,91,weakening,-0.4,-0.78,0.0,0.0,0.0,2
+443,EMAMILTD,Emami Ltd.,-0.295,-0.4225,0.1275,+0.1275,Reliable change,Watch,,4,3,Moderate,Q3 FY26,0.0,75,weakening,-0.29,-0.89,0.0,0.0,0.0,0
+444,INDUSTOWER,Indus Towers Ltd.,-0.2975,-0.4025,0.105,+0.1050,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.195,83,weakening,-0.34,-0.85,0.0,0.0,0.0,1
+445,JSWDULUX,JSW Dulux Ltd.,-0.3025,-0.25,-0.0525,-0.0525,Reliable change,Watch,,7,4,High,Q3 FY26,-0.1875,404,weakening,-0.46,-0.75,0.0,0.0,0.0,1
+446,SAPPHIRE,Sapphire Foods India Ltd.,-0.305,-0.39,0.085,+0.0850,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.1975,94,weakening,-0.44,-0.78,0.0,0.0,0.0,1
+447,EMMVEE,Emmvee Photovoltaic Power Ltd.,-0.3075,-0.1925,-0.115,-0.1150,Reliable change,Fading,Moderate,6,3,Moderate,Q3 FY26,0.0,426,weakening,-0.4,-0.83,0.0,0.0,0.0,0
+448,UTIAMC,UTI Asset Management Company Ltd.,-0.31,-0.415,0.105,+0.1050,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.19,83,weakening,-0.42,-0.82,0.0,0.0,0.0,1
+449,MFSL,Max Financial Services Ltd.,-0.3125,-0.395,0.0825,+0.0825,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.1975,96,weakening,-0.49,-0.76,0.0,0.0,0.0,1
+450,TMPV,Tata Motors Passenger Vehicles Ltd.,-0.315,-0.2025,-0.1125,-0.1125,Reliable change,Fading,Moderate,7,4,High,Q3 FY26,-0.3925,425,weakening,-0.41,-0.85,0.0,0.0,0.0,2
+451,RVNL,Rail Vikas Nigam Ltd.,-0.3775,-0.3775,0.0,+0.0000,Reliable change,Watch,,3,3,Limited,Q3 FY26,-0.3875,285,weakening,-0.75,-0.76,0.0,0.0,0.0,2
+452,JWL,Jupiter Wagons Ltd.,-0.3825,-0.385,0.0025,+0.0025,Reliable change,Watch,,8,5,High,Q3 FY26,-0.385,246,weakening,-0.79,-0.74,0.0,0.0,0.0,3
+453,GAIL,GAIL (India) Ltd.,-0.3925,-0.38,-0.0125,-0.0125,Reliable change,Watch,,6,4,Moderate,Q3 FY26,-0.3775,385,weakening,-0.83,-0.74,0.0,0.0,0.0,2
+454,ARE&M,Amara Raja Energy & Mobility Ltd.,-0.3925,-0.3775,-0.015,-0.0150,Reliable change,Watch,,4,2,Moderate,Q3 FY26,-0.1875,389,weakening,-0.82,-0.75,0.0,0.0,0.0,1
+455,DEEPAKNTR,Deepak Nitrite Ltd.,-0.3925,-0.3925,0.0,+0.0000,Reliable change,Watch,,4,4,Moderate,Q3 FY26,-0.3875,285,weakening,-0.8,-0.77,0.0,0.0,0.0,2
+456,CYIENT,Cyient Ltd.,-0.395,-0.3975,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.19,246,weakening,-0.81,-0.77,0.0,0.0,0.0,1
+457,BERGEPAINT,Berger Paints India Ltd.,-0.3975,-0.4125,0.015,+0.0150,Reliable change,Watch,,3,2,Limited,Q3 FY26,0.0,146,weakening,-0.79,-0.8,0.0,0.0,0.0,0
+458,ANGELONE,Angel One Ltd.,-0.4,-0.4,0.0,+0.0000,Reliable change,Watch,,5,5,Moderate,Q3 FY26,-0.3925,285,weakening,-0.8,-0.8,0.0,0.0,0.0,2
+459,NCC,NCC Ltd.,-0.4025,-0.3975,-0.005,-0.0050,Reliable change,Watch,Early,5,3,Moderate,Q3 FY26,0.0,356,weakening,-0.86,-0.75,0.0,0.0,0.0,0
+460,LGEINDIA,LG Electronics India Ltd.,-0.4025,-0.3775,-0.025,-0.0250,Reliable change,Watch,Early,4,2,Moderate,Q3 FY26,0.0,402,weakening,-0.82,-0.79,0.0,0.0,0.0,0
+461,BATAINDIA,Bata India Ltd.,-0.4025,-0.4025,0.0,+0.0000,Reliable change,Watch,,3,3,Limited,Q3 FY26,-0.1975,285,weakening,-0.81,-0.8,0.0,0.0,0.0,1
+462,TITAGARH,Titagarh Rail Systems Ltd.,-0.405,-0.4025,-0.0025,-0.0025,Reliable change,Watch,Early,6,5,Moderate,Q3 FY26,-0.19,331,weakening,-0.79,-0.83,0.0,0.0,0.0,2
+463,ADANIPOWER,Adani Power Ltd.,-0.405,-0.385,-0.02,-0.0200,Reliable change,Watch,Early,5,2,Moderate,Q3 FY26,0.0,398,weakening,-0.77,-0.85,0.0,0.0,0.0,0
+464,COALINDIA,Coal India Ltd.,-0.405,-0.4075,0.0025,+0.0025,Reliable change,Watch,,5,3,Moderate,Q3 FY26,-0.195,246,weakening,-0.8,-0.82,0.0,0.0,0.0,1
+465,VOLTAS,Voltas Ltd.,-0.4075,-0.405,-0.0025,-0.0025,Reliable change,Watch,Early,5,4,Moderate,Q3 FY26,-0.3875,331,weakening,-0.84,-0.79,0.0,0.0,0.0,2
+466,TATAELXSI,Tata Elxsi Ltd.,-0.41,-0.4,-0.01,-0.0100,Reliable change,Watch,Early,6,4,Moderate,Q3 FY26,-0.3825,377,weakening,-0.83,-0.81,0.0,0.0,0.0,2
+467,TEJASNET,Tejas Networks Ltd.,-0.4125,-0.405,-0.0075,-0.0075,Reliable change,Watch,Early,9,6,High,Q3 FY26,-0.39,367,weakening,-0.82,-0.83,0.0,0.0,0.0,3
+468,TATATECH,Tata Technologies Ltd.,-0.4125,-0.19,-0.2225,-0.2225 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,465,weakening,-0.82,-0.83,0.0,0.0,0.0,0
+469,OLAELEC,Ola Electric Mobility Ltd.,-0.415,-0.3925,-0.0225,-0.0225,Reliable change,Watch,Early,8,5,High,Q3 FY26,-0.385,399,weakening,-0.83,-0.83,0.0,0.0,0.0,3
+470,ABREL,Aditya Birla Real Estate Ltd.,-0.4225,-0.4125,-0.01,-0.0100,Reliable change,Watch,Early,9,6,High,Q3 FY26,-0.39,377,weakening,-0.83,-0.86,0.0,0.0,0.0,3
+471,SPLPETRO,Supreme Petrochem Ltd.,-0.425,-0.205,-0.22,-0.2200,Reliable change,Fading,High,5,3,Moderate,Q3 FY26,-0.1875,463,weakening,-0.84,-0.86,0.0,0.0,0.0,1
+472,PCBL,PCBL Chemical Ltd.,-0.4275,-0.4275,0.0,+0.0000,Reliable change,Watch,,6,3,Moderate,Q3 FY26,-0.1875,285,weakening,-0.83,-0.88,0.0,0.0,0.0,1
+473,PIIND,PI Industries Ltd.,-0.4275,-0.1975,-0.23,-0.2300,Reliable change,Fading,High,5,2,Moderate,Q3 FY26,0.0,466,weakening,-0.82,-0.89,0.0,0.0,0.0,0
+474,WELSPUNLIV,Welspun Living Ltd.,-0.43,-0.415,-0.015,-0.0150,Reliable change,Watch,Early,6,4,Moderate,Q3 FY26,-0.1975,389,weakening,-0.82,-0.9,0.0,0.0,0.0,1
+475,VTL,Vardhman Textiles Ltd.,-0.43,0.0,-0.43,New signal,New signal,Fading,High,2,0,Limited,Q3 FY26,0.0,477,weakening,-0.9,-0.82,0.0,0.0,0.0,0
+476,CLEAN,Clean Science and Technology Ltd.,-0.4325,-0.2,-0.2325,-0.2325 (limited history),Limited history,Fading,High,3,1,Limited,Q3 FY26,0.0,467,weakening,-0.86,-0.87,0.0,0.0,0.0,0
+477,JINDALSAW,Jindal Saw Ltd.,-0.4475,-0.435,-0.0125,-0.0125,Reliable change,Watch,Early,5,3,Moderate,Q3 FY26,0.0,385,weakening,-0.88,-0.91,0.0,0.0,0.0,0

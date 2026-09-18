@@ -10,6 +10,10 @@ COPY final_validation/ ./final_validation/
 COPY nifty500_bms_v1_results.csv ./
 COPY nifty500_bms_v1_product_view_final.csv ./
 COPY nifty500_bms_v1_candidate.db ./
+COPY bms_artifact_manifest.json ./
+COPY verify_bms_artifacts.py ./
+
+RUN python verify_bms_artifacts.py
 
 RUN pip install --no-cache-dir .
 

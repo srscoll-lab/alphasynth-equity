@@ -58,6 +58,15 @@ BMS_DB_FILE = Path(
     )
 )
 
+BMS_LEGACY_FUNDAMENTALS_FILE = Path(
+    os.environ.get(
+        "BMS_LEGACY_FUNDAMENTALS_FILE",
+        str(_bms_artifact_root / "final_validation" / "nifty500_bms_v1_fundamentals.csv"),
+    )
+)
+
+BMS_LEGACY_SNAPSHOT_DATE = os.environ.get("BMS_LEGACY_SNAPSHOT_DATE", "2026-08-22")
+
 BMS_SUPPLEMENTAL_EVIDENCE_FILE = Path(
     os.environ.get(
         "BMS_SUPPLEMENTAL_EVIDENCE_FILE",
@@ -722,6 +731,8 @@ def current_bms_lifecycle():
         scores_by_symbol=scores_by_symbol,
         supplemental_evidence_file=BMS_SUPPLEMENTAL_EVIDENCE_FILE,
         official_domains_by_symbol=_controlled_cohort_domains(),
+        legacy_fundamentals_file=BMS_LEGACY_FUNDAMENTALS_FILE,
+        legacy_snapshot_date=BMS_LEGACY_SNAPSHOT_DATE,
     )
     product["factor_analysis"] = product["symbol"].map(analyses)
     product["publication_eligibility"] = product["factor_analysis"].map(

@@ -295,7 +295,7 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
         ),
     )
 
-    for symbol in {"LT", "TATASTEEL", "ULTRACEMCO"}:
+    for symbol in ("LT", "TATASTEEL", "ULTRACEMCO"):
         eligibility = assess_publication_eligibility(analyses[symbol])
         assert eligibility.score_publishable is False
         assert set(eligibility.complete_factor_ids) == {"execution", "balance_sheet"}
@@ -306,3 +306,65 @@ def test_launch_cohort_supplemental_rows_are_admitted(tmp_path):
     assert set(adani_eligibility.missing_factor_ids) == {
         "earnings", "economics", "balance_sheet"
     }
+
+
+def test_restored_secondary_financial_baseline_combines_with_official_operating_evidence(
+    tmp_path,
+):
+    database = tmp_path / "bms.db"
+    connection = sqlite3.connect(database)
+    connection.executescript(
+        """
+        CREATE TABLE companies (id INTEGER PRIMARY KEY, nse_symbol TEXT, symbol TEXT);
+        CREATE TABLE change_records (
+          id INTEGER PRIMARY KEY, company_id INTEGER, metric_or_topic TEXT, previous_period TEXT,
+          current_period TEXT, previous_value TEXT, current_value TEXT,
+          change_value TEXT, confidence REAL
+        );
+        INSERT INTO companies VALUES (1, 'TESTCO', 'TESTCO');
+        """
+    )
+    connection.commit()
+    connection.close()
+
+    fundamentals = tmp_path / "fundamentals.csv"
+    fundamentals.write_text(
+        "symbol,period,metric_name,value,unit,factor,source_type,source_reference,validation_note,source_status,source_file\n"
+        "TESTCO,Q3 FY25,revenue,100,INR crore,earnings,screener,https://example.com/testco,Archived baseline,collected,baseline.csv\n"
+        "TESTCO,Q3 FY26,revenue,120,INR crore,earnings,screener,https://example.com/testco,Archived baseline,collected,baseline.csv\n"
+        "TESTCO,Q3 FY25,operating_margin,10,percent,economics,screener,https://example.com/testco,Archived baseline,collected,baseline.csv\n"
+        "TESTCO,Q3 FY26,operating_margin,12,percent,economics,screener,https://example.com/testco,Archived baseline,collected,baseline.csv\n",
+        encoding="utf-8",
+    )
+    evidence = tmp_path / "launch.csv"
+    evidence.write_text(
+        "symbol,factor,metric_name,previous_period,current_period,previous_value,current_value,unit,source_type,source_ref,source_date,cutoff_date,confidence\n"
+        "TESTCO,execution,order_book,Q3 FY25,Q3 FY26,10,12,INR crore,company_results,https://company.example/results.pdf,2026-02-03,2026-08-25,0.95\n"
+        "TESTCO,balance_sheet,total_debt,Q3 FY25,Q3 FY26,40,30,INR crore,company_results,https://company.example/results.pdf,2026-02-03,2026-08-25,0.95\n",
+        encoding="utf-8",
+    )
+
+    analyses = load_factor_analyses(
+        database,
+        periods_by_symbol={"TESTCO": "Q3 FY26"},
+        scores_by_symbol={
+            "TESTCO": {
+                "earnings": 0.2,
+                "economics": 0.1,
+                "execution": 0.3,
+                "balance_sheet": 0.4,
+            }
+        },
+        supplemental_evidence_file=evidence,
+        official_domains_by_symbol={"TESTCO": {"company.example"}},
+        legacy_fundamentals_file=fundamentals,
+        legacy_snapshot_date="2026-08-22",
+    )
+    eligibility = assess_publication_eligibility(analyses["TESTCO"])
+    factors = {factor["id"]: factor for factor in analyses["TESTCO"]["factors"]}
+
+    assert eligibility.score_publishable is True
+    assert eligibility.complete_factor_count == 4
+    assert factors["earnings"]["source_details"][0]["source_tier"] == "secondary_aggregator"
+    assert factors["earnings"]["source_details"][0]["captured_at"] == "2026-08-22"
+    assert factors["execution"]["source_details"][0]["source_tier"] == "official"
