@@ -268,6 +268,10 @@ const scrollToWorkflow = () => {
   document.getElementById('workflow')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
+const scrollToResearchSearch = () => {
+  document.getElementById('company-research-search')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
 const CHART_COLORS = [
   '#3b82f6', // Blue
   '#10b981', // Emerald
@@ -537,7 +541,7 @@ export default function App() {
     }
 
     if (new URLSearchParams(window.location.search).get('view') === 'research') {
-      window.setTimeout(scrollToWorkflow, 100);
+      window.setTimeout(scrollToResearchSearch, 100);
     } else {
       window.scrollTo(0, 0);
     }
@@ -554,10 +558,10 @@ export default function App() {
   const enterOpenResearch = () => {
     const url = new URL(window.location.href);
     url.searchParams.set('view', 'research');
-    window.history.replaceState({}, '', `${url.pathname}${url.search}#workflow`);
+    window.history.replaceState({}, '', `${url.pathname}${url.search}#company-research-search`);
     setAppView('research');
     setActiveTab('equity');
-    window.setTimeout(scrollToWorkflow, 100);
+    window.setTimeout(scrollToResearchSearch, 100);
   };
 
   const returnToBmsDiscovery = () => {
@@ -4072,7 +4076,7 @@ ${list}
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <button
             type="button"
-            onClick={standaloneResearchMode ? scrollToWorkflow : returnToBmsDiscovery}
+            onClick={standaloneResearchMode ? scrollToResearchSearch : returnToBmsDiscovery}
             className="flex items-center gap-2 group relative cursor-pointer"
             title={standaloneResearchMode ? 'Open company research' : 'Back to BMS Discovery'}
           >
@@ -4349,7 +4353,7 @@ ${list}
             )}
 
             {/* Input Controls */}
-            <div className="max-w-2xl mx-auto mb-10 flex flex-col md:flex-row gap-2">
+            <div id="company-research-search" className="max-w-2xl mx-auto mb-10 flex flex-col md:flex-row gap-2 scroll-mt-28">
               <div className="flex-1 relative">
                 <input
                   type="text"
