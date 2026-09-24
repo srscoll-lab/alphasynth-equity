@@ -10,8 +10,8 @@
   "marketEntryRule": "First completed Indian trading session strictly after the information cutoff",
   "marketEntryDate": "2026-08-26",
   "asOfDate": "2026-09-24",
-  "forwardSessionsObserved": 20,
-  "generatedAt": "2026-09-24T12:19:07.868Z",
+  "forwardSessionsObserved": 21,
+  "generatedAt": "2026-09-24T13:11:10.839Z",
   "sourceManifest": {
     "path": "../alphasynth-bms-v2/output/fifty-company-v2-release-manifest.json",
     "sha256": "64d4d395d39de8ef86c1f41da9b75cdebb1b517577befad7cb9df4319c92bc5e"
@@ -6731,6 +6731,11 @@
         "adjustedClose": 23414.30078125
       },
       {
+        "date": "2026-09-22",
+        "close": 23329,
+        "adjustedClose": 23329
+      },
+      {
         "date": "2026-09-23",
         "close": 23446.80078125,
         "adjustedClose": 23446.80078125
@@ -6742,6 +6747,101 @@
       }
     ],
     "NIFTY_FIN_SERVICE": [
+      {
+        "date": "2026-08-26",
+        "close": 26386.75,
+        "adjustedClose": 26386.75
+      },
+      {
+        "date": "2026-08-27",
+        "close": 26280.65,
+        "adjustedClose": 26280.65
+      },
+      {
+        "date": "2026-08-28",
+        "close": 26286.5,
+        "adjustedClose": 26286.5
+      },
+      {
+        "date": "2026-08-31",
+        "close": 26293.65,
+        "adjustedClose": 26293.65
+      },
+      {
+        "date": "2026-09-01",
+        "close": 26003.9,
+        "adjustedClose": 26003.9
+      },
+      {
+        "date": "2026-09-02",
+        "close": 25813.05,
+        "adjustedClose": 25813.05
+      },
+      {
+        "date": "2026-09-03",
+        "close": 25923.05,
+        "adjustedClose": 25923.05
+      },
+      {
+        "date": "2026-09-04",
+        "close": 26051,
+        "adjustedClose": 26051
+      },
+      {
+        "date": "2026-09-07",
+        "close": 25935.6,
+        "adjustedClose": 25935.6
+      },
+      {
+        "date": "2026-09-08",
+        "close": 25695.55,
+        "adjustedClose": 25695.55
+      },
+      {
+        "date": "2026-09-09",
+        "close": 25376.8,
+        "adjustedClose": 25376.8
+      },
+      {
+        "date": "2026-09-10",
+        "close": 25520.3,
+        "adjustedClose": 25520.3
+      },
+      {
+        "date": "2026-09-11",
+        "close": 25545.4,
+        "adjustedClose": 25545.4
+      },
+      {
+        "date": "2026-09-15",
+        "close": 25076.65,
+        "adjustedClose": 25076.65
+      },
+      {
+        "date": "2026-09-16",
+        "close": 25262.4,
+        "adjustedClose": 25262.4
+      },
+      {
+        "date": "2026-09-17",
+        "close": 25318.35,
+        "adjustedClose": 25318.35
+      },
+      {
+        "date": "2026-09-18",
+        "close": 25510,
+        "adjustedClose": 25510
+      },
+      {
+        "date": "2026-09-21",
+        "close": 25524.7,
+        "adjustedClose": 25524.7
+      },
+      {
+        "date": "2026-09-22",
+        "close": 25417.95,
+        "adjustedClose": 25417.95
+      },
       {
         "date": "2026-09-24",
         "close": 27047.19921875,
@@ -6840,6 +6940,11 @@
         "adjustedClose": 27021.150390625
       },
       {
+        "date": "2026-09-22",
+        "close": 26909.6,
+        "adjustedClose": 26909.6
+      },
+      {
         "date": "2026-09-23",
         "close": 27152.099609375,
         "adjustedClose": 27152.099609375
@@ -6851,6 +6956,101 @@
       }
     ],
     "NIFTY_METAL": [
+      {
+        "date": "2026-08-26",
+        "close": 13541.7,
+        "adjustedClose": 13541.7
+      },
+      {
+        "date": "2026-08-27",
+        "close": 13425.2,
+        "adjustedClose": 13425.2
+      },
+      {
+        "date": "2026-08-28",
+        "close": 13525.35,
+        "adjustedClose": 13525.35
+      },
+      {
+        "date": "2026-08-31",
+        "close": 13193.9,
+        "adjustedClose": 13193.9
+      },
+      {
+        "date": "2026-09-01",
+        "close": 13189.85,
+        "adjustedClose": 13189.85
+      },
+      {
+        "date": "2026-09-02",
+        "close": 13157.35,
+        "adjustedClose": 13157.35
+      },
+      {
+        "date": "2026-09-03",
+        "close": 13176.05,
+        "adjustedClose": 13176.05
+      },
+      {
+        "date": "2026-09-04",
+        "close": 13317.45,
+        "adjustedClose": 13317.45
+      },
+      {
+        "date": "2026-09-07",
+        "close": 13152.9,
+        "adjustedClose": 13152.9
+      },
+      {
+        "date": "2026-09-08",
+        "close": 13155.95,
+        "adjustedClose": 13155.95
+      },
+      {
+        "date": "2026-09-09",
+        "close": 13391.4,
+        "adjustedClose": 13391.4
+      },
+      {
+        "date": "2026-09-10",
+        "close": 13304.95,
+        "adjustedClose": 13304.95
+      },
+      {
+        "date": "2026-09-11",
+        "close": 12999.05,
+        "adjustedClose": 12999.05
+      },
+      {
+        "date": "2026-09-15",
+        "close": 12669.15,
+        "adjustedClose": 12669.15
+      },
+      {
+        "date": "2026-09-16",
+        "close": 12739.1,
+        "adjustedClose": 12739.1
+      },
+      {
+        "date": "2026-09-17",
+        "close": 12858.45,
+        "adjustedClose": 12858.45
+      },
+      {
+        "date": "2026-09-18",
+        "close": 13052.6,
+        "adjustedClose": 13052.6
+      },
+      {
+        "date": "2026-09-21",
+        "close": 12972.7,
+        "adjustedClose": 12972.7
+      },
+      {
+        "date": "2026-09-22",
+        "close": 12990.35,
+        "adjustedClose": 12990.35
+      },
       {
         "date": "2026-09-24",
         "close": 13041.9501953125,
@@ -6949,6 +7149,11 @@
         "adjustedClose": 28830.900390625
       },
       {
+        "date": "2026-09-22",
+        "close": 28582.1,
+        "adjustedClose": 28582.1
+      },
+      {
         "date": "2026-09-23",
         "close": 28334.05078125,
         "adjustedClose": 28334.05078125
@@ -6961,12 +7166,202 @@
     ],
     "NIFTY_INFRA": [
       {
+        "date": "2026-08-26",
+        "close": 9288.85,
+        "adjustedClose": 9288.85
+      },
+      {
+        "date": "2026-08-27",
+        "close": 9237.8,
+        "adjustedClose": 9237.8
+      },
+      {
+        "date": "2026-08-28",
+        "close": 9242.7,
+        "adjustedClose": 9242.7
+      },
+      {
+        "date": "2026-08-31",
+        "close": 9179.4,
+        "adjustedClose": 9179.4
+      },
+      {
+        "date": "2026-09-01",
+        "close": 9209.25,
+        "adjustedClose": 9209.25
+      },
+      {
+        "date": "2026-09-02",
+        "close": 9212.05,
+        "adjustedClose": 9212.05
+      },
+      {
+        "date": "2026-09-03",
+        "close": 9204.2,
+        "adjustedClose": 9204.2
+      },
+      {
+        "date": "2026-09-04",
+        "close": 9197.8,
+        "adjustedClose": 9197.8
+      },
+      {
+        "date": "2026-09-07",
+        "close": 9188.7,
+        "adjustedClose": 9188.7
+      },
+      {
+        "date": "2026-09-08",
+        "close": 9144.05,
+        "adjustedClose": 9144.05
+      },
+      {
+        "date": "2026-09-09",
+        "close": 9119.5,
+        "adjustedClose": 9119.5
+      },
+      {
+        "date": "2026-09-10",
+        "close": 9133.45,
+        "adjustedClose": 9133.45
+      },
+      {
+        "date": "2026-09-11",
+        "close": 9077.15,
+        "adjustedClose": 9077.15
+      },
+      {
+        "date": "2026-09-15",
+        "close": 8910.75,
+        "adjustedClose": 8910.75
+      },
+      {
+        "date": "2026-09-16",
+        "close": 8908.7,
+        "adjustedClose": 8908.7
+      },
+      {
+        "date": "2026-09-17",
+        "close": 8969.3,
+        "adjustedClose": 8969.3
+      },
+      {
+        "date": "2026-09-18",
+        "close": 9071.3,
+        "adjustedClose": 9071.3
+      },
+      {
+        "date": "2026-09-21",
+        "close": 9058.2,
+        "adjustedClose": 9058.2
+      },
+      {
+        "date": "2026-09-22",
+        "close": 9020.8,
+        "adjustedClose": 9020.8
+      },
+      {
         "date": "2026-09-24",
         "close": 8944.849609375,
         "adjustedClose": 8944.849609375
       }
     ],
     "NIFTY_ENERGY": [
+      {
+        "date": "2026-08-26",
+        "close": 38099.9,
+        "adjustedClose": 38099.9
+      },
+      {
+        "date": "2026-08-27",
+        "close": 38103.95,
+        "adjustedClose": 38103.95
+      },
+      {
+        "date": "2026-08-28",
+        "close": 38003.65,
+        "adjustedClose": 38003.65
+      },
+      {
+        "date": "2026-08-31",
+        "close": 37949.25,
+        "adjustedClose": 37949.25
+      },
+      {
+        "date": "2026-09-01",
+        "close": 37806.1,
+        "adjustedClose": 37806.1
+      },
+      {
+        "date": "2026-09-02",
+        "close": 38028.4,
+        "adjustedClose": 38028.4
+      },
+      {
+        "date": "2026-09-03",
+        "close": 38140.8,
+        "adjustedClose": 38140.8
+      },
+      {
+        "date": "2026-09-04",
+        "close": 38067.85,
+        "adjustedClose": 38067.85
+      },
+      {
+        "date": "2026-09-07",
+        "close": 37973.35,
+        "adjustedClose": 37973.35
+      },
+      {
+        "date": "2026-09-08",
+        "close": 38093.5,
+        "adjustedClose": 38093.5
+      },
+      {
+        "date": "2026-09-09",
+        "close": 38333.65,
+        "adjustedClose": 38333.65
+      },
+      {
+        "date": "2026-09-10",
+        "close": 38223.4,
+        "adjustedClose": 38223.4
+      },
+      {
+        "date": "2026-09-11",
+        "close": 37935.2,
+        "adjustedClose": 37935.2
+      },
+      {
+        "date": "2026-09-15",
+        "close": 37147.95,
+        "adjustedClose": 37147.95
+      },
+      {
+        "date": "2026-09-16",
+        "close": 37183.4,
+        "adjustedClose": 37183.4
+      },
+      {
+        "date": "2026-09-17",
+        "close": 37381.75,
+        "adjustedClose": 37381.75
+      },
+      {
+        "date": "2026-09-18",
+        "close": 37773.55,
+        "adjustedClose": 37773.55
+      },
+      {
+        "date": "2026-09-21",
+        "close": 37818.55,
+        "adjustedClose": 37818.55
+      },
+      {
+        "date": "2026-09-22",
+        "close": 37727,
+        "adjustedClose": 37727
+      },
       {
         "date": "2026-09-24",
         "close": 37360.94921875,
@@ -6975,12 +7370,202 @@
     ],
     "NIFTY_CONSUMPTION": [
       {
+        "date": "2026-08-26",
+        "close": 11968.2,
+        "adjustedClose": 11968.2
+      },
+      {
+        "date": "2026-08-27",
+        "close": 11921.2,
+        "adjustedClose": 11921.2
+      },
+      {
+        "date": "2026-08-28",
+        "close": 11904.2,
+        "adjustedClose": 11904.2
+      },
+      {
+        "date": "2026-08-31",
+        "close": 11802.7,
+        "adjustedClose": 11802.7
+      },
+      {
+        "date": "2026-09-01",
+        "close": 11782.3,
+        "adjustedClose": 11782.3
+      },
+      {
+        "date": "2026-09-02",
+        "close": 11703.6,
+        "adjustedClose": 11703.6
+      },
+      {
+        "date": "2026-09-03",
+        "close": 11644.8,
+        "adjustedClose": 11644.8
+      },
+      {
+        "date": "2026-09-04",
+        "close": 11597.7,
+        "adjustedClose": 11597.7
+      },
+      {
+        "date": "2026-09-07",
+        "close": 11560.75,
+        "adjustedClose": 11560.75
+      },
+      {
+        "date": "2026-09-08",
+        "close": 11569.35,
+        "adjustedClose": 11569.35
+      },
+      {
+        "date": "2026-09-09",
+        "close": 11531.65,
+        "adjustedClose": 11531.65
+      },
+      {
+        "date": "2026-09-10",
+        "close": 11514.75,
+        "adjustedClose": 11514.75
+      },
+      {
+        "date": "2026-09-11",
+        "close": 11460.6,
+        "adjustedClose": 11460.6
+      },
+      {
+        "date": "2026-09-15",
+        "close": 11282.8,
+        "adjustedClose": 11282.8
+      },
+      {
+        "date": "2026-09-16",
+        "close": 11361.65,
+        "adjustedClose": 11361.65
+      },
+      {
+        "date": "2026-09-17",
+        "close": 11428,
+        "adjustedClose": 11428
+      },
+      {
+        "date": "2026-09-18",
+        "close": 11460.7,
+        "adjustedClose": 11460.7
+      },
+      {
+        "date": "2026-09-21",
+        "close": 11509.3,
+        "adjustedClose": 11509.3
+      },
+      {
+        "date": "2026-09-22",
+        "close": 11487.2,
+        "adjustedClose": 11487.2
+      },
+      {
         "date": "2026-09-24",
         "close": 11353.4501953125,
         "adjustedClose": 11353.4501953125
       }
     ],
     "NIFTY_AUTO": [
+      {
+        "date": "2026-08-26",
+        "close": 29000.15,
+        "adjustedClose": 29000.15
+      },
+      {
+        "date": "2026-08-27",
+        "close": 28883.5,
+        "adjustedClose": 28883.5
+      },
+      {
+        "date": "2026-08-28",
+        "close": 28851.8,
+        "adjustedClose": 28851.8
+      },
+      {
+        "date": "2026-08-31",
+        "close": 28841.5,
+        "adjustedClose": 28841.5
+      },
+      {
+        "date": "2026-09-01",
+        "close": 28491.05,
+        "adjustedClose": 28491.05
+      },
+      {
+        "date": "2026-09-02",
+        "close": 27981.95,
+        "adjustedClose": 27981.95
+      },
+      {
+        "date": "2026-09-03",
+        "close": 27837.4,
+        "adjustedClose": 27837.4
+      },
+      {
+        "date": "2026-09-04",
+        "close": 27710.9,
+        "adjustedClose": 27710.9
+      },
+      {
+        "date": "2026-09-07",
+        "close": 27698.75,
+        "adjustedClose": 27698.75
+      },
+      {
+        "date": "2026-09-08",
+        "close": 27775.35,
+        "adjustedClose": 27775.35
+      },
+      {
+        "date": "2026-09-09",
+        "close": 27653.35,
+        "adjustedClose": 27653.35
+      },
+      {
+        "date": "2026-09-10",
+        "close": 27540.95,
+        "adjustedClose": 27540.95
+      },
+      {
+        "date": "2026-09-11",
+        "close": 27304.5,
+        "adjustedClose": 27304.5
+      },
+      {
+        "date": "2026-09-15",
+        "close": 26756.6,
+        "adjustedClose": 26756.6
+      },
+      {
+        "date": "2026-09-16",
+        "close": 26893.65,
+        "adjustedClose": 26893.65
+      },
+      {
+        "date": "2026-09-17",
+        "close": 27159.15,
+        "adjustedClose": 27159.15
+      },
+      {
+        "date": "2026-09-18",
+        "close": 27129,
+        "adjustedClose": 27129
+      },
+      {
+        "date": "2026-09-21",
+        "close": 27151.1,
+        "adjustedClose": 27151.1
+      },
+      {
+        "date": "2026-09-22",
+        "close": 27086.3,
+        "adjustedClose": 27086.3
+      },
       {
         "date": "2026-09-24",
         "close": 26730.099609375,
@@ -7079,6 +7664,11 @@
         "adjustedClose": 22860.05078125
       },
       {
+        "date": "2026-09-22",
+        "close": 22794.2,
+        "adjustedClose": 22794.2
+      },
+      {
         "date": "2026-09-23",
         "close": 22935.099609375,
         "adjustedClose": 22935.099609375
@@ -7094,52 +7684,62 @@
     "NIFTY_50": {
       "label": "Nifty 50",
       "yahooSymbol": "^NSEI",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_FIN_SERVICE": {
       "label": "Nifty Financial Services",
       "yahooSymbol": "^CNXFIN",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_PHARMA": {
       "label": "Nifty Pharma",
       "yahooSymbol": "^CNXPHARMA",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_METAL": {
       "label": "Nifty Metal",
       "yahooSymbol": "^CNXMETAL",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_IT": {
       "label": "Nifty IT",
       "yahooSymbol": "^CNXIT",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_INFRA": {
       "label": "Nifty Infrastructure",
       "yahooSymbol": "^CNXINFRA",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_ENERGY": {
       "label": "Nifty Energy",
       "yahooSymbol": "^CNXENERGY",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_CONSUMPTION": {
       "label": "Nifty India Consumption",
       "yahooSymbol": "^CNXCONSUM",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_AUTO": {
       "label": "Nifty Auto",
       "yahooSymbol": "^CNXAUTO",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     },
     "NIFTY_500": {
       "label": "Nifty 500",
       "yahooSymbol": "^CRSLDX",
-      "status": "available"
+      "status": "available",
+      "frozenTrackerOverlay": true
     }
   }
 }

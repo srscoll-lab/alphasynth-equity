@@ -14,6 +14,8 @@ const outputPath = path.resolve(
 );
 const signalDate = "2026-08-25";
 const marketEntryDate = "2026-08-26";
+const frozenTrackerUrl = process.argv.find((value) => value.startsWith("--frozen-tracker-url="))?.slice(21)
+  || "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app/api/forward-validation";
 
 const benchmarkDefinitions = {
   NIFTY_50: { label: "Nifty 50", yahoo: ["^NSEI"] },
@@ -49,14 +51,8 @@ function sha256(buffer) {
   return crypto.createHash("sha256").update(buffer).digest("hex");
 }
 
-function unix(date) {
-  return Math.floor(new Date(`${date}T00:00:00Z`).getTime() / 1000);
-}
-
 async function fetchYahoo(symbol) {
-  const period1 = unix("2026-08-25");
-  const period2 = Math.floor(Date.now() / 1000) + 86400;
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&period1=${period1}&period2=${period2}&events=div%2Csplits`;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=1y&events=div%2Csplits`;
   const response = await fetch(url, { headers: { "user-agent": "Mozilla/5.0 AlphaSynth/2.0" } });
   if (!response.ok) throw new Error(`${symbol}: HTTP ${response.status}`);
   const body = await response.json();
@@ -84,11 +80,30 @@ async function fetchWithFallback(symbols) {
   throw lastError || new Error(`No market data for ${symbols.join(", ")}`);
 }
 
+function mergeObservations(...series) {
+  const byDate = new Map();
+  for (const observations of series) {
+    for (const point of observations || []) {
+      if (point.date >= marketEntryDate && Number.isFinite(point.close) && Number.isFinite(point.adjustedClose)) {
+        byDate.set(point.date, point);
+      }
+    }
+  }
+  return [...byDate.values()].sort((left, right) => left.date.localeCompare(right.date));
+}
+
 async function main() {
   const manifestBuffer = fs.readFileSync(manifestPath);
   const manifest = JSON.parse(manifestBuffer.toString("utf8"));
   const equities = JSON.parse(fs.readFileSync(path.join(root, "nse_equities.json"), "utf8"));
   const names = new Map(equities.map((company) => [company.s, company.n]));
+  let frozenTracker;
+  try {
+    const response = await fetch(frozenTrackerUrl, { headers: { "user-agent": "Mozilla/5.0 AlphaSynth/2.0" } });
+    if (response.ok) frozenTracker = await response.json();
+  } catch (error) {
+    console.warn(`Frozen tracker benchmark overlay unavailable: ${error?.message || error}`);
+  }
 
   const requiredBenchmarkIds = [...new Set([
     "NIFTY_50",
@@ -100,8 +115,14 @@ async function main() {
     const definition = benchmarkDefinitions[id];
     try {
       const fetched = await fetchWithFallback(definition.yahoo);
-      benchmarks[id] = fetched.observations;
-      benchmarkSources[id] = { label: definition.label, yahooSymbol: fetched.yahooSymbol, status: "available" };
+      const frozenObservations = frozenTracker?.benchmarks?.[id] || [];
+      benchmarks[id] = mergeObservations(frozenObservations, fetched.observations);
+      benchmarkSources[id] = {
+        label: definition.label,
+        yahooSymbol: fetched.yahooSymbol,
+        status: "available",
+        frozenTrackerOverlay: frozenObservations.length > 0,
+      };
     } catch (error) {
       if (id === "NIFTY_50") throw error;
       benchmarks[id] = [];

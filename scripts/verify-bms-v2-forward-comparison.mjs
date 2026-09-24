@@ -29,6 +29,7 @@ for (const company of comparison.companies) {
 
 for (const [id, source] of Object.entries(comparison.benchmarkSources)) {
   if (source.status !== "available" || !comparison.benchmarks[id]?.length) failures.push(`${id}: benchmark unavailable`);
+  if ((comparison.benchmarks[id]?.length || 0) < comparison.forwardSessionsObserved - 1) failures.push(`${id}: benchmark history is too sparse for a continuous comparison`);
 }
 
 if (failures.length) {
