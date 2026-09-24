@@ -15,6 +15,8 @@
     "verify:management-guidance": "node --import tsx scripts/verify-management-guidance-delivery.ts && node --import tsx scripts/management-guidance-ledger-verify.ts && node --import tsx scripts/management-guidance-extraction-verify.ts && node --import tsx scripts/validate-management-guidance-pilot.ts",
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
+    "build:bms-v2-forward-comparison": "node scripts/build-bms-v2-forward-comparison.mjs",
+    "verify:bms-v2-forward-comparison": "node scripts/verify-bms-v2-forward-comparison.mjs",
     "export:bms-factor-evidence": "node --import tsx scripts/export-bms-factor-evidence.ts",
     "export:bms-management-evidence": "node --experimental-strip-types scripts/export-bms-management-evidence.ts",
     "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",

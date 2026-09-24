@@ -33,6 +33,7 @@ import {
 } from "recharts";
 import frozenCohortData from "../data/signalTrackerCohort001.json";
 import SignalEvidenceLayer from "./SignalEvidenceLayer";
+import SignalTrackerV2Comparison from "./SignalTrackerV2Comparison";
 
 type Lifecycle =
   | "Watch"
@@ -231,6 +232,7 @@ type SignalTrackerProps = {
 };
 
 export default function SignalTracker({ onBack }: SignalTrackerProps) {
+  const [studyMode, setStudyMode] = useState<"v1" | "v2">("v2");
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
@@ -330,6 +332,10 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
     ...(selected.qualityGateReasons ?? []),
   ].filter((reason, index, reasons) => reason && reasons.indexOf(reason) === index);
 
+  if (studyMode === "v2") {
+    return <SignalTrackerV2Comparison onShowFrozen={() => setStudyMode("v1")} />;
+  }
+
   if (evidenceOpen) {
     return (
       <SignalEvidenceLayer
@@ -349,6 +355,14 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white transition-colors mb-7"
         >
           <ArrowLeft className="w-4 h-4" /> Back to BMS Discovery
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStudyMode("v2")}
+          className="ml-4 inline-flex items-center gap-2 rounded-lg border border-violet-400/25 bg-violet-400/[0.08] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-violet-200 hover:bg-violet-400/[0.13]"
+        >
+          <BarChart3 className="w-4 h-4" /> View V2 50-company comparison
         </button>
 
         <section className="rounded-[28px] border border-amber-400/20 bg-gradient-to-br from-[#0d1728] via-[#101a2b] to-[#0b1321] overflow-hidden shadow-2xl">

@@ -1,0 +1,7145 @@
+{
+  "schemaVersion": "1.0.0",
+  "cohortId": "BMS-V2-C50-20260825-RECONSTRUCTED",
+  "baseReleasePolicyId": "BMS_V2_CONTROLLED_50_RELEASE_2026_09_24",
+  "methodologyId": "BMS_V2_OPTION_C_FOUR_FACTOR",
+  "studyType": "retrospective_reconstruction_with_forward_market_observation",
+  "informationCutoff": "2026-08-25",
+  "classificationCalculatedAt": "2026-09-24T11:17:55.703Z",
+  "signalDate": "2026-08-25",
+  "marketEntryRule": "First completed Indian trading session strictly after the information cutoff",
+  "marketEntryDate": "2026-08-26",
+  "asOfDate": "2026-09-24",
+  "forwardSessionsObserved": 20,
+  "generatedAt": "2026-09-24T12:19:07.868Z",
+  "sourceManifest": {
+    "path": "../alphasynth-bms-v2/output/fifty-company-v2-release-manifest.json",
+    "sha256": "64d4d395d39de8ef86c1f41da9b75cdebb1b517577befad7cb9df4319c92bc5e"
+  },
+  "integrityNotice": "The V2 classifications were calculated after the cutoff using only evidence available by the cutoff. Returns are genuine subsequent market observations, but this is a reconstructed shadow study—not a contemporaneously frozen prospective signal.",
+  "summary": {
+    "companies": 50,
+    "four_factor_complete": 50,
+    "trajectory_backed": 13,
+    "provisional_watch": 37,
+    "lifecycle_counts": {
+      "BUILDING": 6,
+      "FADING": 3,
+      "WATCH": 40,
+      "EMERGING": 1
+    },
+    "lifecycle_status_counts": {
+      "trajectory_backed_automated_wave1": 4,
+      "trajectory_backed_approved": 5,
+      "provisional_watch_insufficient_v2_trajectory": 37,
+      "trajectory_backed_automated_wave2": 2,
+      "trajectory_backed_automated": 2
+    }
+  },
+  "companies": [
+    {
+      "symbol": "APTUS",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6051,
+      "display_score_v2": 65,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_automated_wave1",
+      "checkpoints": 3,
+      "previous_raw_score": 0.3023,
+      "earlier_raw_score": 0.3385,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "Aptus Value Housing Finance India Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "APTUS.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 258.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 258.5,
+          "adjustedClose": 258.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 256.45001220703125,
+          "adjustedClose": 256.45001220703125
+        },
+        {
+          "date": "2026-08-28",
+          "close": 256.1499938964844,
+          "adjustedClose": 256.1499938964844
+        },
+        {
+          "date": "2026-08-31",
+          "close": 248.85000610351562,
+          "adjustedClose": 248.85000610351562
+        },
+        {
+          "date": "2026-09-01",
+          "close": 253.36000061035156,
+          "adjustedClose": 253.36000061035156
+        },
+        {
+          "date": "2026-09-02",
+          "close": 254.27999877929688,
+          "adjustedClose": 254.27999877929688
+        },
+        {
+          "date": "2026-09-03",
+          "close": 257.30999755859375,
+          "adjustedClose": 257.30999755859375
+        },
+        {
+          "date": "2026-09-04",
+          "close": 258.8500061035156,
+          "adjustedClose": 258.8500061035156
+        },
+        {
+          "date": "2026-09-07",
+          "close": 256.8900146484375,
+          "adjustedClose": 256.8900146484375
+        },
+        {
+          "date": "2026-09-08",
+          "close": 256.9599914550781,
+          "adjustedClose": 256.9599914550781
+        },
+        {
+          "date": "2026-09-09",
+          "close": 258.2799987792969,
+          "adjustedClose": 258.2799987792969
+        },
+        {
+          "date": "2026-09-10",
+          "close": 252.1999969482422,
+          "adjustedClose": 252.1999969482422
+        },
+        {
+          "date": "2026-09-11",
+          "close": 249.11000061035156,
+          "adjustedClose": 249.11000061035156
+        },
+        {
+          "date": "2026-09-14",
+          "close": 249.11000061035156,
+          "adjustedClose": 249.11000061035156
+        },
+        {
+          "date": "2026-09-15",
+          "close": 244.8300018310547,
+          "adjustedClose": 244.8300018310547
+        },
+        {
+          "date": "2026-09-16",
+          "close": 239.91000366210938,
+          "adjustedClose": 239.91000366210938
+        },
+        {
+          "date": "2026-09-17",
+          "close": 239.16000366210938,
+          "adjustedClose": 239.16000366210938
+        },
+        {
+          "date": "2026-09-18",
+          "close": 237.67999267578125,
+          "adjustedClose": 237.67999267578125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 237.27000427246094,
+          "adjustedClose": 237.27000427246094
+        },
+        {
+          "date": "2026-09-22",
+          "close": 242.0800018310547,
+          "adjustedClose": 242.0800018310547
+        },
+        {
+          "date": "2026-09-23",
+          "close": 251.3300018310547,
+          "adjustedClose": 251.3300018310547
+        },
+        {
+          "date": "2026-09-24",
+          "close": 240.9199981689453,
+          "adjustedClose": 240.9199981689453
+        }
+      ]
+    },
+    {
+      "symbol": "BAJFINANCE",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.7001,
+      "display_score_v2": 68,
+      "lifecycle": "Fading",
+      "lifecycle_status": "trajectory_backed_approved",
+      "checkpoints": 3,
+      "previous_raw_score": 0.9385,
+      "earlier_raw_score": 0.9385,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": true,
+      "name": "Bajaj Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "BAJFINANCE.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1085,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1085,
+          "adjustedClose": 1085
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1083,
+          "adjustedClose": 1083
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1079.9000244140625,
+          "adjustedClose": 1079.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1057,
+          "adjustedClose": 1057
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1053.9000244140625,
+          "adjustedClose": 1053.9000244140625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1055.9000244140625,
+          "adjustedClose": 1055.9000244140625
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1049,
+          "adjustedClose": 1049
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1060.5,
+          "adjustedClose": 1060.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1060,
+          "adjustedClose": 1060
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1054.0999755859375,
+          "adjustedClose": 1054.0999755859375
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1039.300048828125,
+          "adjustedClose": 1039.300048828125
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1043.5,
+          "adjustedClose": 1043.5
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1034.5,
+          "adjustedClose": 1034.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1034.5,
+          "adjustedClose": 1034.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1009.2000122070312,
+          "adjustedClose": 1009.2000122070312
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1006.2000122070312,
+          "adjustedClose": 1006.2000122070312
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1015,
+          "adjustedClose": 1015
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1040.300048828125,
+          "adjustedClose": 1040.300048828125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1021.2999877929688,
+          "adjustedClose": 1021.2999877929688
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1008.7999877929688,
+          "adjustedClose": 1008.7999877929688
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1043.199951171875,
+          "adjustedClose": 1043.199951171875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 982,
+          "adjustedClose": 982
+        }
+      ]
+    },
+    {
+      "symbol": "CIPLA",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.0438,
+      "display_score_v2": 51,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Cipla Limited",
+      "sectorBenchmarkId": "NIFTY_PHARMA",
+      "sectorBenchmarkLabel": "Nifty Pharma",
+      "marketDataStatus": "available",
+      "yahooSymbol": "CIPLA.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1402.699951171875,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1402.699951171875,
+          "adjustedClose": 1402.699951171875
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1420,
+          "adjustedClose": 1420
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1423.5,
+          "adjustedClose": 1423.5
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1409.199951171875,
+          "adjustedClose": 1409.199951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1423,
+          "adjustedClose": 1423
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1412.800048828125,
+          "adjustedClose": 1412.800048828125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1394.699951171875,
+          "adjustedClose": 1394.699951171875
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1385,
+          "adjustedClose": 1385
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1395,
+          "adjustedClose": 1395
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1384,
+          "adjustedClose": 1384
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1363.0999755859375,
+          "adjustedClose": 1363.0999755859375
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1373.300048828125,
+          "adjustedClose": 1373.300048828125
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1366,
+          "adjustedClose": 1366
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1366,
+          "adjustedClose": 1366
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1351,
+          "adjustedClose": 1351
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1358,
+          "adjustedClose": 1358
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1376.300048828125,
+          "adjustedClose": 1376.300048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1394.5,
+          "adjustedClose": 1394.5
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1386.0999755859375,
+          "adjustedClose": 1386.0999755859375
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1384.0999755859375,
+          "adjustedClose": 1384.0999755859375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1383,
+          "adjustedClose": 1383
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1399,
+          "adjustedClose": 1399
+        }
+      ]
+    },
+    {
+      "symbol": "HINDALCO",
+      "factor_status": "four_factor_complete",
+      "raw_score": -0.351,
+      "display_score_v2": 41,
+      "lifecycle": "Fading",
+      "lifecycle_status": "trajectory_backed_approved",
+      "checkpoints": 3,
+      "previous_raw_score": 0.1607,
+      "earlier_raw_score": -0.0101,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": true,
+      "name": "Hindalco Industries Limited",
+      "sectorBenchmarkId": "NIFTY_METAL",
+      "sectorBenchmarkLabel": "Nifty Metal",
+      "marketDataStatus": "available",
+      "yahooSymbol": "HINDALCO.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1053,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1053,
+          "adjustedClose": 1053
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1024,
+          "adjustedClose": 1024
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1037.4000244140625,
+          "adjustedClose": 1037.4000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1015.4500122070312,
+          "adjustedClose": 1015.4500122070312
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1014.4000244140625,
+          "adjustedClose": 1014.4000244140625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1009.7000122070312,
+          "adjustedClose": 1009.7000122070312
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1010,
+          "adjustedClose": 1010
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1011,
+          "adjustedClose": 1011
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1006,
+          "adjustedClose": 1006
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1009,
+          "adjustedClose": 1009
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1026.9000244140625,
+          "adjustedClose": 1026.9000244140625
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1014,
+          "adjustedClose": 1014
+        },
+        {
+          "date": "2026-09-11",
+          "close": 981.5,
+          "adjustedClose": 981.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 981.5,
+          "adjustedClose": 981.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 958.7000122070312,
+          "adjustedClose": 958.7000122070312
+        },
+        {
+          "date": "2026-09-16",
+          "close": 972.7000122070312,
+          "adjustedClose": 972.7000122070312
+        },
+        {
+          "date": "2026-09-17",
+          "close": 980.5,
+          "adjustedClose": 980.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 986.5,
+          "adjustedClose": 986.5
+        },
+        {
+          "date": "2026-09-21",
+          "close": 981.2000122070312,
+          "adjustedClose": 981.2000122070312
+        },
+        {
+          "date": "2026-09-22",
+          "close": 973,
+          "adjustedClose": 973
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1003.7999877929688,
+          "adjustedClose": 1003.7999877929688
+        },
+        {
+          "date": "2026-09-24",
+          "close": 982,
+          "adjustedClose": 982
+        }
+      ]
+    },
+    {
+      "symbol": "HCLTECH",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6161,
+      "display_score_v2": 65,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "HCL Technologies Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "HCLTECH.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1298.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1298.5,
+          "adjustedClose": 1298.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1282,
+          "adjustedClose": 1282
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1316.0999755859375,
+          "adjustedClose": 1316.0999755859375
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1312.199951171875,
+          "adjustedClose": 1312.199951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1351.4000244140625,
+          "adjustedClose": 1351.4000244140625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1331.5,
+          "adjustedClose": 1331.5
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1319,
+          "adjustedClose": 1319
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1293.4000244140625,
+          "adjustedClose": 1293.4000244140625
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1282.800048828125,
+          "adjustedClose": 1282.800048828125
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1277,
+          "adjustedClose": 1277
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1229.800048828125,
+          "adjustedClose": 1229.800048828125
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1207,
+          "adjustedClose": 1207
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1206.0999755859375,
+          "adjustedClose": 1206.0999755859375
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1206.0999755859375,
+          "adjustedClose": 1206.0999755859375
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1253.699951171875,
+          "adjustedClose": 1253.699951171875
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1253,
+          "adjustedClose": 1253
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1258.300048828125,
+          "adjustedClose": 1258.300048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1249.300048828125,
+          "adjustedClose": 1249.300048828125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1281,
+          "adjustedClose": 1281
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1270.4000244140625,
+          "adjustedClose": 1270.4000244140625
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1256.699951171875,
+          "adjustedClose": 1256.699951171875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1243.5999755859375,
+          "adjustedClose": 1243.5999755859375
+        }
+      ]
+    },
+    {
+      "symbol": "DRREDDY",
+      "factor_status": "four_factor_complete",
+      "raw_score": -0.1724,
+      "display_score_v2": 46,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Dr. Reddy's Laboratories Limited",
+      "sectorBenchmarkId": "NIFTY_PHARMA",
+      "sectorBenchmarkLabel": "Nifty Pharma",
+      "marketDataStatus": "available",
+      "yahooSymbol": "DRREDDY.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1182,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1182,
+          "adjustedClose": 1182
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1177,
+          "adjustedClose": 1177
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1178,
+          "adjustedClose": 1178
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1154.4000244140625,
+          "adjustedClose": 1154.4000244140625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1171,
+          "adjustedClose": 1171
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1156.5,
+          "adjustedClose": 1156.5
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1155,
+          "adjustedClose": 1155
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1151,
+          "adjustedClose": 1151
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1144.199951171875,
+          "adjustedClose": 1144.199951171875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1151,
+          "adjustedClose": 1151
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1145,
+          "adjustedClose": 1145
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1143,
+          "adjustedClose": 1143
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1165.5,
+          "adjustedClose": 1165.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1165.5,
+          "adjustedClose": 1165.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1145,
+          "adjustedClose": 1145
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1140,
+          "adjustedClose": 1140
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1175,
+          "adjustedClose": 1175
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1185,
+          "adjustedClose": 1185
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1198.300048828125,
+          "adjustedClose": 1198.300048828125
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1211,
+          "adjustedClose": 1211
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1211.199951171875,
+          "adjustedClose": 1211.199951171875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1200.4000244140625,
+          "adjustedClose": 1200.4000244140625
+        }
+      ]
+    },
+    {
+      "symbol": "SUZLON",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3722,
+      "display_score_v2": 84,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Suzlon Energy Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "SUZLON.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 46.939998626708984,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 46.939998626708984,
+          "adjustedClose": 46.939998626708984
+        },
+        {
+          "date": "2026-08-27",
+          "close": 46.810001373291016,
+          "adjustedClose": 46.810001373291016
+        },
+        {
+          "date": "2026-08-28",
+          "close": 46.790000915527344,
+          "adjustedClose": 46.790000915527344
+        },
+        {
+          "date": "2026-08-31",
+          "close": 47.52000045776367,
+          "adjustedClose": 47.52000045776367
+        },
+        {
+          "date": "2026-09-01",
+          "close": 46.5,
+          "adjustedClose": 46.5
+        },
+        {
+          "date": "2026-09-02",
+          "close": 45.459999084472656,
+          "adjustedClose": 45.459999084472656
+        },
+        {
+          "date": "2026-09-03",
+          "close": 46.029998779296875,
+          "adjustedClose": 46.029998779296875
+        },
+        {
+          "date": "2026-09-04",
+          "close": 45.349998474121094,
+          "adjustedClose": 45.349998474121094
+        },
+        {
+          "date": "2026-09-07",
+          "close": 45.54999923706055,
+          "adjustedClose": 45.54999923706055
+        },
+        {
+          "date": "2026-09-08",
+          "close": 45.5,
+          "adjustedClose": 45.5
+        },
+        {
+          "date": "2026-09-09",
+          "close": 45.45000076293945,
+          "adjustedClose": 45.45000076293945
+        },
+        {
+          "date": "2026-09-10",
+          "close": 44.220001220703125,
+          "adjustedClose": 44.220001220703125
+        },
+        {
+          "date": "2026-09-11",
+          "close": 44.119998931884766,
+          "adjustedClose": 44.119998931884766
+        },
+        {
+          "date": "2026-09-14",
+          "close": 44.119998931884766,
+          "adjustedClose": 44.119998931884766
+        },
+        {
+          "date": "2026-09-15",
+          "close": 42.900001525878906,
+          "adjustedClose": 42.900001525878906
+        },
+        {
+          "date": "2026-09-16",
+          "close": 42.150001525878906,
+          "adjustedClose": 42.150001525878906
+        },
+        {
+          "date": "2026-09-17",
+          "close": 42.540000915527344,
+          "adjustedClose": 42.540000915527344
+        },
+        {
+          "date": "2026-09-18",
+          "close": 43.13999938964844,
+          "adjustedClose": 43.13999938964844
+        },
+        {
+          "date": "2026-09-21",
+          "close": 43.34000015258789,
+          "adjustedClose": 43.34000015258789
+        },
+        {
+          "date": "2026-09-22",
+          "close": 43,
+          "adjustedClose": 43
+        },
+        {
+          "date": "2026-09-23",
+          "close": 42.38999938964844,
+          "adjustedClose": 42.38999938964844
+        },
+        {
+          "date": "2026-09-24",
+          "close": 40.7400016784668,
+          "adjustedClose": 40.7400016784668
+        }
+      ]
+    },
+    {
+      "symbol": "IOC",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.4128,
+      "display_score_v2": 85,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Indian Oil Corporation Limited",
+      "sectorBenchmarkId": "NIFTY_ENERGY",
+      "sectorBenchmarkLabel": "Nifty Energy",
+      "marketDataStatus": "available",
+      "yahooSymbol": "IOC.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 139.47999572753906,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 139.47999572753906,
+          "adjustedClose": 139.47999572753906
+        },
+        {
+          "date": "2026-08-27",
+          "close": 137.57000732421875,
+          "adjustedClose": 137.57000732421875
+        },
+        {
+          "date": "2026-08-28",
+          "close": 137.10000610351562,
+          "adjustedClose": 137.10000610351562
+        },
+        {
+          "date": "2026-08-31",
+          "close": 139.1300048828125,
+          "adjustedClose": 139.1300048828125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 136.52999877929688,
+          "adjustedClose": 136.52999877929688
+        },
+        {
+          "date": "2026-09-02",
+          "close": 137,
+          "adjustedClose": 137
+        },
+        {
+          "date": "2026-09-03",
+          "close": 137.8000030517578,
+          "adjustedClose": 137.8000030517578
+        },
+        {
+          "date": "2026-09-04",
+          "close": 137.60000610351562,
+          "adjustedClose": 137.60000610351562
+        },
+        {
+          "date": "2026-09-07",
+          "close": 135.14999389648438,
+          "adjustedClose": 135.14999389648438
+        },
+        {
+          "date": "2026-09-08",
+          "close": 134.35000610351562,
+          "adjustedClose": 134.35000610351562
+        },
+        {
+          "date": "2026-09-09",
+          "close": 135.60000610351562,
+          "adjustedClose": 135.60000610351562
+        },
+        {
+          "date": "2026-09-10",
+          "close": 134.94000244140625,
+          "adjustedClose": 134.94000244140625
+        },
+        {
+          "date": "2026-09-11",
+          "close": 135.11000061035156,
+          "adjustedClose": 135.11000061035156
+        },
+        {
+          "date": "2026-09-14",
+          "close": 135.11000061035156,
+          "adjustedClose": 135.11000061035156
+        },
+        {
+          "date": "2026-09-15",
+          "close": 132.02999877929688,
+          "adjustedClose": 132.02999877929688
+        },
+        {
+          "date": "2026-09-16",
+          "close": 134.75,
+          "adjustedClose": 134.75
+        },
+        {
+          "date": "2026-09-17",
+          "close": 134.27000427246094,
+          "adjustedClose": 134.27000427246094
+        },
+        {
+          "date": "2026-09-18",
+          "close": 137,
+          "adjustedClose": 137
+        },
+        {
+          "date": "2026-09-21",
+          "close": 136.52999877929688,
+          "adjustedClose": 136.52999877929688
+        },
+        {
+          "date": "2026-09-22",
+          "close": 137.8000030517578,
+          "adjustedClose": 137.8000030517578
+        },
+        {
+          "date": "2026-09-23",
+          "close": 138.14999389648438,
+          "adjustedClose": 138.14999389648438
+        },
+        {
+          "date": "2026-09-24",
+          "close": 136.27000427246094,
+          "adjustedClose": 136.27000427246094
+        }
+      ]
+    },
+    {
+      "symbol": "HOMEFIRST",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3339,
+      "display_score_v2": 83,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_automated_wave2",
+      "checkpoints": 3,
+      "previous_raw_score": 0.9524,
+      "earlier_raw_score": 1.0552,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "Home First Finance Company India Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "HOMEFIRST.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1183.699951171875,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1183.699951171875,
+          "adjustedClose": 1183.699951171875
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1200.199951171875,
+          "adjustedClose": 1200.199951171875
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1198.300048828125,
+          "adjustedClose": 1198.300048828125
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1164.699951171875,
+          "adjustedClose": 1164.699951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1182.800048828125,
+          "adjustedClose": 1182.800048828125
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1196.699951171875,
+          "adjustedClose": 1196.699951171875
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1201.4000244140625,
+          "adjustedClose": 1201.4000244140625
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1210.0999755859375,
+          "adjustedClose": 1210.0999755859375
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1233.699951171875,
+          "adjustedClose": 1233.699951171875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1237.0999755859375,
+          "adjustedClose": 1237.0999755859375
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1202.300048828125,
+          "adjustedClose": 1202.300048828125
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1209.4000244140625,
+          "adjustedClose": 1209.4000244140625
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1184.5,
+          "adjustedClose": 1184.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1184.5,
+          "adjustedClose": 1184.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1175.300048828125,
+          "adjustedClose": 1175.300048828125
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1175.9000244140625,
+          "adjustedClose": 1175.9000244140625
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1173.300048828125,
+          "adjustedClose": 1173.300048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1241.300048828125,
+          "adjustedClose": 1241.300048828125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1257.699951171875,
+          "adjustedClose": 1257.699951171875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1212.5,
+          "adjustedClose": 1212.5
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1205.800048828125,
+          "adjustedClose": 1205.800048828125
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1157.5,
+          "adjustedClose": 1157.5
+        }
+      ]
+    },
+    {
+      "symbol": "MUTHOOTFIN",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3905,
+      "display_score_v2": 85,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Muthoot Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "MUTHOOTFIN.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 3206.89990234375,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 3206.89990234375,
+          "adjustedClose": 3206.89990234375
+        },
+        {
+          "date": "2026-08-27",
+          "close": 3085,
+          "adjustedClose": 3085
+        },
+        {
+          "date": "2026-08-28",
+          "close": 3091,
+          "adjustedClose": 3091
+        },
+        {
+          "date": "2026-08-31",
+          "close": 2978.10009765625,
+          "adjustedClose": 2978.10009765625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 2905,
+          "adjustedClose": 2905
+        },
+        {
+          "date": "2026-09-02",
+          "close": 2937.699951171875,
+          "adjustedClose": 2937.699951171875
+        },
+        {
+          "date": "2026-09-03",
+          "close": 2926.5,
+          "adjustedClose": 2926.5
+        },
+        {
+          "date": "2026-09-04",
+          "close": 2913.800048828125,
+          "adjustedClose": 2913.800048828125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 2880,
+          "adjustedClose": 2880
+        },
+        {
+          "date": "2026-09-08",
+          "close": 2899.699951171875,
+          "adjustedClose": 2899.699951171875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 2815,
+          "adjustedClose": 2815
+        },
+        {
+          "date": "2026-09-10",
+          "close": 2841.5,
+          "adjustedClose": 2841.5
+        },
+        {
+          "date": "2026-09-11",
+          "close": 2792.10009765625,
+          "adjustedClose": 2792.10009765625
+        },
+        {
+          "date": "2026-09-14",
+          "close": 2792.10009765625,
+          "adjustedClose": 2792.10009765625
+        },
+        {
+          "date": "2026-09-15",
+          "close": 2722.300048828125,
+          "adjustedClose": 2722.300048828125
+        },
+        {
+          "date": "2026-09-16",
+          "close": 2771.39990234375,
+          "adjustedClose": 2771.39990234375
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2770.199951171875,
+          "adjustedClose": 2770.199951171875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2841.10009765625,
+          "adjustedClose": 2841.10009765625
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2854.199951171875,
+          "adjustedClose": 2854.199951171875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2831.5,
+          "adjustedClose": 2831.5
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2856.5,
+          "adjustedClose": 2856.5
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2825.300048828125,
+          "adjustedClose": 2825.300048828125
+        }
+      ]
+    },
+    {
+      "symbol": "POLYCAB",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.7105,
+      "display_score_v2": 68,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_automated_wave2",
+      "checkpoints": 3,
+      "previous_raw_score": 0.6194,
+      "earlier_raw_score": 0.7138,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "Polycab India Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "POLYCAB.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 9060,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 9060,
+          "adjustedClose": 9060
+        },
+        {
+          "date": "2026-08-27",
+          "close": 9079,
+          "adjustedClose": 9079
+        },
+        {
+          "date": "2026-08-28",
+          "close": 9088,
+          "adjustedClose": 9088
+        },
+        {
+          "date": "2026-08-31",
+          "close": 9445,
+          "adjustedClose": 9445
+        },
+        {
+          "date": "2026-09-01",
+          "close": 8895.5,
+          "adjustedClose": 8895.5
+        },
+        {
+          "date": "2026-09-02",
+          "close": 8804,
+          "adjustedClose": 8804
+        },
+        {
+          "date": "2026-09-03",
+          "close": 8807.5,
+          "adjustedClose": 8807.5
+        },
+        {
+          "date": "2026-09-04",
+          "close": 8300,
+          "adjustedClose": 8300
+        },
+        {
+          "date": "2026-09-07",
+          "close": 8261,
+          "adjustedClose": 8261
+        },
+        {
+          "date": "2026-09-08",
+          "close": 8373.5,
+          "adjustedClose": 8373.5
+        },
+        {
+          "date": "2026-09-09",
+          "close": 8354,
+          "adjustedClose": 8354
+        },
+        {
+          "date": "2026-09-10",
+          "close": 8358,
+          "adjustedClose": 8358
+        },
+        {
+          "date": "2026-09-11",
+          "close": 8241,
+          "adjustedClose": 8241
+        },
+        {
+          "date": "2026-09-14",
+          "close": 8241,
+          "adjustedClose": 8241
+        },
+        {
+          "date": "2026-09-15",
+          "close": 8143.5,
+          "adjustedClose": 8143.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 8121.5,
+          "adjustedClose": 8121.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 8208.5,
+          "adjustedClose": 8208.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 8400,
+          "adjustedClose": 8400
+        },
+        {
+          "date": "2026-09-21",
+          "close": 8369.5,
+          "adjustedClose": 8369.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 8350,
+          "adjustedClose": 8350
+        },
+        {
+          "date": "2026-09-23",
+          "close": 8417,
+          "adjustedClose": 8417
+        },
+        {
+          "date": "2026-09-24",
+          "close": 8366.5,
+          "adjustedClose": 8366.5
+        }
+      ]
+    },
+    {
+      "symbol": "SHREECEM",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.7355,
+      "display_score_v2": 68,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "SHREE CEMENT LIMITED",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "SHREECEM.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 24865,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 24865,
+          "adjustedClose": 24865
+        },
+        {
+          "date": "2026-08-27",
+          "close": 24480,
+          "adjustedClose": 24480
+        },
+        {
+          "date": "2026-08-28",
+          "close": 24000,
+          "adjustedClose": 24000
+        },
+        {
+          "date": "2026-08-31",
+          "close": 23200,
+          "adjustedClose": 23200
+        },
+        {
+          "date": "2026-09-01",
+          "close": 23490,
+          "adjustedClose": 23490
+        },
+        {
+          "date": "2026-09-02",
+          "close": 23680,
+          "adjustedClose": 23680
+        },
+        {
+          "date": "2026-09-03",
+          "close": 23910,
+          "adjustedClose": 23910
+        },
+        {
+          "date": "2026-09-04",
+          "close": 23855,
+          "adjustedClose": 23855
+        },
+        {
+          "date": "2026-09-07",
+          "close": 23365,
+          "adjustedClose": 23365
+        },
+        {
+          "date": "2026-09-08",
+          "close": 23160,
+          "adjustedClose": 23160
+        },
+        {
+          "date": "2026-09-09",
+          "close": 22950,
+          "adjustedClose": 22950
+        },
+        {
+          "date": "2026-09-10",
+          "close": 22785,
+          "adjustedClose": 22785
+        },
+        {
+          "date": "2026-09-11",
+          "close": 22570,
+          "adjustedClose": 22570
+        },
+        {
+          "date": "2026-09-14",
+          "close": 22570,
+          "adjustedClose": 22570
+        },
+        {
+          "date": "2026-09-15",
+          "close": 21905,
+          "adjustedClose": 21905
+        },
+        {
+          "date": "2026-09-16",
+          "close": 21795,
+          "adjustedClose": 21795
+        },
+        {
+          "date": "2026-09-17",
+          "close": 21960,
+          "adjustedClose": 21960
+        },
+        {
+          "date": "2026-09-18",
+          "close": 22600,
+          "adjustedClose": 22600
+        },
+        {
+          "date": "2026-09-21",
+          "close": 22550,
+          "adjustedClose": 22550
+        },
+        {
+          "date": "2026-09-22",
+          "close": 22200,
+          "adjustedClose": 22200
+        },
+        {
+          "date": "2026-09-23",
+          "close": 22500,
+          "adjustedClose": 22500
+        },
+        {
+          "date": "2026-09-24",
+          "close": 22350,
+          "adjustedClose": 22350
+        }
+      ]
+    },
+    {
+      "symbol": "ULTRACEMCO",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.0102,
+      "display_score_v2": 75,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "UltraTech Cement Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "ULTRACEMCO.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 11717,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 11717,
+          "adjustedClose": 11717
+        },
+        {
+          "date": "2026-08-27",
+          "close": 11717,
+          "adjustedClose": 11717
+        },
+        {
+          "date": "2026-08-28",
+          "close": 11589,
+          "adjustedClose": 11589
+        },
+        {
+          "date": "2026-08-31",
+          "close": 11450,
+          "adjustedClose": 11450
+        },
+        {
+          "date": "2026-09-01",
+          "close": 11400,
+          "adjustedClose": 11400
+        },
+        {
+          "date": "2026-09-02",
+          "close": 11393,
+          "adjustedClose": 11393
+        },
+        {
+          "date": "2026-09-03",
+          "close": 11275,
+          "adjustedClose": 11275
+        },
+        {
+          "date": "2026-09-04",
+          "close": 11408,
+          "adjustedClose": 11408
+        },
+        {
+          "date": "2026-09-07",
+          "close": 11175,
+          "adjustedClose": 11175
+        },
+        {
+          "date": "2026-09-08",
+          "close": 11009,
+          "adjustedClose": 11009
+        },
+        {
+          "date": "2026-09-09",
+          "close": 10900,
+          "adjustedClose": 10900
+        },
+        {
+          "date": "2026-09-10",
+          "close": 10979,
+          "adjustedClose": 10979
+        },
+        {
+          "date": "2026-09-11",
+          "close": 11000,
+          "adjustedClose": 11000
+        },
+        {
+          "date": "2026-09-14",
+          "close": 11000,
+          "adjustedClose": 11000
+        },
+        {
+          "date": "2026-09-15",
+          "close": 10697,
+          "adjustedClose": 10697
+        },
+        {
+          "date": "2026-09-16",
+          "close": 10700,
+          "adjustedClose": 10700
+        },
+        {
+          "date": "2026-09-17",
+          "close": 10764,
+          "adjustedClose": 10764
+        },
+        {
+          "date": "2026-09-18",
+          "close": 11014,
+          "adjustedClose": 11014
+        },
+        {
+          "date": "2026-09-21",
+          "close": 11100,
+          "adjustedClose": 11100
+        },
+        {
+          "date": "2026-09-22",
+          "close": 11000,
+          "adjustedClose": 11000
+        },
+        {
+          "date": "2026-09-23",
+          "close": 11155,
+          "adjustedClose": 11155
+        },
+        {
+          "date": "2026-09-24",
+          "close": 11056,
+          "adjustedClose": 11056
+        }
+      ]
+    },
+    {
+      "symbol": "BPCL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.4822,
+      "display_score_v2": 87,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Bharat Petroleum Corporation Limited",
+      "sectorBenchmarkId": "NIFTY_ENERGY",
+      "sectorBenchmarkLabel": "Nifty Energy",
+      "marketDataStatus": "available",
+      "yahooSymbol": "BPCL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 318,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 318,
+          "adjustedClose": 318
+        },
+        {
+          "date": "2026-08-27",
+          "close": 318,
+          "adjustedClose": 318
+        },
+        {
+          "date": "2026-08-28",
+          "close": 319.25,
+          "adjustedClose": 319.25
+        },
+        {
+          "date": "2026-08-31",
+          "close": 324.04998779296875,
+          "adjustedClose": 324.04998779296875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 317.6499938964844,
+          "adjustedClose": 317.6499938964844
+        },
+        {
+          "date": "2026-09-02",
+          "close": 319.6000061035156,
+          "adjustedClose": 319.6000061035156
+        },
+        {
+          "date": "2026-09-03",
+          "close": 320.04998779296875,
+          "adjustedClose": 320.04998779296875
+        },
+        {
+          "date": "2026-09-04",
+          "close": 315.70001220703125,
+          "adjustedClose": 315.70001220703125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 312.8999938964844,
+          "adjustedClose": 312.8999938964844
+        },
+        {
+          "date": "2026-09-08",
+          "close": 303.8500061035156,
+          "adjustedClose": 303.8500061035156
+        },
+        {
+          "date": "2026-09-09",
+          "close": 303.54998779296875,
+          "adjustedClose": 303.54998779296875
+        },
+        {
+          "date": "2026-09-10",
+          "close": 303,
+          "adjustedClose": 303
+        },
+        {
+          "date": "2026-09-11",
+          "close": 304.5,
+          "adjustedClose": 304.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 304.5,
+          "adjustedClose": 304.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 298.6499938964844,
+          "adjustedClose": 298.6499938964844
+        },
+        {
+          "date": "2026-09-16",
+          "close": 303.3500061035156,
+          "adjustedClose": 303.3500061035156
+        },
+        {
+          "date": "2026-09-17",
+          "close": 307,
+          "adjustedClose": 307
+        },
+        {
+          "date": "2026-09-18",
+          "close": 314,
+          "adjustedClose": 314
+        },
+        {
+          "date": "2026-09-21",
+          "close": 312.75,
+          "adjustedClose": 312.75
+        },
+        {
+          "date": "2026-09-22",
+          "close": 313.6000061035156,
+          "adjustedClose": 313.6000061035156
+        },
+        {
+          "date": "2026-09-23",
+          "close": 315.75,
+          "adjustedClose": 315.75
+        },
+        {
+          "date": "2026-09-24",
+          "close": 307.1000061035156,
+          "adjustedClose": 307.1000061035156
+        }
+      ]
+    },
+    {
+      "symbol": "HINDPETRO",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6433,
+      "display_score_v2": 66,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Hindustan Petroleum Corporation Limited",
+      "sectorBenchmarkId": "NIFTY_ENERGY",
+      "sectorBenchmarkLabel": "Nifty Energy",
+      "marketDataStatus": "available",
+      "yahooSymbol": "HINDPETRO.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 375.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 375.5,
+          "adjustedClose": 375.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 371,
+          "adjustedClose": 371
+        },
+        {
+          "date": "2026-08-28",
+          "close": 364,
+          "adjustedClose": 364
+        },
+        {
+          "date": "2026-08-31",
+          "close": 365.75,
+          "adjustedClose": 365.75
+        },
+        {
+          "date": "2026-09-01",
+          "close": 363.1000061035156,
+          "adjustedClose": 363.1000061035156
+        },
+        {
+          "date": "2026-09-02",
+          "close": 359,
+          "adjustedClose": 359
+        },
+        {
+          "date": "2026-09-03",
+          "close": 361.3500061035156,
+          "adjustedClose": 361.3500061035156
+        },
+        {
+          "date": "2026-09-04",
+          "close": 356.5,
+          "adjustedClose": 356.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 356.8999938964844,
+          "adjustedClose": 356.8999938964844
+        },
+        {
+          "date": "2026-09-08",
+          "close": 347,
+          "adjustedClose": 347
+        },
+        {
+          "date": "2026-09-09",
+          "close": 348.8999938964844,
+          "adjustedClose": 348.8999938964844
+        },
+        {
+          "date": "2026-09-10",
+          "close": 352.6499938964844,
+          "adjustedClose": 352.6499938964844
+        },
+        {
+          "date": "2026-09-11",
+          "close": 352,
+          "adjustedClose": 352
+        },
+        {
+          "date": "2026-09-14",
+          "close": 352,
+          "adjustedClose": 352
+        },
+        {
+          "date": "2026-09-15",
+          "close": 345.29998779296875,
+          "adjustedClose": 345.29998779296875
+        },
+        {
+          "date": "2026-09-16",
+          "close": 350.04998779296875,
+          "adjustedClose": 350.04998779296875
+        },
+        {
+          "date": "2026-09-17",
+          "close": 350.6000061035156,
+          "adjustedClose": 350.6000061035156
+        },
+        {
+          "date": "2026-09-18",
+          "close": 359,
+          "adjustedClose": 359
+        },
+        {
+          "date": "2026-09-21",
+          "close": 357.6000061035156,
+          "adjustedClose": 357.6000061035156
+        },
+        {
+          "date": "2026-09-22",
+          "close": 360.70001220703125,
+          "adjustedClose": 360.70001220703125
+        },
+        {
+          "date": "2026-09-23",
+          "close": 360,
+          "adjustedClose": 360
+        },
+        {
+          "date": "2026-09-24",
+          "close": 350.3999938964844,
+          "adjustedClose": 350.3999938964844
+        }
+      ]
+    },
+    {
+      "symbol": "TITAN",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.9407,
+      "display_score_v2": 74,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Titan Company Limited",
+      "sectorBenchmarkId": "NIFTY_CONSUMPTION",
+      "sectorBenchmarkLabel": "Nifty India Consumption",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TITAN.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 5100,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 5100,
+          "adjustedClose": 5100
+        },
+        {
+          "date": "2026-08-27",
+          "close": 5139.2998046875,
+          "adjustedClose": 5139.2998046875
+        },
+        {
+          "date": "2026-08-28",
+          "close": 5169.2001953125,
+          "adjustedClose": 5169.2001953125
+        },
+        {
+          "date": "2026-08-31",
+          "close": 5102.39990234375,
+          "adjustedClose": 5102.39990234375
+        },
+        {
+          "date": "2026-09-01",
+          "close": 5050,
+          "adjustedClose": 5050
+        },
+        {
+          "date": "2026-09-02",
+          "close": 5074,
+          "adjustedClose": 5074
+        },
+        {
+          "date": "2026-09-03",
+          "close": 5027,
+          "adjustedClose": 5027
+        },
+        {
+          "date": "2026-09-04",
+          "close": 5020,
+          "adjustedClose": 5020
+        },
+        {
+          "date": "2026-09-07",
+          "close": 4995,
+          "adjustedClose": 4995
+        },
+        {
+          "date": "2026-09-08",
+          "close": 4987,
+          "adjustedClose": 4987
+        },
+        {
+          "date": "2026-09-09",
+          "close": 5005,
+          "adjustedClose": 5005
+        },
+        {
+          "date": "2026-09-10",
+          "close": 5021,
+          "adjustedClose": 5021
+        },
+        {
+          "date": "2026-09-11",
+          "close": 5009.5,
+          "adjustedClose": 5009.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 5009.5,
+          "adjustedClose": 5009.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 4856,
+          "adjustedClose": 4856
+        },
+        {
+          "date": "2026-09-16",
+          "close": 4908.5,
+          "adjustedClose": 4908.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 4841,
+          "adjustedClose": 4841
+        },
+        {
+          "date": "2026-09-18",
+          "close": 4798.5,
+          "adjustedClose": 4798.5
+        },
+        {
+          "date": "2026-09-21",
+          "close": 4875,
+          "adjustedClose": 4875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 4928.5,
+          "adjustedClose": 4928.5
+        },
+        {
+          "date": "2026-09-23",
+          "close": 4880,
+          "adjustedClose": 4880
+        },
+        {
+          "date": "2026-09-24",
+          "close": 4832.5,
+          "adjustedClose": 4832.5
+        }
+      ]
+    },
+    {
+      "symbol": "COFORGE",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3639,
+      "display_score_v2": 84,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Coforge Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "COFORGE.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1880,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1880,
+          "adjustedClose": 1880
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1901.800048828125,
+          "adjustedClose": 1901.800048828125
+        },
+        {
+          "date": "2026-08-28",
+          "close": 2014.5999755859375,
+          "adjustedClose": 2014.5999755859375
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1985.300048828125,
+          "adjustedClose": 1985.300048828125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1988.9000244140625,
+          "adjustedClose": 1988.9000244140625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1965.699951171875,
+          "adjustedClose": 1965.699951171875
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1971.800048828125,
+          "adjustedClose": 1971.800048828125
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1972.800048828125,
+          "adjustedClose": 1972.800048828125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1935,
+          "adjustedClose": 1935
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1950,
+          "adjustedClose": 1950
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1845,
+          "adjustedClose": 1845
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1833.0999755859375,
+          "adjustedClose": 1833.0999755859375
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1846.5,
+          "adjustedClose": 1846.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1846.5,
+          "adjustedClose": 1846.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1775.5,
+          "adjustedClose": 1775.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1766.699951171875,
+          "adjustedClose": 1766.699951171875
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1793,
+          "adjustedClose": 1793
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1841,
+          "adjustedClose": 1841
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1814,
+          "adjustedClose": 1814
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1803,
+          "adjustedClose": 1803
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1782.4000244140625,
+          "adjustedClose": 1782.4000244140625
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1785.9000244140625,
+          "adjustedClose": 1785.9000244140625
+        }
+      ]
+    },
+    {
+      "symbol": "BEL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6861,
+      "display_score_v2": 67,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Bharat Electronics Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "BEL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 406.8999938964844,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 406.8999938964844,
+          "adjustedClose": 406.8999938964844
+        },
+        {
+          "date": "2026-08-27",
+          "close": 411,
+          "adjustedClose": 411
+        },
+        {
+          "date": "2026-08-28",
+          "close": 411.8999938964844,
+          "adjustedClose": 411.8999938964844
+        },
+        {
+          "date": "2026-08-31",
+          "close": 414.45001220703125,
+          "adjustedClose": 414.45001220703125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 411.20001220703125,
+          "adjustedClose": 411.20001220703125
+        },
+        {
+          "date": "2026-09-02",
+          "close": 405.75,
+          "adjustedClose": 405.75
+        },
+        {
+          "date": "2026-09-03",
+          "close": 408.6000061035156,
+          "adjustedClose": 408.6000061035156
+        },
+        {
+          "date": "2026-09-04",
+          "close": 405.3500061035156,
+          "adjustedClose": 405.3500061035156
+        },
+        {
+          "date": "2026-09-07",
+          "close": 404,
+          "adjustedClose": 404
+        },
+        {
+          "date": "2026-09-08",
+          "close": 410.54998779296875,
+          "adjustedClose": 410.54998779296875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 406,
+          "adjustedClose": 406
+        },
+        {
+          "date": "2026-09-10",
+          "close": 405,
+          "adjustedClose": 405
+        },
+        {
+          "date": "2026-09-11",
+          "close": 404.3500061035156,
+          "adjustedClose": 404.3500061035156
+        },
+        {
+          "date": "2026-09-14",
+          "close": 404.3500061035156,
+          "adjustedClose": 404.3500061035156
+        },
+        {
+          "date": "2026-09-15",
+          "close": 382.8999938964844,
+          "adjustedClose": 382.8999938964844
+        },
+        {
+          "date": "2026-09-16",
+          "close": 385.75,
+          "adjustedClose": 385.75
+        },
+        {
+          "date": "2026-09-17",
+          "close": 395.45001220703125,
+          "adjustedClose": 395.45001220703125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 393.29998779296875,
+          "adjustedClose": 393.29998779296875
+        },
+        {
+          "date": "2026-09-21",
+          "close": 398.5,
+          "adjustedClose": 398.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 397.8999938964844,
+          "adjustedClose": 397.8999938964844
+        },
+        {
+          "date": "2026-09-23",
+          "close": 396.04998779296875,
+          "adjustedClose": 396.04998779296875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 392,
+          "adjustedClose": 392
+        }
+      ]
+    },
+    {
+      "symbol": "JSWSTEEL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3622,
+      "display_score_v2": 84,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "JSW Steel Limited",
+      "sectorBenchmarkId": "NIFTY_METAL",
+      "sectorBenchmarkLabel": "Nifty Metal",
+      "marketDataStatus": "available",
+      "yahooSymbol": "JSWSTEEL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1341,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1341,
+          "adjustedClose": 1341
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1337.5,
+          "adjustedClose": 1337.5
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1334.9000244140625,
+          "adjustedClose": 1334.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1307.699951171875,
+          "adjustedClose": 1307.699951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1313.5,
+          "adjustedClose": 1313.5
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1306,
+          "adjustedClose": 1306
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1308,
+          "adjustedClose": 1308
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1325,
+          "adjustedClose": 1325
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1302,
+          "adjustedClose": 1302
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1297.300048828125,
+          "adjustedClose": 1297.300048828125
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1310,
+          "adjustedClose": 1310
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1304,
+          "adjustedClose": 1304
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1265,
+          "adjustedClose": 1265
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1265,
+          "adjustedClose": 1265
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1229.199951171875,
+          "adjustedClose": 1229.199951171875
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1248.9000244140625,
+          "adjustedClose": 1248.9000244140625
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1253.4000244140625,
+          "adjustedClose": 1253.4000244140625
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1275.5999755859375,
+          "adjustedClose": 1275.5999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1268.5999755859375,
+          "adjustedClose": 1268.5999755859375
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1267,
+          "adjustedClose": 1267
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1297.800048828125,
+          "adjustedClose": 1297.800048828125
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1273.199951171875,
+          "adjustedClose": 1273.199951171875
+        }
+      ]
+    },
+    {
+      "symbol": "PNBHOUSING",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.5922,
+      "display_score_v2": 65,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "PNB Housing Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "PNBHOUSING.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1185,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1185,
+          "adjustedClose": 1185
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1178,
+          "adjustedClose": 1178
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1169.9000244140625,
+          "adjustedClose": 1169.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1148.699951171875,
+          "adjustedClose": 1148.699951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1152,
+          "adjustedClose": 1152
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1141,
+          "adjustedClose": 1141
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1145.5,
+          "adjustedClose": 1145.5
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1166,
+          "adjustedClose": 1166
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1182.0999755859375,
+          "adjustedClose": 1182.0999755859375
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1167.0999755859375,
+          "adjustedClose": 1167.0999755859375
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1142,
+          "adjustedClose": 1142
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1179,
+          "adjustedClose": 1179
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1178.9000244140625,
+          "adjustedClose": 1178.9000244140625
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1178.9000244140625,
+          "adjustedClose": 1178.9000244140625
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1145,
+          "adjustedClose": 1145
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1134,
+          "adjustedClose": 1134
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1103.5,
+          "adjustedClose": 1103.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1133.0999755859375,
+          "adjustedClose": 1133.0999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1141.0999755859375,
+          "adjustedClose": 1141.0999755859375
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1125.5999755859375,
+          "adjustedClose": 1125.5999755859375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1138.5,
+          "adjustedClose": 1138.5
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1094.5,
+          "adjustedClose": 1094.5
+        }
+      ]
+    },
+    {
+      "symbol": "PERSISTENT",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6166,
+      "display_score_v2": 65,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Persistent Systems Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "PERSISTENT.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 5590.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 5590.5,
+          "adjustedClose": 5590.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 5654,
+          "adjustedClose": 5654
+        },
+        {
+          "date": "2026-08-28",
+          "close": 5875,
+          "adjustedClose": 5875
+        },
+        {
+          "date": "2026-08-31",
+          "close": 5594.5,
+          "adjustedClose": 5594.5
+        },
+        {
+          "date": "2026-09-01",
+          "close": 5800,
+          "adjustedClose": 5800
+        },
+        {
+          "date": "2026-09-02",
+          "close": 5690,
+          "adjustedClose": 5690
+        },
+        {
+          "date": "2026-09-03",
+          "close": 5657,
+          "adjustedClose": 5657
+        },
+        {
+          "date": "2026-09-04",
+          "close": 5643,
+          "adjustedClose": 5643
+        },
+        {
+          "date": "2026-09-07",
+          "close": 5540,
+          "adjustedClose": 5540
+        },
+        {
+          "date": "2026-09-08",
+          "close": 5560,
+          "adjustedClose": 5560
+        },
+        {
+          "date": "2026-09-09",
+          "close": 5419,
+          "adjustedClose": 5419
+        },
+        {
+          "date": "2026-09-10",
+          "close": 5509.5,
+          "adjustedClose": 5509.5
+        },
+        {
+          "date": "2026-09-11",
+          "close": 5516,
+          "adjustedClose": 5516
+        },
+        {
+          "date": "2026-09-14",
+          "close": 5516,
+          "adjustedClose": 5516
+        },
+        {
+          "date": "2026-09-15",
+          "close": 5477.5,
+          "adjustedClose": 5477.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 5440,
+          "adjustedClose": 5440
+        },
+        {
+          "date": "2026-09-17",
+          "close": 5473,
+          "adjustedClose": 5473
+        },
+        {
+          "date": "2026-09-18",
+          "close": 5416,
+          "adjustedClose": 5416
+        },
+        {
+          "date": "2026-09-21",
+          "close": 5449,
+          "adjustedClose": 5449
+        },
+        {
+          "date": "2026-09-22",
+          "close": 5366,
+          "adjustedClose": 5366
+        },
+        {
+          "date": "2026-09-23",
+          "close": 5240,
+          "adjustedClose": 5240
+        },
+        {
+          "date": "2026-09-24",
+          "close": 5277,
+          "adjustedClose": 5277
+        }
+      ]
+    },
+    {
+      "symbol": "SUNDARMFIN",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.9802,
+      "display_score_v2": 75,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Sundaram Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "SUNDARMFIN.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 4539.60009765625,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 4539.60009765625,
+          "adjustedClose": 4539.60009765625
+        },
+        {
+          "date": "2026-08-27",
+          "close": 4636.89990234375,
+          "adjustedClose": 4636.89990234375
+        },
+        {
+          "date": "2026-08-28",
+          "close": 4574.39990234375,
+          "adjustedClose": 4574.39990234375
+        },
+        {
+          "date": "2026-08-31",
+          "close": 4540,
+          "adjustedClose": 4540
+        },
+        {
+          "date": "2026-09-01",
+          "close": 4540.10009765625,
+          "adjustedClose": 4540.10009765625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 4557.2001953125,
+          "adjustedClose": 4557.2001953125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 4578,
+          "adjustedClose": 4578
+        },
+        {
+          "date": "2026-09-04",
+          "close": 4648.7001953125,
+          "adjustedClose": 4648.7001953125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 4708.2998046875,
+          "adjustedClose": 4708.2998046875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 4712.7001953125,
+          "adjustedClose": 4712.7001953125
+        },
+        {
+          "date": "2026-09-09",
+          "close": 4728,
+          "adjustedClose": 4728
+        },
+        {
+          "date": "2026-09-10",
+          "close": 4703,
+          "adjustedClose": 4703
+        },
+        {
+          "date": "2026-09-11",
+          "close": 4710.7001953125,
+          "adjustedClose": 4710.7001953125
+        },
+        {
+          "date": "2026-09-14",
+          "close": 4710.7001953125,
+          "adjustedClose": 4710.7001953125
+        },
+        {
+          "date": "2026-09-15",
+          "close": 4695,
+          "adjustedClose": 4695
+        },
+        {
+          "date": "2026-09-16",
+          "close": 4672.39990234375,
+          "adjustedClose": 4672.39990234375
+        },
+        {
+          "date": "2026-09-17",
+          "close": 4662.7998046875,
+          "adjustedClose": 4662.7998046875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 4730.60009765625,
+          "adjustedClose": 4730.60009765625
+        },
+        {
+          "date": "2026-09-21",
+          "close": 4679.5,
+          "adjustedClose": 4679.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 4751.89990234375,
+          "adjustedClose": 4751.89990234375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 4654.89990234375,
+          "adjustedClose": 4654.89990234375
+        },
+        {
+          "date": "2026-09-24",
+          "close": 4592,
+          "adjustedClose": 4592
+        }
+      ]
+    },
+    {
+      "symbol": "GRASIM",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.9957,
+      "display_score_v2": 75,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Grasim Industries Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "GRASIM.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 3299.89990234375,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 3299.89990234375,
+          "adjustedClose": 3299.89990234375
+        },
+        {
+          "date": "2026-08-27",
+          "close": 3258,
+          "adjustedClose": 3258
+        },
+        {
+          "date": "2026-08-28",
+          "close": 3290,
+          "adjustedClose": 3290
+        },
+        {
+          "date": "2026-08-31",
+          "close": 3371,
+          "adjustedClose": 3371
+        },
+        {
+          "date": "2026-09-01",
+          "close": 3305,
+          "adjustedClose": 3305
+        },
+        {
+          "date": "2026-09-02",
+          "close": 3294.89990234375,
+          "adjustedClose": 3294.89990234375
+        },
+        {
+          "date": "2026-09-03",
+          "close": 3310,
+          "adjustedClose": 3310
+        },
+        {
+          "date": "2026-09-04",
+          "close": 3322,
+          "adjustedClose": 3322
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3302.39990234375,
+          "adjustedClose": 3302.39990234375
+        },
+        {
+          "date": "2026-09-08",
+          "close": 3306.800048828125,
+          "adjustedClose": 3306.800048828125
+        },
+        {
+          "date": "2026-09-09",
+          "close": 3300,
+          "adjustedClose": 3300
+        },
+        {
+          "date": "2026-09-10",
+          "close": 3319,
+          "adjustedClose": 3319
+        },
+        {
+          "date": "2026-09-11",
+          "close": 3281.89990234375,
+          "adjustedClose": 3281.89990234375
+        },
+        {
+          "date": "2026-09-14",
+          "close": 3281.89990234375,
+          "adjustedClose": 3281.89990234375
+        },
+        {
+          "date": "2026-09-15",
+          "close": 3171,
+          "adjustedClose": 3171
+        },
+        {
+          "date": "2026-09-16",
+          "close": 3187,
+          "adjustedClose": 3187
+        },
+        {
+          "date": "2026-09-17",
+          "close": 3173.10009765625,
+          "adjustedClose": 3173.10009765625
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3209.199951171875,
+          "adjustedClose": 3209.199951171875
+        },
+        {
+          "date": "2026-09-21",
+          "close": 3166,
+          "adjustedClose": 3166
+        },
+        {
+          "date": "2026-09-22",
+          "close": 3128.199951171875,
+          "adjustedClose": 3128.199951171875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 3188.5,
+          "adjustedClose": 3188.5
+        },
+        {
+          "date": "2026-09-24",
+          "close": 3166.5,
+          "adjustedClose": 3166.5
+        }
+      ]
+    },
+    {
+      "symbol": "TECHM",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.9974,
+      "display_score_v2": 75,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Tech Mahindra Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TECHM.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1571,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1571,
+          "adjustedClose": 1571
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1585,
+          "adjustedClose": 1585
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1640.9000244140625,
+          "adjustedClose": 1640.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1628,
+          "adjustedClose": 1628
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1638,
+          "adjustedClose": 1638
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1623,
+          "adjustedClose": 1623
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1598,
+          "adjustedClose": 1598
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1596.9000244140625,
+          "adjustedClose": 1596.9000244140625
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1564,
+          "adjustedClose": 1564
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1559,
+          "adjustedClose": 1559
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1508,
+          "adjustedClose": 1508
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1525.800048828125,
+          "adjustedClose": 1525.800048828125
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1541,
+          "adjustedClose": 1541
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1541,
+          "adjustedClose": 1541
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1575.9000244140625,
+          "adjustedClose": 1575.9000244140625
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1558,
+          "adjustedClose": 1558
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1561,
+          "adjustedClose": 1561
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1537.0999755859375,
+          "adjustedClose": 1537.0999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1558.5,
+          "adjustedClose": 1558.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1551.5999755859375,
+          "adjustedClose": 1551.5999755859375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1557,
+          "adjustedClose": 1557
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1543,
+          "adjustedClose": 1543
+        }
+      ]
+    },
+    {
+      "symbol": "TATASTEEL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3261,
+      "display_score_v2": 83,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Tata Steel Limited",
+      "sectorBenchmarkId": "NIFTY_METAL",
+      "sectorBenchmarkLabel": "Nifty Metal",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TATASTEEL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 188.00999450683594,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 188.00999450683594,
+          "adjustedClose": 188.00999450683594
+        },
+        {
+          "date": "2026-08-27",
+          "close": 186.8000030517578,
+          "adjustedClose": 186.8000030517578
+        },
+        {
+          "date": "2026-08-28",
+          "close": 186.5,
+          "adjustedClose": 186.5
+        },
+        {
+          "date": "2026-08-31",
+          "close": 184.35000610351562,
+          "adjustedClose": 184.35000610351562
+        },
+        {
+          "date": "2026-09-01",
+          "close": 184.07000732421875,
+          "adjustedClose": 184.07000732421875
+        },
+        {
+          "date": "2026-09-02",
+          "close": 183.85000610351562,
+          "adjustedClose": 183.85000610351562
+        },
+        {
+          "date": "2026-09-03",
+          "close": 184.1999969482422,
+          "adjustedClose": 184.1999969482422
+        },
+        {
+          "date": "2026-09-04",
+          "close": 188.7899932861328,
+          "adjustedClose": 188.7899932861328
+        },
+        {
+          "date": "2026-09-07",
+          "close": 185.61000061035156,
+          "adjustedClose": 185.61000061035156
+        },
+        {
+          "date": "2026-09-08",
+          "close": 184.14999389648438,
+          "adjustedClose": 184.14999389648438
+        },
+        {
+          "date": "2026-09-09",
+          "close": 188.75,
+          "adjustedClose": 188.75
+        },
+        {
+          "date": "2026-09-10",
+          "close": 186.77999877929688,
+          "adjustedClose": 186.77999877929688
+        },
+        {
+          "date": "2026-09-11",
+          "close": 183,
+          "adjustedClose": 183
+        },
+        {
+          "date": "2026-09-14",
+          "close": 183,
+          "adjustedClose": 183
+        },
+        {
+          "date": "2026-09-15",
+          "close": 183.64999389648438,
+          "adjustedClose": 183.64999389648438
+        },
+        {
+          "date": "2026-09-16",
+          "close": 183,
+          "adjustedClose": 183
+        },
+        {
+          "date": "2026-09-17",
+          "close": 187.2899932861328,
+          "adjustedClose": 187.2899932861328
+        },
+        {
+          "date": "2026-09-18",
+          "close": 185.5399932861328,
+          "adjustedClose": 185.5399932861328
+        },
+        {
+          "date": "2026-09-21",
+          "close": 183.39999389648438,
+          "adjustedClose": 183.39999389648438
+        },
+        {
+          "date": "2026-09-22",
+          "close": 184.97000122070312,
+          "adjustedClose": 184.97000122070312
+        },
+        {
+          "date": "2026-09-23",
+          "close": 190.82000732421875,
+          "adjustedClose": 190.82000732421875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 188.02000427246094,
+          "adjustedClose": 188.02000427246094
+        }
+      ]
+    },
+    {
+      "symbol": "HINDZINC",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.4,
+      "display_score_v2": 85,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Hindustan Zinc Limited",
+      "sectorBenchmarkId": "NIFTY_METAL",
+      "sectorBenchmarkLabel": "Nifty Metal",
+      "marketDataStatus": "available",
+      "yahooSymbol": "HINDZINC.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 626.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 626.5,
+          "adjustedClose": 626.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 610.0999755859375,
+          "adjustedClose": 610.0999755859375
+        },
+        {
+          "date": "2026-08-28",
+          "close": 622,
+          "adjustedClose": 622
+        },
+        {
+          "date": "2026-08-31",
+          "close": 595.4500122070312,
+          "adjustedClose": 595.4500122070312
+        },
+        {
+          "date": "2026-09-01",
+          "close": 597,
+          "adjustedClose": 597
+        },
+        {
+          "date": "2026-09-02",
+          "close": 588.4000244140625,
+          "adjustedClose": 588.4000244140625
+        },
+        {
+          "date": "2026-09-03",
+          "close": 587.9500122070312,
+          "adjustedClose": 587.9500122070312
+        },
+        {
+          "date": "2026-09-04",
+          "close": 601,
+          "adjustedClose": 601
+        },
+        {
+          "date": "2026-09-07",
+          "close": 589.1500244140625,
+          "adjustedClose": 589.1500244140625
+        },
+        {
+          "date": "2026-09-08",
+          "close": 595.5,
+          "adjustedClose": 595.5
+        },
+        {
+          "date": "2026-09-09",
+          "close": 605.4000244140625,
+          "adjustedClose": 605.4000244140625
+        },
+        {
+          "date": "2026-09-10",
+          "close": 593.5999755859375,
+          "adjustedClose": 593.5999755859375
+        },
+        {
+          "date": "2026-09-11",
+          "close": 576.4500122070312,
+          "adjustedClose": 576.4500122070312
+        },
+        {
+          "date": "2026-09-14",
+          "close": 576.4500122070312,
+          "adjustedClose": 576.4500122070312
+        },
+        {
+          "date": "2026-09-15",
+          "close": 560.9000244140625,
+          "adjustedClose": 560.9000244140625
+        },
+        {
+          "date": "2026-09-16",
+          "close": 567.5,
+          "adjustedClose": 567.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 572.2999877929688,
+          "adjustedClose": 572.2999877929688
+        },
+        {
+          "date": "2026-09-18",
+          "close": 596,
+          "adjustedClose": 596
+        },
+        {
+          "date": "2026-09-21",
+          "close": 591.7999877929688,
+          "adjustedClose": 591.7999877929688
+        },
+        {
+          "date": "2026-09-22",
+          "close": 590.5,
+          "adjustedClose": 590.5
+        },
+        {
+          "date": "2026-09-23",
+          "close": 595.4500122070312,
+          "adjustedClose": 595.4500122070312
+        },
+        {
+          "date": "2026-09-24",
+          "close": 587.1500244140625,
+          "adjustedClose": 587.1500244140625
+        }
+      ]
+    },
+    {
+      "symbol": "BAJAJ-AUTO",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3466,
+      "display_score_v2": 84,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Bajaj Auto Limited",
+      "sectorBenchmarkId": "NIFTY_AUTO",
+      "sectorBenchmarkLabel": "Nifty Auto",
+      "marketDataStatus": "available",
+      "yahooSymbol": "BAJAJ-AUTO.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 11724,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 11724,
+          "adjustedClose": 11724
+        },
+        {
+          "date": "2026-08-27",
+          "close": 11720,
+          "adjustedClose": 11720
+        },
+        {
+          "date": "2026-08-28",
+          "close": 11910,
+          "adjustedClose": 11910
+        },
+        {
+          "date": "2026-08-31",
+          "close": 12130,
+          "adjustedClose": 12130
+        },
+        {
+          "date": "2026-09-01",
+          "close": 12361,
+          "adjustedClose": 12361
+        },
+        {
+          "date": "2026-09-02",
+          "close": 12130,
+          "adjustedClose": 12130
+        },
+        {
+          "date": "2026-09-03",
+          "close": 11920,
+          "adjustedClose": 11920
+        },
+        {
+          "date": "2026-09-04",
+          "close": 11919,
+          "adjustedClose": 11919
+        },
+        {
+          "date": "2026-09-07",
+          "close": 11800,
+          "adjustedClose": 11800
+        },
+        {
+          "date": "2026-09-08",
+          "close": 11880,
+          "adjustedClose": 11880
+        },
+        {
+          "date": "2026-09-09",
+          "close": 11790,
+          "adjustedClose": 11790
+        },
+        {
+          "date": "2026-09-10",
+          "close": 11768,
+          "adjustedClose": 11768
+        },
+        {
+          "date": "2026-09-11",
+          "close": 11678,
+          "adjustedClose": 11678
+        },
+        {
+          "date": "2026-09-14",
+          "close": 11678,
+          "adjustedClose": 11678
+        },
+        {
+          "date": "2026-09-15",
+          "close": 11424,
+          "adjustedClose": 11424
+        },
+        {
+          "date": "2026-09-16",
+          "close": 11593,
+          "adjustedClose": 11593
+        },
+        {
+          "date": "2026-09-17",
+          "close": 11500,
+          "adjustedClose": 11500
+        },
+        {
+          "date": "2026-09-18",
+          "close": 11414,
+          "adjustedClose": 11414
+        },
+        {
+          "date": "2026-09-21",
+          "close": 11460,
+          "adjustedClose": 11460
+        },
+        {
+          "date": "2026-09-22",
+          "close": 11363,
+          "adjustedClose": 11363
+        },
+        {
+          "date": "2026-09-23",
+          "close": 11400,
+          "adjustedClose": 11400
+        },
+        {
+          "date": "2026-09-24",
+          "close": 11208,
+          "adjustedClose": 11208
+        }
+      ]
+    },
+    {
+      "symbol": "CANFINHOME",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3155,
+      "display_score_v2": 83,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Can Fin Homes Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "CANFINHOME.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 802.75,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 802.75,
+          "adjustedClose": 802.75
+        },
+        {
+          "date": "2026-08-27",
+          "close": 803.7999877929688,
+          "adjustedClose": 803.7999877929688
+        },
+        {
+          "date": "2026-08-28",
+          "close": 815.5,
+          "adjustedClose": 815.5
+        },
+        {
+          "date": "2026-08-31",
+          "close": 795.2999877929688,
+          "adjustedClose": 795.2999877929688
+        },
+        {
+          "date": "2026-09-01",
+          "close": 793.4000244140625,
+          "adjustedClose": 793.4000244140625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 795.2999877929688,
+          "adjustedClose": 795.2999877929688
+        },
+        {
+          "date": "2026-09-03",
+          "close": 804.9500122070312,
+          "adjustedClose": 804.9500122070312
+        },
+        {
+          "date": "2026-09-04",
+          "close": 807.4000244140625,
+          "adjustedClose": 807.4000244140625
+        },
+        {
+          "date": "2026-09-07",
+          "close": 805.4500122070312,
+          "adjustedClose": 805.4500122070312
+        },
+        {
+          "date": "2026-09-08",
+          "close": 797.5999755859375,
+          "adjustedClose": 797.5999755859375
+        },
+        {
+          "date": "2026-09-09",
+          "close": 786.9000244140625,
+          "adjustedClose": 786.9000244140625
+        },
+        {
+          "date": "2026-09-10",
+          "close": 782.2000122070312,
+          "adjustedClose": 782.2000122070312
+        },
+        {
+          "date": "2026-09-11",
+          "close": 779.75,
+          "adjustedClose": 779.75
+        },
+        {
+          "date": "2026-09-14",
+          "close": 779.75,
+          "adjustedClose": 779.75
+        },
+        {
+          "date": "2026-09-15",
+          "close": 784.7999877929688,
+          "adjustedClose": 784.7999877929688
+        },
+        {
+          "date": "2026-09-16",
+          "close": 771.9500122070312,
+          "adjustedClose": 771.9500122070312
+        },
+        {
+          "date": "2026-09-17",
+          "close": 774.4000244140625,
+          "adjustedClose": 774.4000244140625
+        },
+        {
+          "date": "2026-09-18",
+          "close": 778.5,
+          "adjustedClose": 778.5
+        },
+        {
+          "date": "2026-09-21",
+          "close": 769.9000244140625,
+          "adjustedClose": 769.9000244140625
+        },
+        {
+          "date": "2026-09-22",
+          "close": 759.5499877929688,
+          "adjustedClose": 759.5499877929688
+        },
+        {
+          "date": "2026-09-23",
+          "close": 757.9500122070312,
+          "adjustedClose": 757.9500122070312
+        },
+        {
+          "date": "2026-09-24",
+          "close": 743.1500244140625,
+          "adjustedClose": 743.1500244140625
+        }
+      ]
+    },
+    {
+      "symbol": "TRENT",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.1872,
+      "display_score_v2": 80,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Trent Limited",
+      "sectorBenchmarkId": "NIFTY_CONSUMPTION",
+      "sectorBenchmarkLabel": "Nifty India Consumption",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TRENT.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 2908.199951171875,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 2908.199951171875,
+          "adjustedClose": 2908.199951171875
+        },
+        {
+          "date": "2026-08-27",
+          "close": 2878.5,
+          "adjustedClose": 2878.5
+        },
+        {
+          "date": "2026-08-28",
+          "close": 2898,
+          "adjustedClose": 2898
+        },
+        {
+          "date": "2026-08-31",
+          "close": 2879.89990234375,
+          "adjustedClose": 2879.89990234375
+        },
+        {
+          "date": "2026-09-01",
+          "close": 2855,
+          "adjustedClose": 2855
+        },
+        {
+          "date": "2026-09-02",
+          "close": 2852.300048828125,
+          "adjustedClose": 2852.300048828125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 2815.60009765625,
+          "adjustedClose": 2815.60009765625
+        },
+        {
+          "date": "2026-09-04",
+          "close": 2853,
+          "adjustedClose": 2853
+        },
+        {
+          "date": "2026-09-07",
+          "close": 2814.5,
+          "adjustedClose": 2814.5
+        },
+        {
+          "date": "2026-09-08",
+          "close": 2793.60009765625,
+          "adjustedClose": 2793.60009765625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 2820,
+          "adjustedClose": 2820
+        },
+        {
+          "date": "2026-09-10",
+          "close": 2818.699951171875,
+          "adjustedClose": 2818.699951171875
+        },
+        {
+          "date": "2026-09-11",
+          "close": 2802.39990234375,
+          "adjustedClose": 2802.39990234375
+        },
+        {
+          "date": "2026-09-14",
+          "close": 2802.39990234375,
+          "adjustedClose": 2802.39990234375
+        },
+        {
+          "date": "2026-09-15",
+          "close": 2730,
+          "adjustedClose": 2730
+        },
+        {
+          "date": "2026-09-16",
+          "close": 2769.699951171875,
+          "adjustedClose": 2769.699951171875
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2789,
+          "adjustedClose": 2789
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2824,
+          "adjustedClose": 2824
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2815.5,
+          "adjustedClose": 2815.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2782.89990234375,
+          "adjustedClose": 2782.89990234375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2774,
+          "adjustedClose": 2774
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2700,
+          "adjustedClose": 2700
+        }
+      ]
+    },
+    {
+      "symbol": "LTF",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.2867,
+      "display_score_v2": 82,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_automated",
+      "checkpoints": 3,
+      "previous_raw_score": 0.1996,
+      "earlier_raw_score": 0.1301,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "L&T Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "LTF.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 322.20001220703125,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 322.20001220703125,
+          "adjustedClose": 322.20001220703125
+        },
+        {
+          "date": "2026-08-27",
+          "close": 321.8999938964844,
+          "adjustedClose": 321.8999938964844
+        },
+        {
+          "date": "2026-08-28",
+          "close": 314.29998779296875,
+          "adjustedClose": 314.29998779296875
+        },
+        {
+          "date": "2026-08-31",
+          "close": 321,
+          "adjustedClose": 321
+        },
+        {
+          "date": "2026-09-01",
+          "close": 309.04998779296875,
+          "adjustedClose": 309.04998779296875
+        },
+        {
+          "date": "2026-09-02",
+          "close": 312.79998779296875,
+          "adjustedClose": 312.79998779296875
+        },
+        {
+          "date": "2026-09-03",
+          "close": 316.8999938964844,
+          "adjustedClose": 316.8999938964844
+        },
+        {
+          "date": "2026-09-04",
+          "close": 314,
+          "adjustedClose": 314
+        },
+        {
+          "date": "2026-09-07",
+          "close": 312.5,
+          "adjustedClose": 312.5
+        },
+        {
+          "date": "2026-09-08",
+          "close": 308.29998779296875,
+          "adjustedClose": 308.29998779296875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 310.3999938964844,
+          "adjustedClose": 310.3999938964844
+        },
+        {
+          "date": "2026-09-10",
+          "close": 311.29998779296875,
+          "adjustedClose": 311.29998779296875
+        },
+        {
+          "date": "2026-09-11",
+          "close": 309.1000061035156,
+          "adjustedClose": 309.1000061035156
+        },
+        {
+          "date": "2026-09-14",
+          "close": 309.1000061035156,
+          "adjustedClose": 309.1000061035156
+        },
+        {
+          "date": "2026-09-15",
+          "close": 296.79998779296875,
+          "adjustedClose": 296.79998779296875
+        },
+        {
+          "date": "2026-09-16",
+          "close": 295.5,
+          "adjustedClose": 295.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 302.29998779296875,
+          "adjustedClose": 302.29998779296875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 312.79998779296875,
+          "adjustedClose": 312.79998779296875
+        },
+        {
+          "date": "2026-09-21",
+          "close": 307.79998779296875,
+          "adjustedClose": 307.79998779296875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 304.8999938964844,
+          "adjustedClose": 304.8999938964844
+        },
+        {
+          "date": "2026-09-23",
+          "close": 310,
+          "adjustedClose": 310
+        },
+        {
+          "date": "2026-09-24",
+          "close": 282,
+          "adjustedClose": 282
+        }
+      ]
+    },
+    {
+      "symbol": "ICICIAMC",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.4578,
+      "display_score_v2": 86,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "ICICI Prudential Asset Management Company Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "ICICIAMC.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 3222.800048828125,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 3222.800048828125,
+          "adjustedClose": 3222.800048828125
+        },
+        {
+          "date": "2026-08-27",
+          "close": 3093.60009765625,
+          "adjustedClose": 3093.60009765625
+        },
+        {
+          "date": "2026-08-28",
+          "close": 3139.60009765625,
+          "adjustedClose": 3139.60009765625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 3065.10009765625,
+          "adjustedClose": 3065.10009765625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 3038.10009765625,
+          "adjustedClose": 3038.10009765625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 2973.300048828125,
+          "adjustedClose": 2973.300048828125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 2980,
+          "adjustedClose": 2980
+        },
+        {
+          "date": "2026-09-04",
+          "close": 2970.89990234375,
+          "adjustedClose": 2970.89990234375
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3013.699951171875,
+          "adjustedClose": 3013.699951171875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 3013,
+          "adjustedClose": 3013
+        },
+        {
+          "date": "2026-09-09",
+          "close": 3003.5,
+          "adjustedClose": 3003.5
+        },
+        {
+          "date": "2026-09-10",
+          "close": 3033.5,
+          "adjustedClose": 3033.5
+        },
+        {
+          "date": "2026-09-11",
+          "close": 3041.5,
+          "adjustedClose": 3041.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 3041.5,
+          "adjustedClose": 3041.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 3065,
+          "adjustedClose": 3065
+        },
+        {
+          "date": "2026-09-16",
+          "close": 3086.300048828125,
+          "adjustedClose": 3086.300048828125
+        },
+        {
+          "date": "2026-09-17",
+          "close": 3098,
+          "adjustedClose": 3098
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3206.699951171875,
+          "adjustedClose": 3206.699951171875
+        },
+        {
+          "date": "2026-09-21",
+          "close": 3207.800048828125,
+          "adjustedClose": 3207.800048828125
+        },
+        {
+          "date": "2026-09-22",
+          "close": 3151.199951171875,
+          "adjustedClose": 3151.199951171875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 3179,
+          "adjustedClose": 3179
+        },
+        {
+          "date": "2026-09-24",
+          "close": 3169.199951171875,
+          "adjustedClose": 3169.199951171875
+        }
+      ]
+    },
+    {
+      "symbol": "ADANIENT",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3106,
+      "display_score_v2": 83,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Adani Enterprises Limited",
+      "sectorBenchmarkId": "NIFTY_500",
+      "sectorBenchmarkLabel": "Nifty 500",
+      "marketDataStatus": "available",
+      "yahooSymbol": "ADANIENT.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 3112,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 3112,
+          "adjustedClose": 3112
+        },
+        {
+          "date": "2026-08-27",
+          "close": 3169,
+          "adjustedClose": 3169
+        },
+        {
+          "date": "2026-08-28",
+          "close": 3168.5,
+          "adjustedClose": 3168.5
+        },
+        {
+          "date": "2026-08-31",
+          "close": 2859.10009765625,
+          "adjustedClose": 2859.10009765625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 2863.89990234375,
+          "adjustedClose": 2863.89990234375
+        },
+        {
+          "date": "2026-09-02",
+          "close": 2891.800048828125,
+          "adjustedClose": 2891.800048828125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 2901,
+          "adjustedClose": 2901
+        },
+        {
+          "date": "2026-09-04",
+          "close": 2938,
+          "adjustedClose": 2938
+        },
+        {
+          "date": "2026-09-07",
+          "close": 2950,
+          "adjustedClose": 2950
+        },
+        {
+          "date": "2026-09-08",
+          "close": 2953.10009765625,
+          "adjustedClose": 2953.10009765625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 3104.699951171875,
+          "adjustedClose": 3104.699951171875
+        },
+        {
+          "date": "2026-09-10",
+          "close": 3077.199951171875,
+          "adjustedClose": 3077.199951171875
+        },
+        {
+          "date": "2026-09-11",
+          "close": 3060,
+          "adjustedClose": 3060
+        },
+        {
+          "date": "2026-09-14",
+          "close": 3060,
+          "adjustedClose": 3060
+        },
+        {
+          "date": "2026-09-15",
+          "close": 2928.60009765625,
+          "adjustedClose": 2928.60009765625
+        },
+        {
+          "date": "2026-09-16",
+          "close": 2920,
+          "adjustedClose": 2920
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2923.199951171875,
+          "adjustedClose": 2923.199951171875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3020,
+          "adjustedClose": 3020
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2975,
+          "adjustedClose": 2975
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2997,
+          "adjustedClose": 2997
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2993.199951171875,
+          "adjustedClose": 2993.199951171875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2900,
+          "adjustedClose": 2900
+        }
+      ]
+    },
+    {
+      "symbol": "SUNPHARMA",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3167,
+      "display_score_v2": 83,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_approved",
+      "checkpoints": 3,
+      "previous_raw_score": 1.2717,
+      "earlier_raw_score": 0.9855,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "Sun Pharmaceutical Industries Limited",
+      "sectorBenchmarkId": "NIFTY_PHARMA",
+      "sectorBenchmarkLabel": "Nifty Pharma",
+      "marketDataStatus": "available",
+      "yahooSymbol": "SUNPHARMA.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1899.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1899.5,
+          "adjustedClose": 1899.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1913.300048828125,
+          "adjustedClose": 1913.300048828125
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1920,
+          "adjustedClose": 1920
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1984.800048828125,
+          "adjustedClose": 1984.800048828125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1929,
+          "adjustedClose": 1929
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1931.699951171875,
+          "adjustedClose": 1931.699951171875
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1916,
+          "adjustedClose": 1916
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1899,
+          "adjustedClose": 1899
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1895,
+          "adjustedClose": 1895
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1885.9000244140625,
+          "adjustedClose": 1885.9000244140625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1864.9000244140625,
+          "adjustedClose": 1864.9000244140625
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1861,
+          "adjustedClose": 1861
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1840,
+          "adjustedClose": 1840
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1840,
+          "adjustedClose": 1840
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1835,
+          "adjustedClose": 1835
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1853.5,
+          "adjustedClose": 1853.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1867.300048828125,
+          "adjustedClose": 1867.300048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1837.300048828125,
+          "adjustedClose": 1837.300048828125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1868.9000244140625,
+          "adjustedClose": 1868.9000244140625
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1846.4000244140625,
+          "adjustedClose": 1846.4000244140625
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1865,
+          "adjustedClose": 1865
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1849.9000244140625,
+          "adjustedClose": 1849.9000244140625
+        }
+      ]
+    },
+    {
+      "symbol": "PIDILITIND",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.38,
+      "display_score_v2": 85,
+      "lifecycle": "Watch",
+      "lifecycle_status": "trajectory_backed_automated_wave1",
+      "checkpoints": 3,
+      "previous_raw_score": 1.4745,
+      "earlier_raw_score": 0.5827,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Pidilite Industries Limited",
+      "sectorBenchmarkId": "NIFTY_CONSUMPTION",
+      "sectorBenchmarkLabel": "Nifty India Consumption",
+      "marketDataStatus": "available",
+      "yahooSymbol": "PIDILITIND.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1650,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1650,
+          "adjustedClose": 1650
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1656,
+          "adjustedClose": 1656
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1629.5,
+          "adjustedClose": 1629.5
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1687.699951171875,
+          "adjustedClose": 1687.699951171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1643.5,
+          "adjustedClose": 1643.5
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1637,
+          "adjustedClose": 1637
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1638.300048828125,
+          "adjustedClose": 1638.300048828125
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1629.5,
+          "adjustedClose": 1629.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1575,
+          "adjustedClose": 1575
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1593,
+          "adjustedClose": 1593
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1572,
+          "adjustedClose": 1572
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1569,
+          "adjustedClose": 1569
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1566.9000244140625,
+          "adjustedClose": 1566.9000244140625
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1566.9000244140625,
+          "adjustedClose": 1566.9000244140625
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1521.0999755859375,
+          "adjustedClose": 1521.0999755859375
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1543.800048828125,
+          "adjustedClose": 1543.800048828125
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1551.5,
+          "adjustedClose": 1551.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1572.0999755859375,
+          "adjustedClose": 1572.0999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1573.199951171875,
+          "adjustedClose": 1573.199951171875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1572.699951171875,
+          "adjustedClose": 1572.699951171875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1588.0999755859375,
+          "adjustedClose": 1588.0999755859375
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1522,
+          "adjustedClose": 1522
+        }
+      ]
+    },
+    {
+      "symbol": "ADANIENSOL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.4907,
+      "display_score_v2": 62,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Adani Energy Solutions Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "ADANIENSOL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1570.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1570.5,
+          "adjustedClose": 1570.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1617,
+          "adjustedClose": 1617
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1581.4000244140625,
+          "adjustedClose": 1581.4000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1417.4000244140625,
+          "adjustedClose": 1417.4000244140625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1382,
+          "adjustedClose": 1382
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1396.5999755859375,
+          "adjustedClose": 1396.5999755859375
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1385.699951171875,
+          "adjustedClose": 1385.699951171875
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1409.5999755859375,
+          "adjustedClose": 1409.5999755859375
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1390.4000244140625,
+          "adjustedClose": 1390.4000244140625
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1407.699951171875,
+          "adjustedClose": 1407.699951171875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1423.300048828125,
+          "adjustedClose": 1423.300048828125
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1391.9000244140625,
+          "adjustedClose": 1391.9000244140625
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1373,
+          "adjustedClose": 1373
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1373,
+          "adjustedClose": 1373
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1347.5,
+          "adjustedClose": 1347.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1349.199951171875,
+          "adjustedClose": 1349.199951171875
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1386.800048828125,
+          "adjustedClose": 1386.800048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1436.0999755859375,
+          "adjustedClose": 1436.0999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1397.5999755859375,
+          "adjustedClose": 1397.5999755859375
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1381.699951171875,
+          "adjustedClose": 1381.699951171875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1380,
+          "adjustedClose": 1380
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1340.5,
+          "adjustedClose": 1340.5
+        }
+      ]
+    },
+    {
+      "symbol": "BHARTIARTL",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3705,
+      "display_score_v2": 84,
+      "lifecycle": "Watch",
+      "lifecycle_status": "trajectory_backed_automated_wave1",
+      "checkpoints": 3,
+      "previous_raw_score": 1.3705,
+      "earlier_raw_score": 0.5094,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Bharti Airtel Limited",
+      "sectorBenchmarkId": "NIFTY_500",
+      "sectorBenchmarkLabel": "Nifty 500",
+      "marketDataStatus": "available",
+      "yahooSymbol": "BHARTIARTL.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1902.0999755859375,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1902.0999755859375,
+          "adjustedClose": 1902.0999755859375
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1878.300048828125,
+          "adjustedClose": 1878.300048828125
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1882.4000244140625,
+          "adjustedClose": 1882.4000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1811.9000244140625,
+          "adjustedClose": 1811.9000244140625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1877.199951171875,
+          "adjustedClose": 1877.199951171875
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1862.800048828125,
+          "adjustedClose": 1862.800048828125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1869,
+          "adjustedClose": 1869
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1840,
+          "adjustedClose": 1840
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1854,
+          "adjustedClose": 1854
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1844,
+          "adjustedClose": 1844
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1814.699951171875,
+          "adjustedClose": 1814.699951171875
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1839,
+          "adjustedClose": 1839
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1831.0999755859375,
+          "adjustedClose": 1831.0999755859375
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1831.0999755859375,
+          "adjustedClose": 1831.0999755859375
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1830.4000244140625,
+          "adjustedClose": 1830.4000244140625
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1835,
+          "adjustedClose": 1835
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1836,
+          "adjustedClose": 1836
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1893.300048828125,
+          "adjustedClose": 1893.300048828125
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1830.199951171875,
+          "adjustedClose": 1830.199951171875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1817.199951171875,
+          "adjustedClose": 1817.199951171875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1833.199951171875,
+          "adjustedClose": 1833.199951171875
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1795.800048828125,
+          "adjustedClose": 1795.800048828125
+        }
+      ]
+    },
+    {
+      "symbol": "POONAWALLA",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.6061,
+      "display_score_v2": 65,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Poonawalla Fincorp Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "POONAWALLA.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 472.6499938964844,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 472.6499938964844,
+          "adjustedClose": 472.6499938964844
+        },
+        {
+          "date": "2026-08-27",
+          "close": 482.3500061035156,
+          "adjustedClose": 482.3500061035156
+        },
+        {
+          "date": "2026-08-28",
+          "close": 479.04998779296875,
+          "adjustedClose": 479.04998779296875
+        },
+        {
+          "date": "2026-08-31",
+          "close": 463.79998779296875,
+          "adjustedClose": 463.79998779296875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 460.95001220703125,
+          "adjustedClose": 460.95001220703125
+        },
+        {
+          "date": "2026-09-02",
+          "close": 459.6499938964844,
+          "adjustedClose": 459.6499938964844
+        },
+        {
+          "date": "2026-09-03",
+          "close": 465.1000061035156,
+          "adjustedClose": 465.1000061035156
+        },
+        {
+          "date": "2026-09-04",
+          "close": 468.45001220703125,
+          "adjustedClose": 468.45001220703125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 459.1499938964844,
+          "adjustedClose": 459.1499938964844
+        },
+        {
+          "date": "2026-09-08",
+          "close": 455.25,
+          "adjustedClose": 455.25
+        },
+        {
+          "date": "2026-09-09",
+          "close": 448.6000061035156,
+          "adjustedClose": 448.6000061035156
+        },
+        {
+          "date": "2026-09-10",
+          "close": 449.3999938964844,
+          "adjustedClose": 449.3999938964844
+        },
+        {
+          "date": "2026-09-11",
+          "close": 445.25,
+          "adjustedClose": 445.25
+        },
+        {
+          "date": "2026-09-14",
+          "close": 445.25,
+          "adjustedClose": 445.25
+        },
+        {
+          "date": "2026-09-15",
+          "close": 434.6000061035156,
+          "adjustedClose": 434.6000061035156
+        },
+        {
+          "date": "2026-09-16",
+          "close": 432.45001220703125,
+          "adjustedClose": 432.45001220703125
+        },
+        {
+          "date": "2026-09-17",
+          "close": 432.79998779296875,
+          "adjustedClose": 432.79998779296875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 479.3999938964844,
+          "adjustedClose": 479.3999938964844
+        },
+        {
+          "date": "2026-09-21",
+          "close": 471,
+          "adjustedClose": 471
+        },
+        {
+          "date": "2026-09-22",
+          "close": 471.8999938964844,
+          "adjustedClose": 471.8999938964844
+        },
+        {
+          "date": "2026-09-23",
+          "close": 478.8500061035156,
+          "adjustedClose": 478.8500061035156
+        },
+        {
+          "date": "2026-09-24",
+          "close": 466.79998779296875,
+          "adjustedClose": 466.79998779296875
+        }
+      ]
+    },
+    {
+      "symbol": "M&M",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.2928,
+      "display_score_v2": 82,
+      "lifecycle": "Watch",
+      "lifecycle_status": "trajectory_backed_automated_wave1",
+      "checkpoints": 3,
+      "previous_raw_score": 1.3317,
+      "earlier_raw_score": 1.34,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Mahindra & Mahindra Limited",
+      "sectorBenchmarkId": "NIFTY_AUTO",
+      "sectorBenchmarkLabel": "Nifty Auto",
+      "marketDataStatus": "available",
+      "yahooSymbol": "M&M.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 3398.199951171875,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 3398.199951171875,
+          "adjustedClose": 3398.199951171875
+        },
+        {
+          "date": "2026-08-27",
+          "close": 3330,
+          "adjustedClose": 3330
+        },
+        {
+          "date": "2026-08-28",
+          "close": 3334,
+          "adjustedClose": 3334
+        },
+        {
+          "date": "2026-08-31",
+          "close": 3282,
+          "adjustedClose": 3282
+        },
+        {
+          "date": "2026-09-01",
+          "close": 3259,
+          "adjustedClose": 3259
+        },
+        {
+          "date": "2026-09-02",
+          "close": 3190,
+          "adjustedClose": 3190
+        },
+        {
+          "date": "2026-09-03",
+          "close": 3150,
+          "adjustedClose": 3150
+        },
+        {
+          "date": "2026-09-04",
+          "close": 3170,
+          "adjustedClose": 3170
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3160,
+          "adjustedClose": 3160
+        },
+        {
+          "date": "2026-09-08",
+          "close": 3160,
+          "adjustedClose": 3160
+        },
+        {
+          "date": "2026-09-09",
+          "close": 3150,
+          "adjustedClose": 3150
+        },
+        {
+          "date": "2026-09-10",
+          "close": 3123.800048828125,
+          "adjustedClose": 3123.800048828125
+        },
+        {
+          "date": "2026-09-11",
+          "close": 3107,
+          "adjustedClose": 3107
+        },
+        {
+          "date": "2026-09-14",
+          "close": 3107,
+          "adjustedClose": 3107
+        },
+        {
+          "date": "2026-09-15",
+          "close": 3029.5,
+          "adjustedClose": 3029.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 3070,
+          "adjustedClose": 3070
+        },
+        {
+          "date": "2026-09-17",
+          "close": 3076.5,
+          "adjustedClose": 3076.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3052,
+          "adjustedClose": 3052
+        },
+        {
+          "date": "2026-09-21",
+          "close": 3055.300048828125,
+          "adjustedClose": 3055.300048828125
+        },
+        {
+          "date": "2026-09-22",
+          "close": 3044.5,
+          "adjustedClose": 3044.5
+        },
+        {
+          "date": "2026-09-23",
+          "close": 3035,
+          "adjustedClose": 3035
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2982.699951171875,
+          "adjustedClose": 2982.699951171875
+        }
+      ]
+    },
+    {
+      "symbol": "RELIANCE",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.4483,
+      "display_score_v2": 61,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Reliance Industries Limited",
+      "sectorBenchmarkId": "NIFTY_ENERGY",
+      "sectorBenchmarkLabel": "Nifty Energy",
+      "marketDataStatus": "available",
+      "yahooSymbol": "RELIANCE.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1298,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1298,
+          "adjustedClose": 1298
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1282.199951171875,
+          "adjustedClose": 1282.199951171875
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1287,
+          "adjustedClose": 1287
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1277,
+          "adjustedClose": 1277
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1309,
+          "adjustedClose": 1309
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1313.0999755859375,
+          "adjustedClose": 1313.0999755859375
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1302.5,
+          "adjustedClose": 1302.5
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1322,
+          "adjustedClose": 1322
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1309.5,
+          "adjustedClose": 1309.5
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1294.9000244140625,
+          "adjustedClose": 1294.9000244140625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1279,
+          "adjustedClose": 1279
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1274,
+          "adjustedClose": 1274
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1257.5,
+          "adjustedClose": 1257.5
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1257.5,
+          "adjustedClose": 1257.5
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1235.300048828125,
+          "adjustedClose": 1235.300048828125
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1240,
+          "adjustedClose": 1240
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1243.9000244140625,
+          "adjustedClose": 1243.9000244140625
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1226.4000244140625,
+          "adjustedClose": 1226.4000244140625
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1247.4000244140625,
+          "adjustedClose": 1247.4000244140625
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1240.4000244140625,
+          "adjustedClose": 1240.4000244140625
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1248,
+          "adjustedClose": 1248
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1219.199951171875,
+          "adjustedClose": 1219.199951171875
+        }
+      ]
+    },
+    {
+      "symbol": "NTPC",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.5766,
+      "display_score_v2": 64,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "NTPC Limited",
+      "sectorBenchmarkId": "NIFTY_ENERGY",
+      "sectorBenchmarkLabel": "Nifty Energy",
+      "marketDataStatus": "available",
+      "yahooSymbol": "NTPC.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 331.0241394042969,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 334.6000061035156,
+          "adjustedClose": 331.0241394042969
+        },
+        {
+          "date": "2026-08-27",
+          "close": 330.8999938964844,
+          "adjustedClose": 327.3636779785156
+        },
+        {
+          "date": "2026-08-28",
+          "close": 330.04998779296875,
+          "adjustedClose": 326.5227355957031
+        },
+        {
+          "date": "2026-08-31",
+          "close": 327.3999938964844,
+          "adjustedClose": 323.90106201171875
+        },
+        {
+          "date": "2026-09-01",
+          "close": 327.5,
+          "adjustedClose": 324
+        },
+        {
+          "date": "2026-09-02",
+          "close": 330,
+          "adjustedClose": 330
+        },
+        {
+          "date": "2026-09-03",
+          "close": 330.8999938964844,
+          "adjustedClose": 330.8999938964844
+        },
+        {
+          "date": "2026-09-04",
+          "close": 332.5,
+          "adjustedClose": 332.5
+        },
+        {
+          "date": "2026-09-07",
+          "close": 332,
+          "adjustedClose": 332
+        },
+        {
+          "date": "2026-09-08",
+          "close": 330.79998779296875,
+          "adjustedClose": 330.79998779296875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 334.5,
+          "adjustedClose": 334.5
+        },
+        {
+          "date": "2026-09-10",
+          "close": 335,
+          "adjustedClose": 335
+        },
+        {
+          "date": "2026-09-11",
+          "close": 333.3999938964844,
+          "adjustedClose": 333.3999938964844
+        },
+        {
+          "date": "2026-09-14",
+          "close": 333.3999938964844,
+          "adjustedClose": 333.3999938964844
+        },
+        {
+          "date": "2026-09-15",
+          "close": 329.5,
+          "adjustedClose": 329.5
+        },
+        {
+          "date": "2026-09-16",
+          "close": 327,
+          "adjustedClose": 327
+        },
+        {
+          "date": "2026-09-17",
+          "close": 329.6000061035156,
+          "adjustedClose": 329.6000061035156
+        },
+        {
+          "date": "2026-09-18",
+          "close": 323.6499938964844,
+          "adjustedClose": 323.6499938964844
+        },
+        {
+          "date": "2026-09-21",
+          "close": 326.3999938964844,
+          "adjustedClose": 326.3999938964844
+        },
+        {
+          "date": "2026-09-22",
+          "close": 327.79998779296875,
+          "adjustedClose": 327.79998779296875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 326,
+          "adjustedClose": 326
+        },
+        {
+          "date": "2026-09-24",
+          "close": 326.6000061035156,
+          "adjustedClose": 326.6000061035156
+        }
+      ]
+    },
+    {
+      "symbol": "INFY",
+      "factor_status": "four_factor_complete",
+      "raw_score": -0.2166,
+      "display_score_v2": 45,
+      "lifecycle": "Fading",
+      "lifecycle_status": "trajectory_backed_approved",
+      "checkpoints": 3,
+      "previous_raw_score": 0.661,
+      "earlier_raw_score": -0.5499,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": true,
+      "name": "Infosys Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "INFY.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1120,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1120,
+          "adjustedClose": 1120
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1110.800048828125,
+          "adjustedClose": 1110.800048828125
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1144,
+          "adjustedClose": 1144
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1133.800048828125,
+          "adjustedClose": 1133.800048828125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1156,
+          "adjustedClose": 1156
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1140,
+          "adjustedClose": 1140
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1130.300048828125,
+          "adjustedClose": 1130.300048828125
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1130,
+          "adjustedClose": 1130
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1087.5,
+          "adjustedClose": 1087.5
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1082,
+          "adjustedClose": 1082
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1035,
+          "adjustedClose": 1035
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1036.5,
+          "adjustedClose": 1036.5
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1037.699951171875,
+          "adjustedClose": 1037.699951171875
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1037.699951171875,
+          "adjustedClose": 1037.699951171875
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1077,
+          "adjustedClose": 1077
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1060,
+          "adjustedClose": 1060
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1058.5999755859375,
+          "adjustedClose": 1058.5999755859375
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1051.4000244140625,
+          "adjustedClose": 1051.4000244140625
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1038.5,
+          "adjustedClose": 1038.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1029.4000244140625,
+          "adjustedClose": 1029.4000244140625
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1020.5,
+          "adjustedClose": 1020.5
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1014.5,
+          "adjustedClose": 1014.5
+        }
+      ]
+    },
+    {
+      "symbol": "CHOLAFIN",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.0107,
+      "display_score_v2": 75,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Cholamandalam Investment and Finance Company Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "CHOLAFIN.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1868.0999755859375,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1868.0999755859375,
+          "adjustedClose": 1868.0999755859375
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1875.4000244140625,
+          "adjustedClose": 1875.4000244140625
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1862.9000244140625,
+          "adjustedClose": 1862.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1857.4000244140625,
+          "adjustedClose": 1857.4000244140625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1814.699951171875,
+          "adjustedClose": 1814.699951171875
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1825.9000244140625,
+          "adjustedClose": 1825.9000244140625
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1849.300048828125,
+          "adjustedClose": 1849.300048828125
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1839,
+          "adjustedClose": 1839
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1848.199951171875,
+          "adjustedClose": 1848.199951171875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1823.4000244140625,
+          "adjustedClose": 1823.4000244140625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1829,
+          "adjustedClose": 1829
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1859,
+          "adjustedClose": 1859
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1845.9000244140625,
+          "adjustedClose": 1845.9000244140625
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1845.9000244140625,
+          "adjustedClose": 1845.9000244140625
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1791.5999755859375,
+          "adjustedClose": 1791.5999755859375
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1765.5999755859375,
+          "adjustedClose": 1765.5999755859375
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1764.5,
+          "adjustedClose": 1764.5
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1800,
+          "adjustedClose": 1800
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1764,
+          "adjustedClose": 1764
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1759.0999755859375,
+          "adjustedClose": 1759.0999755859375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1774,
+          "adjustedClose": 1774
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1681.699951171875,
+          "adjustedClose": 1681.699951171875
+        }
+      ]
+    },
+    {
+      "symbol": "LT",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.0022,
+      "display_score_v2": 75,
+      "lifecycle": "Building",
+      "lifecycle_status": "trajectory_backed_approved",
+      "checkpoints": 3,
+      "previous_raw_score": 0.1979,
+      "earlier_raw_score": 0.7272,
+      "api_lifecycle_stage": "BUILDING",
+      "fading_warning": false,
+      "name": "Larsen & Toubro Limited",
+      "sectorBenchmarkId": "NIFTY_INFRA",
+      "sectorBenchmarkLabel": "Nifty Infrastructure",
+      "marketDataStatus": "available",
+      "yahooSymbol": "LT.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 4038.10009765625,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 4038.10009765625,
+          "adjustedClose": 4038.10009765625
+        },
+        {
+          "date": "2026-08-27",
+          "close": 4027,
+          "adjustedClose": 4027
+        },
+        {
+          "date": "2026-08-28",
+          "close": 4045.800048828125,
+          "adjustedClose": 4045.800048828125
+        },
+        {
+          "date": "2026-08-31",
+          "close": 4044.89990234375,
+          "adjustedClose": 4044.89990234375
+        },
+        {
+          "date": "2026-09-01",
+          "close": 3980.10009765625,
+          "adjustedClose": 3980.10009765625
+        },
+        {
+          "date": "2026-09-02",
+          "close": 3981,
+          "adjustedClose": 3981
+        },
+        {
+          "date": "2026-09-03",
+          "close": 3975,
+          "adjustedClose": 3975
+        },
+        {
+          "date": "2026-09-04",
+          "close": 3964.10009765625,
+          "adjustedClose": 3964.10009765625
+        },
+        {
+          "date": "2026-09-07",
+          "close": 3999,
+          "adjustedClose": 3999
+        },
+        {
+          "date": "2026-09-08",
+          "close": 3946.10009765625,
+          "adjustedClose": 3946.10009765625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 3922.60009765625,
+          "adjustedClose": 3922.60009765625
+        },
+        {
+          "date": "2026-09-10",
+          "close": 3955,
+          "adjustedClose": 3955
+        },
+        {
+          "date": "2026-09-11",
+          "close": 3930.699951171875,
+          "adjustedClose": 3930.699951171875
+        },
+        {
+          "date": "2026-09-14",
+          "close": 3930.699951171875,
+          "adjustedClose": 3930.699951171875
+        },
+        {
+          "date": "2026-09-15",
+          "close": 3850.699951171875,
+          "adjustedClose": 3850.699951171875
+        },
+        {
+          "date": "2026-09-16",
+          "close": 3807.699951171875,
+          "adjustedClose": 3807.699951171875
+        },
+        {
+          "date": "2026-09-17",
+          "close": 3836.199951171875,
+          "adjustedClose": 3836.199951171875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 3885,
+          "adjustedClose": 3885
+        },
+        {
+          "date": "2026-09-21",
+          "close": 3904.800048828125,
+          "adjustedClose": 3904.800048828125
+        },
+        {
+          "date": "2026-09-22",
+          "close": 3866.39990234375,
+          "adjustedClose": 3866.39990234375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 3929.89990234375,
+          "adjustedClose": 3929.89990234375
+        },
+        {
+          "date": "2026-09-24",
+          "close": 3858.39990234375,
+          "adjustedClose": 3858.39990234375
+        }
+      ]
+    },
+    {
+      "symbol": "SHRIRAMFIN",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.2983,
+      "display_score_v2": 82,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Shriram Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "SHRIRAMFIN.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1117.5,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1117.5,
+          "adjustedClose": 1117.5
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1101,
+          "adjustedClose": 1101
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1086.9000244140625,
+          "adjustedClose": 1086.9000244140625
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1109.9000244140625,
+          "adjustedClose": 1109.9000244140625
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1059.0999755859375,
+          "adjustedClose": 1059.0999755859375
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1047,
+          "adjustedClose": 1047
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1044.199951171875,
+          "adjustedClose": 1044.199951171875
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1041,
+          "adjustedClose": 1041
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1037,
+          "adjustedClose": 1037
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1029,
+          "adjustedClose": 1029
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1029,
+          "adjustedClose": 1029
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1038,
+          "adjustedClose": 1038
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1028.5999755859375,
+          "adjustedClose": 1028.5999755859375
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1028.5999755859375,
+          "adjustedClose": 1028.5999755859375
+        },
+        {
+          "date": "2026-09-15",
+          "close": 979.7999877929688,
+          "adjustedClose": 979.7999877929688
+        },
+        {
+          "date": "2026-09-16",
+          "close": 979,
+          "adjustedClose": 979
+        },
+        {
+          "date": "2026-09-17",
+          "close": 995,
+          "adjustedClose": 995
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1010,
+          "adjustedClose": 1010
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1011.7999877929688,
+          "adjustedClose": 1011.7999877929688
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1006,
+          "adjustedClose": 1006
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1010.7999877929688,
+          "adjustedClose": 1010.7999877929688
+        },
+        {
+          "date": "2026-09-24",
+          "close": 990,
+          "adjustedClose": 990
+        }
+      ]
+    },
+    {
+      "symbol": "TCS",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.5722,
+      "display_score_v2": 64,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Tata Consultancy Services Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TCS.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 2270,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 2270,
+          "adjustedClose": 2270
+        },
+        {
+          "date": "2026-08-27",
+          "close": 2248.39990234375,
+          "adjustedClose": 2248.39990234375
+        },
+        {
+          "date": "2026-08-28",
+          "close": 2342,
+          "adjustedClose": 2342
+        },
+        {
+          "date": "2026-08-31",
+          "close": 2399.300048828125,
+          "adjustedClose": 2399.300048828125
+        },
+        {
+          "date": "2026-09-01",
+          "close": 2369,
+          "adjustedClose": 2369
+        },
+        {
+          "date": "2026-09-02",
+          "close": 2348,
+          "adjustedClose": 2348
+        },
+        {
+          "date": "2026-09-03",
+          "close": 2320.10009765625,
+          "adjustedClose": 2320.10009765625
+        },
+        {
+          "date": "2026-09-04",
+          "close": 2304,
+          "adjustedClose": 2304
+        },
+        {
+          "date": "2026-09-07",
+          "close": 2270,
+          "adjustedClose": 2270
+        },
+        {
+          "date": "2026-09-08",
+          "close": 2255.5,
+          "adjustedClose": 2255.5
+        },
+        {
+          "date": "2026-09-09",
+          "close": 2208,
+          "adjustedClose": 2208
+        },
+        {
+          "date": "2026-09-10",
+          "close": 2204.10009765625,
+          "adjustedClose": 2204.10009765625
+        },
+        {
+          "date": "2026-09-11",
+          "close": 2200.800048828125,
+          "adjustedClose": 2200.800048828125
+        },
+        {
+          "date": "2026-09-14",
+          "close": 2200.800048828125,
+          "adjustedClose": 2200.800048828125
+        },
+        {
+          "date": "2026-09-15",
+          "close": 2251,
+          "adjustedClose": 2251
+        },
+        {
+          "date": "2026-09-16",
+          "close": 2188.800048828125,
+          "adjustedClose": 2188.800048828125
+        },
+        {
+          "date": "2026-09-17",
+          "close": 2190,
+          "adjustedClose": 2190
+        },
+        {
+          "date": "2026-09-18",
+          "close": 2105,
+          "adjustedClose": 2105
+        },
+        {
+          "date": "2026-09-21",
+          "close": 2128.699951171875,
+          "adjustedClose": 2128.699951171875
+        },
+        {
+          "date": "2026-09-22",
+          "close": 2105,
+          "adjustedClose": 2105
+        },
+        {
+          "date": "2026-09-23",
+          "close": 2089.60009765625,
+          "adjustedClose": 2089.60009765625
+        },
+        {
+          "date": "2026-09-24",
+          "close": 2087,
+          "adjustedClose": 2087
+        }
+      ]
+    },
+    {
+      "symbol": "WIPRO",
+      "factor_status": "four_factor_complete",
+      "raw_score": -0.2527,
+      "display_score_v2": 44,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Wipro Limited",
+      "sectorBenchmarkId": "NIFTY_IT",
+      "sectorBenchmarkLabel": "Nifty IT",
+      "marketDataStatus": "available",
+      "yahooSymbol": "WIPRO.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 177.35000610351562,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 177.35000610351562,
+          "adjustedClose": 177.35000610351562
+        },
+        {
+          "date": "2026-08-27",
+          "close": 176.39999389648438,
+          "adjustedClose": 176.39999389648438
+        },
+        {
+          "date": "2026-08-28",
+          "close": 180.9499969482422,
+          "adjustedClose": 180.9499969482422
+        },
+        {
+          "date": "2026-08-31",
+          "close": 184.5,
+          "adjustedClose": 184.5
+        },
+        {
+          "date": "2026-09-01",
+          "close": 181.6999969482422,
+          "adjustedClose": 181.6999969482422
+        },
+        {
+          "date": "2026-09-02",
+          "close": 177.08999633789062,
+          "adjustedClose": 177.08999633789062
+        },
+        {
+          "date": "2026-09-03",
+          "close": 175.72000122070312,
+          "adjustedClose": 175.72000122070312
+        },
+        {
+          "date": "2026-09-04",
+          "close": 176.39999389648438,
+          "adjustedClose": 176.39999389648438
+        },
+        {
+          "date": "2026-09-07",
+          "close": 172.8000030517578,
+          "adjustedClose": 172.8000030517578
+        },
+        {
+          "date": "2026-09-08",
+          "close": 171.5,
+          "adjustedClose": 171.5
+        },
+        {
+          "date": "2026-09-09",
+          "close": 167,
+          "adjustedClose": 167
+        },
+        {
+          "date": "2026-09-10",
+          "close": 166.3000030517578,
+          "adjustedClose": 166.3000030517578
+        },
+        {
+          "date": "2026-09-11",
+          "close": 167.39999389648438,
+          "adjustedClose": 167.39999389648438
+        },
+        {
+          "date": "2026-09-14",
+          "close": 167.39999389648438,
+          "adjustedClose": 167.39999389648438
+        },
+        {
+          "date": "2026-09-15",
+          "close": 170,
+          "adjustedClose": 170
+        },
+        {
+          "date": "2026-09-16",
+          "close": 166.88999938964844,
+          "adjustedClose": 166.88999938964844
+        },
+        {
+          "date": "2026-09-17",
+          "close": 166.39999389648438,
+          "adjustedClose": 166.39999389648438
+        },
+        {
+          "date": "2026-09-18",
+          "close": 166.8300018310547,
+          "adjustedClose": 166.8300018310547
+        },
+        {
+          "date": "2026-09-21",
+          "close": 164.5500030517578,
+          "adjustedClose": 164.5500030517578
+        },
+        {
+          "date": "2026-09-22",
+          "close": 166,
+          "adjustedClose": 166
+        },
+        {
+          "date": "2026-09-23",
+          "close": 164.89999389648438,
+          "adjustedClose": 164.89999389648438
+        },
+        {
+          "date": "2026-09-24",
+          "close": 163.63999938964844,
+          "adjustedClose": 163.63999938964844
+        }
+      ]
+    },
+    {
+      "symbol": "FIVESTAR",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.1296,
+      "display_score_v2": 53,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Five-Star Business Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "FIVESTAR.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 515.0499877929688,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 515.0499877929688,
+          "adjustedClose": 515.0499877929688
+        },
+        {
+          "date": "2026-08-27",
+          "close": 533.75,
+          "adjustedClose": 533.75
+        },
+        {
+          "date": "2026-08-28",
+          "close": 537.8499755859375,
+          "adjustedClose": 537.8499755859375
+        },
+        {
+          "date": "2026-08-31",
+          "close": 535.0499877929688,
+          "adjustedClose": 535.0499877929688
+        },
+        {
+          "date": "2026-09-01",
+          "close": 538.0999755859375,
+          "adjustedClose": 538.0999755859375
+        },
+        {
+          "date": "2026-09-02",
+          "close": 524.8499755859375,
+          "adjustedClose": 524.8499755859375
+        },
+        {
+          "date": "2026-09-03",
+          "close": 534.5999755859375,
+          "adjustedClose": 534.5999755859375
+        },
+        {
+          "date": "2026-09-04",
+          "close": 523.0499877929688,
+          "adjustedClose": 523.0499877929688
+        },
+        {
+          "date": "2026-09-07",
+          "close": 526.2000122070312,
+          "adjustedClose": 526.2000122070312
+        },
+        {
+          "date": "2026-09-08",
+          "close": 524.1500244140625,
+          "adjustedClose": 524.1500244140625
+        },
+        {
+          "date": "2026-09-09",
+          "close": 533.0499877929688,
+          "adjustedClose": 533.0499877929688
+        },
+        {
+          "date": "2026-09-10",
+          "close": 530.6500244140625,
+          "adjustedClose": 530.6500244140625
+        },
+        {
+          "date": "2026-09-11",
+          "close": 551.0499877929688,
+          "adjustedClose": 551.0499877929688
+        },
+        {
+          "date": "2026-09-14",
+          "close": 551.0499877929688,
+          "adjustedClose": 551.0499877929688
+        },
+        {
+          "date": "2026-09-15",
+          "close": 541.9500122070312,
+          "adjustedClose": 541.9500122070312
+        },
+        {
+          "date": "2026-09-16",
+          "close": 549.4000244140625,
+          "adjustedClose": 549.4000244140625
+        },
+        {
+          "date": "2026-09-17",
+          "close": 530.9500122070312,
+          "adjustedClose": 530.9500122070312
+        },
+        {
+          "date": "2026-09-18",
+          "close": 538.4500122070312,
+          "adjustedClose": 538.4500122070312
+        },
+        {
+          "date": "2026-09-21",
+          "close": 524.9500122070312,
+          "adjustedClose": 524.9500122070312
+        },
+        {
+          "date": "2026-09-22",
+          "close": 524.8499755859375,
+          "adjustedClose": 524.8499755859375
+        },
+        {
+          "date": "2026-09-23",
+          "close": 549.7000122070312,
+          "adjustedClose": 549.7000122070312
+        },
+        {
+          "date": "2026-09-24",
+          "close": 524.8499755859375,
+          "adjustedClose": 524.8499755859375
+        }
+      ]
+    },
+    {
+      "symbol": "CREDITACC",
+      "factor_status": "four_factor_complete",
+      "raw_score": 0.9524,
+      "display_score_v2": 74,
+      "lifecycle": "Emerging",
+      "lifecycle_status": "trajectory_backed_automated",
+      "checkpoints": 3,
+      "previous_raw_score": -0.6205,
+      "earlier_raw_score": -1.2983,
+      "api_lifecycle_stage": "EMERGING",
+      "fading_warning": false,
+      "name": "CREDITACCESS GRAMEEN LIMITED",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "CREDITACC.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 1440.199951171875,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 1440.199951171875,
+          "adjustedClose": 1440.199951171875
+        },
+        {
+          "date": "2026-08-27",
+          "close": 1425.9000244140625,
+          "adjustedClose": 1425.9000244140625
+        },
+        {
+          "date": "2026-08-28",
+          "close": 1391.699951171875,
+          "adjustedClose": 1391.699951171875
+        },
+        {
+          "date": "2026-08-31",
+          "close": 1363.5,
+          "adjustedClose": 1363.5
+        },
+        {
+          "date": "2026-09-01",
+          "close": 1393.300048828125,
+          "adjustedClose": 1393.300048828125
+        },
+        {
+          "date": "2026-09-02",
+          "close": 1403.4000244140625,
+          "adjustedClose": 1403.4000244140625
+        },
+        {
+          "date": "2026-09-03",
+          "close": 1437.4000244140625,
+          "adjustedClose": 1437.4000244140625
+        },
+        {
+          "date": "2026-09-04",
+          "close": 1443.0999755859375,
+          "adjustedClose": 1443.0999755859375
+        },
+        {
+          "date": "2026-09-07",
+          "close": 1427.199951171875,
+          "adjustedClose": 1427.199951171875
+        },
+        {
+          "date": "2026-09-08",
+          "close": 1417.0999755859375,
+          "adjustedClose": 1417.0999755859375
+        },
+        {
+          "date": "2026-09-09",
+          "close": 1396.199951171875,
+          "adjustedClose": 1396.199951171875
+        },
+        {
+          "date": "2026-09-10",
+          "close": 1403.199951171875,
+          "adjustedClose": 1403.199951171875
+        },
+        {
+          "date": "2026-09-11",
+          "close": 1424.199951171875,
+          "adjustedClose": 1424.199951171875
+        },
+        {
+          "date": "2026-09-14",
+          "close": 1424.199951171875,
+          "adjustedClose": 1424.199951171875
+        },
+        {
+          "date": "2026-09-15",
+          "close": 1409.5999755859375,
+          "adjustedClose": 1409.5999755859375
+        },
+        {
+          "date": "2026-09-16",
+          "close": 1416.5,
+          "adjustedClose": 1416.5
+        },
+        {
+          "date": "2026-09-17",
+          "close": 1370.800048828125,
+          "adjustedClose": 1370.800048828125
+        },
+        {
+          "date": "2026-09-18",
+          "close": 1387.5999755859375,
+          "adjustedClose": 1387.5999755859375
+        },
+        {
+          "date": "2026-09-21",
+          "close": 1393,
+          "adjustedClose": 1393
+        },
+        {
+          "date": "2026-09-22",
+          "close": 1357.9000244140625,
+          "adjustedClose": 1357.9000244140625
+        },
+        {
+          "date": "2026-09-23",
+          "close": 1349.5999755859375,
+          "adjustedClose": 1349.5999755859375
+        },
+        {
+          "date": "2026-09-24",
+          "close": 1315.0999755859375,
+          "adjustedClose": 1315.0999755859375
+        }
+      ]
+    },
+    {
+      "symbol": "TMCV",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.2972,
+      "display_score_v2": 82,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Tata Motors Limited",
+      "sectorBenchmarkId": "NIFTY_AUTO",
+      "sectorBenchmarkLabel": "Nifty Auto",
+      "marketDataStatus": "available",
+      "yahooSymbol": "TMCV.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 483.75,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 483.75,
+          "adjustedClose": 483.75
+        },
+        {
+          "date": "2026-08-27",
+          "close": 473.1000061035156,
+          "adjustedClose": 473.1000061035156
+        },
+        {
+          "date": "2026-08-28",
+          "close": 466.29998779296875,
+          "adjustedClose": 466.29998779296875
+        },
+        {
+          "date": "2026-08-31",
+          "close": 471.1000061035156,
+          "adjustedClose": 471.1000061035156
+        },
+        {
+          "date": "2026-09-01",
+          "close": 464.3500061035156,
+          "adjustedClose": 464.3500061035156
+        },
+        {
+          "date": "2026-09-02",
+          "close": 447.45001220703125,
+          "adjustedClose": 447.45001220703125
+        },
+        {
+          "date": "2026-09-03",
+          "close": 460.3500061035156,
+          "adjustedClose": 460.3500061035156
+        },
+        {
+          "date": "2026-09-04",
+          "close": 458.20001220703125,
+          "adjustedClose": 458.20001220703125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 459.6499938964844,
+          "adjustedClose": 459.6499938964844
+        },
+        {
+          "date": "2026-09-08",
+          "close": 456.04998779296875,
+          "adjustedClose": 456.04998779296875
+        },
+        {
+          "date": "2026-09-09",
+          "close": 444.95001220703125,
+          "adjustedClose": 444.95001220703125
+        },
+        {
+          "date": "2026-09-10",
+          "close": 439.25,
+          "adjustedClose": 439.25
+        },
+        {
+          "date": "2026-09-11",
+          "close": 434.54998779296875,
+          "adjustedClose": 434.54998779296875
+        },
+        {
+          "date": "2026-09-14",
+          "close": 434.54998779296875,
+          "adjustedClose": 434.54998779296875
+        },
+        {
+          "date": "2026-09-15",
+          "close": 427.1499938964844,
+          "adjustedClose": 427.1499938964844
+        },
+        {
+          "date": "2026-09-16",
+          "close": 424.25,
+          "adjustedClose": 424.25
+        },
+        {
+          "date": "2026-09-17",
+          "close": 436.1000061035156,
+          "adjustedClose": 436.1000061035156
+        },
+        {
+          "date": "2026-09-18",
+          "close": 442.8999938964844,
+          "adjustedClose": 442.8999938964844
+        },
+        {
+          "date": "2026-09-21",
+          "close": 444.5,
+          "adjustedClose": 444.5
+        },
+        {
+          "date": "2026-09-22",
+          "close": 440.1000061035156,
+          "adjustedClose": 440.1000061035156
+        },
+        {
+          "date": "2026-09-23",
+          "close": 450.20001220703125,
+          "adjustedClose": 450.20001220703125
+        },
+        {
+          "date": "2026-09-24",
+          "close": 437.1499938964844,
+          "adjustedClose": 437.1499938964844
+        }
+      ]
+    },
+    {
+      "symbol": "MANAPPURAM",
+      "factor_status": "four_factor_complete",
+      "raw_score": -0.6405,
+      "display_score_v2": 34,
+      "lifecycle": "Watch",
+      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "checkpoints": 1,
+      "previous_raw_score": null,
+      "earlier_raw_score": null,
+      "api_lifecycle_stage": "WATCH",
+      "fading_warning": false,
+      "name": "Manappuram Finance Limited",
+      "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
+      "sectorBenchmarkLabel": "Nifty Financial Services",
+      "marketDataStatus": "available",
+      "yahooSymbol": "MANAPPURAM.NS",
+      "entryDate": "2026-08-26",
+      "entryPrice": 365.3999938964844,
+      "priceHistory": [
+        {
+          "date": "2026-08-26",
+          "close": 365.3999938964844,
+          "adjustedClose": 365.3999938964844
+        },
+        {
+          "date": "2026-08-27",
+          "close": 348,
+          "adjustedClose": 348
+        },
+        {
+          "date": "2026-08-28",
+          "close": 348.8999938964844,
+          "adjustedClose": 348.8999938964844
+        },
+        {
+          "date": "2026-08-31",
+          "close": 340.1000061035156,
+          "adjustedClose": 340.1000061035156
+        },
+        {
+          "date": "2026-09-01",
+          "close": 337,
+          "adjustedClose": 337
+        },
+        {
+          "date": "2026-09-02",
+          "close": 340.8999938964844,
+          "adjustedClose": 340.8999938964844
+        },
+        {
+          "date": "2026-09-03",
+          "close": 341,
+          "adjustedClose": 341
+        },
+        {
+          "date": "2026-09-04",
+          "close": 339.70001220703125,
+          "adjustedClose": 339.70001220703125
+        },
+        {
+          "date": "2026-09-07",
+          "close": 325.6000061035156,
+          "adjustedClose": 325.6000061035156
+        },
+        {
+          "date": "2026-09-08",
+          "close": 325,
+          "adjustedClose": 325
+        },
+        {
+          "date": "2026-09-09",
+          "close": 320,
+          "adjustedClose": 320
+        },
+        {
+          "date": "2026-09-10",
+          "close": 330.79998779296875,
+          "adjustedClose": 330.79998779296875
+        },
+        {
+          "date": "2026-09-11",
+          "close": 329,
+          "adjustedClose": 329
+        },
+        {
+          "date": "2026-09-14",
+          "close": 329,
+          "adjustedClose": 329
+        },
+        {
+          "date": "2026-09-15",
+          "close": 318.8500061035156,
+          "adjustedClose": 318.8500061035156
+        },
+        {
+          "date": "2026-09-16",
+          "close": 319.8999938964844,
+          "adjustedClose": 319.8999938964844
+        },
+        {
+          "date": "2026-09-17",
+          "close": 316.04998779296875,
+          "adjustedClose": 316.04998779296875
+        },
+        {
+          "date": "2026-09-18",
+          "close": 319.1499938964844,
+          "adjustedClose": 319.1499938964844
+        },
+        {
+          "date": "2026-09-21",
+          "close": 315.1000061035156,
+          "adjustedClose": 315.1000061035156
+        },
+        {
+          "date": "2026-09-22",
+          "close": 319.29998779296875,
+          "adjustedClose": 319.29998779296875
+        },
+        {
+          "date": "2026-09-23",
+          "close": 320.3999938964844,
+          "adjustedClose": 320.3999938964844
+        },
+        {
+          "date": "2026-09-24",
+          "close": 324.95001220703125,
+          "adjustedClose": 324.95001220703125
+        }
+      ]
+    }
+  ],
+  "benchmarks": {
+    "NIFTY_50": [
+      {
+        "date": "2026-08-26",
+        "close": 24207.75,
+        "adjustedClose": 24207.75
+      },
+      {
+        "date": "2026-08-27",
+        "close": 24090.849609375,
+        "adjustedClose": 24090.849609375
+      },
+      {
+        "date": "2026-08-28",
+        "close": 24175.650390625,
+        "adjustedClose": 24175.650390625
+      },
+      {
+        "date": "2026-08-31",
+        "close": 24080.400390625,
+        "adjustedClose": 24080.400390625
+      },
+      {
+        "date": "2026-09-01",
+        "close": 24055.80078125,
+        "adjustedClose": 24055.80078125
+      },
+      {
+        "date": "2026-09-02",
+        "close": 23914.44921875,
+        "adjustedClose": 23914.44921875
+      },
+      {
+        "date": "2026-09-03",
+        "close": 23873.44921875,
+        "adjustedClose": 23873.44921875
+      },
+      {
+        "date": "2026-09-04",
+        "close": 23897.69921875,
+        "adjustedClose": 23897.69921875
+      },
+      {
+        "date": "2026-09-07",
+        "close": 23779.150390625,
+        "adjustedClose": 23779.150390625
+      },
+      {
+        "date": "2026-09-08",
+        "close": 23635.099609375,
+        "adjustedClose": 23635.099609375
+      },
+      {
+        "date": "2026-09-09",
+        "close": 23431.5,
+        "adjustedClose": 23431.5
+      },
+      {
+        "date": "2026-09-10",
+        "close": 23477.80078125,
+        "adjustedClose": 23477.80078125
+      },
+      {
+        "date": "2026-09-11",
+        "close": 23398.099609375,
+        "adjustedClose": 23398.099609375
+      },
+      {
+        "date": "2026-09-15",
+        "close": 23118.599609375,
+        "adjustedClose": 23118.599609375
+      },
+      {
+        "date": "2026-09-16",
+        "close": 23217.599609375,
+        "adjustedClose": 23217.599609375
+      },
+      {
+        "date": "2026-09-17",
+        "close": 23270.599609375,
+        "adjustedClose": 23270.599609375
+      },
+      {
+        "date": "2026-09-18",
+        "close": 23346.400390625,
+        "adjustedClose": 23346.400390625
+      },
+      {
+        "date": "2026-09-21",
+        "close": 23414.30078125,
+        "adjustedClose": 23414.30078125
+      },
+      {
+        "date": "2026-09-23",
+        "close": 23446.80078125,
+        "adjustedClose": 23446.80078125
+      },
+      {
+        "date": "2026-09-24",
+        "close": 23063.099609375,
+        "adjustedClose": 23063.099609375
+      }
+    ],
+    "NIFTY_FIN_SERVICE": [
+      {
+        "date": "2026-09-24",
+        "close": 27047.19921875,
+        "adjustedClose": 27047.19921875
+      }
+    ],
+    "NIFTY_PHARMA": [
+      {
+        "date": "2026-08-26",
+        "close": 26626.30078125,
+        "adjustedClose": 26626.30078125
+      },
+      {
+        "date": "2026-08-27",
+        "close": 26848.75,
+        "adjustedClose": 26848.75
+      },
+      {
+        "date": "2026-08-28",
+        "close": 26991.849609375,
+        "adjustedClose": 26991.849609375
+      },
+      {
+        "date": "2026-08-31",
+        "close": 27186.44921875,
+        "adjustedClose": 27186.44921875
+      },
+      {
+        "date": "2026-09-01",
+        "close": 26792.650390625,
+        "adjustedClose": 26792.650390625
+      },
+      {
+        "date": "2026-09-02",
+        "close": 26780.69921875,
+        "adjustedClose": 26780.69921875
+      },
+      {
+        "date": "2026-09-03",
+        "close": 26658.650390625,
+        "adjustedClose": 26658.650390625
+      },
+      {
+        "date": "2026-09-04",
+        "close": 26478.099609375,
+        "adjustedClose": 26478.099609375
+      },
+      {
+        "date": "2026-09-07",
+        "close": 26675.5,
+        "adjustedClose": 26675.5
+      },
+      {
+        "date": "2026-09-08",
+        "close": 26880.80078125,
+        "adjustedClose": 26880.80078125
+      },
+      {
+        "date": "2026-09-09",
+        "close": 26691.80078125,
+        "adjustedClose": 26691.80078125
+      },
+      {
+        "date": "2026-09-10",
+        "close": 26555.849609375,
+        "adjustedClose": 26555.849609375
+      },
+      {
+        "date": "2026-09-11",
+        "close": 26532.400390625,
+        "adjustedClose": 26532.400390625
+      },
+      {
+        "date": "2026-09-15",
+        "close": 26188.400390625,
+        "adjustedClose": 26188.400390625
+      },
+      {
+        "date": "2026-09-16",
+        "close": 26146.19921875,
+        "adjustedClose": 26146.19921875
+      },
+      {
+        "date": "2026-09-17",
+        "close": 26579.25,
+        "adjustedClose": 26579.25
+      },
+      {
+        "date": "2026-09-18",
+        "close": 26710.099609375,
+        "adjustedClose": 26710.099609375
+      },
+      {
+        "date": "2026-09-21",
+        "close": 27021.150390625,
+        "adjustedClose": 27021.150390625
+      },
+      {
+        "date": "2026-09-23",
+        "close": 27152.099609375,
+        "adjustedClose": 27152.099609375
+      },
+      {
+        "date": "2026-09-24",
+        "close": 27028.69921875,
+        "adjustedClose": 27028.69921875
+      }
+    ],
+    "NIFTY_METAL": [
+      {
+        "date": "2026-09-24",
+        "close": 13041.9501953125,
+        "adjustedClose": 13041.9501953125
+      }
+    ],
+    "NIFTY_IT": [
+      {
+        "date": "2026-08-26",
+        "close": 30318.849609375,
+        "adjustedClose": 30318.849609375
+      },
+      {
+        "date": "2026-08-27",
+        "close": 30221.150390625,
+        "adjustedClose": 30221.150390625
+      },
+      {
+        "date": "2026-08-28",
+        "close": 31281.69921875,
+        "adjustedClose": 31281.69921875
+      },
+      {
+        "date": "2026-08-31",
+        "close": 31191.44921875,
+        "adjustedClose": 31191.44921875
+      },
+      {
+        "date": "2026-09-01",
+        "close": 31496.69921875,
+        "adjustedClose": 31496.69921875
+      },
+      {
+        "date": "2026-09-02",
+        "close": 31102.900390625,
+        "adjustedClose": 31102.900390625
+      },
+      {
+        "date": "2026-09-03",
+        "close": 30838.849609375,
+        "adjustedClose": 30838.849609375
+      },
+      {
+        "date": "2026-09-04",
+        "close": 30695.150390625,
+        "adjustedClose": 30695.150390625
+      },
+      {
+        "date": "2026-09-07",
+        "close": 29995.19921875,
+        "adjustedClose": 29995.19921875
+      },
+      {
+        "date": "2026-09-08",
+        "close": 29883.5,
+        "adjustedClose": 29883.5
+      },
+      {
+        "date": "2026-09-09",
+        "close": 28914,
+        "adjustedClose": 28914
+      },
+      {
+        "date": "2026-09-10",
+        "close": 28890.900390625,
+        "adjustedClose": 28890.900390625
+      },
+      {
+        "date": "2026-09-11",
+        "close": 28921.5,
+        "adjustedClose": 28921.5
+      },
+      {
+        "date": "2026-09-15",
+        "close": 29555.30078125,
+        "adjustedClose": 29555.30078125
+      },
+      {
+        "date": "2026-09-16",
+        "close": 29087.650390625,
+        "adjustedClose": 29087.650390625
+      },
+      {
+        "date": "2026-09-17",
+        "close": 29155.599609375,
+        "adjustedClose": 29155.599609375
+      },
+      {
+        "date": "2026-09-18",
+        "close": 28854.55078125,
+        "adjustedClose": 28854.55078125
+      },
+      {
+        "date": "2026-09-21",
+        "close": 28830.900390625,
+        "adjustedClose": 28830.900390625
+      },
+      {
+        "date": "2026-09-23",
+        "close": 28334.05078125,
+        "adjustedClose": 28334.05078125
+      },
+      {
+        "date": "2026-09-24",
+        "close": 28208.849609375,
+        "adjustedClose": 28208.849609375
+      }
+    ],
+    "NIFTY_INFRA": [
+      {
+        "date": "2026-09-24",
+        "close": 8944.849609375,
+        "adjustedClose": 8944.849609375
+      }
+    ],
+    "NIFTY_ENERGY": [
+      {
+        "date": "2026-09-24",
+        "close": 37360.94921875,
+        "adjustedClose": 37360.94921875
+      }
+    ],
+    "NIFTY_CONSUMPTION": [
+      {
+        "date": "2026-09-24",
+        "close": 11353.4501953125,
+        "adjustedClose": 11353.4501953125
+      }
+    ],
+    "NIFTY_AUTO": [
+      {
+        "date": "2026-09-24",
+        "close": 26730.099609375,
+        "adjustedClose": 26730.099609375
+      }
+    ],
+    "NIFTY_500": [
+      {
+        "date": "2026-08-26",
+        "close": 23559.19921875,
+        "adjustedClose": 23559.19921875
+      },
+      {
+        "date": "2026-08-27",
+        "close": 23482,
+        "adjustedClose": 23482
+      },
+      {
+        "date": "2026-08-28",
+        "close": 23528.55078125,
+        "adjustedClose": 23528.55078125
+      },
+      {
+        "date": "2026-08-31",
+        "close": 23450.349609375,
+        "adjustedClose": 23450.349609375
+      },
+      {
+        "date": "2026-09-01",
+        "close": 23339.900390625,
+        "adjustedClose": 23339.900390625
+      },
+      {
+        "date": "2026-09-02",
+        "close": 23222.80078125,
+        "adjustedClose": 23222.80078125
+      },
+      {
+        "date": "2026-09-03",
+        "close": 23254.05078125,
+        "adjustedClose": 23254.05078125
+      },
+      {
+        "date": "2026-09-04",
+        "close": 23254.150390625,
+        "adjustedClose": 23254.150390625
+      },
+      {
+        "date": "2026-09-07",
+        "close": 23156.19921875,
+        "adjustedClose": 23156.19921875
+      },
+      {
+        "date": "2026-09-08",
+        "close": 23106.099609375,
+        "adjustedClose": 23106.099609375
+      },
+      {
+        "date": "2026-09-09",
+        "close": 22958.75,
+        "adjustedClose": 22958.75
+      },
+      {
+        "date": "2026-09-10",
+        "close": 22952.349609375,
+        "adjustedClose": 22952.349609375
+      },
+      {
+        "date": "2026-09-11",
+        "close": 22866.5,
+        "adjustedClose": 22866.5
+      },
+      {
+        "date": "2026-09-15",
+        "close": 22477.44921875,
+        "adjustedClose": 22477.44921875
+      },
+      {
+        "date": "2026-09-16",
+        "close": 22532,
+        "adjustedClose": 22532
+      },
+      {
+        "date": "2026-09-17",
+        "close": 22654.650390625,
+        "adjustedClose": 22654.650390625
+      },
+      {
+        "date": "2026-09-18",
+        "close": 22840.55078125,
+        "adjustedClose": 22840.55078125
+      },
+      {
+        "date": "2026-09-21",
+        "close": 22860.05078125,
+        "adjustedClose": 22860.05078125
+      },
+      {
+        "date": "2026-09-23",
+        "close": 22935.099609375,
+        "adjustedClose": 22935.099609375
+      },
+      {
+        "date": "2026-09-24",
+        "close": 22552.599609375,
+        "adjustedClose": 22552.599609375
+      }
+    ]
+  },
+  "benchmarkSources": {
+    "NIFTY_50": {
+      "label": "Nifty 50",
+      "yahooSymbol": "^NSEI",
+      "status": "available"
+    },
+    "NIFTY_FIN_SERVICE": {
+      "label": "Nifty Financial Services",
+      "yahooSymbol": "^CNXFIN",
+      "status": "available"
+    },
+    "NIFTY_PHARMA": {
+      "label": "Nifty Pharma",
+      "yahooSymbol": "^CNXPHARMA",
+      "status": "available"
+    },
+    "NIFTY_METAL": {
+      "label": "Nifty Metal",
+      "yahooSymbol": "^CNXMETAL",
+      "status": "available"
+    },
+    "NIFTY_IT": {
+      "label": "Nifty IT",
+      "yahooSymbol": "^CNXIT",
+      "status": "available"
+    },
+    "NIFTY_INFRA": {
+      "label": "Nifty Infrastructure",
+      "yahooSymbol": "^CNXINFRA",
+      "status": "available"
+    },
+    "NIFTY_ENERGY": {
+      "label": "Nifty Energy",
+      "yahooSymbol": "^CNXENERGY",
+      "status": "available"
+    },
+    "NIFTY_CONSUMPTION": {
+      "label": "Nifty India Consumption",
+      "yahooSymbol": "^CNXCONSUM",
+      "status": "available"
+    },
+    "NIFTY_AUTO": {
+      "label": "Nifty Auto",
+      "yahooSymbol": "^CNXAUTO",
+      "status": "available"
+    },
+    "NIFTY_500": {
+      "label": "Nifty 500",
+      "yahooSymbol": "^CRSLDX",
+      "status": "available"
+    }
+  }
+}
