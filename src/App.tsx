@@ -528,6 +528,7 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
+  const standaloneResearchMode = new URLSearchParams(window.location.search).get('view') === 'research';
   // The BMS dashboard is the primary AlphaSynth landing experience.
   // Prevent the browser from restoring an old scroll position on refresh.
   useEffect(() => {
@@ -535,14 +536,37 @@ export default function App() {
       window.history.scrollRestoration = "manual";
     }
 
-    window.scrollTo(0, 0);
+    if (new URLSearchParams(window.location.search).get('view') === 'research') {
+      window.setTimeout(scrollToWorkflow, 100);
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   // AlphaSynth V1 navigation:
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
-  const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>('discovery');
+  const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>(
+    standaloneResearchMode ? 'research' : 'discovery'
+  );
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
+
+  const enterOpenResearch = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'research');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}#workflow`);
+    setAppView('research');
+    setActiveTab('equity');
+    window.setTimeout(scrollToWorkflow, 100);
+  };
+
+  const returnToBmsDiscovery = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('view');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    setAppView('discovery');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
   const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
@@ -4048,12 +4072,9 @@ ${list}
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <button
             type="button"
-            onClick={() => {
-              setAppView('discovery');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
+            onClick={standaloneResearchMode ? scrollToWorkflow : returnToBmsDiscovery}
             className="flex items-center gap-2 group relative cursor-pointer"
-            title="Back to BMS Discovery"
+            title={standaloneResearchMode ? 'Open company research' : 'Back to BMS Discovery'}
           >
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
@@ -4063,16 +4084,15 @@ ${list}
               <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
-              ← BMS Discovery
+              {standaloneResearchMode ? 'Open company research' : '← BMS Discovery'}
             </span>
           </button>
           <div className="flex items-center gap-4">
-            {appView === 'research' && (
+            {appView === 'research' && !standaloneResearchMode && (
               <button
                 type="button"
                 onClick={() => {
-                  setAppView('discovery');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  returnToBmsDiscovery();
                 }}
                 className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
                 title="Return to Business Momentum Discovery"
@@ -4080,7 +4100,7 @@ ${list}
                 ← BMS Discovery
               </button>
             )}
-            <button
+            {!standaloneResearchMode && <button
               type="button"
               onClick={() => {
                 setAppView('tracker');
@@ -4090,7 +4110,7 @@ ${list}
               title="Open the frozen BMS forward-validation tracker"
             >
               <BarChart3 className="w-3.5 h-3.5" /> Signal Tracker
-            </button>
+            </button>}
             <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                <button onClick={() => { setAppView('research'); setActiveTab('news'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
                <button onClick={() => { setAppView('research'); setActiveTab('equity'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
@@ -4116,10 +4136,10 @@ ${list}
               </div>
             ) : (
               <button 
-                onClick={handleLogin}
+                onClick={enterOpenResearch}
                 className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(201,145,42,0.3)] active:scale-95`}
               >
-                <TrendingUp className="w-3 h-3" /> Start Free Research
+                <TrendingUp className="w-3 h-3" /> {appView === 'research' ? 'Research Workspace' : 'Start Free Research'}
               </button>
             )}
           </div>
