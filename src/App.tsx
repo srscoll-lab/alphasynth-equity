@@ -532,7 +532,8 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
-  const standaloneResearchMode = new URLSearchParams(window.location.search).get('view') === 'research';
+  const requestedResearchView = new URLSearchParams(window.location.search).get('view') === 'research';
+  const standaloneResearchMode = window.location.hostname.startsWith('research-only---');
   // The BMS dashboard is the primary AlphaSynth landing experience.
   // Prevent the browser from restoring an old scroll position on refresh.
   useEffect(() => {
@@ -540,18 +541,18 @@ export default function App() {
       window.history.scrollRestoration = "manual";
     }
 
-    if (new URLSearchParams(window.location.search).get('view') === 'research') {
+    if (requestedResearchView || standaloneResearchMode) {
       window.setTimeout(scrollToResearchSearch, 100);
     } else {
       window.scrollTo(0, 0);
     }
-  }, []);
+  }, [requestedResearchView, standaloneResearchMode]);
 
   // AlphaSynth V1 navigation:
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
   const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>(
-    standaloneResearchMode ? 'research' : 'discovery'
+    requestedResearchView || standaloneResearchMode ? 'research' : 'discovery'
   );
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
 
@@ -4099,9 +4100,9 @@ ${list}
                   returnToBmsDiscovery();
                 }}
                 className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
-                title="Return to Business Momentum Discovery"
+                title="Return to BMS"
               >
-                ← BMS Discovery
+                ← Back to BMS
               </button>
             )}
             {!standaloneResearchMode && <button
