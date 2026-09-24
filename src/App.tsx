@@ -4208,8 +4208,8 @@ ${list}
         />
       )}
 
-      {/* Legacy AlphaSynth Hero — retained temporarily during BMS redesign */}
-      <section className="hidden pt-32 pb-20 px-6 relative overflow-hidden">
+      {/* Open research entry — independent of BMS publication eligibility */}
+      <section className={`${appView === 'research' ? 'block' : 'hidden'} pt-32 pb-20 px-6 relative overflow-hidden`}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-gold/5 blur-[120px] rounded-full -z-10" />
         <div className="max-w-7xl mx-auto text-center">
           <motion.div
