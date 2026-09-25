@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, BarChart3, CalendarClock, Database, ShieldCheck, TriangleAlert } from "lucide-react";
+import { ArrowLeft, BarChart3, CalendarClock, Compass, Database, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import comparisonData from "../data/signalTrackerV2Comparison.json";
 
@@ -64,7 +64,7 @@ function chartFor(company: Company) {
   return rows;
 }
 
-export default function SignalTrackerV2Comparison({ onShowFrozen }: { onShowFrozen: () => void }) {
+export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum }: { onShowFrozen: () => void; onShowMomentum: () => void }) {
   const companies = comparisonData.companies as Company[];
   const [filter, setFilter] = useState<"All" | Lifecycle>("All");
   const [query, setQuery] = useState("");
@@ -98,6 +98,9 @@ export default function SignalTrackerV2Comparison({ onShowFrozen }: { onShowFroz
       <div className="max-w-7xl mx-auto">
         <button type="button" onClick={onShowFrozen} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white mb-7">
           <ArrowLeft className="w-4 h-4" /> View original frozen V1 study
+        </button>
+        <button type="button" onClick={onShowMomentum} className="ml-4 inline-flex items-center gap-2 rounded-lg border border-cyan-400/25 bg-cyan-400/[0.08] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 hover:bg-cyan-400/[0.13]">
+          <Compass className="w-4 h-4" /> Open 477-company momentum radar
         </button>
 
         <section className="rounded-[28px] border border-violet-400/20 bg-gradient-to-br from-[#0d1728] via-[#101a2b] to-[#0b1321] overflow-hidden shadow-2xl">

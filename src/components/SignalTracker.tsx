@@ -34,6 +34,7 @@ import {
 import frozenCohortData from "../data/signalTrackerCohort001.json";
 import SignalEvidenceLayer from "./SignalEvidenceLayer";
 import SignalTrackerV2Comparison from "./SignalTrackerV2Comparison";
+import MomentumRadar from "./MomentumRadar";
 
 type Lifecycle =
   | "Watch"
@@ -232,7 +233,7 @@ type SignalTrackerProps = {
 };
 
 export default function SignalTracker({ onBack }: SignalTrackerProps) {
-  const [studyMode, setStudyMode] = useState<"v1" | "v2">("v2");
+  const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum">("v2");
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
@@ -333,7 +334,11 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
   ].filter((reason, index, reasons) => reason && reasons.indexOf(reason) === index);
 
   if (studyMode === "v2") {
-    return <SignalTrackerV2Comparison onShowFrozen={() => setStudyMode("v1")} />;
+    return <SignalTrackerV2Comparison onShowFrozen={() => setStudyMode("v1")} onShowMomentum={() => setStudyMode("momentum")} />;
+  }
+
+  if (studyMode === "momentum") {
+    return <MomentumRadar onBack={() => setStudyMode("v2")} />;
   }
 
   if (evidenceOpen) {
