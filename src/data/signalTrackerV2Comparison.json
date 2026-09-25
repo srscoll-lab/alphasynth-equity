@@ -1,37 +1,37 @@
 {
-  "schemaVersion": "1.0.0",
+  "schemaVersion": "1.1.0",
   "cohortId": "BMS-V2-C50-20260825-RECONSTRUCTED",
   "baseReleasePolicyId": "BMS_V2_CONTROLLED_50_RELEASE_2026_09_24",
   "methodologyId": "BMS_V2_OPTION_C_FOUR_FACTOR",
   "studyType": "retrospective_reconstruction_with_forward_market_observation",
   "informationCutoff": "2026-08-25",
-  "classificationCalculatedAt": "2026-09-24T11:17:55.703Z",
+  "classificationCalculatedAt": "2026-09-25T04:04:46.051Z",
   "signalDate": "2026-08-25",
   "marketEntryRule": "First completed Indian trading session strictly after the information cutoff",
   "marketEntryDate": "2026-08-26",
-  "asOfDate": "2026-09-24",
-  "forwardSessionsObserved": 21,
-  "generatedAt": "2026-09-24T13:11:10.839Z",
+  "asOfDate": "2026-09-25",
+  "forwardSessionsObserved": 22,
+  "generatedAt": "2026-09-25T04:05:12.504Z",
   "sourceManifest": {
     "path": "../alphasynth-bms-v2/output/fifty-company-v2-release-manifest.json",
-    "sha256": "64d4d395d39de8ef86c1f41da9b75cdebb1b517577befad7cb9df4319c92bc5e"
+    "sha256": "508f0001dbd94ccf1ef5bb773ea21274e5739124c87c608192e91a2c9c1158f2"
   },
   "integrityNotice": "The V2 classifications were calculated after the cutoff using only evidence available by the cutoff. Returns are genuine subsequent market observations, but this is a reconstructed shadow study—not a contemporaneously frozen prospective signal.",
   "summary": {
     "companies": 50,
     "four_factor_complete": 50,
     "trajectory_backed": 13,
-    "provisional_watch": 37,
+    "lifecycle_pending": 37,
     "lifecycle_counts": {
       "BUILDING": 6,
       "FADING": 3,
-      "WATCH": 40,
+      "WATCH": 3,
       "EMERGING": 1
     },
     "lifecycle_status_counts": {
       "trajectory_backed_automated_wave1": 4,
       "trajectory_backed_approved": 5,
-      "provisional_watch_insufficient_v2_trajectory": 37,
+      "lifecycle_pending_insufficient_v2_trajectory": 37,
       "trajectory_backed_automated_wave2": 2,
       "trajectory_backed_automated": 2
     }
@@ -44,6 +44,7 @@
       "display_score_v2": 65,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_automated_wave1",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.3023,
       "earlier_raw_score": 0.3385,
@@ -166,6 +167,11 @@
           "date": "2026-09-24",
           "close": 240.9199981689453,
           "adjustedClose": 240.9199981689453
+        },
+        {
+          "date": "2026-09-25",
+          "close": 242.3800048828125,
+          "adjustedClose": 242.3800048828125
         }
       ]
     },
@@ -176,6 +182,7 @@
       "display_score_v2": 68,
       "lifecycle": "Fading",
       "lifecycle_status": "trajectory_backed_approved",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.9385,
       "earlier_raw_score": 0.9385,
@@ -298,6 +305,11 @@
           "date": "2026-09-24",
           "close": 982,
           "adjustedClose": 982
+        },
+        {
+          "date": "2026-09-25",
+          "close": 988.9000244140625,
+          "adjustedClose": 988.9000244140625
         }
       ]
     },
@@ -306,12 +318,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.0438,
       "display_score_v2": 51,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Cipla Limited",
       "sectorBenchmarkId": "NIFTY_PHARMA",
@@ -430,6 +443,11 @@
           "date": "2026-09-24",
           "close": 1399,
           "adjustedClose": 1399
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1413.199951171875,
+          "adjustedClose": 1413.199951171875
         }
       ]
     },
@@ -440,6 +458,7 @@
       "display_score_v2": 41,
       "lifecycle": "Fading",
       "lifecycle_status": "trajectory_backed_approved",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.1607,
       "earlier_raw_score": -0.0101,
@@ -562,6 +581,11 @@
           "date": "2026-09-24",
           "close": 982,
           "adjustedClose": 982
+        },
+        {
+          "date": "2026-09-25",
+          "close": 983.4000244140625,
+          "adjustedClose": 983.4000244140625
         }
       ]
     },
@@ -570,12 +594,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.6161,
       "display_score_v2": 65,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "HCL Technologies Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -694,6 +719,11 @@
           "date": "2026-09-24",
           "close": 1243.5999755859375,
           "adjustedClose": 1243.5999755859375
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1256.4000244140625,
+          "adjustedClose": 1256.4000244140625
         }
       ]
     },
@@ -702,12 +732,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": -0.1724,
       "display_score_v2": 46,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Dr. Reddy's Laboratories Limited",
       "sectorBenchmarkId": "NIFTY_PHARMA",
@@ -826,6 +857,11 @@
           "date": "2026-09-24",
           "close": 1200.4000244140625,
           "adjustedClose": 1200.4000244140625
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1199.5999755859375,
+          "adjustedClose": 1199.5999755859375
         }
       ]
     },
@@ -834,12 +870,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3722,
       "display_score_v2": 84,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Suzlon Energy Limited",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -958,6 +995,11 @@
           "date": "2026-09-24",
           "close": 40.7400016784668,
           "adjustedClose": 40.7400016784668
+        },
+        {
+          "date": "2026-09-25",
+          "close": 40.689998626708984,
+          "adjustedClose": 40.689998626708984
         }
       ]
     },
@@ -966,12 +1008,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.4128,
       "display_score_v2": 85,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Indian Oil Corporation Limited",
       "sectorBenchmarkId": "NIFTY_ENERGY",
@@ -1090,6 +1133,11 @@
           "date": "2026-09-24",
           "close": 136.27000427246094,
           "adjustedClose": 136.27000427246094
+        },
+        {
+          "date": "2026-09-25",
+          "close": 136.4499969482422,
+          "adjustedClose": 136.4499969482422
         }
       ]
     },
@@ -1100,6 +1148,7 @@
       "display_score_v2": 83,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_automated_wave2",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.9524,
       "earlier_raw_score": 1.0552,
@@ -1219,9 +1268,9 @@
           "adjustedClose": 1205.800048828125
         },
         {
-          "date": "2026-09-24",
-          "close": 1157.5,
-          "adjustedClose": 1157.5
+          "date": "2026-09-25",
+          "close": 1115.5,
+          "adjustedClose": 1115.5
         }
       ]
     },
@@ -1230,12 +1279,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3905,
       "display_score_v2": 85,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Muthoot Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -1351,9 +1401,9 @@
           "adjustedClose": 2856.5
         },
         {
-          "date": "2026-09-24",
-          "close": 2825.300048828125,
-          "adjustedClose": 2825.300048828125
+          "date": "2026-09-25",
+          "close": 2823.10009765625,
+          "adjustedClose": 2823.10009765625
         }
       ]
     },
@@ -1364,6 +1414,7 @@
       "display_score_v2": 68,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_automated_wave2",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.6194,
       "earlier_raw_score": 0.7138,
@@ -1486,6 +1537,11 @@
           "date": "2026-09-24",
           "close": 8366.5,
           "adjustedClose": 8366.5
+        },
+        {
+          "date": "2026-09-25",
+          "close": 8434.5,
+          "adjustedClose": 8434.5
         }
       ]
     },
@@ -1494,12 +1550,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.7355,
       "display_score_v2": 68,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "SHREE CEMENT LIMITED",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -1618,6 +1675,11 @@
           "date": "2026-09-24",
           "close": 22350,
           "adjustedClose": 22350
+        },
+        {
+          "date": "2026-09-25",
+          "close": 22350,
+          "adjustedClose": 22350
         }
       ]
     },
@@ -1626,12 +1688,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.0102,
       "display_score_v2": 75,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "UltraTech Cement Limited",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -1747,9 +1810,9 @@
           "adjustedClose": 11155
         },
         {
-          "date": "2026-09-24",
-          "close": 11056,
-          "adjustedClose": 11056
+          "date": "2026-09-25",
+          "close": 11088,
+          "adjustedClose": 11088
         }
       ]
     },
@@ -1758,12 +1821,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.4822,
       "display_score_v2": 87,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Bharat Petroleum Corporation Limited",
       "sectorBenchmarkId": "NIFTY_ENERGY",
@@ -1882,6 +1946,11 @@
           "date": "2026-09-24",
           "close": 307.1000061035156,
           "adjustedClose": 307.1000061035156
+        },
+        {
+          "date": "2026-09-25",
+          "close": 308.79998779296875,
+          "adjustedClose": 308.79998779296875
         }
       ]
     },
@@ -1890,12 +1959,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.6433,
       "display_score_v2": 66,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Hindustan Petroleum Corporation Limited",
       "sectorBenchmarkId": "NIFTY_ENERGY",
@@ -2014,6 +2084,11 @@
           "date": "2026-09-24",
           "close": 350.3999938964844,
           "adjustedClose": 350.3999938964844
+        },
+        {
+          "date": "2026-09-25",
+          "close": 351.5,
+          "adjustedClose": 351.5
         }
       ]
     },
@@ -2022,12 +2097,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.9407,
       "display_score_v2": 74,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Titan Company Limited",
       "sectorBenchmarkId": "NIFTY_CONSUMPTION",
@@ -2146,6 +2222,11 @@
           "date": "2026-09-24",
           "close": 4832.5,
           "adjustedClose": 4832.5
+        },
+        {
+          "date": "2026-09-25",
+          "close": 4844,
+          "adjustedClose": 4844
         }
       ]
     },
@@ -2154,12 +2235,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3639,
       "display_score_v2": 84,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Coforge Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -2278,6 +2360,11 @@
           "date": "2026-09-24",
           "close": 1785.9000244140625,
           "adjustedClose": 1785.9000244140625
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1784.0999755859375,
+          "adjustedClose": 1784.0999755859375
         }
       ]
     },
@@ -2286,12 +2373,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.6861,
       "display_score_v2": 67,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Bharat Electronics Limited",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -2410,6 +2498,11 @@
           "date": "2026-09-24",
           "close": 392,
           "adjustedClose": 392
+        },
+        {
+          "date": "2026-09-25",
+          "close": 394,
+          "adjustedClose": 394
         }
       ]
     },
@@ -2418,12 +2511,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3622,
       "display_score_v2": 84,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "JSW Steel Limited",
       "sectorBenchmarkId": "NIFTY_METAL",
@@ -2539,9 +2633,9 @@
           "adjustedClose": 1297.800048828125
         },
         {
-          "date": "2026-09-24",
-          "close": 1273.199951171875,
-          "adjustedClose": 1273.199951171875
+          "date": "2026-09-25",
+          "close": 1285.800048828125,
+          "adjustedClose": 1285.800048828125
         }
       ]
     },
@@ -2550,12 +2644,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.5922,
       "display_score_v2": 65,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "PNB Housing Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -2674,6 +2769,11 @@
           "date": "2026-09-24",
           "close": 1094.5,
           "adjustedClose": 1094.5
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1091.9000244140625,
+          "adjustedClose": 1091.9000244140625
         }
       ]
     },
@@ -2682,12 +2782,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.6166,
       "display_score_v2": 65,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Persistent Systems Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -2803,9 +2904,9 @@
           "adjustedClose": 5240
         },
         {
-          "date": "2026-09-24",
-          "close": 5277,
-          "adjustedClose": 5277
+          "date": "2026-09-25",
+          "close": 5318.5,
+          "adjustedClose": 5318.5
         }
       ]
     },
@@ -2814,12 +2915,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.9802,
       "display_score_v2": 75,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Sundaram Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -2935,9 +3037,9 @@
           "adjustedClose": 4654.89990234375
         },
         {
-          "date": "2026-09-24",
-          "close": 4592,
-          "adjustedClose": 4592
+          "date": "2026-09-25",
+          "close": 4509,
+          "adjustedClose": 4509
         }
       ]
     },
@@ -2946,12 +3048,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.9957,
       "display_score_v2": 75,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Grasim Industries Limited",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -3067,9 +3170,9 @@
           "adjustedClose": 3188.5
         },
         {
-          "date": "2026-09-24",
-          "close": 3166.5,
-          "adjustedClose": 3166.5
+          "date": "2026-09-25",
+          "close": 3179.89990234375,
+          "adjustedClose": 3179.89990234375
         }
       ]
     },
@@ -3078,12 +3181,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.9974,
       "display_score_v2": 75,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Tech Mahindra Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -3202,6 +3306,11 @@
           "date": "2026-09-24",
           "close": 1543,
           "adjustedClose": 1543
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1540.699951171875,
+          "adjustedClose": 1540.699951171875
         }
       ]
     },
@@ -3210,12 +3319,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3261,
       "display_score_v2": 83,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Tata Steel Limited",
       "sectorBenchmarkId": "NIFTY_METAL",
@@ -3334,6 +3444,11 @@
           "date": "2026-09-24",
           "close": 188.02000427246094,
           "adjustedClose": 188.02000427246094
+        },
+        {
+          "date": "2026-09-25",
+          "close": 190.10000610351562,
+          "adjustedClose": 190.10000610351562
         }
       ]
     },
@@ -3342,12 +3457,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.4,
       "display_score_v2": 85,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Hindustan Zinc Limited",
       "sectorBenchmarkId": "NIFTY_METAL",
@@ -3463,9 +3579,9 @@
           "adjustedClose": 595.4500122070312
         },
         {
-          "date": "2026-09-24",
-          "close": 587.1500244140625,
-          "adjustedClose": 587.1500244140625
+          "date": "2026-09-25",
+          "close": 595.7000122070312,
+          "adjustedClose": 595.7000122070312
         }
       ]
     },
@@ -3474,12 +3590,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3466,
       "display_score_v2": 84,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Bajaj Auto Limited",
       "sectorBenchmarkId": "NIFTY_AUTO",
@@ -3595,9 +3712,9 @@
           "adjustedClose": 11400
         },
         {
-          "date": "2026-09-24",
-          "close": 11208,
-          "adjustedClose": 11208
+          "date": "2026-09-25",
+          "close": 11278,
+          "adjustedClose": 11278
         }
       ]
     },
@@ -3606,12 +3723,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3155,
       "display_score_v2": 83,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Can Fin Homes Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -3727,9 +3845,9 @@
           "adjustedClose": 757.9500122070312
         },
         {
-          "date": "2026-09-24",
-          "close": 743.1500244140625,
-          "adjustedClose": 743.1500244140625
+          "date": "2026-09-25",
+          "close": 740.2999877929688,
+          "adjustedClose": 740.2999877929688
         }
       ]
     },
@@ -3738,12 +3856,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.1872,
       "display_score_v2": 80,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Trent Limited",
       "sectorBenchmarkId": "NIFTY_CONSUMPTION",
@@ -3862,6 +3981,11 @@
           "date": "2026-09-24",
           "close": 2700,
           "adjustedClose": 2700
+        },
+        {
+          "date": "2026-09-25",
+          "close": 2704.300048828125,
+          "adjustedClose": 2704.300048828125
         }
       ]
     },
@@ -3872,6 +3996,7 @@
       "display_score_v2": 82,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_automated",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.1996,
       "earlier_raw_score": 0.1301,
@@ -3994,6 +4119,11 @@
           "date": "2026-09-24",
           "close": 282,
           "adjustedClose": 282
+        },
+        {
+          "date": "2026-09-25",
+          "close": 282.20001220703125,
+          "adjustedClose": 282.20001220703125
         }
       ]
     },
@@ -4002,12 +4132,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.4578,
       "display_score_v2": 86,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "ICICI Prudential Asset Management Company Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -4123,9 +4254,9 @@
           "adjustedClose": 3179
         },
         {
-          "date": "2026-09-24",
-          "close": 3169.199951171875,
-          "adjustedClose": 3169.199951171875
+          "date": "2026-09-25",
+          "close": 3175,
+          "adjustedClose": 3175
         }
       ]
     },
@@ -4134,12 +4265,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.3106,
       "display_score_v2": 83,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Adani Enterprises Limited",
       "sectorBenchmarkId": "NIFTY_500",
@@ -4258,6 +4390,11 @@
           "date": "2026-09-24",
           "close": 2900,
           "adjustedClose": 2900
+        },
+        {
+          "date": "2026-09-25",
+          "close": 2925.60009765625,
+          "adjustedClose": 2925.60009765625
         }
       ]
     },
@@ -4268,6 +4405,7 @@
       "display_score_v2": 83,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_approved",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 1.2717,
       "earlier_raw_score": 0.9855,
@@ -4390,6 +4528,11 @@
           "date": "2026-09-24",
           "close": 1849.9000244140625,
           "adjustedClose": 1849.9000244140625
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1851.0999755859375,
+          "adjustedClose": 1851.0999755859375
         }
       ]
     },
@@ -4400,6 +4543,7 @@
       "display_score_v2": 85,
       "lifecycle": "Watch",
       "lifecycle_status": "trajectory_backed_automated_wave1",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 1.4745,
       "earlier_raw_score": 0.5827,
@@ -4519,9 +4663,9 @@
           "adjustedClose": 1588.0999755859375
         },
         {
-          "date": "2026-09-24",
-          "close": 1522,
-          "adjustedClose": 1522
+          "date": "2026-09-25",
+          "close": 1511.5999755859375,
+          "adjustedClose": 1511.5999755859375
         }
       ]
     },
@@ -4530,12 +4674,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.4907,
       "display_score_v2": 62,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Adani Energy Solutions Limited",
       "sectorBenchmarkId": "NIFTY_INFRA",
@@ -4654,6 +4799,11 @@
           "date": "2026-09-24",
           "close": 1340.5,
           "adjustedClose": 1340.5
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1331,
+          "adjustedClose": 1331
         }
       ]
     },
@@ -4664,6 +4814,7 @@
       "display_score_v2": 84,
       "lifecycle": "Watch",
       "lifecycle_status": "trajectory_backed_automated_wave1",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 1.3705,
       "earlier_raw_score": 0.5094,
@@ -4786,6 +4937,11 @@
           "date": "2026-09-24",
           "close": 1795.800048828125,
           "adjustedClose": 1795.800048828125
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1799.300048828125,
+          "adjustedClose": 1799.300048828125
         }
       ]
     },
@@ -4794,12 +4950,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.6061,
       "display_score_v2": 65,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Poonawalla Fincorp Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -4915,9 +5072,9 @@
           "adjustedClose": 478.8500061035156
         },
         {
-          "date": "2026-09-24",
-          "close": 466.79998779296875,
-          "adjustedClose": 466.79998779296875
+          "date": "2026-09-25",
+          "close": 462.45001220703125,
+          "adjustedClose": 462.45001220703125
         }
       ]
     },
@@ -4928,6 +5085,7 @@
       "display_score_v2": 82,
       "lifecycle": "Watch",
       "lifecycle_status": "trajectory_backed_automated_wave1",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 1.3317,
       "earlier_raw_score": 1.34,
@@ -5050,6 +5208,11 @@
           "date": "2026-09-24",
           "close": 2982.699951171875,
           "adjustedClose": 2982.699951171875
+        },
+        {
+          "date": "2026-09-25",
+          "close": 2988.300048828125,
+          "adjustedClose": 2988.300048828125
         }
       ]
     },
@@ -5058,12 +5221,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.4483,
       "display_score_v2": 61,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Reliance Industries Limited",
       "sectorBenchmarkId": "NIFTY_ENERGY",
@@ -5182,6 +5346,11 @@
           "date": "2026-09-24",
           "close": 1219.199951171875,
           "adjustedClose": 1219.199951171875
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1225.300048828125,
+          "adjustedClose": 1225.300048828125
         }
       ]
     },
@@ -5190,12 +5359,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.5766,
       "display_score_v2": 64,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "NTPC Limited",
       "sectorBenchmarkId": "NIFTY_ENERGY",
@@ -5314,6 +5484,11 @@
           "date": "2026-09-24",
           "close": 326.6000061035156,
           "adjustedClose": 326.6000061035156
+        },
+        {
+          "date": "2026-09-25",
+          "close": 325.8999938964844,
+          "adjustedClose": 325.8999938964844
         }
       ]
     },
@@ -5324,6 +5499,7 @@
       "display_score_v2": 45,
       "lifecycle": "Fading",
       "lifecycle_status": "trajectory_backed_approved",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.661,
       "earlier_raw_score": -0.5499,
@@ -5446,6 +5622,11 @@
           "date": "2026-09-24",
           "close": 1014.5,
           "adjustedClose": 1014.5
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1001.0999755859375,
+          "adjustedClose": 1001.0999755859375
         }
       ]
     },
@@ -5454,12 +5635,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.0107,
       "display_score_v2": 75,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Cholamandalam Investment and Finance Company Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -5578,6 +5760,11 @@
           "date": "2026-09-24",
           "close": 1681.699951171875,
           "adjustedClose": 1681.699951171875
+        },
+        {
+          "date": "2026-09-25",
+          "close": 1663.5999755859375,
+          "adjustedClose": 1663.5999755859375
         }
       ]
     },
@@ -5588,6 +5775,7 @@
       "display_score_v2": 75,
       "lifecycle": "Building",
       "lifecycle_status": "trajectory_backed_approved",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": 0.1979,
       "earlier_raw_score": 0.7272,
@@ -5710,6 +5898,11 @@
           "date": "2026-09-24",
           "close": 3858.39990234375,
           "adjustedClose": 3858.39990234375
+        },
+        {
+          "date": "2026-09-25",
+          "close": 3874.300048828125,
+          "adjustedClose": 3874.300048828125
         }
       ]
     },
@@ -5718,12 +5911,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.2983,
       "display_score_v2": 82,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Shriram Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -5842,6 +6036,11 @@
           "date": "2026-09-24",
           "close": 990,
           "adjustedClose": 990
+        },
+        {
+          "date": "2026-09-25",
+          "close": 999.2000122070312,
+          "adjustedClose": 999.2000122070312
         }
       ]
     },
@@ -5850,12 +6049,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.5722,
       "display_score_v2": 64,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Tata Consultancy Services Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -5974,6 +6174,11 @@
           "date": "2026-09-24",
           "close": 2087,
           "adjustedClose": 2087
+        },
+        {
+          "date": "2026-09-25",
+          "close": 2070,
+          "adjustedClose": 2070
         }
       ]
     },
@@ -5982,12 +6187,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": -0.2527,
       "display_score_v2": 44,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Wipro Limited",
       "sectorBenchmarkId": "NIFTY_IT",
@@ -6106,6 +6312,11 @@
           "date": "2026-09-24",
           "close": 163.63999938964844,
           "adjustedClose": 163.63999938964844
+        },
+        {
+          "date": "2026-09-25",
+          "close": 163.47000122070312,
+          "adjustedClose": 163.47000122070312
         }
       ]
     },
@@ -6114,12 +6325,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 0.1296,
       "display_score_v2": 53,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Five-Star Business Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -6238,6 +6450,11 @@
           "date": "2026-09-24",
           "close": 524.8499755859375,
           "adjustedClose": 524.8499755859375
+        },
+        {
+          "date": "2026-09-25",
+          "close": 521.1500244140625,
+          "adjustedClose": 521.1500244140625
         }
       ]
     },
@@ -6248,6 +6465,7 @@
       "display_score_v2": 74,
       "lifecycle": "Emerging",
       "lifecycle_status": "trajectory_backed_automated",
+      "lifecycle_publishable": true,
       "checkpoints": 3,
       "previous_raw_score": -0.6205,
       "earlier_raw_score": -1.2983,
@@ -6367,9 +6585,9 @@
           "adjustedClose": 1349.5999755859375
         },
         {
-          "date": "2026-09-24",
-          "close": 1315.0999755859375,
-          "adjustedClose": 1315.0999755859375
+          "date": "2026-09-25",
+          "close": 1301,
+          "adjustedClose": 1301
         }
       ]
     },
@@ -6378,12 +6596,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": 1.2972,
       "display_score_v2": 82,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Tata Motors Limited",
       "sectorBenchmarkId": "NIFTY_AUTO",
@@ -6502,6 +6721,11 @@
           "date": "2026-09-24",
           "close": 437.1499938964844,
           "adjustedClose": 437.1499938964844
+        },
+        {
+          "date": "2026-09-25",
+          "close": 440.6000061035156,
+          "adjustedClose": 440.6000061035156
         }
       ]
     },
@@ -6510,12 +6734,13 @@
       "factor_status": "four_factor_complete",
       "raw_score": -0.6405,
       "display_score_v2": 34,
-      "lifecycle": "Watch",
-      "lifecycle_status": "provisional_watch_insufficient_v2_trajectory",
+      "lifecycle": "Pending",
+      "lifecycle_status": "lifecycle_pending_insufficient_v2_trajectory",
+      "lifecycle_publishable": false,
       "checkpoints": 1,
       "previous_raw_score": null,
       "earlier_raw_score": null,
-      "api_lifecycle_stage": "WATCH",
+      "api_lifecycle_stage": null,
       "fading_warning": false,
       "name": "Manappuram Finance Limited",
       "sectorBenchmarkId": "NIFTY_FIN_SERVICE",
@@ -6631,9 +6856,9 @@
           "adjustedClose": 320.3999938964844
         },
         {
-          "date": "2026-09-24",
-          "close": 324.95001220703125,
-          "adjustedClose": 324.95001220703125
+          "date": "2026-09-25",
+          "close": 328,
+          "adjustedClose": 328
         }
       ]
     }
@@ -6744,6 +6969,11 @@
         "date": "2026-09-24",
         "close": 23063.099609375,
         "adjustedClose": 23063.099609375
+      },
+      {
+        "date": "2026-09-25",
+        "close": 23110.05078125,
+        "adjustedClose": 23110.05078125
       }
     ],
     "NIFTY_FIN_SERVICE": [
@@ -6843,9 +7073,9 @@
         "adjustedClose": 25417.95
       },
       {
-        "date": "2026-09-24",
-        "close": 27047.19921875,
-        "adjustedClose": 27047.19921875
+        "date": "2026-09-25",
+        "close": 27090.30078125,
+        "adjustedClose": 27090.30078125
       }
     ],
     "NIFTY_PHARMA": [
@@ -6953,6 +7183,11 @@
         "date": "2026-09-24",
         "close": 27028.69921875,
         "adjustedClose": 27028.69921875
+      },
+      {
+        "date": "2026-09-25",
+        "close": 27065.599609375,
+        "adjustedClose": 27065.599609375
       }
     ],
     "NIFTY_METAL": [
@@ -7052,9 +7287,9 @@
         "adjustedClose": 12990.35
       },
       {
-        "date": "2026-09-24",
-        "close": 13041.9501953125,
-        "adjustedClose": 13041.9501953125
+        "date": "2026-09-25",
+        "close": 13147.099609375,
+        "adjustedClose": 13147.099609375
       }
     ],
     "NIFTY_IT": [
@@ -7162,6 +7397,11 @@
         "date": "2026-09-24",
         "close": 28208.849609375,
         "adjustedClose": 28208.849609375
+      },
+      {
+        "date": "2026-09-25",
+        "close": 28073.30078125,
+        "adjustedClose": 28073.30078125
       }
     ],
     "NIFTY_INFRA": [
@@ -7261,9 +7501,9 @@
         "adjustedClose": 9020.8
       },
       {
-        "date": "2026-09-24",
-        "close": 8944.849609375,
-        "adjustedClose": 8944.849609375
+        "date": "2026-09-25",
+        "close": 8964.5,
+        "adjustedClose": 8964.5
       }
     ],
     "NIFTY_ENERGY": [
@@ -7363,9 +7603,9 @@
         "adjustedClose": 37727
       },
       {
-        "date": "2026-09-24",
-        "close": 37360.94921875,
-        "adjustedClose": 37360.94921875
+        "date": "2026-09-25",
+        "close": 37392.80078125,
+        "adjustedClose": 37392.80078125
       }
     ],
     "NIFTY_CONSUMPTION": [
@@ -7465,9 +7705,9 @@
         "adjustedClose": 11487.2
       },
       {
-        "date": "2026-09-24",
-        "close": 11353.4501953125,
-        "adjustedClose": 11353.4501953125
+        "date": "2026-09-25",
+        "close": 11375.7998046875,
+        "adjustedClose": 11375.7998046875
       }
     ],
     "NIFTY_AUTO": [
@@ -7567,9 +7807,9 @@
         "adjustedClose": 27086.3
       },
       {
-        "date": "2026-09-24",
-        "close": 26730.099609375,
-        "adjustedClose": 26730.099609375
+        "date": "2026-09-25",
+        "close": 26833.19921875,
+        "adjustedClose": 26833.19921875
       }
     ],
     "NIFTY_500": [
@@ -7677,6 +7917,11 @@
         "date": "2026-09-24",
         "close": 22552.599609375,
         "adjustedClose": 22552.599609375
+      },
+      {
+        "date": "2026-09-25",
+        "close": 22588,
+        "adjustedClose": 22588
       }
     ]
   },

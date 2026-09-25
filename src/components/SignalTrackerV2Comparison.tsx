@@ -3,17 +3,18 @@ import { ArrowLeft, BarChart3, CalendarClock, Database, ShieldCheck, TriangleAle
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import comparisonData from "../data/signalTrackerV2Comparison.json";
 
-type Lifecycle = "Watch" | "Emerging" | "Building" | "Established" | "Fading";
+type Lifecycle = "Watch" | "Emerging" | "Building" | "Established" | "Fading" | "Pending";
 type PricePoint = { date: string; close: number; adjustedClose: number };
 type Company = (typeof comparisonData.companies)[number];
 
-const lifecycleOrder: Array<"All" | Lifecycle> = ["All", "Watch", "Emerging", "Building", "Established", "Fading"];
+const lifecycleOrder: Array<"All" | Lifecycle> = ["All", "Watch", "Emerging", "Building", "Established", "Fading", "Pending"];
 const lifecycleStyle: Record<Lifecycle, string> = {
   Watch: "border-sky-400/30 bg-sky-400/10 text-sky-300",
   Emerging: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
   Building: "border-violet-400/30 bg-violet-400/10 text-violet-300",
   Established: "border-teal-400/30 bg-teal-400/10 text-teal-300",
   Fading: "border-orange-400/30 bg-orange-400/10 text-orange-300",
+  Pending: "border-amber-300/30 bg-amber-300/10 text-amber-200",
 };
 
 const formatDate = (date: string) => new Intl.DateTimeFormat("en-IN", {
@@ -21,7 +22,7 @@ const formatDate = (date: string) => new Intl.DateTimeFormat("en-IN", {
 }).format(new Date(`${date}T00:00:00`));
 const percentage = (value: number | null) => value === null ? "Unavailable" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const points = (value: number | null) => value === null ? "Unavailable" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)} pp`;
-const isTrajectoryBacked = (company: Company) => !company.lifecycle_status.startsWith("provisional_watch");
+const isTrajectoryBacked = (company: Company) => company.lifecycle_publishable === true;
 
 function returnsFor(company: Company) {
   if (!company.priceHistory.length) return { company: null, nifty: null, sector: null, versusNifty: null, versusSector: null };
@@ -118,7 +119,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen }: { onShowFroz
               {[
                 ["Companies", "50", "Four-factor complete"],
                 ["Trajectory-backed", "13", "Lifecycle supported by 3 checkpoints"],
-                ["Provisional Watch", "37", "Fail-closed pending trajectory"],
+                ["Lifecycle pending", "37", "Score complete; trajectory incomplete"],
                 ["Forward record", `${comparisonData.forwardSessionsObserved} sessions`, `From ${formatDate(comparisonData.marketEntryDate)}`],
               ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
                 <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div>
@@ -154,19 +155,19 @@ export default function SignalTrackerV2Comparison({ onShowFrozen }: { onShowFroz
                     <div className="min-w-0"><div className="font-semibold text-white truncate">{company.name}</div><div className="text-[10px] font-mono text-zinc-500 mt-1">{company.symbol} · score {company.display_score_v2}</div></div>
                     <span className={`h-fit rounded-full border px-2 py-1 text-[9px] font-black uppercase ${lifecycleStyle[company.lifecycle]}`}>{company.lifecycle}</span>
                   </div>
-                  <div className={`mt-2 text-[9px] uppercase tracking-wider ${isTrajectoryBacked(company) ? "text-emerald-300" : "text-amber-200"}`}>{isTrajectoryBacked(company) ? "Trajectory-backed" : "Provisional holding state"}</div>
+                  <div className={`mt-2 text-[9px] uppercase tracking-wider ${isTrajectoryBacked(company) ? "text-emerald-300" : "text-amber-200"}`}>{isTrajectoryBacked(company) ? "Trajectory-backed" : "Lifecycle pending"}</div>
                 </button>)}
               </div>
             </aside>
 
             <section className="p-5 md:p-7 min-w-0">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div><div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">{selected.symbol} · V2 four-factor record</div><h2 className="text-2xl md:text-3xl font-semibold text-white mt-2">{selected.name}</h2><div className={`inline-flex mt-3 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase ${lifecycleStyle[selected.lifecycle]}`}>V2 lifecycle: {selected.lifecycle}</div></div>
+                <div><div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">{selected.symbol} · V2 four-factor record</div><h2 className="text-2xl md:text-3xl font-semibold text-white mt-2">{selected.name}</h2><div className={`inline-flex mt-3 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase ${lifecycleStyle[selected.lifecycle]}`}>{isTrajectoryBacked(selected) ? `V2 lifecycle: ${selected.lifecycle}` : "V2 lifecycle: Pending"}</div></div>
                 <div className="sm:text-right"><div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">V2 display score</div><div className="text-3xl font-mono font-bold text-white mt-1">{selected.display_score_v2}</div><div className="text-xs text-zinc-500">Raw {selected.raw_score.toFixed(4)}</div></div>
               </div>
 
               <div className={`mt-5 rounded-2xl border p-4 ${isTrajectoryBacked(selected) ? "border-emerald-400/20 bg-emerald-400/[0.04]" : "border-amber-400/20 bg-amber-400/[0.04]"}`}>
-                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} comparable V2 checkpoints` : "Provisional Watch—not a flat-momentum conclusion"}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `Lifecycle is based on the recorded V2 path ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}.` : "All four current factors are complete, but comparable V2 history is not yet long enough for a genuine trajectory classification."}</p></div></div>
+                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} comparable V2 checkpoints` : "Lifecycle pending—not classified as Watch"}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `Lifecycle is based on the recorded V2 path ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}.` : "All four current factors and the current score are complete, but comparable V2 history is not yet long enough for a genuine trajectory classification."}</p></div></div>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-3 mt-5">

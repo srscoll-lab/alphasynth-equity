@@ -168,7 +168,7 @@ async function main() {
   const niftyDates = benchmarks.NIFTY_50.map((point) => point.date);
   const asOfDate = niftyDates.at(-1) || marketEntryDate;
   const output = {
-    schemaVersion: "1.0.0",
+    schemaVersion: "1.1.0",
     cohortId: "BMS-V2-C50-20260825-RECONSTRUCTED",
     baseReleasePolicyId: manifest.release_policy_id,
     methodologyId: "BMS_V2_OPTION_C_FOUR_FACTOR",
@@ -197,7 +197,8 @@ async function main() {
     output: outputPath,
     companies: companies.length,
     marketDataAvailable: companies.filter((company) => company.marketDataStatus === "available").length,
-    trajectoryBacked: companies.filter((company) => !company.lifecycle_status.startsWith("provisional_watch")).length,
+    trajectoryBacked: companies.filter((company) => company.lifecycle_publishable === true).length,
+    lifecyclePending: companies.filter((company) => company.lifecycle_publishable === false).length,
     asOfDate,
     forwardSessionsObserved: niftyDates.length,
   }, null, 2));

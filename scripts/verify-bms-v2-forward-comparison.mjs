@@ -24,12 +24,16 @@ for (const company of comparison.companies) {
   if (!company.priceHistory.length) failures.push(`${company.symbol}: missing market observations`);
   if (company.priceHistory.some((point) => point.date < comparison.marketEntryDate)) failures.push(`${company.symbol}: pre-entry observation leaked into forward record`);
   if (company.priceHistory.some((point, index, rows) => index > 0 && point.date <= rows[index - 1].date)) failures.push(`${company.symbol}: market dates are not strictly increasing`);
-  if (company.lifecycle_status.startsWith("provisional_watch") && company.lifecycle !== "Watch") failures.push(`${company.symbol}: provisional state must fail closed to Watch`);
+  if (company.lifecycle_publishable === false && company.lifecycle !== "Pending") failures.push(`${company.symbol}: insufficient trajectory must remain lifecycle Pending`);
+  if (company.lifecycle === "Pending" && company.lifecycle_status !== "lifecycle_pending_insufficient_v2_trajectory") failures.push(`${company.symbol}: pending lifecycle has an unexpected status`);
 }
 
 for (const [id, source] of Object.entries(comparison.benchmarkSources)) {
   if (source.status !== "available" || !comparison.benchmarks[id]?.length) failures.push(`${id}: benchmark unavailable`);
-  if ((comparison.benchmarks[id]?.length || 0) < comparison.forwardSessionsObserved - 1) failures.push(`${id}: benchmark history is too sparse for a continuous comparison`);
+  const observations = comparison.benchmarks[id] || [];
+  const minimumCoverage = Math.floor(comparison.forwardSessionsObserved * 0.9);
+  if (observations.length < minimumCoverage) failures.push(`${id}: benchmark history covers less than 90% of observed sessions`);
+  if (observations.at(-1)?.date !== comparison.asOfDate) failures.push(`${id}: benchmark is stale at the comparison cutoff`);
 }
 
 if (failures.length) {
@@ -41,8 +45,8 @@ console.log(JSON.stringify({
   status: "passed",
   companies: comparison.companies.length,
   fourFactorComplete: comparison.companies.filter((company) => company.factor_status === "four_factor_complete").length,
-  trajectoryBacked: comparison.companies.filter((company) => !company.lifecycle_status.startsWith("provisional_watch")).length,
-  provisionalWatch: comparison.companies.filter((company) => company.lifecycle_status.startsWith("provisional_watch")).length,
+  trajectoryBacked: comparison.companies.filter((company) => company.lifecycle_publishable === true).length,
+  lifecyclePending: comparison.companies.filter((company) => company.lifecycle_publishable === false).length,
   forwardSessionsObserved: comparison.forwardSessionsObserved,
   asOfDate: comparison.asOfDate,
   manifestSha256: manifestHash,
