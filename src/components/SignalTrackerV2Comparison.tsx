@@ -3,15 +3,17 @@ import { ArrowLeft, BarChart3, CalendarClock, Compass, Database, ShieldCheck, Tr
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import comparisonData from "../data/signalTrackerV2Comparison.json";
 
-type Lifecycle = "Watch" | "Emerging" | "Building" | "Established" | "Fading" | "Pending";
+type Lifecycle = "Watch" | "Emerging" | "Building" | "Established" | "Recovering" | "Rebounding" | "Fading" | "Pending";
 type PricePoint = { date: string; close: number; adjustedClose: number };
 type Company = (typeof comparisonData.companies)[number];
 
-const lifecycleOrder: Array<"All" | Lifecycle> = ["All", "Watch", "Emerging", "Building", "Established", "Fading", "Pending"];
+const lifecycleOrder: Array<"All" | Lifecycle> = ["All", "Watch", "Emerging", "Building", "Recovering", "Rebounding", "Established", "Fading", "Pending"];
 const lifecycleStyle: Record<Lifecycle, string> = {
   Watch: "border-sky-400/30 bg-sky-400/10 text-sky-300",
   Emerging: "border-emerald-400/30 bg-emerald-400/10 text-emerald-300",
   Building: "border-violet-400/30 bg-violet-400/10 text-violet-300",
+  Recovering: "border-cyan-400/30 bg-cyan-400/10 text-cyan-300",
+  Rebounding: "border-indigo-400/30 bg-indigo-400/10 text-indigo-300",
   Established: "border-teal-400/30 bg-teal-400/10 text-teal-300",
   Fading: "border-orange-400/30 bg-orange-400/10 text-orange-300",
   Pending: "border-amber-300/30 bg-amber-300/10 text-amber-200",
@@ -25,15 +27,17 @@ const points = (value: number | null) => value === null ? "Unavailable" : `${val
 const isTrajectoryBacked = (company: Company) => company.lifecycle_publishable === true;
 
 function returnsFor(company: Company) {
-  if (!company.priceHistory.length) return { company: null, nifty: null, sector: null, versusNifty: null, versusSector: null };
+  if (!company.priceHistory.length) return { company: null, nifty: null, sector: null, versusNifty: null, versusSector: null, comparisonDate: null };
   const nifty = comparisonData.benchmarks.NIFTY_50 as PricePoint[];
   const sector = (comparisonData.benchmarks as Record<string, PricePoint[]>)[company.sectorBenchmarkId] || [];
   const first = company.priceHistory[0];
-  const last = company.priceHistory.at(-1)!;
+  const availableEndDates = [company.priceHistory.at(-1)?.date, nifty.at(-1)?.date, sector.at(-1)?.date].filter(Boolean) as string[];
+  const comparisonDate = availableEndDates.sort()[0] || first.date;
+  const last = [...company.priceHistory].reverse().find((item) => item.date <= comparisonDate) || first;
   const niftyFirst = nifty.find((item) => item.date >= first.date);
-  const niftyLast = [...nifty].reverse().find((item) => item.date <= last.date);
+  const niftyLast = [...nifty].reverse().find((item) => item.date <= comparisonDate);
   const sectorFirst = sector.find((item) => item.date >= first.date);
-  const sectorLast = [...sector].reverse().find((item) => item.date <= last.date);
+  const sectorLast = [...sector].reverse().find((item) => item.date <= comparisonDate);
   const companyReturn = last.adjustedClose / first.adjustedClose - 1;
   const niftyReturn = niftyFirst && niftyLast ? niftyLast.adjustedClose / niftyFirst.adjustedClose - 1 : null;
   const sectorReturn = sectorFirst && sectorLast ? sectorLast.adjustedClose / sectorFirst.adjustedClose - 1 : null;
@@ -43,6 +47,7 @@ function returnsFor(company: Company) {
     sector: sectorReturn,
     versusNifty: niftyReturn === null ? null : companyReturn - niftyReturn,
     versusSector: sectorReturn === null ? null : companyReturn - sectorReturn,
+    comparisonDate,
   };
 }
 
@@ -53,7 +58,9 @@ function chartFor(company: Company) {
   if (!first) return [];
   const sectorBase = sector.get(first.date)?.adjustedClose;
   const niftyBase = nifty.get(first.date)?.adjustedClose;
-  const rows = company.priceHistory.map((item, session) => ({
+  const availableEndDates = [company.priceHistory.at(-1)?.date, [...nifty.keys()].at(-1), [...sector.keys()].at(-1)].filter(Boolean) as string[];
+  const comparisonDate = availableEndDates.sort()[0] || first.date;
+  const rows = company.priceHistory.filter((item) => item.date <= comparisonDate).map((item, session) => ({
     session,
     date: item.date,
     company: Number((item.adjustedClose / first.adjustedClose * 100).toFixed(2)),
@@ -108,7 +115,8 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
               <div>
                 <div className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-300 mb-3">V2 controlled 50 · reconstructed shadow study</div>
-                <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white">BMS V2 Forward Comparison</h1>
+                <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white">Fundamental Change Forward Comparison</h1>
+                <p className="mt-2 text-xs text-zinc-500">Fundamental Change Score is calculated with the BMS V2 methodology.</p>
                 <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-3xl leading-relaxed">
                   Revised four-factor lifecycle ratings compared with genuine market prices from the first session after the 25 August information cutoff.
                 </p>
@@ -120,9 +128,9 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
             </div>
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-7">
               {[
-                ["Companies", "50", "Four-factor complete"],
-                ["Trajectory-backed", "13", "Lifecycle supported by 3 checkpoints"],
-                ["Lifecycle pending", "37", "Score complete; trajectory incomplete"],
+                ["Companies", `${comparisonData.summary.companies}`, "Four-factor complete"],
+                ["Trajectory-backed", `${comparisonData.summary.trajectory_backed}`, "Lifecycle V2.1 supported by 3 checkpoints"],
+                ["Lifecycle pending", `${comparisonData.summary.lifecycle_pending}`, "Score complete; trajectory incomplete"],
                 ["Forward record", `${comparisonData.forwardSessionsObserved} sessions`, `From ${formatDate(comparisonData.marketEntryDate)}`],
               ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
                 <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div>
@@ -134,7 +142,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
 
           <div className="px-5 py-5 md:px-8 border-b border-white/10">
             <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-white"><BarChart3 className="w-4 h-4 text-violet-300" /> Lifecycle-level forward comparison</div>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               {lifecycleSummary.map((row) => <div key={row.stage} className="rounded-xl border border-white/10 bg-black/15 p-3">
                 <div className={`inline-flex rounded-full border px-2 py-1 text-[9px] font-black uppercase ${lifecycleStyle[row.stage]}`}>{row.stage}</div>
                 <div className="mt-2 text-xs text-zinc-400">{row.count} companies · {row.trajectory} trajectory-backed</div>
@@ -170,7 +178,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
               </div>
 
               <div className={`mt-5 rounded-2xl border p-4 ${isTrajectoryBacked(selected) ? "border-emerald-400/20 bg-emerald-400/[0.04]" : "border-amber-400/20 bg-amber-400/[0.04]"}`}>
-                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} comparable V2 checkpoints` : "Lifecycle pending—not classified as Watch"}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `Lifecycle is based on the recorded V2 path ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}.` : "All four current factors and the current score are complete, but comparable V2 history is not yet long enough for a genuine trajectory classification."}</p></div></div>
+                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} comparable V2 checkpoints` : "Lifecycle pending—not classified as Watch"}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `Lifecycle V2.1 is based on the recorded path ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}. ${selected.lifecycle_reason_code?.replaceAll("_", " ") || ""}` : "All four current factors and the current score are complete, but comparable V2 history is not yet long enough for a genuine trajectory classification."}</p>{isTrajectoryBacked(selected) && selected.lifecycle_changed_from_v1 ? <p className="mt-1 text-[11px] text-cyan-300">Corrected from the frozen legacy label {selected.frozen_lifecycle_v1}; the historical record remains preserved.</p> : null}</div></div>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-3 mt-5">
@@ -182,7 +190,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
                 <div className="h-[310px]"><ResponsiveContainer width="100%" height="100%"><LineChart data={chart}><CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} /><XAxis dataKey="session" domain={[0, 60]} type="number" ticks={[0, 20, 40, 60]} tick={{ fill: "#71717a", fontSize: 11 }} /><YAxis domain={["dataMin - 2", "dataMax + 2"]} tick={{ fill: "#71717a", fontSize: 11 }} /><Tooltip labelFormatter={(_, payload) => payload?.[0]?.payload?.date ? formatDate(payload[0].payload.date) : "Not yet observed"} contentStyle={{ background: "#111827", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 12 }} /><Legend wrapperStyle={{ fontSize: 11 }} /><ReferenceLine x={0} stroke="#a78bfa" strokeDasharray="4 4" label={{ value: "26 Aug entry", fill: "#a78bfa", fontSize: 10 }} /><Line type="monotone" dataKey="company" name={selected.symbol} stroke="#60a5fa" strokeWidth={2.5} dot={false} connectNulls /><Line type="monotone" dataKey="nifty" name="Nifty 50" stroke="#2dd4bf" strokeWidth={2} dot={false} connectNulls /><Line type="monotone" dataKey="sector" name={selected.sectorBenchmarkLabel} stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls /></LineChart></ResponsiveContainer></div>
               </div>
 
-              <div className="mt-4 rounded-xl border border-sky-400/15 bg-sky-400/[0.035] px-4 py-3 text-xs leading-relaxed text-zinc-400"><Database className="inline w-4 h-4 text-sky-300 mr-2" />Prices are unadjusted/adjusted daily observations recorded from Yahoo’s chart feed; unavailable values remain unavailable. As of {formatDate(comparisonData.asOfDate)}. This market-data layer does not change any V2 factor score or lifecycle.</div>
+              <div className="mt-4 rounded-xl border border-sky-400/15 bg-sky-400/[0.035] px-4 py-3 text-xs leading-relaxed text-zinc-400"><Database className="inline w-4 h-4 text-sky-300 mr-2" />Prices are unadjusted/adjusted daily observations recorded from Yahoo’s chart feed; unavailable or unreconciled benchmark extensions remain unavailable. This comparison is aligned through {selectedReturns.comparisonDate ? formatDate(selectedReturns.comparisonDate) : "the latest shared session"}. This market-data layer does not change any V2 factor score or lifecycle.</div>
             </section>
           </div>
         </section>

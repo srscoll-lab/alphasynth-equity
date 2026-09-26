@@ -151,6 +151,8 @@ type BmsResponse = {
 type Props = {
   onResearch?: (company: BmsCompany) => void;
   onDeepDive?: (company: BmsCompany) => void;
+  onOpenMomentum?: () => void;
+  onOpenTracker?: () => void;
   researchText?: string;
   researchLoading?: boolean;
   researchError?: string;
@@ -228,21 +230,21 @@ function priorYearComparison(period: string): string {
 
 function bmsDirectionText(company: BmsCompany): string {
   if (company.bms_change_reliability === "New signal") {
-    return "New BMS signal";
+    return "New FCS signal";
   }
 
   if (company.bms_change === null) {
-    return "No prior BMS comparison";
+    return "No prior FCS comparison";
   }
 
   const points = scorePointChange(company.bms_change);
   const sign = points > 0 ? "+" : "";
 
   if (company.bms_change_reliability === "Limited history") {
-    return `${sign}${points} BMS pts since last result`;
+    return `${sign}${points} FCS pts since last result`;
   }
 
-  return `${sign}${points} BMS pts since last result`;
+  return `${sign}${points} FCS pts since last result`;
 }
 
 function reliabilityLabel(company: BmsCompany): string | null {
@@ -456,7 +458,7 @@ function researchAction(company: BmsCompany) {
       priority: "MEDIUM",
       title: "Improvement Has Persisted",
       copy: "The initial improvement has survived confirmation, but further evidence is needed before treating it as a stronger acceleration signal.",
-      nextTrigger: "Look for another period of improving fundamentals or broader confirmation across the BMS factors.",
+      nextTrigger: "Look for another period of improving fundamentals or broader confirmation across the FCS factors.",
       tone: "amber",
     };
   }
@@ -487,7 +489,7 @@ function researchAction(company: BmsCompany) {
     state: "STAND ASIDE",
     priority: "LOW",
     title: "No Active Momentum Signal",
-    copy: "Current BMS evidence does not justify prioritising this company for momentum research.",
+    copy: "Current FCS evidence does not justify prioritising this company for momentum research.",
     nextTrigger: "Revisit if a future result produces a meaningful positive change in the underlying business factors.",
     tone: "zinc",
   };
@@ -496,6 +498,8 @@ function researchAction(company: BmsCompany) {
 export default function BusinessMomentum({
   onResearch,
   onDeepDive,
+  onOpenMomentum,
+  onOpenTracker,
   researchText = "",
   researchLoading = false,
   researchError = "",
@@ -795,7 +799,7 @@ export default function BusinessMomentum({
         y += 1;
       });
 
-      drawBars("Business Momentum components", [
+      drawBars("Fundamental Change Score components", [
         { label: "Earnings", value: score100(selected?.earnings || 0) },
         { label: "Economics", value: score100(selected?.economics || 0) },
         { label: "Execution", value: score100(selected?.execution || 0) },
@@ -977,12 +981,16 @@ export default function BusinessMomentum({
 
     try {
       const response = await fetch("/api/bms/lifecycle");
-      if (!response.ok) throw new Error("Business Momentum service unavailable");
+      if (!response.ok) throw new Error("Fundamental Change service unavailable");
 
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        throw new Error("The Fundamental Change API is not connected in this local preview. Open Signal Tracker to review the frozen study.");
+      }
       const payload: BmsResponse = await response.json();
       setData(payload);
     } catch (err: any) {
-      setError(err?.message || "Unable to load Business Momentum");
+      setError(err?.message || "Unable to load Fundamental Change data");
     } finally {
       setLoading(false);
     }
@@ -1327,7 +1335,7 @@ export default function BusinessMomentum({
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-emerald-400/20 bg-emerald-400/5 text-emerald-300 text-[10px] font-black uppercase tracking-[0.22em] mb-6"
             >
               <Activity className="w-3.5 h-3.5" />
-              Business Momentum Intelligence
+              Fundamental Change Intelligence
             </motion.div>
 
             <motion.h1
@@ -1336,18 +1344,24 @@ export default function BusinessMomentum({
               transition={{ delay: 0.06 }}
               className="text-5xl md:text-7xl font-display font-semibold tracking-tight leading-[1.02] text-white mb-6"
             >
-              Find the change
+              See what the market is noticing.
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-gold">
-                before it becomes obvious.
+                Verify what the business is changing.
               </span>
             </motion.h1>
 
             <p className="max-w-2xl text-zinc-400 text-base md:text-lg leading-relaxed">
-              AlphaSynth follows the journey of business momentum — from the first
-              signs of change to persistent improvement, and warns when the thesis
-              begins to fade.
+              AlphaSynth combines market recognition with evidence-qualified business analysis. Use the Momentum Radar to discover companies, the four-factor Fundamental Change Score to verify reported business change, and Lifecycle V2.1 to follow whether that change persists, recovers or fades.
             </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <button type="button" onClick={onOpenMomentum} className="inline-flex items-center gap-2 rounded-xl border border-cyan-300/30 bg-cyan-300/[0.10] px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] text-cyan-100 hover:bg-cyan-300/[0.16]">
+                <TrendingUp className="h-4 w-4" /> Explore Momentum Radar <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+              <button type="button" onClick={onOpenTracker} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-[10px] font-black uppercase tracking-[0.14em] text-zinc-200 hover:bg-white/[0.08]">
+                <Layers3 className="h-4 w-4" /> Open FCS &amp; Lifecycle <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
           </div>
 
           <div className="lg:justify-self-end w-full max-w-md">
@@ -1355,17 +1369,17 @@ export default function BusinessMomentum({
               <div className="flex items-center justify-between mb-5">
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.2em] font-black text-zinc-500">
-                    Momentum Universe
+                    FCS Coverage
                   </p>
                   <p className="text-sm text-zinc-300 mt-1">
-                    Evidence-qualified signals available to research
+                    Four-factor-qualified companies available to study
                   </p>
                 </div>
 
                 <button
                   onClick={loadBms}
                   className="p-2 rounded-xl border border-white/10 hover:bg-white/5 transition-colors"
-                  title="Refresh Business Momentum"
+                  title="Refresh Fundamental Change data"
                 >
                   <RefreshCw
                     className={`w-4 h-4 text-zinc-400 ${
@@ -1398,6 +1412,19 @@ export default function BusinessMomentum({
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-3 mb-8">
+          {[
+            { icon: TrendingUp, step: "01 · Discover", title: "Market recognition", copy: "Scan 477 companies for trend, relative strength, liquidity and segment-aware momentum. This prioritises research; it does not predict returns.", tone: "text-cyan-300" },
+            { icon: ShieldCheck, step: "02 · Verify", title: "Fundamental Change Score", copy: "Test earnings, economics, execution and balance-sheet change using comparable, source-qualified evidence. Calculated with the BMS V2 methodology.", tone: "text-emerald-300" },
+            { icon: Layers3, step: "03 · Follow", title: "Lifecycle V2.1", copy: "Track the business across comparable checkpoints: Watch, Emerging, Building, Recovering, Rebounding, Established or Fading.", tone: "text-violet-300" },
+            { icon: Eye, step: "04 · Investigate", title: "Evidence and research", copy: "Open the underlying comparisons, qualifications and company research before forming a view.", tone: "text-gold" },
+          ].map(({ icon: Icon, step, title, copy, tone }) => <div key={step} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+            <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] ${tone}`}><Icon className="h-4 w-4" />{step}</div>
+            <h2 className="mt-3 text-base font-semibold text-white">{title}</h2>
+            <p className="mt-2 text-xs leading-relaxed text-zinc-500">{copy}</p>
+          </div>)}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
@@ -1539,7 +1566,7 @@ export default function BusinessMomentum({
 
                       <div className="text-right">
                         <p className="text-[9px] uppercase tracking-widest text-zinc-600 font-black">
-                          BMS
+                          FCS
                         </p>
                         <p className={`text-xl font-mono font-bold ${
                           company.fading_warning ? "text-amber-300" : "text-emerald-300"
@@ -1642,11 +1669,11 @@ export default function BusinessMomentum({
                   <div className="mb-5 px-1">
                     <p className="text-[11px] text-zinc-400 leading-relaxed max-w-2xl">
                       <span className="font-bold text-zinc-300">
-                        What BMS means:{" "}
+                        What FCS means:{" "}
                       </span>
                       {selectedIsFading ? (
                         <>
-                          The current BMS level remains above neutral, but it has <span className="font-bold text-amber-300">weakened materially since the last result</span>. The primary lifecycle signal is therefore Fading.
+                          The current Fundamental Change Score remains above neutral, but it has <span className="font-bold text-amber-300">weakened materially since the last result</span>. The primary lifecycle signal is therefore Fading.
                         </>
                       ) : (
                         <>
@@ -1656,7 +1683,7 @@ export default function BusinessMomentum({
                     </p>
 
                     <p className="text-[9px] text-zinc-500 mt-1.5 leading-relaxed">
-                      Lifecycle shows <span className="font-bold text-zinc-400">how Business Momentum is evolving across successive results</span> — Watch, Emerging, Building, Established or Fading. It combines current BMS strength, movement in BMS since the last result and evidence maturity. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
+                      Lifecycle shows <span className="font-bold text-zinc-400">how reported fundamental change is evolving across successive results</span> — Watch, Emerging, Building, Established or Fading. It combines current FCS strength, movement in FCS since the last result and evidence maturity. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
                     </p>
                   </div>
 
@@ -1667,7 +1694,7 @@ export default function BusinessMomentum({
                         : "border-emerald-400/15 bg-emerald-400/[0.035]"
                     }`}>
                       <p className="text-[9px] uppercase tracking-[0.18em] font-black text-zinc-500">
-                        Current BMS Level
+                        Current FCS Level
                       </p>
                       <div className="flex items-end gap-2 mt-2">
                         <span className={`text-2xl font-mono font-bold ${
@@ -1700,8 +1727,8 @@ export default function BusinessMomentum({
                       </p>
                       <p className="text-[10px] text-zinc-500 mt-2 leading-relaxed">
                         {selected.previous_bms !== null
-                          ? `Previous BMS ${score100(selected.previous_bms)} → Current BMS ${score100(selected.bms)}`
-                          : "Prior BMS unavailable"}
+                          ? `Previous FCS ${score100(selected.previous_bms)} → Current FCS ${score100(selected.bms)}`
+                          : "Prior FCS unavailable"}
                       </p>
                     </div>
 
@@ -2041,7 +2068,7 @@ export default function BusinessMomentum({
                       {researchLoading && (
                         <div className="py-4">
                           <p className="text-sm text-zinc-400">
-                            Investigating the BMS signal…
+                            Investigating the Fundamental Change signal…
                           </p>
                           <p className="text-[10px] text-zinc-600 mt-2">
                             Reviewing supporting evidence, challenges and what to watch next.
@@ -2153,7 +2180,7 @@ export default function BusinessMomentum({
                               <div className="flex items-start justify-between gap-3">
                                 <div>
                                   <h4 className="text-[9px] font-black uppercase tracking-widest text-emerald-300">Later-results check</h4>
-                                  <p className="mt-1 text-[10px] text-zinc-500">Later published results are compared with the earlier reading; the recorded BMS V1 lifecycle remains unchanged.</p>
+                          <p className="mt-1 text-[10px] text-zinc-500">Later published results are compared with the earlier reading; the recorded BMS V1 methodology lifecycle remains unchanged.</p>
                                 </div>
                                 <div className="text-right">
                                   <p className="text-sm font-black uppercase text-zinc-100">{dossierDeliveryCheck.assessment.deliveryDirection.replaceAll("_", " ")}</p>
@@ -2202,11 +2229,11 @@ export default function BusinessMomentum({
 
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 text-[11px] text-zinc-600">
           <p>
-            BMS identifies changes in business fundamentals. Research priorities are
+            FCS identifies changes in reported business fundamentals. Research priorities are
             workflow prompts, not buy/sell recommendations.
           </p>
           <p>
-            Market Recognition will be layered on separately from Business Momentum.
+            Market Recognition remains separate from the Fundamental Change Score.
           </p>
         </div>
       </div>

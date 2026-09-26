@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0.0",
+  "status": "equity_library_integration_ready",
+  "source_artifact": "../alphasynth-bms-v2/output/final-build-four-company-equity-integration-v1.json",
+  "methodology_id": "BMS_V2_QUALIFIED_FOUR_FACTOR",
+  "display_policy_id": "BMS_V2_FULL_RANGE_DISPLAY",
+  "information_cutoff": "2026-09-25T23:59:59Z",
+  "records": [
+    {
+      "symbol": "LAURUSLABS",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.4983,
+      "display_score_v2": 87,
+      "checkpoints": 1,
+      "period": "Q1 FY27",
+      "lifecycle": null,
+      "lifecycle_status": "insufficient_v2_trajectory",
+      "lifecycle_publishable": false
+    },
+    {
+      "symbol": "WELCORP",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.3883,
+      "display_score_v2": 85,
+      "checkpoints": 1,
+      "period": "Q1 FY27",
+      "lifecycle": null,
+      "lifecycle_status": "insufficient_v2_trajectory",
+      "lifecycle_publishable": false
+    },
+    {
+      "symbol": "STLTECH",
+      "factor_status": "four_factor_complete",
+      "raw_score": 1.5045,
+      "display_score_v2": 88,
+      "checkpoints": 1,
+      "period": "Q1 FY27",
+      "lifecycle": null,
+      "lifecycle_status": "insufficient_v2_trajectory",
+      "lifecycle_publishable": false
+    }
+  ],
+  "excluded": [
+    {
+      "symbol": "JUSTDIAL",
+      "reason": "Only two independently qualified factors."
+    },
+    {
+      "symbol": "SANSERA",
+      "reason": "Controlled scoring failed closed because percentage change cannot be calculated from a zero debt-to-equity baseline."
+    }
+  ]
+}

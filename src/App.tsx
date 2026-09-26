@@ -532,7 +532,10 @@ function isValidTickerPattern(ticker: string): boolean {
 }
 
 export default function App() {
-  const requestedResearchView = new URLSearchParams(window.location.search).get('view') === 'research';
+  const requestedView = new URLSearchParams(window.location.search).get('view');
+  const requestedResearchView = requestedView === 'research';
+  const requestedTrackerView = requestedView === 'tracker' || requestedView === 'momentum';
+  const requestedMomentumView = requestedView === 'momentum';
   const standaloneResearchMode = window.location.hostname.startsWith('research-only---');
   // The BMS dashboard is the primary AlphaSynth landing experience.
   // Prevent the browser from restoring an old scroll position on refresh.
@@ -552,8 +555,13 @@ export default function App() {
   // discovery = BMS-first landing experience
   // research  = existing AlphaSynth research workspace
   const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>(
-    requestedResearchView || standaloneResearchMode ? 'research' : 'discovery'
+    requestedResearchView || standaloneResearchMode
+      ? 'research'
+      : requestedTrackerView
+        ? 'tracker'
+        : 'discovery'
   );
+  const [trackerInitialMode, setTrackerInitialMode] = useState<'v1' | 'v2' | 'momentum'>(requestedMomentumView ? 'momentum' : 'v2');
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
 
   const enterOpenResearch = () => {
@@ -572,6 +580,14 @@ export default function App() {
     setAppView('discovery');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  const openSignalTracker = (mode: 'v2' | 'momentum' = 'v2') => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', mode === 'momentum' ? 'momentum' : 'tracker');
+    window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+    setTrackerInitialMode(mode);
+    setAppView('tracker');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
   const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
@@ -579,6 +595,13 @@ export default function App() {
   const [bmsResearchLoading, setBmsResearchLoading] = useState<boolean>(false);
   const [bmsResearchError, setBmsResearchError] = useState<string>("");
   const [reportFromCache, setReportFromCache] = useState<boolean>(false);
+  const returnFromResearch = () => {
+    if (bmsResearchContext?.origin === 'momentum_radar') {
+      openSignalTracker('momentum');
+      return;
+    }
+    returnToBmsDiscovery();
+  };
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
   // Canonical company resolved from the user's search term — shared by the report AND the
@@ -3653,7 +3676,7 @@ ${list}
         <div className="flex flex-wrap items-start justify-between gap-4 mb-5">
           <div>
             <p className="text-[9px] font-black uppercase tracking-[0.22em] text-gold mb-2">
-              BMS & Deep Dive Momentum Validation
+              FCS & Deep Dive Validation
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -3662,7 +3685,7 @@ ${list}
               </span>
 
               <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider ${momentumStageClass}`}>
-                BMS Momentum Stage: {historicalMomentumStage}
+                Fundamental Change Stage: {historicalMomentumStage}
               </span>
             </div>
           </div>
@@ -3681,7 +3704,7 @@ ${list}
         <div className="grid md:grid-cols-3 gap-3">
           <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/[0.035] p-4">
             <p className="text-[9px] font-black uppercase tracking-[0.16em] text-emerald-300 mb-2">
-              What Supports the BMS Trend
+              What Supports the Fundamental Change Trend
             </p>
             <p className="text-xs text-zinc-400 leading-relaxed">
               {bmsValidation.supporting_evidence || "No material confirming evidence identified."}
@@ -3690,7 +3713,7 @@ ${list}
 
           <div className="rounded-xl border border-orange-400/15 bg-orange-400/[0.035] p-4">
             <p className="text-[9px] font-black uppercase tracking-[0.16em] text-orange-300 mb-2">
-              What Challenges the BMS Trend
+              What Challenges the Fundamental Change Trend
             </p>
             <p className="text-xs text-zinc-400 leading-relaxed">
               {bmsValidation.challenging_evidence || "No material contradictory evidence identified."}
@@ -3708,7 +3731,7 @@ ${list}
         </div>
 
         <p className="mt-4 text-[10px] text-zinc-600 leading-relaxed">
-          BMS is a multi-quarter fundamental trend assessment, updated when the latest reporting period is processed. Deep Dive independently checks the business evidence available for this report against that BMS trend. The evidence may overlap with, or extend beyond, the latest BMS reporting period.
+          FCS is a multi-quarter fundamental change assessment, calculated using the BMS methodology and updated when the latest reporting period is processed. Deep Dive independently checks the business evidence available for this report against that FCS trend. The evidence may overlap with, or extend beyond, the latest FCS reporting period.
         </p>
       </div>
     );
@@ -4079,7 +4102,7 @@ ${list}
             type="button"
             onClick={standaloneResearchMode ? scrollToResearchSearch : returnToBmsDiscovery}
             className="flex items-center gap-2 group relative cursor-pointer"
-            title={standaloneResearchMode ? 'Open company research' : 'Back to BMS Discovery'}
+            title={standaloneResearchMode ? 'Open company research' : 'Back to Fundamental Change Discovery'}
           >
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
@@ -4089,30 +4112,27 @@ ${list}
               <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
-              {standaloneResearchMode ? 'Open company research' : '← BMS Discovery'}
+              {standaloneResearchMode ? 'Open company research' : '← Fundamental Change Discovery'}
             </span>
           </button>
           <div className="flex items-center gap-4">
             {appView === 'research' && !standaloneResearchMode && (
               <button
                 type="button"
-                onClick={() => {
-                  returnToBmsDiscovery();
-                }}
+                onClick={returnFromResearch}
                 className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
-                title="Return to BMS"
+                title={bmsResearchContext?.origin === 'momentum_radar' ? 'Return to Momentum Radar' : 'Return to Fundamental Change'}
               >
-                ← Back to BMS
+                ← {bmsResearchContext?.origin === 'momentum_radar' ? 'Back to Momentum Radar' : 'Back to Fundamental Change'}
               </button>
             )}
             {!standaloneResearchMode && <button
               type="button"
               onClick={() => {
-                setAppView('tracker');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                openSignalTracker('v2');
               }}
               className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-black uppercase tracking-[0.14em] transition-all ${appView === 'tracker' ? 'border-teal-400/40 bg-teal-400/[0.12] text-teal-200' : 'border-teal-400/20 bg-teal-400/[0.05] text-teal-300 hover:bg-teal-400/[0.10] hover:border-teal-400/35'}`}
-              title="Open the frozen BMS forward-validation tracker"
+              title="Open the frozen Fundamental Change forward-validation tracker"
             >
               <BarChart3 className="w-3.5 h-3.5" /> Signal Tracker
             </button>}
@@ -4157,6 +4177,8 @@ ${list}
       {/* ── Business Momentum — Primary Landing Experience ── */}
       {appView === 'discovery' && (
       <BusinessMomentum
+        onOpenMomentum={() => openSignalTracker('momentum')}
+        onOpenTracker={() => openSignalTracker('v2')}
         onResearch={(company) => {
           // Focused BMS signal investigation only.
           // Stay inside the discovery experience.
@@ -4202,6 +4224,26 @@ ${list}
 
       {appView === 'tracker' && (
         <SignalTracker
+          initialMode={trackerInitialMode}
+          onDeepDive={(company) => {
+            setTicker(company.symbol);
+            setBmsResearchContext({
+              symbol: company.symbol,
+              company_name: company.company_name,
+              period: '',
+              bms: 0,
+              origin: 'momentum_radar',
+              workflow_status: company.bms_status,
+            });
+            setBmsResearchText("");
+            setBmsResearchError("");
+            setResolvedCompany({ name: company.company_name || company.symbol, symbol: company.symbol, candidates: [] });
+            resolvedCompanyRef.current = { name: company.company_name || company.symbol, symbol: company.symbol, candidates: [] };
+            setWorkflowMode('deep_dive');
+            setActiveTab('equity');
+            setAppView('research');
+            setTimeout(scrollToWorkflow, 100);
+          }}
           onBack={() => {
             setAppView('discovery');
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -5012,21 +5054,22 @@ ${list}
                           ) : error ? (
                             <div className="not-italic bg-red-950/30 border border-red-500/20 rounded-xl p-4">
                               <p className="text-red-400 font-semibold text-sm mb-1">Unable to generate report</p>
-                              <p className="text-zinc-400 text-xs leading-relaxed">{error}</p>
+                              <p className="text-zinc-400 text-xs leading-relaxed">{window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost' ? 'The local frontend preview is working, but it is not connected to the Cloud research API. Open the deployed pilot after this version is deployed to run the Deep Dive.' : error}</p>
+                              {bmsResearchContext?.origin === 'momentum_radar' && <p className="mt-2 text-[10px] leading-relaxed text-amber-200">This Deep Dive failure did not start, stop or change Fundamental Change evidence processing.</p>}
                             </div>
                           ) : (lastReport && lastReport.ticker === ticker) ? (
                             lastReport.rawReport
                           ) : ticker ? (
                             <div className="bg-gradient-to-br from-sky-400/[0.06] to-teal-400/[0.03] p-5 border border-sky-400/20 rounded-xl not-italic group-hover:border-sky-400/35 transition-all">
                               <span className="text-sky-300 font-black block mb-2 uppercase tracking-[0.12em]">
-                                {bmsResearchContext ? `${ticker} SELECTED FROM BMS` : `${ticker} SELECTION CONFIRMED`}
+                                {bmsResearchContext ? `${ticker} SELECTED FROM FUNDAMENTAL CHANGE` : `${ticker} SELECTION CONFIRMED`}
                               </span>
                               <div className="text-zinc-300 block leading-relaxed">
                                         {bmsResearchContext ? (
                                           <div className="space-y-4">
                                             {bmsResearchLoading && (
                                               <div className="text-sky-300">
-                                                Researching the BMS signal...
+                                                Researching the Fundamental Change signal...
                                               </div>
                                             )}
 
@@ -5044,7 +5087,7 @@ ${list}
 
                                             {!bmsResearchLoading && !bmsResearchText && !bmsResearchError && (
                                               <div>
-                                                Ready to investigate why the BMS signal changed for {ticker}.
+                                                Ready to investigate why the Fundamental Change signal changed for {ticker}.
                                               </div>
                                             )}
                                           </div>
@@ -5052,6 +5095,7 @@ ${list}
                                           `Ready for institutional research on ${ticker}.`
                                         )}
                                       </div>
+                              {bmsResearchContext?.origin === 'momentum_radar' && <div className="mt-4 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3 text-[10px] leading-relaxed text-amber-100"><strong className="block uppercase tracking-[0.1em]">FCS processing status: {bmsResearchContext.workflow_status === 'ready' ? 'FCS & Lifecycle ready' : bmsResearchContext.workflow_status === 'evidence_queued' ? 'Evidence work queued' : 'Eligible · not queued'}</strong><span className="mt-1 block text-zinc-400">Running this independent Deep Dive does not start or modify the Fundamental Change evidence job. Use “Back to Momentum Radar” to review its status.</span></div>}
                             </div>
                           ) : (
                             "Click the 'Scrape NSE Data' button above to generate a real-time equity analysis for your chosen ticker."

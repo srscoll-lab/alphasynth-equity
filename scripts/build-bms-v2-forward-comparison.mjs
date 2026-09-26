@@ -80,16 +80,53 @@ async function fetchWithFallback(symbols) {
   throw lastError || new Error(`No market data for ${symbols.join(", ")}`);
 }
 
-function mergeObservations(...series) {
+function mergeObservations(frozenObservations = [], fetchedObservations = []) {
+  const frozen = frozenObservations.filter((point) => point.date >= marketEntryDate && Number.isFinite(point.close) && Number.isFinite(point.adjustedClose));
+  const fetched = fetchedObservations.filter((point) => point.date >= marketEntryDate && Number.isFinite(point.close) && Number.isFinite(point.adjustedClose));
+  if (!frozen.length) {
+    return { observations: [...fetched], status: "fetched_only", overlapCount: 0, maximumRelativeGap: null };
+  }
+  if (!fetched.length) {
+    return { observations: [...frozen], status: "frozen_only", overlapCount: 0, maximumRelativeGap: null };
+  }
+
+  const frozenByDate = new Map(frozen.map((point) => [point.date, point]));
+  const overlaps = fetched.filter((point) => frozenByDate.has(point.date));
+  if (!overlaps.length) {
+    return {
+      observations: [...frozen],
+      status: "extension_withheld_no_overlap",
+      overlapCount: 0,
+      maximumRelativeGap: null,
+    };
+  }
+  const maximumRelativeGap = Math.max(...overlaps.map((point) => {
+    const frozen = frozenByDate.get(point.date);
+    return Math.abs(point.adjustedClose / frozen.adjustedClose - 1);
+  }));
+  if (maximumRelativeGap > 0.01) {
+    return {
+      observations: [...frozen],
+      status: "extension_withheld_value_mismatch",
+      overlapCount: overlaps.length,
+      maximumRelativeGap,
+    };
+  }
+
   const byDate = new Map();
-  for (const observations of series) {
+  for (const observations of [frozen, fetched]) {
     for (const point of observations || []) {
       if (point.date >= marketEntryDate && Number.isFinite(point.close) && Number.isFinite(point.adjustedClose)) {
         byDate.set(point.date, point);
       }
     }
   }
-  return [...byDate.values()].sort((left, right) => left.date.localeCompare(right.date));
+  return {
+    observations: [...byDate.values()].sort((left, right) => left.date.localeCompare(right.date)),
+    status: "validated_overlap_merge",
+    overlapCount: overlaps.length,
+    maximumRelativeGap,
+  };
 }
 
 async function main() {
@@ -116,12 +153,16 @@ async function main() {
     try {
       const fetched = await fetchWithFallback(definition.yahoo);
       const frozenObservations = frozenTracker?.benchmarks?.[id] || [];
-      benchmarks[id] = mergeObservations(frozenObservations, fetched.observations);
+      const merge = mergeObservations(frozenObservations, fetched.observations);
+      benchmarks[id] = merge.observations;
       benchmarkSources[id] = {
         label: definition.label,
         yahooSymbol: fetched.yahooSymbol,
         status: "available",
         frozenTrackerOverlay: frozenObservations.length > 0,
+        mergeStatus: merge.status,
+        overlapCount: merge.overlapCount,
+        maximumRelativeGap: merge.maximumRelativeGap,
       };
     } catch (error) {
       if (id === "NIFTY_50") throw error;
@@ -130,11 +171,23 @@ async function main() {
     }
   }
 
+  const sharedBenchmarkAsOf = requiredBenchmarkIds
+    .map((id) => benchmarks[id]?.at(-1)?.date)
+    .filter(Boolean)
+    .sort()[0];
+  if (!sharedBenchmarkAsOf) throw new Error("No shared benchmark cutoff is available.");
+  for (const id of requiredBenchmarkIds) {
+    benchmarks[id] = benchmarks[id].filter((point) => point.date <= sharedBenchmarkAsOf);
+    benchmarkSources[id].comparisonAsOf = sharedBenchmarkAsOf;
+  }
+
   const companies = [];
   for (const company of manifest.companies) {
     let market;
     try {
       market = await fetchWithFallback([`${company.symbol}.NS`, `${company.symbol}.BO`]);
+      market.observations = market.observations.filter((point) => point.date <= sharedBenchmarkAsOf);
+      if (!market.observations.length) throw new Error(`${company.symbol}: no observations through shared benchmark cutoff ${sharedBenchmarkAsOf}`);
     } catch (error) {
       companies.push({
         ...company,
@@ -166,12 +219,12 @@ async function main() {
   }
 
   const niftyDates = benchmarks.NIFTY_50.map((point) => point.date);
-  const asOfDate = niftyDates.at(-1) || marketEntryDate;
+  const asOfDate = sharedBenchmarkAsOf;
   const output = {
-    schemaVersion: "1.1.0",
+    schemaVersion: manifest.schema_version,
     cohortId: "BMS-V2-C50-20260825-RECONSTRUCTED",
     baseReleasePolicyId: manifest.release_policy_id,
-    methodologyId: "BMS_V2_OPTION_C_FOUR_FACTOR",
+    methodologyId: manifest.lifecycle_methodology_id,
     studyType: "retrospective_reconstruction_with_forward_market_observation",
     informationCutoff: manifest.information_cutoff,
     classificationCalculatedAt: manifest.generated_at,

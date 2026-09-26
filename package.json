@@ -19,6 +19,7 @@
     "verify:bms-v2-forward-comparison": "node scripts/verify-bms-v2-forward-comparison.mjs",
     "build:bms-momentum-radar": "node scripts/build-bms-momentum-radar.mjs",
     "verify:bms-momentum-radar": "node scripts/verify-bms-momentum-radar.mjs",
+    "build:fcs-score-details": "node scripts/build-fundamental-change-score-details.mjs",
     "export:bms-factor-evidence": "node --import tsx scripts/export-bms-factor-evidence.ts",
     "export:bms-management-evidence": "node --experimental-strip-types scripts/export-bms-management-evidence.ts",
     "verify:bms-factor-evidence": "node --import tsx scripts/verify-bms-factor-evidence-export.ts",

@@ -3,12 +3,16 @@ import path from "node:path";
 import process from "node:process";
 
 const root = process.cwd();
-const policyPath = path.resolve("../alphasynth-bms-v2/config/momentum-radar-policy-v1.json");
-const universePath = path.resolve("services/bms-api/nifty500_bms_v1_product_view_final.csv");
+const policyPath = path.resolve(arg("policy") || "../alphasynth-bms-v2/config/momentum-radar-policy-v1.json");
+const universePath = path.resolve(arg("universe") || "services/bms-api/nifty500_bms_v1_product_view_final.csv");
 const outputPath = path.resolve(arg("output") || "src/data/bmsMomentumRadar.json");
+const cacheRoot = path.resolve(arg("cache") || "output/momentum-market-cache");
 const concurrency = Number(arg("concurrency") || 8);
 const limit = Number(arg("limit") || 0);
+const offset = Number(arg("offset") || 0);
+const refreshCache = arg("refresh-cache") === "true";
 const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
+const requestedAsOfDate = arg("as-of") || policy.market_data.as_of_date || null;
 
 function arg(name) {
   return process.argv.find((value) => value.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
@@ -38,6 +42,12 @@ function parseCsv(text) {
 
 const round = (value, digits = 6) => Number.isFinite(value) ? Number(value.toFixed(digits)) : null;
 const mean = (values) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+const median = (values) => {
+  const sorted = values.filter(Number.isFinite).sort((left, right) => left - right);
+  if (!sorted.length) return null;
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+};
 const standardDeviation = (values) => {
   if (values.length < 2) return null;
   const average = mean(values);
@@ -75,6 +85,46 @@ async function fetchYahoo(symbol) {
     }
   }
   throw lastError;
+}
+
+async function fetchYahooCached(symbol) {
+  fs.mkdirSync(cacheRoot, { recursive: true });
+  const cachePath = path.join(cacheRoot, `${symbol.replace(/[^A-Za-z0-9._-]/g, "_")}.json`);
+  if (!refreshCache && fs.existsSync(cachePath)) {
+    const cached = JSON.parse(fs.readFileSync(cachePath, "utf8"));
+    if (Array.isArray(cached.observations) && cached.observations.length) return cached.observations;
+  }
+  const observations = await fetchYahoo(symbol);
+  const temporaryPath = `${cachePath}.tmp`;
+  fs.writeFileSync(temporaryPath, `${JSON.stringify({ symbol, fetched_at: new Date().toISOString(), observations })}\n`);
+  fs.renameSync(temporaryPath, cachePath);
+  return observations;
+}
+
+function observationsThroughCutoff(observations) {
+  if (!requestedAsOfDate) return observations;
+  return observations.filter((point) => point.date <= requestedAsOfDate);
+}
+
+function loadUniverse(filePath) {
+  if (filePath.toLowerCase().endsWith(".json")) {
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    const rows = Array.isArray(parsed) ? parsed : parsed.companies;
+    if (!Array.isArray(rows)) throw new Error(`JSON universe must be an array or contain companies: ${filePath}`);
+    return rows.map((row) => ({
+      symbol: String(row.symbol ?? row.s ?? "").trim().toUpperCase(),
+      company_name: String(row.company_name ?? row.name ?? row.n ?? row.symbol ?? row.s ?? "").trim(),
+      series: String(row.series ?? "").trim().toUpperCase(),
+    })).filter((row) => row.symbol);
+  }
+  return parseCsv(fs.readFileSync(filePath, "utf8")).map((row) => {
+    const normalized = Object.fromEntries(Object.entries(row).map(([key, value]) => [key.trim(), value]));
+    return {
+      symbol: String(normalized.symbol ?? normalized.Symbol ?? normalized.SYMBOL ?? "").trim().toUpperCase(),
+      company_name: String(normalized.company_name ?? normalized["Company Name"] ?? normalized["NAME OF COMPANY"] ?? normalized.symbol ?? normalized.SYMBOL ?? "").trim(),
+      series: String(normalized.series ?? normalized.Series ?? normalized.SERIES ?? "").trim().toUpperCase(),
+    };
+  }).filter((row) => row.symbol);
 }
 
 function observationAtOrBefore(observations, date) {
@@ -117,6 +167,9 @@ function featuresFor(company, observations, benchmark) {
     ? Number(current > sma50) / 3 + Number(sma50 > sma200) / 3 + Number(current > sma200) / 3
     : null;
   const averageTradedValue20 = mean(observations.slice(-20).filter((point) => Number.isFinite(point.volume)).map((point) => point.close * point.volume));
+  const tradedValues60 = observations.slice(-60).filter((point) => Number.isFinite(point.volume) && point.volume > 0).map((point) => point.close * point.volume);
+  const benchmarkSessions126 = benchmark.filter((point) => point.date <= latest.date).slice(-126);
+  const companyDates = new Set(observations.map((point) => point.date));
   return {
     symbol: company.symbol,
     company_name: company.company_name,
@@ -140,6 +193,9 @@ function featuresFor(company, observations, benchmark) {
     high_proximity: round(current / high252),
     volume_confirmation: round(Number.isFinite(avgVolume20) && Number.isFinite(avgVolume60) && avgVolume60 > 0 ? Math.min(avgVolume20 / avgVolume60, 3) : null),
     average_traded_value_20: round(averageTradedValue20, 0),
+    median_daily_traded_value_60: tradedValues60.length >= 48 ? round(median(tradedValues60), 0) : null,
+    traded_value_coverage_60: round(tradedValues60.length / Math.min(60, observations.length)),
+    trading_frequency_126: benchmarkSessions126.length >= 126 ? round(benchmarkSessions126.filter((point) => companyDates.has(point.date)).length / 126) : null,
     annualized_volatility_63: round(standardDeviation(returns.slice(-63)) * Math.sqrt(252)),
     data_status: observations.length >= policy.market_data.minimum_full_history_sessions ? "full_history" : observations.length >= policy.market_data.minimum_partial_history_sessions ? "partial_history" : "insufficient_history",
   };
@@ -182,20 +238,27 @@ async function mapConcurrent(items, worker, size) {
 }
 
 async function main() {
-  const universeRows = parseCsv(fs.readFileSync(universePath, "utf8"));
-  const deduplicated = [...new Map(universeRows.map((row) => [row.symbol, { symbol: row.symbol, company_name: row.company_name }])).values()];
+  const includedSeries = new Set(policy.universe.included_series || []);
+  const universeRows = loadUniverse(universePath).filter((row) => !includedSeries.size || includedSeries.has(row.series));
+  const deduplicated = [...new Map(universeRows.map((row) => [row.symbol, row])).values()];
   if (deduplicated.length !== policy.universe.expected_companies) throw new Error(`Universe contains ${deduplicated.length}, expected ${policy.universe.expected_companies}`);
-  const selected = limit > 0 ? deduplicated.slice(0, limit) : deduplicated;
+  const selected = limit > 0 ? deduplicated.slice(offset, offset + limit) : deduplicated.slice(offset);
   let benchmark;
   let benchmarkSymbol;
   for (const symbol of ["^CRSLDX", "^CNX500"]) {
-    try { benchmark = await fetchYahoo(symbol); benchmarkSymbol = symbol; break; } catch (error) { console.warn(`${symbol}: ${error.message}`); }
+    try {
+      benchmark = observationsThroughCutoff(await fetchYahooCached(symbol));
+      if (!benchmark.length) throw new Error(`no observations through requested cutoff ${requestedAsOfDate}`);
+      benchmarkSymbol = symbol;
+      break;
+    } catch (error) { console.warn(`${symbol}: ${error.message}`); }
   }
   if (!benchmark) throw new Error("Nifty 500 benchmark unavailable");
   let completed = 0;
   const fetched = await mapConcurrent(selected, async (company) => {
     try {
-      const observations = await fetchYahoo(`${company.symbol}.NS`);
+      const observations = observationsThroughCutoff(await fetchYahooCached(`${company.symbol}.NS`));
+      if (!observations.length) throw new Error(`no observations through requested cutoff ${requestedAsOfDate}`);
       return featuresFor(company, observations, benchmark);
     } catch (error) {
       return { symbol: company.symbol, company_name: company.company_name, yahoo_symbol: `${company.symbol}.NS`, data_status: "provider_unavailable", error: String(error?.message || error) };
@@ -215,6 +278,10 @@ async function main() {
     company.quality_flags = [];
     if (company.data_status === "partial_history" || company.data_status === "insufficient_history") company.quality_flags.push("partial_history");
     if (company.data_status === "provider_unavailable") company.quality_flags.push("provider_unavailable");
+    if (company.as_of_date && benchmark.at(-1).date > company.as_of_date) {
+      const lagDays = Math.floor((Date.parse(benchmark.at(-1).date) - Date.parse(company.as_of_date)) / 86_400_000);
+      if (lagDays > 4) company.quality_flags.push("stale_price");
+    }
     if (Number.isFinite(company.average_traded_value_20) && company.average_traded_value_20 < 10_000_000) company.quality_flags.push("illiquid");
     if (Number.isFinite(company.annualized_volatility_63) && company.annualized_volatility_63 > 0.6) company.quality_flags.push("high_volatility");
   }
@@ -224,12 +291,20 @@ async function main() {
     schema_version: "1.0.0",
     policy_id: policy.policy_id,
     generated_at: new Date().toISOString(),
-    status: selected.length === policy.universe.expected_companies ? "complete_universe_scan" : "partial_test_scan",
+    status: selected.length === policy.universe.expected_companies && offset === 0 ? "complete_universe_scan" : "partial_test_scan",
     purpose: policy.purpose,
     caveat: policy.ranking.note,
     separation_rules: policy.separation_rules,
-    universe: { expected: policy.universe.expected_companies, scanned: selected.length },
-    market_data: { provider: policy.market_data.provisional_provider, price_basis: policy.market_data.price_basis, benchmark: "NIFTY_500", benchmark_symbol: benchmarkSymbol, as_of_date: benchmark.at(-1).date },
+    universe: { expected: policy.universe.expected_companies, scanned: selected.length, offset, source: policy.universe.source, included_series: policy.universe.included_series || null },
+    market_data: {
+      provider: policy.market_data.provisional_provider,
+      price_basis: policy.market_data.price_basis,
+      benchmark: "NIFTY_500",
+      benchmark_symbol: benchmarkSymbol,
+      requested_as_of_date: requestedAsOfDate,
+      as_of_date: benchmark.at(-1).date,
+      cutoff_rule: requestedAsOfDate ? "explicit_completed_session" : "latest_provider_observation",
+    },
     summary: {
       full_history: fetched.filter((company) => company.data_status === "full_history").length,
       partial_history: fetched.filter((company) => company.data_status === "partial_history").length,

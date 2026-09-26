@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0.0",
+  "methodology_id": "BMS_V2_1_TRAJECTORY_LIFECYCLE",
+  "status": "five_company_test_candidate",
+  "source": "alphasynth-bms-v2/output/momentum-expansion-batch1-trajectory-gate.json",
+  "separation_rule": "Momentum selects the research queue; it is not an input to BMS scores or lifecycle classification.",
+  "selection_gates": {
+    "minimum_price_history_sessions": 252,
+    "minimum_average_traded_value_20_inr": 10000000,
+    "eligible_radar_states": ["STARTING", "CONFIRMED"],
+    "extended_is_eligible": false,
+    "market_cap_segment_source": "official index membership or a dated market-cap snapshot; never infer segment from liquidity"
+  },
+  "companies": [
+    { "symbol": "GRANULES", "score_path": [75, 86, 86], "frozen_lifecycle_v1": "WATCH", "lifecycle_v2_1": "ESTABLISHED", "reason": "Strong across all three checkpoints without a material latest deterioration." },
+    { "symbol": "CEMPRO", "score_path": [80, 86, 71], "frozen_lifecycle_v1": "FADING", "lifecycle_v2_1": "FADING", "reason": "The latest checkpoint deteriorated materially." },
+    { "symbol": "GABRIEL", "score_path": [83, 66, 67], "frozen_lifecycle_v1": "BUILDING", "lifecycle_v2_1": "RECOVERING", "reason": "A small improvement followed a material decline, but the score remains below its earlier level." },
+    { "symbol": "HSCL", "score_path": [82, 83, 67], "frozen_lifecycle_v1": "FADING", "lifecycle_v2_1": "FADING", "reason": "The latest checkpoint deteriorated materially." },
+    { "symbol": "LLOYDSME", "score_path": [85, 76, 76], "frozen_lifecycle_v1": "BUILDING", "lifecycle_v2_1": "WATCH", "reason": "The post-decline uptick is below the meaningful-recovery threshold." }
+  ]
+}

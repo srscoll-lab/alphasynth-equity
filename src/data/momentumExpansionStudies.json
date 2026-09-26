@@ -1,0 +1,1803 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-09-25T06:17:03.980Z",
+  "queue_id": "BMS-V2-MOMENTUM-GUIDED-EXPANSION-01",
+  "separation_rule": "Momentum prioritises evidence work but never changes BMS scores or lifecycle.",
+  "summary": {
+    "queued": 25,
+    "complete": 5,
+    "evidence_work_queued": 20
+  },
+  "companies": [
+    {
+      "symbol": "GRANULES",
+      "company_name": "Granules India Ltd.",
+      "queue_priority": 1,
+      "workflow_status": "BMS_AND_LIFECYCLE_COMPLETE",
+      "lifecycle_v2_1": "ESTABLISHED",
+      "lifecycle_reason": "STRONG_ACROSS_THREE_CHECKPOINTS",
+      "checkpoints": [
+        {
+          "checkpoint": "Q3 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.0107,
+          "display_score_v2": 75,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 11377,
+                  "current_value": 13879,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 21.99,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 6,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 revenue INR 13,879/11,377 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.42,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 20.2,
+                  "current_value": 22.2,
+                  "canonical_unit": "percent",
+                  "change_percentage": 9.9,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 6,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 EBITDA margin 22.2%/20.2%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "premium_product_mix",
+                  "direction": "strengthens",
+                  "previous_value": 27,
+                  "current_value": 40,
+                  "canonical_unit": "percent",
+                  "change_percentage": 48.15,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 8,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Complex-generics FD mix 40% in Q3 FY26 versus 27% in Q3 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": -1.12,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt_to_ebitda_ratio",
+                  "direction": "weakens",
+                  "previous_value": 0.9,
+                  "current_value": 0.91,
+                  "canonical_unit": "times",
+                  "change_percentage": 1.11,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 11,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Net debt/EBITDA 0.91x at Q3 FY26 versus 0.90x at Q3 FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q4 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.4289,
+          "display_score_v2": 86,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 11974,
+                  "current_value": 14706,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 22.82,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 13,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 revenue INR 14,706/11,974 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.42,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 21.1,
+                  "current_value": 23.9,
+                  "canonical_unit": "percent",
+                  "change_percentage": 13.27,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 13,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 EBITDA margin 23.9%/21.1%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "premium_product_mix",
+                  "direction": "strengthens",
+                  "previous_value": 39,
+                  "current_value": 46,
+                  "canonical_unit": "percent",
+                  "change_percentage": 17.95,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 14,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Complex-generics FD mix 46% in Q4 FY26 versus 39% in Q4 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.39,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt_to_ebitda_ratio",
+                  "direction": "strengthens",
+                  "previous_value": 0.75,
+                  "current_value": 0.34,
+                  "canonical_unit": "times",
+                  "change_percentage": -54.67,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 4,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Net debt/EBITDA 0.34x at FY26 versus 0.75x at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q1 FY27",
+          "status": "four_factor_complete",
+          "raw_score": 1.4289,
+          "display_score_v2": 86,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 12101,
+                  "current_value": 14768,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 22.04,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 7,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 consolidated revenue INR 14,768/12,101 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.42,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 20.4,
+                  "current_value": 22.9,
+                  "canonical_unit": "percent",
+                  "change_percentage": 12.25,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 7,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 EBITDA margin 22.9%/20.4%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "premium_product_mix",
+                  "direction": "strengthens",
+                  "previous_value": 39,
+                  "current_value": 50,
+                  "canonical_unit": "percent",
+                  "change_percentage": 28.21,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 10,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Complex-generics FD mix 50% in Q1 FY27 versus 39% in Q1 FY26"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.39,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt_to_ebitda_ratio",
+                  "direction": "strengthens",
+                  "previous_value": 0.34,
+                  "current_value": 0.07,
+                  "canonical_unit": "times",
+                  "change_percentage": -79.41,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 4,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Net debt/EBITDA 0.07x in Q1 FY27 versus 0.34x in Q1 FY26"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "CEMPRO",
+      "company_name": "Cemindia Projects Ltd.",
+      "queue_priority": 2,
+      "workflow_status": "BMS_AND_LIFECYCLE_COMPLETE",
+      "lifecycle_v2_1": "FADING",
+      "lifecycle_reason": "LATEST_MATERIAL_DECLINE",
+      "checkpoints": [
+        {
+          "checkpoint": "Q3 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.1956,
+          "display_score_v2": 80,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.09,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 2270,
+                  "current_value": 2315,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 1.98,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 revenue INR 2,315/2,270 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.32,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 9.6,
+                  "current_value": 10.6,
+                  "canonical_unit": "percent",
+                  "change_percentage": 10.42,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 EBITDA margin 10.6%/9.6%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.24,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "order_book",
+                  "direction": "strengthens",
+                  "previous_value": 19893,
+                  "current_value": 21879,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 9.98,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 8,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Order book INR 21,879 crore at Q3 FY26 versus INR 19,893 crore at Q3 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.09,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt",
+                  "direction": "strengthens",
+                  "previous_value": 575,
+                  "current_value": 563,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": -2.09,
+                  "comparison_basis": "point_in_time_prior_period",
+                  "previous_period": "FY25 year end",
+                  "current_period": "Q3 FY26 quarter end",
+                  "source_locator": {
+                    "page": 8,
+                    "table": null,
+                    "section": "Q3 FY26 quarter end",
+                    "quoted_label": "Net debt INR 563 crore at Q3 FY26 versus INR 575 crore at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q4 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.4344,
+          "display_score_v2": 86,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.34,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 2532,
+                  "current_value": 2973,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 17.42,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 revenue INR 2,973/2,532 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.52,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 10.7,
+                  "current_value": 15.1,
+                  "canonical_unit": "percent",
+                  "change_percentage": 41.12,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 EBITDA margin 15.1%/10.7%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "order_book",
+                  "direction": "strengthens",
+                  "previous_value": 18300,
+                  "current_value": 24545,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 34.13,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 8,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Order book INR 24,545 crore at Q4 FY26 versus INR 18,300 crore at Q4 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt",
+                  "direction": "strengthens",
+                  "previous_value": 575,
+                  "current_value": 430,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": -25.22,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 8,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Net debt INR 430 crore at FY26 versus INR 575 crore at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q1 FY27",
+          "status": "four_factor_complete",
+          "raw_score": 0.8435,
+          "display_score_v2": 71,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.24,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 2576,
+                  "current_value": 2721,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 5.63,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 consolidated revenue INR 2,721/2,576 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.15,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 10.1,
+                  "current_value": 10.5,
+                  "canonical_unit": "percent",
+                  "change_percentage": 3.96,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 5,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 consolidated EBITDA margin 10.5%/10.1%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.51,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "order_book",
+                  "direction": "strengthens",
+                  "previous_value": 18820,
+                  "current_value": 31307,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 66.35,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 18,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Order book INR 31,307 crore at Q1 FY27 versus INR 18,820 crore at Q1 FY26"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": -1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_debt",
+                  "direction": "weakens",
+                  "previous_value": 527,
+                  "current_value": 700,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 32.83,
+                  "comparison_basis": "point_in_time_prior_period",
+                  "previous_period": "FY26 year end",
+                  "current_period": "Q1 FY27 quarter end",
+                  "source_locator": {
+                    "page": 7,
+                    "table": null,
+                    "section": "Q1 FY27 quarter end",
+                    "quoted_label": "Net debt INR 700 crore at 30 June 2026 versus INR 527 crore at 31 March 2026"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "GABRIEL",
+      "company_name": "Gabriel India Ltd.",
+      "queue_priority": 3,
+      "workflow_status": "BMS_AND_LIFECYCLE_COMPLETE",
+      "lifecycle_v2_1": "RECOVERING",
+      "lifecycle_reason": "IMPROVING_AFTER_DECLINE_BELOW_EARLIER_LEVEL",
+      "checkpoints": [
+        {
+          "checkpoint": "Q3 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.3161,
+          "display_score_v2": 83,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.34,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 10166,
+                  "current_value": 11787,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 15.95,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 34,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 consolidated revenue INR 11,787/10,166 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.15,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 9,
+                  "current_value": 9.4,
+                  "canonical_unit": "percent",
+                  "change_percentage": 4.44,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 34,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 consolidated EBITDA margin 9.4%/9.0%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.48,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "volume_growth",
+                  "direction": "strengthens",
+                  "previous_value": 10.3,
+                  "current_value": 21,
+                  "canonical_unit": "percent",
+                  "change_percentage": 103.88,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 7,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "2W/3W sales growth 21.0% YoY in Q3 FY26 versus 10.3% YoY in Q3 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.28,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_worth",
+                  "direction": "strengthens",
+                  "previous_value": 11567,
+                  "current_value": 12732,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 10.07,
+                  "comparison_basis": "point_in_time_prior_period",
+                  "previous_period": "FY25 year end",
+                  "current_period": "Q3 FY26 quarter end",
+                  "source_locator": {
+                    "page": 12,
+                    "table": null,
+                    "section": "Q3 FY26 quarter end",
+                    "quoted_label": "Standalone equity INR 12,732 million at Dec-25 versus INR 11,567 million at Mar-25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q4 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 0.6383,
+          "display_score_v2": 66,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.34,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 10732,
+                  "current_value": 12096,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 12.71,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 34,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 consolidated revenue INR 12,096/10,732 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": -1.22,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "weakens",
+                  "previous_value": 10.2,
+                  "current_value": 9.7,
+                  "canonical_unit": "percent",
+                  "change_percentage": -4.9,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 34,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 consolidated EBITDA margin 9.7%/10.2%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.41,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "volume_growth",
+                  "direction": "strengthens",
+                  "previous_value": 12.9,
+                  "current_value": 15.9,
+                  "canonical_unit": "percent",
+                  "change_percentage": 23.26,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 7,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "2W/3W sales growth 15.9% YoY in Q4 FY26 versus 12.9% YoY in Q4 FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.28,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_worth",
+                  "direction": "strengthens",
+                  "previous_value": 11567,
+                  "current_value": 13331,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 15.25,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 12,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Standalone equity INR 13,331 million at FY26 versus INR 11,567 million at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q1 FY27",
+          "status": "four_factor_complete",
+          "raw_score": 0.6744,
+          "display_score_v2": 67,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.34,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 10716.81,
+                  "current_value": 12742.47,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 18.9,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 4,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 standalone revenue INR 12,742.47/10,716.81 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": -1.22,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "weakens",
+                  "previous_value": 9.3,
+                  "current_value": 8.4,
+                  "canonical_unit": "percent",
+                  "change_percentage": -9.68,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 6,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 standalone adjusted EBITDA margin 8.4%/9.3%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.48,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "volume_growth",
+                  "direction": "strengthens",
+                  "previous_value": 12.4,
+                  "current_value": 21,
+                  "canonical_unit": "percent",
+                  "change_percentage": 69.35,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 15,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "2W/3W sales growth 21% YoY in Q1 FY27 versus 12.4% YoY in Q1 FY26"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.38,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_worth",
+                  "direction": "strengthens",
+                  "previous_value": 11567,
+                  "current_value": 14521,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 25.54,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY25",
+                  "current_period": "FY26",
+                  "source_locator": {
+                    "page": 10,
+                    "table": null,
+                    "section": "FY26",
+                    "quoted_label": "Standalone equity INR 14,521 million at FY26 versus INR 11,567 million at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "HSCL",
+      "company_name": "Himadri Speciality Chemical Ltd.",
+      "queue_priority": 4,
+      "workflow_status": "BMS_AND_LIFECYCLE_COMPLETE",
+      "lifecycle_v2_1": "FADING",
+      "lifecycle_reason": "LATEST_MATERIAL_DECLINE",
+      "checkpoints": [
+        {
+          "checkpoint": "Q3 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.2667,
+          "display_score_v2": 82,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.16,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 1140.66,
+                  "current_value": 1183.62,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 3.77,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 59,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 consolidated revenue INR 1,183.62/1,140.66 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.4,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda",
+                  "direction": "strengthens",
+                  "previous_value": 224.89,
+                  "current_value": 252.73,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 12.38,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 59,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 consolidated EBITDA INR 252.73/224.89 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.13,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "sales_volume",
+                  "direction": "strengthens",
+                  "previous_value": 415679,
+                  "current_value": 428572,
+                  "canonical_unit": "tonnes",
+                  "change_percentage": 3.1,
+                  "comparison_basis": "year_to_date_prior_year",
+                  "previous_period": "9M FY25",
+                  "current_period": "9M FY26",
+                  "source_locator": {
+                    "page": 6,
+                    "table": null,
+                    "section": "9M FY26",
+                    "quoted_label": "Standalone sales volume 428,572 tonnes in 9M FY26 versus 415,679 tonnes in 9M FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_cash",
+                  "direction": "strengthens",
+                  "previous_value": 142,
+                  "current_value": 371,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 161.27,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY24",
+                  "current_period": "FY25",
+                  "source_locator": {
+                    "page": 61,
+                    "table": null,
+                    "section": "FY25",
+                    "quoted_label": "Net cash INR 371 crore at FY25 versus INR 142 crore at FY24"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q4 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.325,
+          "display_score_v2": 83,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.34,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 1134.64,
+                  "current_value": 1287.76,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 13.5,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 56,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 consolidated revenue INR 1,287.76/1,134.64 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.5,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda",
+                  "direction": "strengthens",
+                  "previous_value": 231.01,
+                  "current_value": 279.87,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 21.15,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 56,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 consolidated EBITDA INR 279.87/231.01 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.06,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "sales_volume",
+                  "direction": "strengthens",
+                  "previous_value": 552206,
+                  "current_value": 564206,
+                  "canonical_unit": "tonnes",
+                  "change_percentage": 2.17,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY25",
+                  "current_period": "FY26",
+                  "source_locator": {
+                    "page": 9,
+                    "table": null,
+                    "section": "FY26",
+                    "quoted_label": "Standalone sales volume 564,206 tonnes in FY26 versus 552,206 tonnes in FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_cash",
+                  "direction": "strengthens",
+                  "previous_value": 148,
+                  "current_value": 392,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 164.86,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY25",
+                  "current_period": "FY26",
+                  "source_locator": {
+                    "page": 9,
+                    "table": null,
+                    "section": "FY26",
+                    "quoted_label": "Net cash INR 392 crore at FY26 versus INR 148 crore at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q1 FY27",
+          "status": "four_factor_complete",
+          "raw_score": 0.6944,
+          "display_score_v2": 67,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.44,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 1118.29,
+                  "current_value": 1431.88,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 28.04,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 51,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 consolidated revenue INR 1,431.88/1,118.29 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.5,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda",
+                  "direction": "strengthens",
+                  "previous_value": 235.25,
+                  "current_value": 313.11,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 33.1,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 51,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 consolidated EBITDA INR 313.11/235.25 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": -1.31,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "sales_volume",
+                  "direction": "weakens",
+                  "previous_value": 152968,
+                  "current_value": 131844,
+                  "canonical_unit": "tonnes",
+                  "change_percentage": -13.81,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 49,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Standalone sales volume 131,844 tonnes in Q1 FY27 versus 152,968 tonnes in Q1 FY26"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.45,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_cash",
+                  "direction": "strengthens",
+                  "previous_value": 142,
+                  "current_value": 371,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 161.27,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY25",
+                  "current_period": "FY26",
+                  "source_locator": {
+                    "page": 53,
+                    "table": null,
+                    "section": "FY26",
+                    "quoted_label": "Net cash INR 371 crore at FY26 versus INR 142 crore at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "LLOYDSME",
+      "company_name": "Lloyds Metals And Energy Ltd.",
+      "queue_priority": 5,
+      "workflow_status": "BMS_AND_LIFECYCLE_COMPLETE",
+      "lifecycle_v2_1": "WATCH",
+      "lifecycle_reason": "POST_DECLINE_STABILISATION_BELOW_RECOVERY_THRESHOLD",
+      "checkpoints": [
+        {
+          "checkpoint": "Q3 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.4078,
+          "display_score_v2": 85,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.51,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_total_income",
+                  "direction": "strengthens",
+                  "previous_value": 16932,
+                  "current_value": 38750,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 128.86,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 13,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 standalone total income INR 38,750/16,932 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.32,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 32.75,
+                  "current_value": 33.98,
+                  "canonical_unit": "percent",
+                  "change_percentage": 3.76,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q3 FY25",
+                  "current_period": "Q3 FY26",
+                  "source_locator": {
+                    "page": 13,
+                    "table": null,
+                    "section": "Q3 FY26",
+                    "quoted_label": "Q3 FY26/Q3 FY25 standalone EBITDA margin 33.98%/32.75%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.41,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "sales_volume",
+                  "direction": "strengthens",
+                  "previous_value": 7.8,
+                  "current_value": 10.01,
+                  "canonical_unit": "million tonnes",
+                  "change_percentage": 28.33,
+                  "comparison_basis": "year_to_date_prior_year",
+                  "previous_period": "9M FY25",
+                  "current_period": "9M FY26",
+                  "source_locator": {
+                    "page": 11,
+                    "table": null,
+                    "section": "9M FY26",
+                    "quoted_label": "Iron ore sales volume 10.01 million tonnes in 9M FY26 versus 7.80 million tonnes in 9M FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": 1.38,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_worth",
+                  "direction": "strengthens",
+                  "previous_value": 64021,
+                  "current_value": 81590,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 27.44,
+                  "comparison_basis": "point_in_time_prior_period",
+                  "previous_period": "FY25 year end",
+                  "current_period": "H1 FY26 period end",
+                  "source_locator": {
+                    "page": 47,
+                    "table": null,
+                    "section": "H1 FY26 period end",
+                    "quoted_label": "Consolidated net worth INR 81,590 million at H1 FY26 versus INR 64,021 million at FY25, calculated as share capital plus other equity"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q4 FY26",
+          "status": "four_factor_complete",
+          "raw_score": 1.0263,
+          "display_score_v2": 76,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.51,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "net_total_income",
+                  "direction": "strengthens",
+                  "previous_value": 1212.67,
+                  "current_value": 4977.39,
+                  "canonical_unit": "INR crore",
+                  "change_percentage": 310.45,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 9,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 standalone net sales/income from operations INR 4,977.39/1,212.67 crore"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.52,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "operating_margin",
+                  "direction": "strengthens",
+                  "previous_value": 29.82,
+                  "current_value": 34.17,
+                  "canonical_unit": "percent",
+                  "change_percentage": 14.59,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 11,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Q4 FY26/Q4 FY25 standalone operating EBITDA margin 34.17%/29.82%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.48,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "production_volume",
+                  "direction": "strengthens",
+                  "previous_value": 10,
+                  "current_value": 22,
+                  "canonical_unit": "million tonnes",
+                  "change_percentage": 120,
+                  "comparison_basis": "annual_prior_year",
+                  "previous_period": "FY25",
+                  "current_period": "FY26",
+                  "source_locator": {
+                    "page": 4,
+                    "table": null,
+                    "section": "FY26",
+                    "quoted_label": "Iron ore production 22 million tonnes in FY26 versus 10 million tonnes in FY25"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": -1.36,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "debt_to_equity",
+                  "direction": "weakens",
+                  "previous_value": 0.15,
+                  "current_value": 0.46,
+                  "canonical_unit": "ratio",
+                  "change_percentage": 206.67,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q4 FY25",
+                  "current_period": "Q4 FY26",
+                  "source_locator": {
+                    "page": 11,
+                    "table": null,
+                    "section": "Q4 FY26",
+                    "quoted_label": "Standalone debt-equity 0.46x at FY26 versus 0.15x at FY25"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "checkpoint": "Q1 FY27",
+          "status": "four_factor_complete",
+          "raw_score": 1.043,
+          "display_score_v2": 76,
+          "factors": [
+            {
+              "factor_id": "earnings",
+              "score": 1.51,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "revenue",
+                  "direction": "strengthens",
+                  "previous_value": 23799,
+                  "current_value": 54129,
+                  "canonical_unit": "INR million",
+                  "change_percentage": 127.44,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 12,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 standalone revenue INR 54,129/23,799 million"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "economics",
+              "score": 1.58,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "ebitda_margin",
+                  "direction": "strengthens",
+                  "previous_value": 32.78,
+                  "current_value": 39.17,
+                  "canonical_unit": "percent",
+                  "change_percentage": 19.49,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 12,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Q1 FY27/Q1 FY26 standalone EBITDA margin 39.17%/32.78%"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "execution",
+              "score": 1.48,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "sales_volume",
+                  "direction": "strengthens",
+                  "previous_value": 3.45,
+                  "current_value": 5.46,
+                  "canonical_unit": "million tonnes",
+                  "change_percentage": 58.26,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 9,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Iron ore sales volume 5.46 million tonnes in Q1 FY27 versus 3.45 million tonnes in Q1 FY26"
+                  }
+                }
+              ]
+            },
+            {
+              "factor_id": "balance_sheet",
+              "score": -1.36,
+              "contradiction": false,
+              "impacts": [
+                {
+                  "metric_id": "debt_to_equity",
+                  "direction": "weakens",
+                  "previous_value": 0.14,
+                  "current_value": 0.49,
+                  "canonical_unit": "ratio",
+                  "change_percentage": 250,
+                  "comparison_basis": "same_quarter_prior_year",
+                  "previous_period": "Q1 FY26",
+                  "current_period": "Q1 FY27",
+                  "source_locator": {
+                    "page": 6,
+                    "table": null,
+                    "section": "Q1 FY27",
+                    "quoted_label": "Standalone debt-equity 0.49x at Q1 FY27 versus 0.14x at Q1 FY26"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "symbol": "PFOCUS",
+      "company_name": "Prime Focus Ltd.",
+      "queue_priority": 6,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SAREGAMA",
+      "company_name": "Saregama India Ltd",
+      "queue_priority": 7,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "TORNTPHARM",
+      "company_name": "Torrent Pharmaceuticals Ltd.",
+      "queue_priority": 8,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "POLYMED",
+      "company_name": "Poly Medicure Ltd.",
+      "queue_priority": 9,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "INDHOTEL",
+      "company_name": "Indian Hotels Co. Ltd.",
+      "queue_priority": 10,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "OIL",
+      "company_name": "Oil India Ltd.",
+      "queue_priority": 11,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SCHNEIDER",
+      "company_name": "Schneider Electric Infrastructure Ltd.",
+      "queue_priority": 12,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "YESBANK",
+      "company_name": "Yes Bank Ltd.",
+      "queue_priority": 13,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "TEGA",
+      "company_name": "Tega Industries Ltd.",
+      "queue_priority": 14,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SPLPETRO",
+      "company_name": "Supreme Petrochem Ltd.",
+      "queue_priority": 15,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "ENRIN",
+      "company_name": "Siemens Energy India Ltd.",
+      "queue_priority": 16,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "NUVOCO",
+      "company_name": "Nuvoco Vistas Corporation Ltd.",
+      "queue_priority": 17,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "WELCORP",
+      "company_name": "Welspun Corp Ltd.",
+      "queue_priority": 18,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "company_name": "Laurus Labs Ltd.",
+      "queue_priority": 19,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SYRMA",
+      "company_name": "Syrma SGS Technology Ltd.",
+      "queue_priority": 20,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "WELSPUNLIV",
+      "company_name": "Welspun Living Ltd.",
+      "queue_priority": 21,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "ATHERENERG",
+      "company_name": "Ather Energy Ltd.",
+      "queue_priority": 22,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SONACOMS",
+      "company_name": "Sona BLW Precision Forgings Ltd.",
+      "queue_priority": 23,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "SAILIFE",
+      "company_name": "Sai Life Sciences Ltd.",
+      "queue_priority": 24,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    },
+    {
+      "symbol": "FINCABLES",
+      "company_name": "Finolex Cables Ltd.",
+      "queue_priority": 25,
+      "workflow_status": "EVIDENCE_WORK_QUEUED",
+      "checkpoints": [],
+      "lifecycle_v2_1": null,
+      "lifecycle_reason": null
+    }
+  ]
+}

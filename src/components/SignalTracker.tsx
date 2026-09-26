@@ -35,6 +35,7 @@ import frozenCohortData from "../data/signalTrackerCohort001.json";
 import SignalEvidenceLayer from "./SignalEvidenceLayer";
 import SignalTrackerV2Comparison from "./SignalTrackerV2Comparison";
 import MomentumRadar from "./MomentumRadar";
+import FundamentalChangeLibrary from "./FundamentalChangeLibrary";
 
 type Lifecycle =
   | "Watch"
@@ -230,10 +231,12 @@ function genuineSeries(
 
 type SignalTrackerProps = {
   onBack: () => void;
+  initialMode?: "v1" | "v2" | "momentum" | "library";
+  onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "evidence_queued" | "not_queued" }) => void;
 };
 
-export default function SignalTracker({ onBack }: SignalTrackerProps) {
-  const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum">("v2");
+export default function SignalTracker({ onBack, initialMode = "v2", onDeepDive }: SignalTrackerProps) {
+  const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "library">(initialMode);
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
@@ -338,7 +341,11 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
   }
 
   if (studyMode === "momentum") {
-    return <MomentumRadar onBack={() => setStudyMode("v2")} />;
+    return <MomentumRadar onBack={() => setStudyMode("v2")} onBrowseLibrary={() => setStudyMode("library")} onDeepDive={onDeepDive} />;
+  }
+
+  if (studyMode === "library") {
+    return <FundamentalChangeLibrary onBack={() => setStudyMode("momentum")} />;
   }
 
   if (evidenceOpen) {
@@ -359,7 +366,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
           onClick={onBack}
           className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white transition-colors mb-7"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to BMS Discovery
+          <ArrowLeft className="w-4 h-4" /> Back to Fundamental Change Discovery
         </button>
 
         <button
@@ -375,10 +382,10 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
             <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
               <div>
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-teal-300 mb-3">
-                  <Activity className="w-4 h-4" /> Cohort {cohortData.cohortId} · frozen BMS records
+                  <Activity className="w-4 h-4" /> Cohort {cohortData.cohortId} · frozen FCS records
                 </div>
                 <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white">
-                  BMS Signal Tracker
+                  Fundamental Change Signal Tracker
                 </h1>
                 <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-3xl leading-relaxed">
                   A prospective validation view that records what happens after a frozen signal. It does not forecast or draw future prices.
@@ -420,7 +427,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
             <div className="flex min-w-max">
               {([
                 { id: "overview", label: "Tracker", enabled: true },
-                { id: "explanation", label: "How to read BMS", enabled: true },
+                { id: "explanation", label: "How to read FCS", enabled: true },
                 { id: "methodology", label: "Validation methodology", enabled: true },
                 { id: "fundamentals", label: "Fundamental outcomes", enabled: false },
                 { id: "all", label: "All companies", enabled: false },
@@ -462,7 +469,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                     </button>
                   </div>
                   <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-                    This shortlist contains signals with enough supporting evidence for deeper research. It never removes or rewrites an original BMS signal.
+                    This shortlist contains signals with enough supporting evidence for deeper research. It never removes or rewrites an original Fundamental Change signal.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -529,7 +536,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                   </div>
                   <div className="mt-2 text-xs text-zinc-500">#{selected.marketCapRankWithinLifecycle} by market cap within {selected.lifecycle} · {formatMarketCap(selected.marketCap)}</div>
                   <div className="mt-2 text-xs text-zinc-400">
-                    Matching {selected.period} result: {formatDate(selected.resultDate)} · BMS recorded: {formatDate(cohortData.signalDate)}
+                    Matching {selected.period} result: {formatDate(selected.resultDate)} · FCS recorded: {formatDate(cohortData.signalDate)}
                   </div>
                   <a href={selected.resultDateSourceUrl} target="_blank" rel="noreferrer" className="inline-flex mt-1 text-[10px] uppercase tracking-wider text-sky-300 hover:text-sky-200">
                     Official result-date source ↗
@@ -545,7 +552,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
               <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:p-5">
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                   <div className="min-w-0">
-                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Research readiness · separate from BMS V1</div>
+                    <div className="text-[10px] font-black uppercase tracking-[0.14em] text-zinc-500">Research readiness · separate from FCS</div>
                     <div className="mt-2 flex flex-wrap items-center gap-3">
                       <span className={`inline-flex rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${selectedQualificationCopy.style}`}>{selectedQualificationCopy.label}</span>
                       <span className="text-xs text-zinc-500">
@@ -696,7 +703,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                   <div>
                     <h3 className="text-sm font-semibold text-white">What this frozen signal means</h3>
                     <p className="text-sm text-zinc-400 mt-2 leading-relaxed">{lifecycleMeaning[selected.lifecycle]}</p>
-                    <p className="text-xs text-zinc-500 mt-3">Evidence: {selected.evidenceStrength} · {selected.evidenceCount} observations. BMS is a research-prioritisation signal, not a buy, sell or hold recommendation.</p>
+                    <p className="text-xs text-zinc-500 mt-3">Evidence: {selected.evidenceStrength} · {selected.evidenceCount} observations. FCS is a research-prioritisation signal, not a buy, sell or hold recommendation.</p>
                   </div>
                 </div>
               </div>
@@ -709,9 +716,9 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                 <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.18em] text-teal-300">
                   <BookOpenCheck className="w-4 h-4" /> Plain-language guide
                 </div>
-                <h2 className="mt-3 text-2xl md:text-4xl font-semibold text-white">How to read a BMS signal</h2>
+                <h2 className="mt-3 text-2xl md:text-4xl font-semibold text-white">How to read a Fundamental Change signal</h2>
                 <p className="mt-3 max-w-3xl text-sm md:text-base leading-relaxed text-zinc-400">
-                  BMS organises evidence about changes in business fundamentals. It helps a user decide where deeper research may be worthwhile; it does not predict a share price or issue a buy, sell or hold instruction.
+                  FCS organises evidence about changes in reported business fundamentals using the BMS methodology. It helps a user decide where deeper research may be worthwhile; it does not predict a share price or issue a buy, sell or hold instruction.
                 </p>
               </div>
 
@@ -721,7 +728,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                     <div className="rounded-xl bg-teal-400/10 p-2.5"><Gauge className="w-5 h-5 text-teal-300" /></div>
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-[0.15em] text-teal-300">System responsibility</div>
-                      <h3 className="mt-1 text-lg font-semibold text-white">What BMS does</h3>
+                      <h3 className="mt-1 text-lg font-semibold text-white">What FCS does</h3>
                     </div>
                   </div>
                   <div className="mt-5 space-y-4">
@@ -751,7 +758,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                     {[
                       { icon: SearchCheck, title: "Selects a research priority", text: "Uses the lifecycle stage to decide which company deserves attention—not which security to buy or sell." },
                       { icon: BookOpenCheck, title: "Reads the evidence", text: "Examines why the score changed and checks the underlying filings, results and authoritative sources." },
-                      { icon: TriangleAlert, title: "Tests the complete thesis", text: "Assesses sustainability, valuation, expectations, risks and contrary evidence beyond the BMS signal." },
+                      { icon: TriangleAlert, title: "Tests the complete thesis", text: "Assesses sustainability, valuation, expectations, risks and contrary evidence beyond the FCS signal." },
                       { icon: UserRoundCheck, title: "Decides independently", text: "Makes and monitors any investment decision independently, with professional advice where appropriate." },
                     ].map((item) => (
                       <div key={item.title} className="flex gap-3">
@@ -790,7 +797,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                   <ul className="mt-4 space-y-2 text-sm text-zinc-400">
                     <li>• “Emerging means the price will rise.”</li>
                     <li>• “Fading means I must sell.”</li>
-                    <li>• “The tracker proves that BMS predicts returns.”</li>
+                    <li>• “The tracker proves that FCS predicts returns.”</li>
                   </ul>
                 </div>
               </div>
@@ -820,14 +827,14 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
                 <div className="rounded-2xl border border-sky-400/20 bg-sky-400/[0.04] p-5">
                   <div className="flex items-center gap-2 text-sm font-semibold text-sky-200"><CalendarClock className="w-5 h-5" /> Date 1 · Matching result</div>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                    The official release date for the same quarter as the frozen BMS score. Prices from the first following trading session to the freeze are shown only as reconstructed company context.
+                    The official release date for the same quarter as the frozen FCS. Prices from the first following trading session to the freeze are shown only as reconstructed company context.
                   </p>
                   <div className="mt-3 text-[10px] uppercase tracking-[0.12em] text-sky-300">Not claimed as a historically published signal</div>
                 </div>
                 <div className="rounded-2xl border border-violet-400/20 bg-violet-400/[0.04] p-5">
                   <div className="flex items-center gap-2 text-sm font-semibold text-violet-200"><LockKeyhole className="w-5 h-5" /> Date 2 · Prospective freeze</div>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                    On {formatDate(cohortData.signalDate)}, the 477-company universe, displayed 25, BMS values and lifecycle stages were recorded. Only sessions strictly after this date count as forward validation.
+                    On {formatDate(cohortData.signalDate)}, the 477-company universe, displayed 25, FCS values and lifecycle stages were recorded. Only sessions strictly after this date count as forward validation.
                   </p>
                   <div className="mt-3 text-[10px] uppercase tracking-[0.12em] text-violet-300">Genuine prospective observation begins here</div>
                 </div>
@@ -874,7 +881,7 @@ export default function SignalTracker({ onBack }: SignalTrackerProps) {
           )}
 
           <footer className="px-5 md:px-8 py-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-[10px] uppercase tracking-[0.12em] text-zinc-500">
-            <span>Frozen 477-company BMS file · company prices: Yahoo prototype · benchmarks: Nifty Indices · not investment advice</span>
+            <span>Frozen 477-company FCS file (BMS methodology) · company prices: Yahoo prototype · benchmarks: Nifty Indices · not investment advice</span>
             <button type="button" disabled className="inline-flex items-center gap-2 text-zinc-600"><Download className="w-4 h-4" /> Cohort download in full build</button>
           </footer>
         </section>
