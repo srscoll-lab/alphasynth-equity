@@ -155,6 +155,8 @@ function featuresFor(company, observations, benchmark) {
   const momentum6_1 = observations.length >= 127 ? change(closes.at(-22), closes.at(-127)) : null;
   const momentum3m = observations.length >= 64 ? change(current, closes.at(-64)) : null;
   const momentum1m = observations.length >= 22 ? change(current, closes.at(-22)) : null;
+  const momentum20d = observations.length >= 21 ? change(current, closes.at(-21)) : null;
+  const momentum5d = observations.length >= 6 ? change(current, closes.at(-6)) : null;
   const benchmark6_1 = observations.length >= 127
     ? change(observationAtOrBefore(benchmark, observations.at(-22).date)?.close, observationAtOrBefore(benchmark, observations.at(-127).date)?.close)
     : null;
@@ -182,6 +184,8 @@ function featuresFor(company, observations, benchmark) {
     momentum_6_1: round(momentum6_1),
     momentum_3m: round(momentum3m),
     momentum_1m: round(momentum1m),
+    momentum_20d: round(momentum20d),
+    momentum_5d: round(momentum5d),
     nifty500_6_1: round(benchmark6_1),
     nifty500_3m: round(benchmark3m),
     relative_strength: round(relativeStrength),

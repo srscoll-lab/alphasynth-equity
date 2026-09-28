@@ -45,6 +45,10 @@ import {
 import { sanitizeDebtEquity } from "./src/peer-metric-validation";
 import { enforceDeepDiveInvestmentBoundary } from "./src/deep-dive-investment-boundary";
 import { mapBmsFactorMetric } from "./src/bms-factor-evidence";
+import {
+  cleanFundamentalReviewSymbol,
+  normalizeFundamentalReviewJob,
+} from "./src/fundamental-review-contract";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -4067,6 +4071,105 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
 
   app.get("/api/bms/factor-schema", (_req, res) => {
     return res.json(BMS_FACTOR_SCHEMA_DESCRIPTION);
+  });
+
+  app.get("/api/bms/fundamental-review/capabilities", (_req, res) => {
+    const requestConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL);
+    const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
+    return res.json({
+      available: requestConfigured && statusConfigured,
+      requestConfigured,
+      statusConfigured,
+      expectedMinutes: { minimum: 10, maximum: 15 },
+      currentScoreAvailableBeforeLifecycle: true,
+      lifecycleRequiresComparableCheckpoints: 3,
+    });
+  });
+
+  // User-initiated Fundamental Change Review gateway. The durable worker is
+  // deliberately external (n8n/Cloud Tasks) so a Cloud Run instance restart
+  // cannot lose a 10–15 minute evidence job. This bridge fails closed when the
+  // worker is not configured; the UI must never pretend that a job started.
+  app.post("/api/bms/fundamental-review/request", async (req, res) => {
+    const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);
+    const companyName = String(req.body?.company_name || symbol).trim();
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+
+    const requestUrl = process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL;
+    if (!requestUrl) {
+      return res.status(503).json({
+        error: "Fundamental Change Review requests are not configured on this deployment. No job was started.",
+        code: "FUNDAMENTAL_REVIEW_WORKER_NOT_CONFIGURED",
+      });
+    }
+
+    try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN) {
+        headers["x-fundamental-review-token"] = process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN;
+      }
+      const response = await fetch(requestUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          symbol,
+          company_name: companyName,
+          requested_at: new Date().toISOString(),
+          source: "alphasynth-momentum-radar",
+          required_factors: ["earnings", "economics", "execution", "balance_sheet"],
+          lifecycle_after_score: true,
+        }),
+        signal: AbortSignal.timeout(20_000),
+      });
+      const payload: any = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return res.status(response.status).json({
+          error: payload?.error || "The Fundamental Change Review worker rejected the request. No new job was started.",
+          code: payload?.code || "FUNDAMENTAL_REVIEW_REQUEST_REJECTED",
+        });
+      }
+      const job = normalizeFundamentalReviewJob(payload?.job || payload, { symbol, companyName });
+      if (!job.jobId || !["queued", "locating_evidence", "validating_factors", "scoring", "lifecycle_processing", "ready"].includes(job.status)) {
+        return res.status(502).json({
+          error: "The review worker did not return a valid durable job acknowledgement. No start is being claimed.",
+          code: "INVALID_FUNDAMENTAL_REVIEW_ACKNOWLEDGEMENT",
+        });
+      }
+      return res.status(response.status === 200 ? 200 : 202).json({ job });
+    } catch (error: any) {
+      console.error("[fundamental-review] request failed:", error?.message || error);
+      return res.status(502).json({
+        error: "The Fundamental Change Review worker could not be reached. No start is being claimed.",
+        code: "FUNDAMENTAL_REVIEW_WORKER_UNAVAILABLE",
+      });
+    }
+  });
+
+  app.get("/api/bms/fundamental-review/status/:symbol", async (req, res) => {
+    const symbol = cleanFundamentalReviewSymbol(req.params.symbol);
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+    const statusUrl = process.env.FUNDAMENTAL_REVIEW_STATUS_URL;
+    if (!statusUrl) {
+      return res.status(503).json({
+        error: "Fundamental Change Review status is not configured on this deployment.",
+        code: "FUNDAMENTAL_REVIEW_STATUS_NOT_CONFIGURED",
+      });
+    }
+    try {
+      const url = new URL(statusUrl);
+      url.searchParams.set("symbol", symbol);
+      const headers: Record<string, string> = {};
+      if (process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN) {
+        headers["x-fundamental-review-token"] = process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN;
+      }
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
+      const payload: any = await response.json().catch(() => ({}));
+      if (!response.ok) return res.status(response.status).json({ error: payload?.error || "Review status is unavailable." });
+      return res.json({ job: normalizeFundamentalReviewJob(payload?.job || payload, { symbol }) });
+    } catch (error: any) {
+      console.error("[fundamental-review] status failed:", error?.message || error);
+      return res.status(502).json({ error: "Review status is temporarily unavailable." });
+    }
   });
 
   app.get("/api/bms/expectation-delivery/schema", (_req, res) => {

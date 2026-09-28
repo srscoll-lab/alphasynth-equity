@@ -1,9 +1,15 @@
-import { useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Compass, Search, ShieldAlert, TrendingUp, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Compass, RefreshCw, Search, ShieldAlert, TrendingUp, X } from "lucide-react";
 import radarData from "../data/bmsMomentumRadar.json";
 import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
 import lifecycleV21 from "../data/momentumExpansionLifecycleV21.json";
 import expansionStudies from "../data/momentumExpansionStudies.json";
+import {
+  defaultFundamentalReviewMessage,
+  isFundamentalReviewInProgress,
+  normalizeFundamentalReviewJob,
+  type FundamentalReviewJob,
+} from "../fundamental-review-contract";
 
 type RadarState = "DORMANT" | "STARTING" | "CONFIRMED" | "EXTENDED" | "DETERIORATING" | "INSUFFICIENT_HISTORY";
 type Segment = "LARGE_CAP" | "MID_CAP" | "SMALL_CAP" | "MICRO_CAP" | "EXTENDED_NSE" | "UNCLASSIFIED";
@@ -31,6 +37,66 @@ const stateMeaning: Record<RadarState, string> = {
 };
 const pct = (value: number | null) => value === null ? "Unavailable" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const money = (value: number | null) => value === null ? "Unavailable" : `₹${new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(value)}`;
+const ratio = (value: number | null) => value === null ? "Unavailable" : `${value.toFixed(2)}×`;
+const triggerSummary = (trigger: Company["current_momentum_trigger"]) => {
+  if (!trigger) return { label: "Unavailable", style: "text-zinc-500" };
+  if (trigger.breakout_status === "CONFIRMED" && trigger.momentum_20d > 0 && trigger.momentum_5d > 0) return { label: "Confirmed", style: "text-emerald-300" };
+  if (trigger.momentum_20d > 0 && trigger.momentum_5d > 0 && trigger.traded_value_acceleration_5_vs_prior_20 >= 1.1) return { label: "Accelerating", style: "text-cyan-300" };
+  if (trigger.momentum_20d > 0 && trigger.momentum_5d >= 0) return { label: "Developing", style: "text-sky-300" };
+  if (trigger.momentum_20d > 0 && trigger.momentum_5d < 0) return { label: "Cooling", style: "text-amber-200" };
+  if (trigger.momentum_20d < 0 && trigger.momentum_5d < 0) return { label: "Reversing", style: "text-rose-300" };
+  return { label: "Mixed", style: "text-zinc-300" };
+};
+const breakoutLabel = (status: Company["current_momentum_trigger"] extends infer T ? T extends { breakout_status: infer S } ? S : never : never) => ({
+  CONFIRMED: "Confirmed",
+  PRICE_ONLY: "Price only",
+  NEAR_BREAKOUT: "Near breakout",
+  NOT_CONFIRMED: "Not confirmed",
+}[status] ?? "Unavailable");
+const fundamentalReviewStatus = (company: Company) => {
+  if (company.selection_gate.eligible) {
+    return {
+      label: "Eligible for fundamental review",
+      reason: "Meets the current trend, liquidity, history and data-quality rules.",
+      style: "text-emerald-300",
+    };
+  }
+
+  const reasons = company.selection_gate.exclusion_reasons ?? [];
+  if (reasons.includes("extension") || company.radar_state === "EXTENDED") {
+    return {
+      label: "Not currently selected",
+      reason: "The trend is already extended, so fresh evidence work is deferred rather than chasing a mature move.",
+      style: "text-amber-200",
+    };
+  }
+  if (reasons.includes("liquidity")) {
+    return {
+      label: "Not currently selected",
+      reason: "Recent traded value is below the current liquidity requirement.",
+      style: "text-zinc-300",
+    };
+  }
+  if (reasons.includes("history")) {
+    return {
+      label: "Not currently selected",
+      reason: "There is not yet enough comparable price history.",
+      style: "text-zinc-300",
+    };
+  }
+  if (reasons.includes("data_quality")) {
+    return {
+      label: "Not currently selected",
+      reason: "The latest market data requires validation or refresh.",
+      style: "text-zinc-300",
+    };
+  }
+  return {
+    label: "Not currently selected",
+    reason: "The current momentum setup does not meet the fundamental-review selection rules.",
+    style: "text-zinc-300",
+  };
+};
 const lifecycleBySymbol = new Map(lifecycleV21.companies.map((company) => [company.symbol, company]));
 const studyBySymbol = new Map(expansionStudies.companies.map((company) => [company.symbol, company]));
 const lifecycleStyle: Record<string, string> = {
@@ -42,6 +108,18 @@ const lifecycleStyle: Record<string, string> = {
   EMERGING: "border-violet-400/30 bg-violet-400/10 text-violet-300",
   WATCH: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
 };
+
+const reviewStatusLabel = (status: FundamentalReviewJob["status"]) => ({
+  not_started: "FCS not started",
+  queued: "Review queued",
+  locating_evidence: "Locating evidence",
+  validating_factors: "Validating factors",
+  scoring: "Calculating FCS",
+  lifecycle_processing: "Lifecycle processing",
+  ready: "FCS & lifecycle ready",
+  incomplete: "Review incomplete",
+  failed: "Review needs attention",
+}[status]);
 
 type MomentumRadarProps = {
   onBack: () => void;
@@ -76,6 +154,20 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const [inactiveFilter, setInactiveFilter] = useState<"ALL" | "DORMANT" | "DETERIORATING">("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
+  const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>({});
+  const [requestCandidate, setRequestCandidate] = useState<Company | null>(null);
+  const [requestSubmitting, setRequestSubmitting] = useState(false);
+  const [requestError, setRequestError] = useState("");
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
+  const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
+      .then(async (response) => response.ok ? response.json() : null)
+      .then((payload) => { if (active) setReviewRequestsAvailable(payload?.available === true); })
+      .catch(() => { if (active) setReviewRequestsAvailable(false); });
+    return () => { active = false; };
+  }, []);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return companies.filter((company) => (filter === "ALL" || company.radar_state === filter)
@@ -97,6 +189,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   }, [companies, filter, query]);
   const selectedStudy = selectedStudySymbol ? studyBySymbol.get(selectedStudySymbol) : null;
   const selectedStatusCompany = selectedStatusSymbol ? companies.find((company) => company.symbol === selectedStatusSymbol) : null;
+  const selectedRuntimeJob = selectedStatusCompany ? reviewJobs[selectedStatusCompany.symbol] : null;
   const inactiveCounts = {
     all: inactiveMomentumCompanies.length,
     dormant: inactiveMomentumCompanies.filter((company) => company.radar_state === "DORMANT").length,
@@ -120,6 +213,65 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     }
     setInactiveExpanded(true);
     window.setTimeout(() => document.getElementById("inactive-momentum-section")?.scrollIntoView({ behavior: "auto", block: "start" }), 50);
+  };
+
+  const showRequestConfirmation = (company: Company) => {
+    setRequestError("");
+    setRequestCandidate(company);
+  };
+
+  const requestFundamentalReview = async () => {
+    if (!requestCandidate || requestSubmitting) return;
+    setRequestSubmitting(true);
+    setRequestError("");
+    try {
+      const response = await fetch("/api/bms/fundamental-review/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ symbol: requestCandidate.symbol, company_name: requestCandidate.company_name }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || "The review request could not be started.");
+      const job = normalizeFundamentalReviewJob(payload?.job || payload, {
+        symbol: requestCandidate.symbol,
+        companyName: requestCandidate.company_name,
+      });
+      if (!job.jobId || (!isFundamentalReviewInProgress(job.status) && job.status !== "ready")) {
+        throw new Error("The review service did not return a valid durable job acknowledgement. No review was started.");
+      }
+      setReviewJobs((current) => ({ ...current, [job.symbol]: job }));
+      setSelectedStatusSymbol(job.symbol);
+      setRequestCandidate(null);
+    } catch (error) {
+      setRequestError(error instanceof Error ? error.message : "The review request could not be started.");
+    } finally {
+      setRequestSubmitting(false);
+    }
+  };
+
+  const refreshFundamentalReviewStatus = async () => {
+    if (!selectedStatusCompany || refreshingStatus) return;
+    setRefreshingStatus(true);
+    try {
+      const response = await fetch(`/api/bms/fundamental-review/status/${encodeURIComponent(selectedStatusCompany.symbol)}`, { cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || "The latest review status is unavailable.");
+      const job = normalizeFundamentalReviewJob(payload?.job || payload, {
+        symbol: selectedStatusCompany.symbol,
+        companyName: selectedStatusCompany.company_name,
+      });
+      setReviewJobs((current) => ({ ...current, [job.symbol]: job }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "The latest review status is unavailable.";
+      setReviewJobs((current) => ({
+        ...current,
+        [selectedStatusCompany.symbol]: current[selectedStatusCompany.symbol]
+          ? { ...current[selectedStatusCompany.symbol], message }
+          : normalizeFundamentalReviewJob({ status: "not_started", message }, { symbol: selectedStatusCompany.symbol, companyName: selectedStatusCompany.company_name }),
+      }));
+    } finally {
+      setRefreshingStatus(false);
+    }
   };
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
@@ -178,20 +330,19 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
         <div className="p-5 md:p-8">
           {!!filtered.length && <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
             <span>{filtered.length.toLocaleString("en-IN")} companies match the active filters.</span>
-            <span>{filtered.length > displayed.length ? `Showing the first ${displayed.length}; use state, segment, gate or search to narrow the universe.` : `Showing all ${displayed.length}.`}</span>
+            <span>{filtered.length > displayed.length ? `Showing the first ${displayed.length}; use state, segment or search to narrow the universe.` : `Showing all ${displayed.length}.`}</span>
           </div>}
           <div className="rounded-2xl border border-white/10 overflow-x-auto">
-            <table className="w-full min-w-[1840px] text-left">
-              <thead className="bg-white/[0.035] text-[9px] uppercase tracking-[0.13em] text-zinc-500"><tr><th className="px-4 py-3">Priority</th><th className="px-4 py-3">Company</th><th className="px-4 py-3">Segment</th><th className="px-4 py-3">Selection gate</th><th className="px-4 py-3">Radar state</th><th className="px-4 py-3">Fundamental Change workflow</th><th className="px-4 py-3">Research</th><th className="px-4 py-3">12–1</th><th className="px-4 py-3">6–1</th><th className="px-4 py-3">3 month</th><th className="px-4 py-3">vs Nifty 500</th><th className="px-4 py-3">vs universe</th><th className="px-4 py-3">vs sector</th><th className="px-4 py-3">52w high</th><th className="px-4 py-3">60d median traded value</th></tr></thead>
+            <table className="w-full min-w-[1290px] table-fixed text-left">
+              <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="sticky left-0 z-20 w-[175px] bg-[#182235] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">Classification / Score</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
               <tbody className="divide-y divide-white/[0.07]">{displayed.map((company) => <tr key={company.symbol} className="hover:bg-white/[0.025]">
-                <td className="px-4 py-4 font-mono font-bold text-white">{company.experimental_rank_score ?? "—"}</td>
-                <td className="px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 text-xs text-zinc-500 max-w-[220px] truncate">{company.company_name}</div></td>
-                <td className="px-4 py-4"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-200">{company.market_cap_segment.label}</span><div className="mt-2 text-[10px] text-zinc-600">{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
-                <td className="px-4 py-4">{company.selection_gate.eligible ? <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-1 text-[9px] font-black text-emerald-300">ELIGIBLE</span> : <><span className="rounded-full border border-zinc-500/30 bg-zinc-500/10 px-2 py-1 text-[9px] font-black text-zinc-400">HELD BACK</span><div className="mt-2 max-w-[180px] text-[10px] leading-relaxed text-zinc-600">{company.selection_gate.exclusion_reasons.join(", ").replaceAll("_", " ")}</div></>}</td>
-                <td className="px-4 py-4"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{company.radar_state.replaceAll("_", " ")}</span><div className="mt-2 max-w-[230px] text-[10px] leading-relaxed text-zinc-500">{stateMeaning[company.radar_state as RadarState]}</div></td>
-                <td className="px-4 py-4">{lifecycleBySymbol.has(company.symbol) ? <><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>FCS &amp; LIFECYCLE READY · {lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1}</span><div className="mt-2 max-w-[250px] text-[10px] leading-relaxed text-zinc-500">{lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")} · {lifecycleBySymbol.get(company.symbol)!.reason}</div><button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-cyan-300 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button></> : studyBySymbol.has(company.symbol) ? <><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.1em] text-amber-200"><Clock3 className="h-3.5 w-3.5" /> Evidence work queued</span><button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.1em] text-zinc-400 hover:text-white">View processing status</button></> : <><span className="text-[10px] text-zinc-600">Eligible · not queued</span><div className="mt-2 max-w-[210px] text-[9px] leading-relaxed text-zinc-600">Momentum eligibility does not create a Fundamental Change Score automatically.</div></>}</td>
-                <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "evidence_queued" : "not_queued" })} className="inline-flex max-w-[190px] items-center gap-1.5 rounded-lg border border-gold/25 bg-gold/[0.07] px-2.5 py-2 text-left text-[9px] font-black uppercase leading-relaxed tracking-[0.08em] text-gold hover:border-gold/50 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" />{lifecycleBySymbol.has(company.symbol) ? "Open company deep dive" : studyBySymbol.has(company.symbol) ? "Research while FCS is pending" : "Explore company"}</button></td>
-                <td className="px-4 py-4 font-mono text-sm">{pct(company.momentum_12_1)}</td><td className="px-4 py-4 font-mono text-sm">{pct(company.momentum_6_1)}</td><td className="px-4 py-4 font-mono text-sm">{pct(company.momentum_3m)}</td><td className="px-4 py-4 font-mono text-sm">{pct(company.relative_strength)}</td><td className="px-4 py-4"><div className="font-mono text-sm">{pct(company.relative_strength_to_universe)}</div><div className="mt-1 max-w-[150px] text-[9px] leading-relaxed text-zinc-600">{company.universe_benchmark ?? "Unavailable"} · {company.universe_peer_count} peers</div></td><td className="px-4 py-4"><div className="font-mono text-sm">{pct(company.relative_strength_to_sector)}</div><div className="mt-1 max-w-[170px] text-[9px] leading-relaxed text-zinc-600">{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</div></td><td className="px-4 py-4 font-mono text-sm">{pct(company.distance_from_52w_high)}</td><td className="px-4 py-4 font-mono text-sm">{money(company.median_daily_traded_value_60)}</td>
+                <td className="sticky left-0 z-10 bg-[#101827] px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{company.market_cap_segment.label}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
+                <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{company.radar_state.replaceAll("_", " ")}</span><span className="font-mono text-xl font-bold text-white">{company.experimental_rank_score ?? "—"}</span></div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div><div className={`mt-3 text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalReviewStatus(company).style}`}>{fundamentalReviewStatus(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalReviewStatus(company).reason}</div></td>
+                <td className="px-4 py-4"><div className="space-y-2 text-[10px]"><div className="flex justify-between gap-3"><span className="text-zinc-300">12-month</span><span className="font-mono text-white">{pct(company.momentum_12_1)}</span></div><div className="flex justify-between gap-3"><span className="text-zinc-300">6-month</span><span className="font-mono text-white">{pct(company.momentum_6_1)}</span></div><div className="text-[9px] leading-relaxed text-zinc-400">Ends one month before {company.as_of_date}</div></div></td>
+                <td className="px-4 py-4">{company.current_momentum_trigger ? <div><div className={`text-[10px] font-black uppercase tracking-[0.1em] ${triggerSummary(company.current_momentum_trigger).style}`}>{triggerSummary(company.current_momentum_trigger).label}</div><div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]"><span className="text-zinc-300">20-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_20d)}</span><span className="text-zinc-300">5-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_5d)}</span><span className="text-zinc-300">Volume</span><span className="text-right font-mono text-white">{ratio(company.current_momentum_trigger.traded_value_acceleration_5_vs_prior_20)}</span><span className="text-zinc-300">Breakout</span><span className="text-right text-white">{breakoutLabel(company.current_momentum_trigger.breakout_status)}</span></div><div className="mt-2 text-[9px] text-zinc-400">As of {company.current_momentum_trigger.as_of_date}</div></div> : <span className="text-[10px] text-zinc-400">Insufficient current-session history</span>}</td>
+                <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.universe_benchmark ?? "Unavailable"} · ${company.universe_peer_count} peers`}>{company.universe_benchmark ?? "Unavailable"} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
+                <td className="px-4 py-4">{lifecycleBySymbol.has(company.symbol) ? <><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>READY · {lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1}</span><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")} · {lifecycleBySymbol.get(company.symbol)!.reason}</div><button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button></> : studyBySymbol.has(company.symbol) || (reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status)) ? <><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewJobs[company.symbol] ? reviewStatusLabel(reviewJobs[company.symbol].status) : "Evidence queued"}</span><div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{reviewJobs[company.symbol]?.message || "Four-factor evidence work is in progress."}</div><button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-zinc-300 hover:text-white">View processing status</button></> : <><span className={`text-[10px] font-semibold ${company.selection_gate.eligible ? "text-emerald-200" : "text-amber-100"}`}>{company.selection_gate.eligible ? "Fundamental review available" : "FCS not started"}</span><div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{company.selection_gate.eligible ? "Request the four-factor review only if you want to investigate this company further." : fundamentalReviewStatus(company).reason}</div>{reviewRequestsAvailable ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Request FCS review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually 10–15 minutes · optional</div></> : <div className="mt-3 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] leading-relaxed text-zinc-400">Automated requests are not yet enabled. Deep Dive remains available.</div>}</>}</td>
+                <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "evidence_queued" : "not_queued" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" />{lifecycleBySymbol.has(company.symbol) ? "Deep dive" : studyBySymbol.has(company.symbol) ? "Research" : "Explore"}</button></td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -234,10 +385,11 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             <button type="button" onClick={() => { setFilter("ALL"); setSegment("ALL"); setQuery(""); }} className="mt-4 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 hover:text-white">Show all active signals</button>
           </div>}
           {selectedStatusCompany && <section className="mt-6 rounded-3xl border border-amber-400/20 bg-amber-400/[0.035] p-5 md:p-6">
-            <div className="flex items-start justify-between gap-4"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">Evidence processing status</div><h2 className="mt-2 text-xl font-semibold text-white">{selectedStatusCompany.company_name} <span className="font-mono text-sm text-zinc-500">{selectedStatusCompany.symbol}</span></h2></div><button type="button" onClick={() => setSelectedStatusSymbol(null)} className="rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Close processing status"><X className="h-4 w-4" /></button></div>
-            <div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-amber-400/20 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Current state</div><div className="mt-2 text-sm font-bold text-amber-200">Evidence work queued</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Fundamental Change Score</div><div className="mt-2 text-sm font-bold text-zinc-300">Pending four-factor validation</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Lifecycle V2.1</div><div className="mt-2 text-sm font-bold text-zinc-300">Not activated</div></div></div>
-            <p className="mt-4 max-w-4xl text-xs leading-relaxed text-zinc-400">The company has been prioritised for Earnings, Economics, Execution and Balance Sheet evidence work. A Fundamental Change Score will appear only after the four-factor evidence contract passes. Lifecycle will activate only when sufficient comparable reporting-period history is available. No score or trajectory is estimated while either gate remains incomplete.</p>
-            <button type="button" onClick={() => onDeepDive({ symbol: selectedStatusCompany.symbol, company_name: selectedStatusCompany.company_name, bms_status: "evidence_queued" })} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-gold hover:border-gold/50 hover:text-white"><BookOpen className="h-4 w-4" /> Research company while FCS is pending</button>
+            <div className="flex items-start justify-between gap-4"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">Fundamental Change Review status</div><h2 className="mt-2 text-xl font-semibold text-white">{selectedStatusCompany.company_name} <span className="font-mono text-sm text-zinc-500">{selectedStatusCompany.symbol}</span></h2></div><div className="flex items-center gap-2"><button type="button" onClick={refreshFundamentalReviewStatus} disabled={refreshingStatus} className="rounded-xl border border-white/10 p-2 text-zinc-400 hover:text-white disabled:opacity-50" aria-label="Refresh review status"><RefreshCw className={`h-4 w-4 ${refreshingStatus ? "animate-spin" : ""}`} /></button><button type="button" onClick={() => setSelectedStatusSymbol(null)} className="rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Close processing status"><X className="h-4 w-4" /></button></div></div>
+            <div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-amber-400/20 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Current state</div><div className="mt-2 text-sm font-bold text-amber-200">{selectedRuntimeJob ? reviewStatusLabel(selectedRuntimeJob.status) : "Evidence work queued"}</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Validated factors</div><div className="mt-2 text-sm font-bold text-zinc-300">{selectedRuntimeJob ? `${selectedRuntimeJob.completedFactors} of 4` : "Pending worker update"}</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Lifecycle V2.1</div><div className="mt-2 text-sm font-bold text-zinc-300">{selectedRuntimeJob?.status === "ready" ? "Ready" : "Activates after publishable FCS history"}</div></div></div>
+            <p className="mt-4 max-w-4xl text-xs leading-relaxed text-zinc-300">{selectedRuntimeJob?.message || "The company has been prioritised for Earnings, Economics, Execution and Balance Sheet evidence work. No score or lifecycle is estimated while the evidence contract remains incomplete."}</p>
+            <p className="mt-2 text-[10px] leading-relaxed text-zinc-500">You do not need to keep this page open. Use the refresh control when you return. An incomplete result remains explicitly unavailable rather than being estimated.</p>
+            <button type="button" onClick={() => onDeepDive({ symbol: selectedStatusCompany.symbol, company_name: selectedStatusCompany.company_name, bms_status: "evidence_queued" })} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-gold hover:border-gold/50 hover:text-white"><BookOpen className="h-4 w-4" /> Open independent Deep Dive</button>
           </section>}
           {selectedStudy && latestCheckpoint && <section id="momentum-bms-study" className="scroll-mt-24 mt-6 rounded-3xl border border-cyan-400/20 bg-cyan-400/[0.035] overflow-hidden">
             <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-white/10 p-5 md:p-6">
@@ -256,13 +408,24 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
           </section>}
           <div className="mt-5 rounded-2xl border border-violet-400/20 bg-violet-400/[0.035] p-4 text-xs leading-relaxed text-zinc-400"><strong className="text-violet-200">Research separation rule</strong><p className="mt-1">The company deep dive is independent research and is available before FCS completion. It does not alter the frozen Fundamental Change Score, Lifecycle V2.1 classification or momentum ranking.</p></div>
           <div className="mt-5 grid md:grid-cols-2 gap-3 text-xs leading-relaxed text-zinc-400">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><TrendingUp className="w-4 h-4 text-cyan-300 mb-2" /><strong className="text-white">What the rank means</strong><p className="mt-1">A cross-sectional work-queue priority based on 12–1, 6–1 and 3-month momentum, Nifty 500 relative strength, trend structure, 52-week position and volume confirmation.</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><TrendingUp className="w-4 h-4 text-cyan-300 mb-2" /><strong className="text-white">What the rank means</strong><p className="mt-1">A cross-sectional work-queue priority based on the 12-month and 6-month trends ending one month before the as-of date, the latest 3-month trend, Nifty 500 relative strength, trend structure, 52-week position and volume confirmation.</p></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><ShieldAlert className="w-4 h-4 text-amber-300 mb-2" /><strong className="text-white">What it does not mean</strong><p className="mt-1">It is not a recommendation, expected return, FCS factor, lifecycle input or substitute for company evidence. Short-history companies remain unranked.</p></div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">Operational selection gate</strong><p className="mt-1">Eligible means at least 252 sessions, a Starting or Confirmed radar state, no critical stale/provider flag, and the deterministic liquidity rule. The current threshold is {money(activeRadarData.summary.liquidity_universe?.threshold_inr ?? activeRadarData.selection_gate_policy.minimum_traded_value_inr)} median daily traded value over 60 sessions, with at least 90% trading frequency over 126 sessions. Extended setups are held back. Segment source date: {activeRadarData.segment_registry.as_of_date}.</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">How companies are selected for fundamental review</strong><p className="mt-1">A company can be selected when it has at least 252 sessions, a Starting or Confirmed radar state, no critical stale-data issue, and passes the deterministic liquidity rule. The current threshold is {money(activeRadarData.summary.liquidity_universe?.threshold_inr ?? activeRadarData.selection_gate_policy.minimum_traded_value_inr)} median daily traded value over 60 sessions, with at least 90% trading frequency over 126 sessions. Extended trends remain visible on the radar but are not prioritised for fresh evidence work because the move may already be mature. Segment source date: {activeRadarData.segment_registry.as_of_date}.</p></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">Peer-relative strength</strong><p className="mt-1">“Vs universe” compares the company’s blended 6–1 and 3-month momentum with the median of its official large-, mid-, small-, micro-cap or Extended NSE peer group. “Vs sector” is shown only when an official NSE industry label exists and at least five peers are available.</p></div>
+            <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.035] p-4 md:col-span-2"><strong className="text-cyan-100">Current trigger—kept separate from the rank</strong><p className="mt-1">The 20-session and 5-session returns use the latest completed session. Volume acceleration compares recent five-session average traded value with the preceding 20 sessions. A breakout is confirmed only when the latest close exceeds the prior 55-session high and volume acceleration is at least 1.25×. These current readings do not change the existing momentum score, radar classification, FCS or lifecycle.</p></div>
           </div>
         </div>
       </section>
+      {requestCandidate && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/75 px-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="fundamental-review-title">
+        <div className="w-full max-w-lg rounded-3xl border border-cyan-300/25 bg-[#111b2d] p-6 shadow-2xl md:p-7">
+          <div className="flex items-start justify-between gap-4"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-300">Optional evidence workflow</div><h2 id="fundamental-review-title" className="mt-2 text-2xl font-semibold text-white">Start Fundamental Change Review?</h2></div><button type="button" onClick={() => !requestSubmitting && setRequestCandidate(null)} className="rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Cancel review request"><X className="h-4 w-4" /></button></div>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-300"><strong className="text-white">{requestCandidate.company_name} ({requestCandidate.symbol})</strong> will be checked across Earnings, Economics, Execution and Balance Sheet evidence.</p>
+          <div className="mt-4 rounded-2xl border border-amber-300/20 bg-amber-300/[0.06] p-4 text-xs leading-relaxed text-amber-100"><strong className="block">Expected time: normally 10–15 minutes</strong><span className="mt-1 block text-zinc-300">Difficult filings or missing comparable periods can take longer. You may leave this page and return later. A score will be shown only if the evidence contract passes.</span></div>
+          <div className="mt-4 rounded-2xl border border-white/10 bg-black/15 p-4 text-xs leading-relaxed text-zinc-400"><strong className="text-zinc-200">Separate from Deep Dive.</strong> Starting this review creates the four-factor FCS workflow. Opening a Deep Dive provides broader company research and does not start or alter FCS.</div>
+          {requestError && <div className="mt-4 rounded-xl border border-rose-400/25 bg-rose-400/[0.08] p-3 text-xs leading-relaxed text-rose-200">{requestError}<div className="mt-1 text-zinc-400">No processing status has been changed.</div></div>}
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end"><button type="button" disabled={requestSubmitting} onClick={() => setRequestCandidate(null)} className="rounded-xl border border-white/10 px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-zinc-300 hover:text-white disabled:opacity-50">Cancel</button><button type="button" disabled={requestSubmitting} onClick={requestFundamentalReview} className="rounded-xl border border-cyan-300/35 bg-cyan-300/[0.12] px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-cyan-100 hover:bg-cyan-300/[0.18] disabled:opacity-50">{requestSubmitting ? "Submitting…" : "Start review"}</button></div>
+        </div>
+      </div>}
     </div>
   </main>;
 }
