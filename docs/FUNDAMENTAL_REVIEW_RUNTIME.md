@@ -69,7 +69,7 @@ The worker reports itself as configured only when every mandatory runtime variab
 
 | State | Meaning |
 |---|---|
-| `FCS not requested` | No FCS availability or publishability conclusion has been made. |
+| `No FCS report yet` | No FCS availability or publishability conclusion has been made. The enabled action is **Start FCS Review**. |
 | `Review queued` | A durable job exists in Firestore and Cloud Tasks accepted it. |
 | `Locating evidence` | The worker is gathering dated evidence. |
 | `Validating factors` | Candidate evidence is being checked against the four-factor contract. |
