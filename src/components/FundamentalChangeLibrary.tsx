@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpenCheck, Calculator, FileCheck2, Library, Search, ShieldCheck } from "lucide-react";
 import { fundamentalChangeLibrary, type FundamentalChangeRecord } from "../data/fundamentalChangeLibrary";
 import scoreDetails from "../data/fundamentalChangeScoreDetails.json";
+import FundamentalReviewLauncher from "./FundamentalReviewLauncher";
 
 type SortKey = "fcsScore" | "momentumScore" | "companyName" | "fcsAsOf";
 type SortDirection = "asc" | "desc";
@@ -142,6 +143,11 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
             ].map(([title, value, copy]) => <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"><div className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">{title}</div><div className="mt-2 font-mono text-2xl font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{copy}</div></div>)}
           </div>
         </header>
+
+        <FundamentalReviewLauncher
+          availableSymbols={new Set(fundamentalChangeLibrary.map((record) => record.symbol))}
+          onOpenAvailable={(symbol) => setSelectedSymbol(symbol)}
+        />
 
         <div className="border-b border-white/10 px-5 py-5 md:px-8">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">

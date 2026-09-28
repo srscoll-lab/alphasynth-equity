@@ -112,11 +112,18 @@ export class FundamentalReviewService {
       });
       const evidencePayload = await evidenceResponse.json().catch(() => ({})) as Record<string, any>;
       if (!evidenceResponse.ok) throw new Error(`Evidence service returned HTTP ${evidenceResponse.status}.`);
-      const rows = Array.isArray(evidencePayload.rows) ? evidencePayload.rows : [];
+      const candidates = Array.isArray(evidencePayload.candidates) ? evidencePayload.candidates : [];
+      const documents = Array.isArray(evidencePayload.documents) ? evidencePayload.documents : [];
+      const validations = Array.isArray(evidencePayload.validations) ? evidencePayload.validations : [];
       const diagnostics = Array.isArray(evidencePayload.diagnostics) ? evidencePayload.diagnostics : [];
-      const factors = new Set(rows.map((row: any) => String(row?.factor || "").trim().toLowerCase())
+      const validationByCandidate = new Map(validations.map((validation: any) => [validation?.candidate_id, validation]));
+      const qualifiedCandidates = candidates.filter((candidate: any) => {
+        const status = validationByCandidate.get(candidate?.candidate_id)?.status;
+        return status === "qualified" || status === "qualified_provisional";
+      });
+      const factors = new Set(qualifiedCandidates.map((candidate: any) => String(candidate?.factor_id || "").trim().toLowerCase())
         .filter((factor: string) => REQUIRED_FACTORS.includes(factor as typeof REQUIRED_FACTORS[number])));
-      job.evidenceRows = rows;
+      job.evidenceRows = qualifiedCandidates;
       job.diagnostics = diagnostics;
       job.completedFactors = factors.size;
       await this.transition(job, "validating_factors");
@@ -136,7 +143,9 @@ export class FundamentalReviewService {
           job_id: job.jobId,
           symbol: job.symbol,
           information_cutoff: job.informationCutoff,
-          evidence_rows: rows,
+          candidates,
+          documents,
+          validations,
         }),
         signal: AbortSignal.timeout(120_000),
       });

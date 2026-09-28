@@ -13,9 +13,9 @@ The public interface remains disabled until both the request and status gateways
 3. The worker reuses an active or completed job for the same symbol, or creates a new job.
 4. The job is written to both the immutable job collection and the latest-by-symbol collection in one Firestore commit.
 5. Cloud Tasks invokes the worker execution endpoint with a 15-minute dispatch deadline and OIDC identity.
-6. The worker calls the existing official-evidence research endpoint for all four mandatory factors.
-7. Fewer than four validated factors produces `incomplete`; no score is estimated.
-8. Four validated factors are submitted to the authoritative Python BMS/FCS scoring service.
+6. The worker calls the evidence service for canonical V2 candidates, immutable document records and independent validation records covering all four mandatory factors.
+7. Fewer than four independently qualified factors produces `incomplete`; no score is estimated. Reduced legacy CSV rows are not accepted by the scorer.
+8. Four qualified factors are submitted to the authoritative Node.js BMS/FCS scoring service, which directly imports the approved V2 validator and scoring modules rather than translating the formula into another language.
 9. A score is exposed only when the scorer returns `score_publishable: true`.
 10. The result becomes either `score_ready_lifecycle_pending` or `ready`, depending on whether three comparable checkpoints exist.
 
@@ -50,8 +50,8 @@ The public interface remains disabled until both the request and status gateways
 | `FUNDAMENTAL_REVIEW_TASKS_SERVICE_ACCOUNT` | OIDC service account used by Cloud Tasks |
 | `FUNDAMENTAL_REVIEW_WORKER_URL` | Private worker `/internal/fundamental-review/execute` URL |
 | `FUNDAMENTAL_REVIEW_WORKER_AUDIENCE` | Optional Cloud Run OIDC audience |
-| `FUNDAMENTAL_REVIEW_EVIDENCE_URL` | Existing `/api/bms/factor-evidence/research` endpoint |
-| `FUNDAMENTAL_REVIEW_SCORING_URL` | Authoritative BMS API row-level validation/scoring endpoint |
+| `FUNDAMENTAL_REVIEW_EVIDENCE_URL` | Canonical V2 evidence endpoint returning `candidates`, `documents` and `validations` |
+| `FUNDAMENTAL_REVIEW_SCORING_URL` | Authoritative V2 scoring service `/score` endpoint |
 | `FUNDAMENTAL_REVIEW_INTERNAL_TOKEN` | Shared service secret |
 | `DOSSIER_INTERNAL_TOKEN` | Token accepted by the evidence endpoint |
 
@@ -93,7 +93,7 @@ The runtime test proves request idempotency, queue dispatch, the four-factor sto
 
 ## Remaining activation gate
 
-The current Python BMS API does not yet expose the row-level `FUNDAMENTAL_REVIEW_SCORING_URL` required by this worker. That endpoint must reuse the existing deterministic V2 validator/scoring modules and return at minimum:
+The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-review.mjs` and directly reuses the approved deterministic V2 modules. It returns at minimum:
 
 ```json
 {
@@ -103,4 +103,6 @@ The current Python BMS API does not yet expose the row-level `FUNDAMENTAL_REVIEW
 }
 ```
 
-Until that endpoint exists and the five-company live gate passes, do not configure the public request/status URLs and do not claim that automated FCS requests are available.
+The remaining backend dependency is a production evidence endpoint that emits the complete V2 evidence, document and validation contracts. The older factor-evidence CSV response lacks comparison basis, consolidation basis, period-end dates, raw/canonical units and immutable archive hashes, so it must not be adapted into a publishable score by assumption.
+
+Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, do not configure the public request/status URLs and do not claim that automated FCS requests are available.

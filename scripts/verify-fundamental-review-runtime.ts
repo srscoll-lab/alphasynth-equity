@@ -3,13 +3,20 @@ import { FundamentalReviewService } from "../src/fundamental-review-service.ts";
 import { CloudTasksFundamentalReviewQueue, InMemoryFundamentalReviewQueue } from "../src/fundamental-review-queue.ts";
 import { FirestoreFundamentalReviewStore, InMemoryFundamentalReviewStore } from "../src/fundamental-review-store.ts";
 
-const fourFactorRows = ["earnings", "economics", "execution", "balance_sheet"]
-  .map((factor) => ({ factor, metric_name: `${factor}_metric` }));
+const fourFactorCandidates = ["earnings", "economics", "execution", "balance_sheet"]
+  .map((factor) => ({ candidate_id: `candidate-${factor}`, factor_id: factor }));
+const fourFactorValidations = fourFactorCandidates
+  .map((candidate) => ({ candidate_id: candidate.candidate_id, status: "qualified" }));
 
 const fetchMock: typeof fetch = async (input) => {
   const url = String(input);
   if (url.endsWith("/evidence")) {
-    return new Response(JSON.stringify({ rows: fourFactorRows, diagnostics: [] }), {
+    return new Response(JSON.stringify({
+      candidates: fourFactorCandidates,
+      documents: [{ document_id: "document-1" }],
+      validations: fourFactorValidations,
+      diagnostics: [],
+    }), {
       status: 200,
       headers: { "content-type": "application/json" },
     });
@@ -66,7 +73,12 @@ const incompleteService = new FundamentalReviewService({
   scoringUrl: "https://worker.test/score",
   fetch: async (input) => {
     if (String(input).endsWith("/incomplete-evidence")) {
-      return new Response(JSON.stringify({ rows: fourFactorRows.slice(0, 2), diagnostics: [] }), {
+      return new Response(JSON.stringify({
+        candidates: fourFactorCandidates.slice(0, 2),
+        documents: [{ document_id: "document-1" }],
+        validations: fourFactorValidations.slice(0, 2),
+        diagnostics: [],
+      }), {
         status: 200,
         headers: { "content-type": "application/json" },
       });
