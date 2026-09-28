@@ -49,6 +49,12 @@ import {
   cleanFundamentalReviewSymbol,
   normalizeFundamentalReviewJob,
 } from "./src/fundamental-review-contract";
+import { createFundamentalReviewStoreFromEnvironment } from "./src/fundamental-review-store";
+import { createFundamentalReviewQueueFromEnvironment } from "./src/fundamental-review-queue";
+import {
+  FundamentalReviewService,
+  fundamentalReviewRuntimeConfigured,
+} from "./src/fundamental-review-service";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -61,6 +67,28 @@ const SIGNAL_TRACKER_OBJECT = process.env.SIGNAL_TRACKER_OBJECT || "cohort-001/c
 const BMS_LIFECYCLE_FREEZE_DATE = process.env.BMS_LIFECYCLE_FREEZE_DATE || "2026-08-25";
 const SIGNAL_TRACKER_CACHE_MS = 60_000;
 let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
+let fundamentalReviewService: FundamentalReviewService | null = null;
+
+function getFundamentalReviewService(): FundamentalReviewService {
+  if (fundamentalReviewService) return fundamentalReviewService;
+  if (!fundamentalReviewRuntimeConfigured()) {
+    throw new Error("The durable Fundamental Review runtime is not fully configured.");
+  }
+  fundamentalReviewService = new FundamentalReviewService({
+    store: createFundamentalReviewStoreFromEnvironment(),
+    queue: createFundamentalReviewQueueFromEnvironment(),
+    evidenceUrl: String(process.env.FUNDAMENTAL_REVIEW_EVIDENCE_URL),
+    scoringUrl: String(process.env.FUNDAMENTAL_REVIEW_SCORING_URL),
+    internalToken: process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN,
+    dossierToken: process.env.DOSSIER_INTERNAL_TOKEN,
+  });
+  return fundamentalReviewService;
+}
+
+function hasFundamentalReviewInternalAccess(req: express.Request): boolean {
+  const expected = String(process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN || "");
+  return Boolean(expected) && req.header("x-fundamental-review-token") === expected;
+}
 
 async function readCloudForwardValidation(): Promise<any> {
   if (!SIGNAL_TRACKER_BUCKET) throw new Error("SIGNAL_TRACKER_BUCKET is not configured");
@@ -4080,10 +4108,63 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       available: requestConfigured && statusConfigured,
       requestConfigured,
       statusConfigured,
+      durableRuntimeConfigured: fundamentalReviewRuntimeConfigured(),
       expectedMinutes: { minimum: 10, maximum: 15 },
       currentScoreAvailableBeforeLifecycle: true,
       lifecycleRequiresComparableCheckpoints: 3,
     });
+  });
+
+  // Durable worker endpoints. In production these are invoked through Cloud
+  // Tasks and protected by Cloud Run IAM plus the shared internal token. They
+  // are deliberately separate from the public gateway above so a request is
+  // acknowledged only after Firestore persistence and successful enqueueing.
+  app.post("/internal/fundamental-review/request", async (req, res) => {
+    if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
+    const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+    const informationCutoff = String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10));
+    try {
+      const job = await getFundamentalReviewService().request({
+        symbol,
+        companyName: String(req.body?.company_name || symbol),
+        informationCutoff,
+      });
+      return res.status(job.status === "queued" ? 202 : 200).json({ job });
+    } catch (error: any) {
+      console.error("[fundamental-review] durable request failed:", error?.message || error);
+      return res.status(503).json({
+        error: "The review could not be durably recorded and queued. No start is being claimed.",
+        code: "FUNDAMENTAL_REVIEW_DURABLE_REQUEST_FAILED",
+      });
+    }
+  });
+
+  app.get("/internal/fundamental-review/status", async (req, res) => {
+    if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
+    const symbol = cleanFundamentalReviewSymbol(req.query.symbol);
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+    try {
+      const job = await getFundamentalReviewService().status(symbol);
+      return job ? res.json({ job }) : res.status(404).json({ error: "No Fundamental Change Review has been requested." });
+    } catch (error: any) {
+      console.error("[fundamental-review] durable status failed:", error?.message || error);
+      return res.status(503).json({ error: "Review status is temporarily unavailable." });
+    }
+  });
+
+  app.post("/internal/fundamental-review/execute", async (req, res) => {
+    if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
+    const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);
+    const jobId = String(req.body?.jobId || req.body?.job_id || "").trim();
+    if (!symbol || !jobId) return res.status(400).json({ error: "A valid jobId and symbol are required." });
+    try {
+      const job = await getFundamentalReviewService().execute({ jobId, symbol });
+      return res.json({ job });
+    } catch (error: any) {
+      console.error("[fundamental-review] worker dispatch failed:", error?.message || error);
+      return res.status(500).json({ error: "The review worker could not process this task." });
+    }
   });
 
   // User-initiated Fundamental Change Review gateway. The durable worker is
@@ -4115,6 +4196,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           symbol,
           company_name: companyName,
           requested_at: new Date().toISOString(),
+          information_cutoff: new Date().toISOString().slice(0, 10),
           source: "alphasynth-momentum-radar",
           required_factors: ["earnings", "economics", "execution", "balance_sheet"],
           lifecycle_after_score: true,

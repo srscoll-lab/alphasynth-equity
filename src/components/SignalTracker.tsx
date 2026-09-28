@@ -232,7 +232,7 @@ function genuineSeries(
 type SignalTrackerProps = {
   onBack: () => void;
   initialMode?: "v1" | "v2" | "momentum" | "library";
-  onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "evidence_queued" | "not_queued" }) => void;
+  onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
 export default function SignalTracker({ onBack, initialMode = "v2", onDeepDive }: SignalTrackerProps) {

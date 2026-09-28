@@ -5,6 +5,7 @@ export const FUNDAMENTAL_REVIEW_STATUSES = [
   "validating_factors",
   "scoring",
   "lifecycle_processing",
+  "score_ready_lifecycle_pending",
   "ready",
   "incomplete",
   "failed",
@@ -60,7 +61,8 @@ export function normalizeFundamentalReviewJob(
     requestedAt: requestedAt ? String(requestedAt) : null,
     updatedAt: updatedAt ? String(updatedAt) : new Date().toISOString(),
     message: String(raw.message || defaultFundamentalReviewMessage(status)),
-    resultAvailable: raw.resultAvailable === true || raw.result_available === true || status === "ready",
+    resultAvailable: raw.resultAvailable === true || raw.result_available === true
+      || status === "score_ready_lifecycle_pending" || status === "ready",
   };
 }
 
@@ -71,6 +73,7 @@ export function defaultFundamentalReviewMessage(status: FundamentalReviewStatus)
     case "validating_factors": return "Validating Earnings, Economics, Execution and Balance Sheet evidence.";
     case "scoring": return "The four-factor evidence contract passed and the score is being calculated.";
     case "lifecycle_processing": return "The Fundamental Change Score is ready; lifecycle history is being evaluated.";
+    case "score_ready_lifecycle_pending": return "The Fundamental Change Score is ready. Lifecycle requires three comparable checkpoints.";
     case "ready": return "The Fundamental Change Score and lifecycle report are ready.";
     case "incomplete": return "The review finished without enough comparable evidence for a publishable score.";
     case "failed": return "The review could not be completed. No score was estimated.";

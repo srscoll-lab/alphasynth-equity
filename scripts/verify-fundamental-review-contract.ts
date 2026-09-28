@@ -28,4 +28,8 @@ assert.equal(unknown.resultAvailable, false);
 const ready = normalizeFundamentalReviewJob({ status: "ready" }, { symbol: "TCS" });
 assert.equal(ready.resultAvailable, true);
 
+const scoreReady = normalizeFundamentalReviewJob({ status: "score_ready_lifecycle_pending" }, { symbol: "INFY" });
+assert.equal(scoreReady.resultAvailable, true);
+assert.equal(isFundamentalReviewInProgress(scoreReady.status), false);
+
 console.log("Fundamental Review request/status contract verified.");
