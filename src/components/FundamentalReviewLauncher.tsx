@@ -30,6 +30,7 @@ const statusLabel: Record<FundamentalReviewJob["status"], string> = {
 export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvailable }: Props) {
   const [query, setQuery] = useState("");
   const [capabilityAvailable, setCapabilityAvailable] = useState(false);
+  const [capabilityMessage, setCapabilityMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [candidate, setCandidate] = useState<UniverseCompany | null>(null);
   const [job, setJob] = useState<FundamentalReviewJob | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,8 +41,16 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
     let active = true;
     fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() : null)
-      .then((payload) => { if (active) setCapabilityAvailable(payload?.available === true); })
-      .catch(() => { if (active) setCapabilityAvailable(false); });
+      .then((payload) => {
+        if (!active) return;
+        setCapabilityAvailable(payload?.available === true);
+        if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setCapabilityMessage(payload.unavailableReason);
+      })
+      .catch(() => {
+        if (!active) return;
+        setCapabilityAvailable(false);
+        setCapabilityMessage("New FCS processing is temporarily unavailable. Existing published reports remain available.");
+      });
     return () => { active = false; };
   }, []);
 
@@ -114,7 +123,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
                 ? <button type="button" onClick={() => onOpenAvailable(company.symbol)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-emerald-200"><CheckCircle2 className="h-3.5 w-3.5" /> View existing FCS</button>
                 : capabilityAvailable
                   ? <button type="button" onClick={() => { setError(""); setCandidate(company); }} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button>
-                  : <button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">FCS requests not yet enabled</button>}
+                  : <div className="max-w-[18rem] text-right"><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">New FCS processing unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-600">{capabilityMessage}</div></div>}
             </div>;
           })}
         </div>}

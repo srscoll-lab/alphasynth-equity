@@ -27,17 +27,58 @@ const stateStyle: Record<RadarState, string> = {
   DETERIORATING: "border-rose-400/30 bg-rose-400/10 text-rose-300",
   INSUFFICIENT_HISTORY: "border-violet-400/30 bg-violet-400/10 text-violet-300",
 };
+const stateLabel: Record<RadarState, string> = {
+  DORMANT: "No Directional Setup",
+  STARTING: "Early Uptrend",
+  CONFIRMED: "Established Uptrend",
+  EXTENDED: "Stretched Uptrend",
+  DETERIORATING: "Negative Direction",
+  INSUFFICIENT_HISTORY: "Insufficient History",
+};
 const stateMeaning: Record<RadarState, string> = {
-  DORMANT: "No qualifying trend-and-relative-strength setup is present.",
-  STARTING: "Early price and relative-strength conditions are improving, but the full trend is not confirmed.",
-  CONFIRMED: "Price, medium-term trend and relative strength satisfy the experimental confirmation rules.",
-  EXTENDED: "A confirmed trend is unusually stretched above its 50-session average; chasing risk may be elevated.",
-  DETERIORATING: "Trend or relative strength has weakened under the experimental rules.",
+  DORMANT: "Evidence is mixed, so no directional setup is identified.",
+  STARTING: "Preliminary positive conditions are present.",
+  CONFIRMED: "Several independent trend conditions agree.",
+  EXTENDED: "The trend remains positive, but price is unusually far above its recent average.",
+  DETERIORATING: "Trend or relative strength has weakened.",
   INSUFFICIENT_HISTORY: "Fewer than 252 sessions are available, so no cross-sectional rank is published.",
 };
 const pct = (value: number | null) => value === null ? "Unavailable" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const money = (value: number | null) => value === null ? "Unavailable" : `₹${new Intl.NumberFormat("en-IN", { notation: "compact", maximumFractionDigits: 1 }).format(value)}`;
 const ratio = (value: number | null) => value === null ? "Unavailable" : `${value.toFixed(2)}×`;
+const segmentLabel = (segment: string) => segment.replaceAll("EXTENDED_NSE", "Broader NSE").replaceAll("Extended NSE", "Broader NSE").replaceAll("_", " ");
+
+type DownsidePhase = "EARLY_DOWNTREND" | "ESTABLISHED_DOWNTREND" | "STRETCHED_DOWNTREND";
+const downsidePhaseLabel: Record<DownsidePhase, string> = {
+  EARLY_DOWNTREND: "Early Downtrend",
+  ESTABLISHED_DOWNTREND: "Established Downtrend",
+  STRETCHED_DOWNTREND: "Stretched Downtrend",
+};
+const downsideAssessment = (company: Company) => {
+  if (company.radar_state !== "DETERIORATING") return null;
+  const fullAgreement = company.adjusted_close < company.sma_50
+    && company.sma_50 < company.sma_200
+    && company.momentum_6_1 < 0
+    && company.relative_strength < 0;
+  const dailyVolatility = company.annualized_volatility_63 / Math.sqrt(252);
+  const stretchThreshold = Math.max(0.12, 2.5 * dailyVolatility * Math.sqrt(20));
+  const phase: DownsidePhase = fullAgreement && company.distance_from_sma50 <= -stretchThreshold
+    ? "STRETCHED_DOWNTREND"
+    : fullAgreement
+      ? "ESTABLISHED_DOWNTREND"
+      : "EARLY_DOWNTREND";
+  const downsidePressureScore = company.experimental_rank_score === null ? null : Number((100 - company.experimental_rank_score).toFixed(2));
+  const potentiallyOversold = phase === "STRETCHED_DOWNTREND";
+  const recoveryConfirmed = company.adjusted_close > company.sma_50
+    && company.momentum_20d > 0
+    && company.momentum_5d > 0
+    && company.relative_strength > 0;
+  return { phase, downsidePressureScore, potentiallyOversold, recoveryConfirmed };
+};
+const directionalStateLabel = (company: Company) => {
+  const downside = downsideAssessment(company);
+  return downside ? downsidePhaseLabel[downside.phase] : stateLabel[company.radar_state as RadarState];
+};
 const triggerSummary = (trigger: Company["current_momentum_trigger"]) => {
   if (!trigger) return { label: "Unavailable", style: "text-zinc-500" };
   if (trigger.breakout_status === "CONFIRMED" && trigger.momentum_20d > 0 && trigger.momentum_5d > 0) return { label: "Confirmed", style: "text-emerald-300" };
@@ -66,7 +107,7 @@ const momentumPriorityStatus = (company: Company) => {
   if (reasons.includes("extension") || company.radar_state === "EXTENDED") {
     return {
       label: "Not prioritised by Momentum Radar",
-      reason: "The trend is already extended, so the radar does not prioritise fresh evidence work.",
+      reason: "The uptrend is already stretched, so the radar does not prioritise fresh evidence work.",
       style: "text-amber-200",
     };
   }
@@ -210,6 +251,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [selectedStatusSymbol, setSelectedStatusSymbol] = useState<string | null>(null);
   const [inactiveExpanded, setInactiveExpanded] = useState(false);
   const [inactiveFilter, setInactiveFilter] = useState<"ALL" | "DORMANT" | "DETERIORATING">("ALL");
+  const [downsidePhaseFilter, setDownsidePhaseFilter] = useState<"ALL" | DownsidePhase | "POTENTIALLY_OVERSOLD">("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
   const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>({});
   const [requestCandidate, setRequestCandidate] = useState<Company | null>(null);
@@ -217,12 +259,21 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [requestError, setRequestError] = useState("");
   const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
+  const [reviewRequestMessage, setReviewRequestMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   useEffect(() => {
     let active = true;
     fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
       .then(async (response) => response.ok ? response.json() : null)
-      .then((payload) => { if (active) setReviewRequestsAvailable(payload?.available === true); })
-      .catch(() => { if (active) setReviewRequestsAvailable(false); });
+      .then((payload) => {
+        if (!active) return;
+        setReviewRequestsAvailable(payload?.available === true);
+        if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setReviewRequestMessage(payload.unavailableReason);
+      })
+      .catch(() => {
+        if (!active) return;
+        setReviewRequestsAvailable(false);
+        setReviewRequestMessage("New FCS processing is temporarily unavailable. Existing published reports remain available.");
+      });
     return () => { active = false; };
   }, []);
   const filtered = useMemo(() => {
@@ -252,9 +303,20 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     dormant: inactiveMomentumCompanies.filter((company) => company.radar_state === "DORMANT").length,
     deteriorating: inactiveMomentumCompanies.filter((company) => company.radar_state === "DETERIORATING").length,
   };
+  const downsideSummary = inactiveMomentumCompanies.reduce((summary, company) => {
+    const assessment = downsideAssessment(company);
+    if (!assessment) return summary;
+    summary[assessment.phase] += 1;
+    if (assessment.potentiallyOversold) summary.potentiallyOversold += 1;
+    return summary;
+  }, { EARLY_DOWNTREND: 0, ESTABLISHED_DOWNTREND: 0, STRETCHED_DOWNTREND: 0, potentiallyOversold: 0 });
   const filteredInactiveCompanies = inactiveMomentumCompanies.filter((company) => {
     const normalized = inactiveQuery.trim().toLowerCase();
     return (inactiveFilter === "ALL" || company.radar_state === inactiveFilter)
+      && (downsidePhaseFilter === "ALL"
+        || (downsidePhaseFilter === "POTENTIALLY_OVERSOLD"
+          ? downsideAssessment(company)?.potentiallyOversold === true
+          : downsideAssessment(company)?.phase === downsidePhaseFilter))
       && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized));
   });
   const displayedInactiveCompanies = filteredInactiveCompanies.slice(0, 100);
@@ -268,6 +330,10 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
       setInactiveExpanded(false);
       return;
     }
+    // The summary card promises the negative-direction list. Open that view
+    // directly instead of landing on the combined neutral/negative population.
+    setInactiveFilter("DETERIORATING");
+    setDownsidePhaseFilter("ALL");
     setInactiveExpanded(true);
     window.setTimeout(() => document.getElementById("inactive-momentum-section")?.scrollIntoView({ behavior: "auto", block: "start" }), 50);
   };
@@ -346,8 +412,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   </> : <>
     <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>
-    {reviewRequestsAvailable ? <button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button> : <button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> FCS requests not yet enabled</button>}
-    <div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div>
+    {reviewRequestsAvailable ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> New FCS processing unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
   </>;
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
@@ -362,7 +427,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.22em] text-cyan-300 mb-3"><Compass className="w-4 h-4" /> {activeRadarData.universe.scanned.toLocaleString("en-IN")}-company discovery layer</div>
               <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white">Momentum Radar</h1>
               <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-3xl leading-relaxed">A deterministic market-guided queue for deciding which companies should receive Fundamental Change evidence work next. It does not alter Fundamental Change Scores or lifecycles.</p>
-              <p className="mt-2 text-xs text-cyan-100/70 max-w-3xl leading-relaxed">The first five queued companies show the trajectory-aware Lifecycle V2.1 test result. Official market-cap segments come from source-dated NSE index membership; companies outside those indices remain in a clearly labelled Extended NSE lane. Liquidity never determines company size.</p>
+              <p className="mt-2 text-xs text-cyan-100/70 max-w-3xl leading-relaxed">The first five queued companies show the trajectory-aware Lifecycle V2.1 test result. Official market-cap segments come from source-dated NSE index membership; companies outside those indices remain in a clearly labelled Broader NSE lane. Liquidity never determines company size.</p>
             </div>
             <div className="flex max-w-md flex-col gap-3">
             <button type="button" onClick={onBrowseLibrary} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/[0.10] px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 hover:bg-emerald-300/[0.16]"><BookOpen className="h-4 w-4" /> Browse Fundamental Change Library</button>
@@ -376,31 +441,31 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             {[
               ["Universe scanned", `${activeRadarData.universe.scanned}`, expandedMode ? "Official NSE EQ and BE universe" : "Exact monitored FCS universe"],
               ["Analysable liquid universe", `${momentumReadyCompanies.length}`, expandedMode ? "Liquidity-qualified with full price history" : "Complete market history"],
-              ["Active momentum signals", `${companies.length}`, expandedMode ? `${activeSignalSummary.starting} Starting · ${activeSignalSummary.confirmed} Confirmed · ${activeSignalSummary.extended} Extended` : "Displayed below"],
+              ["Active momentum signals", `${companies.length}`, expandedMode ? `${activeSignalSummary.starting} Early Uptrend · ${activeSignalSummary.confirmed} Established Uptrend · ${activeSignalSummary.extended} Stretched Uptrend` : "Displayed below"],
             ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
               <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div><div className="mt-2 text-2xl font-mono font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{note}</div>
             </div>)}
             {expandedMode && <button type="button" onClick={toggleInactiveMomentum} className="rounded-2xl border border-slate-400/20 bg-slate-400/[0.055] px-4 py-4 text-left transition hover:border-slate-300/40 hover:bg-slate-400/[0.09]">
-              <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.15em] font-black text-slate-400">Neutral or negative price direction</div>{inactiveExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</div>
+              <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.15em] font-black text-slate-400">No setup or negative price direction</div>{inactiveExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</div>
               <div className="mt-2 text-2xl font-mono font-bold text-slate-200">{inactiveCounts.all}</div>
-              <div className="mt-1 text-xs text-slate-500">{inactiveCounts.dormant} Neutral · {inactiveCounts.deteriorating} Negative · view companies</div>
+              <div className="mt-1 text-xs text-slate-500">{inactiveCounts.dormant} No Setup · {inactiveCounts.deteriorating} Negative · view companies</div>
             </button>}
           </div>
         </header>
 
         <div className="px-5 py-5 md:px-8 border-b border-white/10">
           <div className="flex flex-col gap-4">
-            <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently have a Starting, Confirmed or Extended positive-direction signal. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>
+            <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently show an Early, Established or Stretched Uptrend. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>
             <div className="flex gap-2 overflow-x-auto pb-1">
-              {visibleStates.map((state) => <button key={state} type="button" onClick={() => setFilter(state)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${filter === state ? "border-cyan-300/50 bg-cyan-300/15 text-cyan-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{state === "ALL" && expandedMode ? "ACTIVE SIGNALS" : state.replaceAll("_", " ")} {stateCounts[state] ?? 0}</button>)}
+              {visibleStates.map((state) => <button key={state} type="button" onClick={() => setFilter(state)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${filter === state ? "border-cyan-300/50 bg-cyan-300/15 text-cyan-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{state === "ALL" && expandedMode ? "ACTIVE SIGNALS" : stateLabel[state as RadarState]} {stateCounts[state] ?? 0}</button>)}
             </div>
             <div className="flex flex-col md:flex-row gap-3 md:items-center">
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {segments.map((item) => <button key={item} type="button" onClick={() => setSegment(item)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${segment === item ? "border-violet-300/50 bg-violet-300/15 text-violet-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{item.replaceAll("_", " ")} {segmentCounts[item]}</button>)}
+                {segments.map((item) => <button key={item} type="button" onClick={() => setSegment(item)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${segment === item ? "border-violet-300/50 bg-violet-300/15 text-violet-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{item === "ALL" ? "ALL" : segmentLabel(item)} {segmentCounts[item]}</button>)}
               </div>
               <label className="relative block md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search active momentum signals" className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-cyan-300/40" /></label>
             </div>
-            {expandedMode && <p className="text-[10px] leading-relaxed text-zinc-500">The main radar contains only liquid, full-history companies with an active Starting, Confirmed or Extended momentum signal. Companies failing liquidity or history checks, and companies with no active signal, are intentionally omitted from this product view.</p>}
+            {expandedMode && <p className="text-[10px] leading-relaxed text-zinc-500">The main radar contains only liquid, full-history companies with an Early, Established or Stretched Uptrend. These labels describe current measured conditions; they are not claims that a phase will generate a particular future return.</p>}
           </div>
         </div>
 
@@ -413,12 +478,12 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             <table className="w-full min-w-[1290px] table-fixed text-left">
               <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="sticky left-0 z-20 w-[175px] bg-[#182235] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">Momentum State / Radar Score</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
               <tbody className="divide-y divide-white/[0.07]">{displayed.map((company) => <tr key={company.symbol} className="hover:bg-white/[0.025]">
-                <td className="sticky left-0 z-10 bg-[#101827] px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{company.market_cap_segment.label}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
-                <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{company.radar_state.replaceAll("_", " ")}</span><span className="font-mono text-xl font-bold text-white">{company.experimental_rank_score ?? "—"}</span></div><div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${directionPresentation[momentumDirection(company.radar_state as RadarState)].style}`}>{directionPresentation[momentumDirection(company.radar_state as RadarState)].label}</div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div><div className={`mt-3 text-[9px] font-black uppercase tracking-[0.08em] ${momentumPriorityStatus(company).style}`}>{momentumPriorityStatus(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{momentumPriorityStatus(company).reason}</div><div className="mt-3 border-t border-white/[0.07] pt-3"><div className={`text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalRelationship(company).style}`}>{fundamentalRelationship(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalRelationship(company).detail}</div></div></td>
+                <td className="sticky left-0 z-10 bg-[#101827] px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{segmentLabel(company.market_cap_segment.label)}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
+                <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{stateLabel[company.radar_state as RadarState]}</span><span className="font-mono text-xl font-bold text-white">{company.experimental_rank_score ?? "—"}</span></div><div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${directionPresentation[momentumDirection(company.radar_state as RadarState)].style}`}>{directionPresentation[momentumDirection(company.radar_state as RadarState)].label}</div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div><div className={`mt-3 text-[9px] font-black uppercase tracking-[0.08em] ${momentumPriorityStatus(company).style}`}>{momentumPriorityStatus(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{momentumPriorityStatus(company).reason}</div><div className="mt-3 border-t border-white/[0.07] pt-3"><div className={`text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalRelationship(company).style}`}>{fundamentalRelationship(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalRelationship(company).detail}</div></div></td>
                 <td className="px-4 py-4"><div className="space-y-2 text-[10px]"><div className="flex justify-between gap-3"><span className="text-zinc-300">12 months to 1 month</span><span className="font-mono text-white">{pct(company.momentum_12_1)}</span></div><div className="flex justify-between gap-3"><span className="text-zinc-300">6 months to 1 month</span><span className="font-mono text-white">{pct(company.momentum_6_1)}</span></div><div className="text-[9px] leading-relaxed text-zinc-400">Both periods exclude the latest month · as of {company.as_of_date}</div></div></td>
                 <td className="px-4 py-4">{company.current_momentum_trigger ? <div><div className={`text-[10px] font-black uppercase tracking-[0.1em] ${triggerSummary(company.current_momentum_trigger).style}`}>{triggerSummary(company.current_momentum_trigger).label}</div><div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]"><span className="text-zinc-300">20-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_20d)}</span><span className="text-zinc-300">5-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_5d)}</span><span className="text-zinc-300">Volume</span><span className="text-right font-mono text-white">{ratio(company.current_momentum_trigger.traded_value_acceleration_5_vs_prior_20)}</span><span className="text-zinc-300">Breakout</span><span className="text-right text-white">{breakoutLabel(company.current_momentum_trigger.breakout_status)}</span></div><div className="mt-2 text-[9px] text-zinc-400">As of {company.current_momentum_trigger.as_of_date}</div></div> : <span className="text-[10px] text-zinc-400">Insufficient current-session history</span>}</td>
-                <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.universe_benchmark ?? "Unavailable"} · ${company.universe_peer_count} peers`}>{company.universe_benchmark ?? "Unavailable"} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
-                <td className="px-4 py-4">{lifecycleBySymbol.has(company.symbol) ? <><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>READY · {lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1}</span><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")} · {lifecycleBySymbol.get(company.symbol)!.reason}</div><button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button></> : studyBySymbol.has(company.symbol) ? <><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> FCS ready · lifecycle pending</span><div className="mt-2 text-[9px] leading-relaxed text-zinc-400">The four-factor score is available. Lifecycle requires three comparable checkpoints.</div><button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button></> : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? <><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewStatusLabel(reviewJobs[company.symbol].status)}</span><div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{reviewJobs[company.symbol].message}</div><button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-zinc-300 hover:text-white">View processing status</button></> : <><span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span><div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>{reviewRequestsAvailable ? <button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button> : <button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> FCS requests not yet enabled</button>}<div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></>}</td>
+                <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${segmentLabel(company.universe_benchmark ?? "Unavailable")} · ${company.universe_peer_count} peers`}>{segmentLabel(company.universe_benchmark ?? "Unavailable")} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
+                <td className="px-4 py-4">{renderFcsStatus(company)}</td>
                 <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
               </tr>)}</tbody>
             </table>
@@ -426,31 +491,40 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
           {expandedMode && inactiveExpanded && <section id="inactive-momentum-section" className="scroll-mt-24 mt-6 overflow-hidden rounded-3xl border border-slate-400/20 bg-slate-400/[0.035]">
             <header className="border-b border-white/10 p-5 md:p-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Neutral and negative price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the same liquidity and price-history checks. Dormant means no current directional setup; Deteriorating means the detected price direction is negative. The table uses the same market and FCS fields as the positive-direction view.</p></div>
+                <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">No setup and negative price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the same liquidity and price-history checks. No Directional Setup means the evidence is mixed. Negative companies are classified separately as Early, Established or Stretched Downtrends and receive a Downside Pressure Score—not the positive Radar Score.</p><p className="mt-2 text-[10px] text-rose-200/80">{downsideSummary.EARLY_DOWNTREND} Early · {downsideSummary.ESTABLISHED_DOWNTREND} Established · {downsideSummary.STRETCHED_DOWNTREND} Stretched · {downsideSummary.potentiallyOversold} potentially oversold warnings</p></div>
                 <button type="button" onClick={() => setInactiveExpanded(false)} className="self-start rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Collapse companies without an active momentum setup"><ChevronUp className="h-4 w-4" /></button>
               </div>
               <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {(["ALL", "DORMANT", "DETERIORATING"] as const).map((state) => {
                     const count = state === "ALL" ? inactiveCounts.all : state === "DORMANT" ? inactiveCounts.dormant : inactiveCounts.deteriorating;
-                    const label = state === "ALL" ? "NEUTRAL + NEGATIVE" : state === "DORMANT" ? "NEUTRAL" : "NEGATIVE";
-                    return <button key={state} type="button" onClick={() => setInactiveFilter(state)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${inactiveFilter === state ? "border-slate-300/50 bg-slate-300/15 text-slate-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{label} {count}</button>;
+                    const label = state === "ALL" ? "NO SETUP + NEGATIVE" : state === "DORMANT" ? "NO DIRECTIONAL SETUP" : "NEGATIVE DIRECTION";
+                    return <button key={state} type="button" onClick={() => { setInactiveFilter(state); setDownsidePhaseFilter("ALL"); }} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${inactiveFilter === state ? "border-slate-300/50 bg-slate-300/15 text-slate-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{label} {count}</button>;
                   })}
                 </div>
                 <label className="relative block md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={inactiveQuery} onChange={(event) => setInactiveQuery(event.target.value)} placeholder="Search this company list" className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-slate-300/40" /></label>
               </div>
+              {inactiveFilter === "DETERIORATING" && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+                {([
+                  ["ALL", "ALL DOWNTRENDS", inactiveCounts.deteriorating],
+                  ["EARLY_DOWNTREND", "EARLY DOWNTREND", downsideSummary.EARLY_DOWNTREND],
+                  ["ESTABLISHED_DOWNTREND", "ESTABLISHED DOWNTREND", downsideSummary.ESTABLISHED_DOWNTREND],
+                  ["STRETCHED_DOWNTREND", "STRETCHED DOWNTREND", downsideSummary.STRETCHED_DOWNTREND],
+                  ["POTENTIALLY_OVERSOLD", "POTENTIALLY OVERSOLD", downsideSummary.potentiallyOversold],
+                ] as const).map(([phase, label, count]) => <button key={phase} type="button" onClick={() => setDownsidePhaseFilter(phase)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] ${downsidePhaseFilter === phase ? "border-rose-300/50 bg-rose-300/15 text-rose-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{label} {count}</button>)}
+              </div>}
             </header>
             <div className="p-5 md:p-6">
               <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between"><span>{filteredInactiveCompanies.length.toLocaleString("en-IN")} companies match this view.</span><span>{filteredInactiveCompanies.length > displayedInactiveCompanies.length ? `Showing the first ${displayedInactiveCompanies.length}; search to locate a specific company.` : `Showing all ${displayedInactiveCompanies.length}.`}</span></div>
               <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <table className="w-full min-w-[1290px] table-fixed text-left">
-                  <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="w-[175px] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">Momentum State / Radar Score</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
+                  <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="w-[175px] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">Directional State / Downside Pressure</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
                   <tbody className="divide-y divide-white/[0.07]">{displayedInactiveCompanies.map((company) => <tr key={company.symbol} className="hover:bg-white/[0.025]">
-                    <td className="px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{company.market_cap_segment.label}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
-                    <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{company.radar_state.replaceAll("_", " ")}</span><span className="font-mono text-xl font-bold text-white">{company.experimental_rank_score ?? "—"}</span></div><div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${directionPresentation[momentumDirection(company.radar_state as RadarState)].style}`}>{directionPresentation[momentumDirection(company.radar_state as RadarState)].label}</div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div><div className="mt-3 border-t border-white/[0.07] pt-3"><div className={`text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalRelationship(company).style}`}>{fundamentalRelationship(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalRelationship(company).detail}</div></div></td>
+                    <td className="px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{segmentLabel(company.market_cap_segment.label)}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
+                    <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{directionalStateLabel(company)}</span><span className="font-mono text-xl font-bold text-white">{downsideAssessment(company)?.downsidePressureScore ?? "—"}</span></div><div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${directionPresentation[momentumDirection(company.radar_state as RadarState)].style}`}>{directionPresentation[momentumDirection(company.radar_state as RadarState)].label}</div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div>{downsideAssessment(company)?.potentiallyOversold && <div className="mt-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.06] px-2 py-1.5 text-[9px] font-semibold text-amber-100">Potentially Oversold · {downsideAssessment(company)?.recoveryConfirmed ? "recovery trigger confirmed" : "reversal not confirmed"}</div>}<div className="mt-3 border-t border-white/[0.07] pt-3"><div className={`text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalRelationship(company).style}`}>{fundamentalRelationship(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalRelationship(company).detail}</div></div></td>
                     <td className="px-4 py-4"><div className="space-y-2 text-[10px]"><div className="flex justify-between gap-3"><span className="text-zinc-300">12 months to 1 month</span><span className="font-mono text-white">{pct(company.momentum_12_1)}</span></div><div className="flex justify-between gap-3"><span className="text-zinc-300">6 months to 1 month</span><span className="font-mono text-white">{pct(company.momentum_6_1)}</span></div><div className="text-[9px] leading-relaxed text-zinc-400">Both periods exclude the latest month · as of {company.as_of_date}</div></div></td>
                     <td className="px-4 py-4">{company.current_momentum_trigger ? <div><div className={`text-[10px] font-black uppercase tracking-[0.1em] ${triggerSummary(company.current_momentum_trigger).style}`}>{triggerSummary(company.current_momentum_trigger).label}</div><div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]"><span className="text-zinc-300">20-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_20d)}</span><span className="text-zinc-300">5-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_5d)}</span><span className="text-zinc-300">Volume</span><span className="text-right font-mono text-white">{ratio(company.current_momentum_trigger.traded_value_acceleration_5_vs_prior_20)}</span><span className="text-zinc-300">Breakout</span><span className="text-right text-white">{breakoutLabel(company.current_momentum_trigger.breakout_status)}</span></div><div className="mt-2 text-[9px] text-zinc-400">As of {company.current_momentum_trigger.as_of_date}</div></div> : <span className="text-[10px] text-zinc-400">Insufficient current-session history</span>}</td>
-                    <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.universe_benchmark ?? "Unavailable"} · ${company.universe_peer_count} peers`}>{company.universe_benchmark ?? "Unavailable"} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
+                    <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${segmentLabel(company.universe_benchmark ?? "Unavailable")} · ${company.universe_peer_count} peers`}>{segmentLabel(company.universe_benchmark ?? "Unavailable")} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
                     <td className="px-4 py-4">{renderFcsStatus(company)}</td>
                     <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
                   </tr>)}</tbody>
@@ -489,8 +563,9 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
           <div className="mt-5 grid md:grid-cols-2 gap-3 text-xs leading-relaxed text-zinc-400">
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><TrendingUp className="w-4 h-4 text-cyan-300 mb-2" /><strong className="text-white">What the rank means</strong><p className="mt-1">A cross-sectional work-queue priority based on the 12-month-to-1-month and 6-month-to-1-month trends, the latest 3-month trend, Nifty 500 relative strength, trend structure, 52-week position and volume confirmation. The two medium-term measurements deliberately exclude the latest month.</p></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><ShieldAlert className="w-4 h-4 text-amber-300 mb-2" /><strong className="text-white">What it does not mean</strong><p className="mt-1">It is not a recommendation, expected return, FCS factor, lifecycle input or substitute for company evidence. Short-history companies remain unranked.</p></div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">How companies are selected for fundamental review</strong><p className="mt-1">A company can be selected when it has at least 252 sessions, a Starting or Confirmed radar state, no critical stale-data issue, and passes the deterministic liquidity rule. The current threshold is {money(activeRadarData.summary.liquidity_universe?.threshold_inr ?? activeRadarData.selection_gate_policy.minimum_traded_value_inr)} median daily traded value over 60 sessions, with at least 90% trading frequency over 126 sessions. Extended trends remain visible on the radar but are not prioritised for fresh evidence work because the move may already be mature. Segment source date: {activeRadarData.segment_registry.as_of_date}.</p></div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">Peer-relative strength</strong><p className="mt-1">“Vs universe” compares the company’s blended 6–1 and 3-month momentum with the median of its official large-, mid-, small-, micro-cap or Extended NSE peer group. “Vs sector” is shown only when an official NSE industry label exists and at least five peers are available.</p></div>
+            <div className="rounded-2xl border border-rose-300/15 bg-rose-300/[0.035] p-4 md:col-span-2"><strong className="text-rose-100">Negative-direction method</strong><p className="mt-1">Downside Pressure is the inverse of the same positive-oriented cross-sectional percentile score. Early, Established and Stretched Downtrends use progressively stricter trend agreement and volatility-adjusted distance rules. Potentially Oversold is only a warning flag; no reversal is suggested unless price regains its 50-session average, 20-day and 5-day returns are positive, and relative strength is positive.</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">How companies are selected for fundamental review</strong><p className="mt-1">A company can be selected when it has at least 252 sessions, an Early or Established Uptrend, no critical stale-data issue, and passes the deterministic liquidity rule. The current threshold is {money(activeRadarData.summary.liquidity_universe?.threshold_inr ?? activeRadarData.selection_gate_policy.minimum_traded_value_inr)} median daily traded value over 60 sessions, with at least 90% trading frequency over 126 sessions. Stretched Uptrends remain visible on the radar but are not prioritised for fresh evidence work because the move may already be mature. Segment source date: {activeRadarData.segment_registry.as_of_date}.</p></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4 md:col-span-2"><strong className="text-white">Peer-relative strength</strong><p className="mt-1">“Vs universe” compares the company’s blended 6–1 and 3-month momentum with the median of its official large-, mid-, small-, micro-cap or Broader NSE peer group. “Vs sector” is shown only when an official NSE industry label exists and at least five peers are available.</p></div>
             <div className="rounded-2xl border border-cyan-300/15 bg-cyan-300/[0.035] p-4 md:col-span-2"><strong className="text-cyan-100">Current trigger—kept separate from the rank</strong><p className="mt-1">The 20-session and 5-session returns use the latest completed session. Volume acceleration compares recent five-session average traded value with the preceding 20 sessions. A breakout is confirmed only when the latest close exceeds the prior 55-session high and volume acceleration is at least 1.25×. These current readings do not change the existing momentum score, radar classification, FCS or lifecycle.</p></div>
           </div>
         </div>

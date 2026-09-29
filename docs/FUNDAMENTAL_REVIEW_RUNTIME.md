@@ -37,6 +37,7 @@ The public interface remains disabled until both the request and status gateways
 | `FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL` | Private worker `/internal/fundamental-review/request` URL |
 | `FUNDAMENTAL_REVIEW_STATUS_URL` | Private worker `/internal/fundamental-review/status` URL |
 | `FUNDAMENTAL_REVIEW_INTERNAL_TOKEN` | Secret shared only between approved services |
+| `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` | Explicit release gate. Must equal `true` only after the live five-company integration gate passes. |
 
 ### Private worker
 
@@ -105,4 +106,4 @@ The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-revie
 
 The remaining backend dependency is a production evidence endpoint that emits the complete V2 evidence, document and validation contracts. The older factor-evidence CSV response lacks comparison basis, consolidation basis, period-end dates, raw/canonical units and immutable archive hashes, so it must not be adapted into a publishable score by assumption.
 
-Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, do not configure the public request/status URLs and do not claim that automated FCS requests are available.
+Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, keep `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` unset (or `false`) and do not claim that automated FCS requests are available. Request/status URLs alone cannot enable the public button.

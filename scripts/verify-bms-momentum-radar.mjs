@@ -17,5 +17,16 @@ for (const company of radar.companies) {
     assert.ok(company.experimental_rank_score >= 0 && company.experimental_rank_score <= 100, `${company.symbol}: rank outside range`);
     assert.ok(company.observations >= 252, `${company.symbol}: full-history flag without 252 observations`);
   } else assert.equal(company.experimental_rank_score, null, `${company.symbol}: incomplete history must not receive a rank`);
+  if (radar.schema_version === "1.1.0") {
+    if (company.radar_state === "DETERIORATING") {
+      assert.ok(["EARLY_DOWNTREND", "ESTABLISHED_DOWNTREND", "STRETCHED_DOWNTREND"].includes(company.downside_phase), `${company.symbol}: invalid downside phase`);
+      assert.ok(Number.isFinite(company.downside_pressure_score), `${company.symbol}: missing downside pressure score`);
+      assert.ok(company.downside_pressure_score >= 0 && company.downside_pressure_score <= 100, `${company.symbol}: downside pressure outside range`);
+      assert.ok(["CONFIRMED", "NOT_CONFIRMED"].includes(company.recovery_trigger), `${company.symbol}: invalid recovery trigger`);
+    } else {
+      assert.equal(company.downside_phase, null, `${company.symbol}: non-negative state must not receive a downside phase`);
+      assert.equal(company.downside_pressure_score, null, `${company.symbol}: non-negative state must not receive a downside score`);
+    }
+  }
 }
 console.log(JSON.stringify({ status: "passed", policy: radar.policy_id, ...radar.universe, ...radar.summary }, null, 2));

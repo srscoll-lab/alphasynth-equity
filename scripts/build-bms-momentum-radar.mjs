@@ -228,6 +228,35 @@ function classify(company) {
   return "DORMANT";
 }
 
+function assessDownside(company) {
+  if (company.radar_state !== "DETERIORATING") return {
+    downside_phase: null,
+    downside_pressure_score: null,
+    potentially_oversold: false,
+    recovery_trigger: "NOT_APPLICABLE",
+  };
+  const fullAgreement = company.adjusted_close < company.sma_50
+    && company.sma_50 < company.sma_200
+    && company.momentum_6_1 < 0
+    && company.relative_strength < 0;
+  const extensionThreshold = Math.max(0.12, 2.5 * (company.annualized_volatility_63 / Math.sqrt(252)) * Math.sqrt(20));
+  const downsidePhase = fullAgreement && company.distance_from_sma50 <= -extensionThreshold
+    ? "STRETCHED_DOWNTREND"
+    : fullAgreement
+      ? "ESTABLISHED_DOWNTREND"
+      : "EARLY_DOWNTREND";
+  const recoveryConfirmed = company.adjusted_close > company.sma_50
+    && company.momentum_20d > 0
+    && company.momentum_5d > 0
+    && company.relative_strength > 0;
+  return {
+    downside_phase: downsidePhase,
+    downside_pressure_score: Number.isFinite(company.experimental_rank_score) ? round(100 - company.experimental_rank_score, 2) : null,
+    potentially_oversold: downsidePhase === "STRETCHED_DOWNTREND",
+    recovery_trigger: recoveryConfirmed ? "CONFIRMED" : "NOT_CONFIRMED",
+  };
+}
+
 async function mapConcurrent(items, worker, size) {
   const results = new Array(items.length);
   let cursor = 0;
@@ -279,6 +308,7 @@ async function main() {
       company.experimental_rank_score = round(policy.features.reduce((sum, feature) => sum + (company.percentiles?.[feature.id] ?? 0) * feature.weight, 0) * 100, 2);
     } else company.experimental_rank_score = null;
     company.radar_state = classify(company);
+    Object.assign(company, assessDownside(company));
     company.quality_flags = [];
     if (company.data_status === "partial_history" || company.data_status === "insufficient_history") company.quality_flags.push("partial_history");
     if (company.data_status === "provider_unavailable") company.quality_flags.push("provider_unavailable");
@@ -292,7 +322,7 @@ async function main() {
   fetched.sort((left, right) => (right.experimental_rank_score ?? -1) - (left.experimental_rank_score ?? -1));
   const stateCounts = Object.fromEntries(policy.states.map((state) => [state, fetched.filter((company) => company.radar_state === state).length]));
   const output = {
-    schema_version: "1.0.0",
+    schema_version: "1.1.0",
     policy_id: policy.policy_id,
     generated_at: new Date().toISOString(),
     status: selected.length === policy.universe.expected_companies && offset === 0 ? "complete_universe_scan" : "partial_test_scan",

@@ -52,6 +52,7 @@ const scoreDetailBySymbol = new Map((scoreDetails.records as ScoreDetail[]).map(
 
 const pct = (value: number | null) => value === null ? "—" : `${value >= 0 ? "+" : ""}${(value * 100).toFixed(1)}%`;
 const label = (value: string) => value.replaceAll("_", " ").toLowerCase().replace(/(^|\s)\S/g, (letter) => letter.toUpperCase());
+const capLabel = (value: string) => value === "Extended NSE" || value === "EXTENDED_NSE" ? "Broader NSE" : value;
 
 const momentumStyle: Record<string, string> = {
   STARTING: "border-sky-400/30 bg-sky-400/10 text-sky-200",
@@ -61,6 +62,15 @@ const momentumStyle: Record<string, string> = {
   DORMANT: "border-zinc-500/30 bg-zinc-500/10 text-zinc-300",
   INSUFFICIENT_HISTORY: "border-violet-400/30 bg-violet-400/10 text-violet-200",
   UNAVAILABLE: "border-zinc-500/30 bg-zinc-500/10 text-zinc-400",
+};
+const momentumLabel: Record<string, string> = {
+  STARTING: "Early Uptrend",
+  CONFIRMED: "Established Uptrend",
+  EXTENDED: "Stretched Uptrend",
+  DORMANT: "No Directional Setup",
+  DETERIORATING: "Negative Direction",
+  INSUFFICIENT_HISTORY: "Insufficient History",
+  UNAVAILABLE: "Unavailable",
 };
 
 function unique(values: string[]) {
@@ -152,8 +162,8 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
         <div className="border-b border-white/10 px-5 py-5 md:px-8">
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <label className="relative xl:col-span-2"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search company or symbol" className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-emerald-300/40" /></label>
-            <select value={momentumState} onChange={(event) => setMomentumState(event.target.value)} aria-label="Filter by momentum state" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All momentum states</option>{momentumStates.map((state) => <option key={state} value={state}>{label(state)}</option>)}</select>
-            <select value={capSegment} onChange={(event) => setCapSegment(event.target.value)} aria-label="Filter by market-cap segment" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All cap segments</option>{capSegments.map((segment) => <option key={segment} value={segment}>{segment}</option>)}</select>
+            <select value={momentumState} onChange={(event) => setMomentumState(event.target.value)} aria-label="Filter by momentum state" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All momentum states</option>{momentumStates.map((state) => <option key={state} value={state}>{momentumLabel[state] ?? label(state)}</option>)}</select>
+            <select value={capSegment} onChange={(event) => setCapSegment(event.target.value)} aria-label="Filter by market-cap segment" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All cap segments</option>{capSegments.map((segment) => <option key={segment} value={segment}>{capLabel(segment)}</option>)}</select>
             <select value={readiness} onChange={(event) => setReadiness(event.target.value as typeof readiness)} aria-label="Filter by lifecycle readiness" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All readiness</option><option value="LIFECYCLE_READY">FCS + lifecycle ready</option><option value="FCS_ONLY">FCS ready · lifecycle pending</option></select>
           </div>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-zinc-500"><span>{records.length} of {fundamentalChangeLibrary.length} records shown</span><span>Sorted by {sortKey === "fcsScore" ? "FCS" : sortKey === "momentumScore" ? "Momentum Radar score" : sortKey === "companyName" ? "company" : "FCS date"} · {sortDirection === "asc" ? "ascending" : "descending"}</span></div>
@@ -174,13 +184,13 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
 function RecordRow({ record, onOpen }: { record: FundamentalChangeRecord; onOpen: () => void }) {
   return <tr className="hover:bg-white/[0.025]">
     <td className="px-3 py-4"><div className="font-semibold text-white">{record.symbol}</div><div className="mt-1 max-w-[220px] truncate text-xs text-zinc-500">{record.companyName}</div></td>
-    <td className="px-3 py-4"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-200">{record.capSegment}</span></td>
+    <td className="px-3 py-4"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-200">{capLabel(record.capSegment)}</span></td>
     <td className="px-3 py-4 max-w-[170px] text-xs text-zinc-400">{record.sector}</td>
     <td className="px-3 py-4"><div className="font-mono text-xl font-bold text-emerald-200">{record.fcsScore}</div><div className="mt-1 text-[9px] text-zinc-600">BMS V2 method</div></td>
     <td className="px-3 py-4"><div className="text-xs text-zinc-300">{record.fcsPeriod}</div><div className="mt-1 text-[10px] text-zinc-600">{record.fcsAsOf.slice(0, 10)}</div></td>
     <td className="px-3 py-4"><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase text-emerald-300"><ShieldCheck className="h-3.5 w-3.5" /> Four-factor ready</span></td>
     <td className="px-3 py-4">{record.lifecycleReady ? <><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-200"><BookOpenCheck className="h-3.5 w-3.5" /> {record.lifecycle}</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints}/3 checkpoints</div></> : <><span className="text-xs text-zinc-500">Pending</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints}/3 checkpoints</div></>}</td>
-    <td className="px-3 py-4"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${momentumStyle[record.momentumState]}`}>{label(record.momentumState)}</span></td>
+    <td className="px-3 py-4"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${momentumStyle[record.momentumState]}`}>{momentumLabel[record.momentumState] ?? label(record.momentumState)}</span></td>
     <td className="px-3 py-4 font-mono text-sm text-white">{record.momentumScore ?? "—"}</td>
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.universeRelativeStrength)}</td>
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.sectorRelativeStrength)}</td>

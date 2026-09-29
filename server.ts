@@ -4104,10 +4104,17 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
   app.get("/api/bms/fundamental-review/capabilities", (_req, res) => {
     const requestConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL);
     const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
+    const publicRequestsEnabled = process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED === "true";
+    const available = requestConfigured && statusConfigured && publicRequestsEnabled;
     return res.json({
-      available: requestConfigured && statusConfigured,
+      available,
       requestConfigured,
       statusConfigured,
+      publicRequestsEnabled,
+      activationState: available ? "available" : "not_activated",
+      unavailableReason: available
+        ? null
+        : "New FCS processing is not yet activated. Existing published FCS reports remain available.",
       durableRuntimeConfigured: fundamentalReviewRuntimeConfigured(),
       expectedMinutes: { minimum: 10, maximum: 15 },
       currentScoreAvailableBeforeLifecycle: true,
@@ -4177,9 +4184,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
 
     const requestUrl = process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL;
-    if (!requestUrl) {
+    if (!requestUrl || process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED !== "true") {
       return res.status(503).json({
-        error: "Fundamental Change Review requests are not configured on this deployment. No job was started.",
+        error: "New Fundamental Change Review processing is not activated on this deployment. No job was started.",
         code: "FUNDAMENTAL_REVIEW_WORKER_NOT_CONFIGURED",
       });
     }
