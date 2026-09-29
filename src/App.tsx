@@ -534,8 +534,9 @@ function isValidTickerPattern(ticker: string): boolean {
 export default function App() {
   const requestedView = new URLSearchParams(window.location.search).get('view');
   const requestedResearchView = requestedView === 'research';
-  const requestedTrackerView = requestedView === 'tracker' || requestedView === 'momentum';
-  const requestedMomentumView = requestedView === 'momentum';
+  const requestedDiscoveryView = requestedView === 'discovery';
+  const requestedLibraryView = requestedView === 'fcs' || requestedView === 'library';
+  const requestedValidationView = requestedView === 'tracker' || requestedView === 'validation';
   const standaloneResearchMode = window.location.hostname.startsWith('research-only---');
   // The BMS dashboard is the primary AlphaSynth landing experience.
   // Prevent the browser from restoring an old scroll position on refresh.
@@ -551,17 +552,20 @@ export default function App() {
     }
   }, [requestedResearchView, standaloneResearchMode]);
 
-  // AlphaSynth V1 navigation:
-  // discovery = BMS-first landing experience
-  // research  = existing AlphaSynth research workspace
+  // Public product navigation:
+  // tracker   = Momentum Radar, FCS Library or the secondary validation record
+  // research  = independent company research workspace
+  // discovery = preserved legacy landing experience (explicit URL only)
   const [appView, setAppView] = useState<'discovery' | 'research' | 'tracker'>(
     requestedResearchView || standaloneResearchMode
       ? 'research'
-      : requestedTrackerView
-        ? 'tracker'
-        : 'discovery'
+      : requestedDiscoveryView
+        ? 'discovery'
+        : 'tracker'
   );
-  const [trackerInitialMode, setTrackerInitialMode] = useState<'v1' | 'v2' | 'momentum'>(requestedMomentumView ? 'momentum' : 'v2');
+  const [trackerInitialMode, setTrackerInitialMode] = useState<'v1' | 'v2' | 'momentum' | 'library'>(
+    requestedLibraryView ? 'library' : requestedValidationView ? 'v2' : 'momentum'
+  );
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
 
   const enterOpenResearch = () => {
@@ -580,9 +584,9 @@ export default function App() {
     setAppView('discovery');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const openSignalTracker = (mode: 'v2' | 'momentum' = 'v2') => {
+  const openSignalTracker = (mode: 'v2' | 'momentum' | 'library' = 'momentum') => {
     const url = new URL(window.location.href);
-    url.searchParams.set('view', mode === 'momentum' ? 'momentum' : 'tracker');
+    url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
     window.history.replaceState({}, '', `${url.pathname}${url.search}`);
     setTrackerInitialMode(mode);
     setAppView('tracker');
@@ -600,7 +604,7 @@ export default function App() {
       openSignalTracker('momentum');
       return;
     }
-    returnToBmsDiscovery();
+    openSignalTracker('momentum');
   };
   const [viewingPortfolioAudit, setViewingPortfolioAudit] = useState(false);
   const [ticker, setTicker] = useState('RELIANCE');
@@ -4100,9 +4104,9 @@ ${list}
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <button
             type="button"
-            onClick={standaloneResearchMode ? scrollToResearchSearch : returnToBmsDiscovery}
+            onClick={standaloneResearchMode ? scrollToResearchSearch : () => openSignalTracker('momentum')}
             className="flex items-center gap-2 group relative cursor-pointer"
-            title={standaloneResearchMode ? 'Open company research' : 'Back to Fundamental Change Discovery'}
+            title={standaloneResearchMode ? 'Open company research' : 'Open Momentum Radar'}
           >
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
@@ -4112,7 +4116,7 @@ ${list}
               <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
-              {standaloneResearchMode ? 'Open company research' : '← Fundamental Change Discovery'}
+              {standaloneResearchMode ? 'Open company research' : 'Open Momentum Radar'}
             </span>
           </button>
           <div className="flex items-center gap-4">
@@ -4123,20 +4127,28 @@ ${list}
                 className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
                 title={bmsResearchContext?.origin === 'momentum_radar' ? 'Return to Momentum Radar' : 'Return to Fundamental Change'}
               >
-                ← {bmsResearchContext?.origin === 'momentum_radar' ? 'Back to Momentum Radar' : 'Back to Fundamental Change'}
+                ← Back to Momentum Radar
               </button>
             )}
-            {!standaloneResearchMode && <button
-              type="button"
-              onClick={() => {
-                openSignalTracker('v2');
-              }}
-              className={`hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border text-[10px] font-black uppercase tracking-[0.14em] transition-all ${appView === 'tracker' ? 'border-teal-400/40 bg-teal-400/[0.12] text-teal-200' : 'border-teal-400/20 bg-teal-400/[0.05] text-teal-300 hover:bg-teal-400/[0.10] hover:border-teal-400/35'}`}
-              title="Open the frozen Fundamental Change forward-validation tracker"
-            >
-              <BarChart3 className="w-3.5 h-3.5" /> Signal Tracker
-            </button>}
-            <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+            {!standaloneResearchMode && appView !== 'research' && (
+              <div className="hidden md:flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-1">
+                <button
+                  type="button"
+                  onClick={() => openSignalTracker('momentum')}
+                  className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'momentum' ? 'bg-teal-400/[0.14] text-teal-200' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
+                >
+                  Momentum Radar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSignalTracker('library')}
+                  className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'library' ? 'bg-amber/15 text-amber' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
+                >
+                  Fundamental Change
+                </button>
+              </div>
+            )}
+            {appView === 'research' && <div className="hidden lg:flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
                <button onClick={() => { setAppView('research'); setActiveTab('news'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'news' ? 'text-gold' : ''}`}>Pulse</button>
                <button onClick={() => { setAppView('research'); setActiveTab('equity'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'equity' ? 'text-gold' : ''}`}>Research</button>
                <button onClick={() => { setAppView('research'); setActiveTab('filings'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'filings' ? 'text-gold' : ''}`}>Filings</button>
@@ -4144,7 +4156,7 @@ ${list}
                <button onClick={() => { setAppView('research'); setActiveTab('marketing'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'marketing' ? 'text-gold' : ''}`}>Growth</button>
                <button onClick={() => { setAppView('research'); setActiveTab('community'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'community' ? 'text-gold' : ''}`}>Social</button>
                <button onClick={() => { setAppView('research'); setActiveTab('aiTransition'); setTimeout(scrollToWorkflow, 100); }} className={`hover:text-white transition-colors ${activeTab === 'aiTransition' ? 'text-gold' : ''}`}>AI Transition</button>
-            </div>
+            </div>}
             {user ? (
               <div className="flex items-center gap-3">
                 <div className="text-right hidden sm:block">
@@ -4164,7 +4176,7 @@ ${list}
                 onClick={enterOpenResearch}
                 className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(201,145,42,0.3)] active:scale-95`}
               >
-                <TrendingUp className="w-3 h-3" /> {appView === 'research' ? 'Research Workspace' : 'Start Free Research'}
+                <TrendingUp className="w-3 h-3" /> Research a Company
               </button>
             )}
           </div>
@@ -4225,6 +4237,12 @@ ${list}
       {appView === 'tracker' && (
         <SignalTracker
           initialMode={trackerInitialMode}
+          onModeChange={(mode) => {
+            setTrackerInitialMode(mode);
+            const url = new URL(window.location.href);
+            url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
+            window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+          }}
           onDeepDive={(company) => {
             setTicker(company.symbol);
             setBmsResearchContext({
@@ -4245,8 +4263,7 @@ ${list}
             setTimeout(scrollToWorkflow, 100);
           }}
           onBack={() => {
-            setAppView('discovery');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            openSignalTracker('momentum');
           }}
         />
       )}

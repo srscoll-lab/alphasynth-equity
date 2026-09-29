@@ -8,16 +8,15 @@ const radarPath = path.resolve("src/data/bmsMomentumRadarExpanded.json");
 const cacheRoot = path.resolve("output/momentum-market-cache-expanded");
 const radar = JSON.parse(fs.readFileSync(radarPath, "utf8"));
 const cutoff = radar.market_data.as_of_date;
-const active = radar.companies.filter((company) => company.data_status === "full_history"
-  && company.liquidity_gate?.qualified
-  && ["STARTING", "CONFIRMED", "EXTENDED"].includes(company.radar_state));
+const momentumReady = radar.companies.filter((company) => company.data_status === "full_history"
+  && company.liquidity_gate?.qualified);
 
 const change = (current, previous) => current / previous - 1;
 const mean = (values) => values.reduce((sum, value) => sum + value, 0) / values.length;
 const closeEnough = (actual, expected, tolerance = 0.000001) => Math.abs(actual - expected) <= tolerance;
 
-assert.ok(active.length > 0, "No active momentum companies found.");
-for (const company of active) {
+assert.ok(momentumReady.length > 0, "No momentum-ready companies found.");
+for (const company of momentumReady) {
   const cachePath = path.join(cacheRoot, `${company.yahoo_symbol.replace(/[^A-Za-z0-9._-]/g, "_")}.json`);
   const observations = JSON.parse(fs.readFileSync(cachePath, "utf8")).observations
     .filter((point) => point.date <= cutoff && Number.isFinite(point.close))
@@ -40,6 +39,6 @@ for (const company of active) {
   assert.equal(trigger.breakout_status, expectedBreakout, `${company.symbol}: breakout status mismatch.`);
 }
 
-const inactiveWithTrigger = radar.companies.filter((company) => !active.includes(company) && company.current_momentum_trigger !== null);
-assert.equal(inactiveWithTrigger.length, 0, "Current triggers should be limited to the active, liquid radar view.");
-console.log(JSON.stringify({ cutoff, active_companies_verified: active.length, checks_per_company: 5, result: "pass" }, null, 2));
+const outOfScopeWithTrigger = radar.companies.filter((company) => !momentumReady.includes(company) && company.current_momentum_trigger !== null);
+assert.equal(outOfScopeWithTrigger.length, 0, "Current triggers should be limited to liquidity-qualified companies with full price history.");
+console.log(JSON.stringify({ cutoff, momentum_ready_companies_verified: momentumReady.length, checks_per_company: 5, result: "pass" }, null, 2));

@@ -69,8 +69,7 @@ let unavailable = 0;
 
 for (const company of radar.companies) {
   const eligibleForTrigger = company.data_status === "full_history"
-    && company.liquidity_gate?.qualified
-    && ["STARTING", "CONFIRMED", "EXTENDED"].includes(company.radar_state);
+    && company.liquidity_gate?.qualified;
   const trigger = eligibleForTrigger ? currentTrigger(observationsFor(company, cutoff)) : null;
   company.current_momentum_trigger = trigger;
   if (trigger) enriched += 1;
@@ -78,8 +77,9 @@ for (const company of radar.companies) {
 }
 
 radar.current_trigger_policy = {
-  version: "1.0.0",
+  version: "1.1.0",
   score_separation: "Current triggers are displayed separately and do not alter the experimental momentum rank, radar state, FCS or lifecycle.",
+  coverage: "All liquidity-qualified companies with full price history, including positive, neutral and negative price-direction views.",
   momentum_windows: {
     medium_term: "12-month and 6-month returns ending one month before the as-of date",
     current: "20-session and 5-session returns ending on the latest completed session",

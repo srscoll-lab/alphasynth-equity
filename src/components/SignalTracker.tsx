@@ -232,15 +232,25 @@ function genuineSeries(
 type SignalTrackerProps = {
   onBack: () => void;
   initialMode?: "v1" | "v2" | "momentum" | "library";
+  onModeChange?: (mode: "v1" | "v2" | "momentum" | "library") => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
-export default function SignalTracker({ onBack, initialMode = "v2", onDeepDive }: SignalTrackerProps) {
+export default function SignalTracker({ onBack, initialMode = "v2", onModeChange, onDeepDive }: SignalTrackerProps) {
   const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "library">(initialMode);
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setStudyMode(initialMode);
+  }, [initialMode]);
+
+  const changeMode = (mode: "v1" | "v2" | "momentum" | "library") => {
+    setStudyMode(mode);
+    onModeChange?.(mode);
+  };
   const [selectedSymbol, setSelectedSymbol] = useState("SUNPHARMA");
   const [priceMode, setPriceMode] = useState<"indexed" | "actual">("indexed");
   const [activeSection, setActiveSection] = useState<TrackerSection>("overview");
@@ -337,15 +347,15 @@ export default function SignalTracker({ onBack, initialMode = "v2", onDeepDive }
   ].filter((reason, index, reasons) => reason && reasons.indexOf(reason) === index);
 
   if (studyMode === "v2") {
-    return <SignalTrackerV2Comparison onShowFrozen={() => setStudyMode("v1")} onShowMomentum={() => setStudyMode("momentum")} />;
+    return <SignalTrackerV2Comparison onShowFrozen={() => changeMode("v1")} onShowMomentum={() => changeMode("momentum")} />;
   }
 
   if (studyMode === "momentum") {
-    return <MomentumRadar onBack={() => setStudyMode("v2")} onBrowseLibrary={() => setStudyMode("library")} onDeepDive={onDeepDive} />;
+    return <MomentumRadar onBack={() => changeMode("v2")} onBrowseLibrary={() => changeMode("library")} onDeepDive={onDeepDive} />;
   }
 
   if (studyMode === "library") {
-    return <FundamentalChangeLibrary onBack={() => setStudyMode("momentum")} />;
+    return <FundamentalChangeLibrary onBack={() => changeMode("momentum")} />;
   }
 
   if (evidenceOpen) {
@@ -371,7 +381,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onDeepDive }
 
         <button
           type="button"
-          onClick={() => setStudyMode("v2")}
+          onClick={() => changeMode("v2")}
           className="ml-4 inline-flex items-center gap-2 rounded-lg border border-violet-400/25 bg-violet-400/[0.08] px-3 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-violet-200 hover:bg-violet-400/[0.13]"
         >
           <BarChart3 className="w-4 h-4" /> View V2 50-company comparison
