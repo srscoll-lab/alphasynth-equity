@@ -5,7 +5,7 @@
   "methodologyId": "BMS_V2_1_TRAJECTORY_LIFECYCLE",
   "studyType": "retrospective_reconstruction_with_forward_market_observation",
   "informationCutoff": "2026-08-25",
-  "classificationCalculatedAt": "2026-09-25T06:41:52.044Z",
+  "classificationCalculatedAt": "2026-09-26T07:50:31.507Z",
   "signalDate": "2026-08-25",
   "marketEntryRule": "First completed Indian trading session strictly after the information cutoff",
   "marketEntryDate": "2026-08-26",
@@ -14,7 +14,7 @@
   "generatedAt": "2026-09-25T06:54:20.799Z",
   "sourceManifest": {
     "path": "../alphasynth-bms-v2/output/fifty-company-v2-release-manifest.json",
-    "sha256": "0c8bc367a872cb45f10fabc61e7cffa7e98f355d97d19fbabd7cb09802fb1e94"
+    "sha256": "a9bad4c8f0f19462f8ec9dced00da1935b01e438cb0e663dfd5b07ff8b72112b"
   },
   "integrityNotice": "The V2 classifications were calculated after the cutoff using only evidence available by the cutoff. Returns are genuine subsequent market observations, but this is a reconstructed shadow study—not a contemporaneously frozen prospective signal.",
   "summary": {
