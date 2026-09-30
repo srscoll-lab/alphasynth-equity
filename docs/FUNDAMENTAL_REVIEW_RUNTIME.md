@@ -107,3 +107,18 @@ The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-revie
 The remaining backend dependency is a production evidence endpoint that emits the complete V2 evidence, document and validation contracts. The older factor-evidence CSV response lacks comparison basis, consolidation basis, period-end dates, raw/canonical units and immutable archive hashes, so it must not be adapted into a publishable score by assumption.
 
 Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, keep `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` unset (or `false`) and do not claim that automated FCS requests are available. Request/status URLs alone cannot enable the public button.
+
+## Capped stage-one deployment (2026-09-30)
+
+The infrastructure-only smoke gate is deployed in `my-nse-research-app`, region `us-central1`:
+
+- private Cloud Run service: `fcs-review-worker`
+- runtime identity: `fcs-worker@my-nse-research-app.iam.gserviceaccount.com`
+- Cloud Tasks OIDC identity: `fcs-tasks@my-nse-research-app.iam.gserviceaccount.com`
+- Firestore database: `(default)`; collection: `fundamental_review_jobs_v1`
+- Cloud Tasks queue: `fcs-reviews`; one concurrent dispatch; currently `PAUSED`
+- Secret Manager secret: `fcs-internal-token`
+
+The synthetic `INFRA-SMOKE` request passed the capped gate: Cloud Run rejected anonymous access, the authenticated request returned HTTP 202, Firestore returned the durable queued record, and Cloud Tasks contained the matching execute task. The task was not dispatched because the queue remained paused.
+
+This stage deliberately does **not** activate evidence retrieval, scoring, public request/status routing, or the frontend request button. The evidence and scoring URL values on the private worker are non-routable placeholders. The next stage must replace both placeholders, run the live five-company gate, and only then consider resuming the queue and enabling public requests.
