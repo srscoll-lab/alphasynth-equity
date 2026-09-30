@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Compass, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, X } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, Clock3, Compass, RefreshCw, Search, ShieldAlert, TrendingUp, X } from "lucide-react";
 import radarData from "../data/bmsMomentumRadar.json";
 import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
 import lifecycleV21 from "../data/momentumExpansionLifecycleV21.json";
@@ -14,6 +14,7 @@ import {
 
 type RadarState = "DORMANT" | "STARTING" | "CONFIRMED" | "EXTENDED" | "DETERIORATING" | "INSUFFICIENT_HISTORY";
 type Segment = "LARGE_CAP" | "MID_CAP" | "SMALL_CAP" | "MICRO_CAP" | "EXTENDED_NSE" | "UNCLASSIFIED";
+type DirectionView = "positive" | "negative" | "neutral";
 type RadarDataset = typeof expandedRadarData;
 type Company = RadarDataset["companies"][number];
 
@@ -254,8 +255,11 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [query, setQuery] = useState("");
   const [selectedStudySymbol, setSelectedStudySymbol] = useState<string | null>(null);
   const [selectedStatusSymbol, setSelectedStatusSymbol] = useState<string | null>(null);
-  const [inactiveExpanded, setInactiveExpanded] = useState(false);
-  const [inactiveFilter, setInactiveFilter] = useState<"ALL" | "DORMANT" | "DETERIORATING">("ALL");
+  const requestedDirection = new URLSearchParams(window.location.search).get("direction");
+  const [directionView, setDirectionView] = useState<DirectionView>(requestedDirection === "negative" || requestedDirection === "neutral" ? requestedDirection : "positive");
+  const [inactiveFilter, setInactiveFilter] = useState<"ALL" | "DORMANT" | "DETERIORATING">(
+    requestedDirection === "negative" ? "DETERIORATING" : requestedDirection === "neutral" ? "DORMANT" : "ALL",
+  );
   const [downsidePhaseFilter, setDownsidePhaseFilter] = useState<"ALL" | DownsidePhase | "POTENTIALLY_OVERSOLD">("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
   const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>({});
@@ -330,13 +334,14 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     setSelectedStudySymbol(symbol);
     window.setTimeout(() => document.getElementById("momentum-bms-study")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
-  const openNegativeMomentum = () => {
-    // Negative direction is a first-class radar view. Always open it directly
-    // rather than making the user infer that it sits inside a combined bucket.
-    setInactiveFilter("DETERIORATING");
+  const selectDirection = (direction: DirectionView) => {
+    setDirectionView(direction);
+    setInactiveFilter(direction === "negative" ? "DETERIORATING" : direction === "neutral" ? "DORMANT" : "ALL");
     setDownsidePhaseFilter("ALL");
-    setInactiveExpanded(true);
-    window.setTimeout(() => document.getElementById("inactive-momentum-section")?.scrollIntoView({ behavior: "auto", block: "start" }), 50);
+    const url = new URL(window.location.href);
+    url.searchParams.set("direction", direction);
+    window.history.replaceState({}, "", url);
+    window.setTimeout(() => document.getElementById("direction-radar-view")?.scrollIntoView({ behavior: "auto", block: "start" }), 50);
   };
 
   const showRequestConfirmation = (company: Company) => {
@@ -442,7 +447,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             </div>
             </div>
           </div>
-          <div className={`grid gap-3 mt-7 ${expandedMode ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
             {[
               ["Universe scanned", `${activeRadarData.universe.scanned}`, expandedMode ? "Official NSE EQ and BE universe" : "Exact monitored FCS universe"],
               ["Analysable liquid universe", `${momentumReadyCompanies.length}`, expandedMode ? "Liquidity-qualified with full price history" : "Complete market history"],
@@ -450,17 +455,18 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
               <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div><div className="mt-2 text-2xl font-mono font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{note}</div>
             </div>)}
-            {expandedMode && <button type="button" onClick={openNegativeMomentum} className="rounded-2xl border border-rose-300/25 bg-rose-300/[0.07] px-4 py-4 text-left transition hover:border-rose-300/50 hover:bg-rose-300/[0.11]">
-              <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.15em] font-black text-rose-200">Open Negative Price Direction Radar</div><ChevronDown className="h-4 w-4 text-rose-300" /></div>
-              <div className="mt-2 text-2xl font-mono font-bold text-rose-100">{inactiveCounts.deteriorating}</div>
-              <div className="mt-1 text-xs text-rose-200/65">Early, Established and Stretched Downtrends · view companies</div>
-            </button>}
           </div>
         </header>
 
-        <div className="px-5 py-5 md:px-8 border-b border-white/10">
+        {expandedMode && <nav id="direction-radar-view" aria-label="Momentum direction" className="scroll-mt-24 grid gap-3 border-b border-white/10 bg-black/10 px-5 py-5 md:grid-cols-3 md:px-8">
+          <button type="button" aria-pressed={directionView === "positive"} onClick={() => selectDirection("positive")} className={`rounded-2xl border px-5 py-4 text-left transition ${directionView === "positive" ? "border-emerald-300/55 bg-emerald-300/[0.12] text-white shadow-lg shadow-emerald-950/20" : "border-white/10 bg-white/[0.025] text-zinc-400 hover:border-emerald-300/30 hover:text-white"}`}><div className="text-[10px] font-black uppercase tracking-[0.14em]">Positive Direction</div><div className="mt-2 font-mono text-2xl font-bold">{companies.length}</div><div className="mt-1 text-[10px] opacity-70">Early, Established and Stretched Uptrends</div></button>
+          <button type="button" aria-pressed={directionView === "negative"} onClick={() => selectDirection("negative")} className={`rounded-2xl border px-5 py-4 text-left transition ${directionView === "negative" ? "border-rose-300/55 bg-rose-300/[0.12] text-white shadow-lg shadow-rose-950/20" : "border-white/10 bg-white/[0.025] text-zinc-400 hover:border-rose-300/30 hover:text-white"}`}><div className="text-[10px] font-black uppercase tracking-[0.14em]">Negative Direction</div><div className="mt-2 font-mono text-2xl font-bold">{inactiveCounts.deteriorating}</div><div className="mt-1 text-[10px] opacity-70">Early, Established and Stretched Downtrends</div></button>
+          <button type="button" aria-pressed={directionView === "neutral"} onClick={() => selectDirection("neutral")} className={`rounded-2xl border px-5 py-4 text-left transition ${directionView === "neutral" ? "border-slate-300/50 bg-slate-300/[0.12] text-white shadow-lg shadow-slate-950/20" : "border-white/10 bg-white/[0.025] text-zinc-400 hover:border-slate-300/30 hover:text-white"}`}><div className="text-[10px] font-black uppercase tracking-[0.14em]">No Directional Setup</div><div className="mt-2 font-mono text-2xl font-bold">{inactiveCounts.dormant}</div><div className="mt-1 text-[10px] opacity-70">Mixed evidence without a confirmed direction</div></button>
+        </nav>}
+
+        {directionView === "positive" && <div className="px-5 py-5 md:px-8 border-b border-white/10">
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently show an Early, Established or Stretched Uptrend. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>{expandedMode && <button type="button" onClick={openNegativeMomentum} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-rose-300/30 bg-rose-300/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100 hover:border-rose-300/55 hover:text-white"><TrendingDown className="h-4 w-4" /> Negative Direction Radar · {inactiveCounts.deteriorating}</button>}</div>
+            <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently show an Early, Established or Stretched Uptrend. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {visibleStates.map((state) => <button key={state} type="button" onClick={() => setFilter(state)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${filter === state ? "border-cyan-300/50 bg-cyan-300/15 text-cyan-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{state === "ALL" && expandedMode ? "ACTIVE SIGNALS" : stateLabel[state as RadarState]} {stateCounts[state] ?? 0}</button>)}
             </div>
@@ -472,9 +478,10 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             </div>
             {expandedMode && <p className="text-[10px] leading-relaxed text-zinc-500">The main radar contains only liquid, full-history companies with an Early, Established or Stretched Uptrend. These labels describe current measured conditions; they are not claims that a phase will generate a particular future return.</p>}
           </div>
-        </div>
+        </div>}
 
         <div className="p-5 md:p-8">
+          {directionView === "positive" && <>
           {!!filtered.length && <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
             <span>{filtered.length.toLocaleString("en-IN")} companies match the active filters.</span>
             <span>{filtered.length > displayed.length ? `Showing the first ${displayed.length}; use state, segment or search to narrow the universe.` : `Showing all ${displayed.length}.`}</span>
@@ -493,21 +500,14 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               </tr>)}</tbody>
             </table>
           </div>
-          {expandedMode && inactiveExpanded && <section id="inactive-momentum-section" className="scroll-mt-24 mt-6 overflow-hidden rounded-3xl border border-slate-400/20 bg-slate-400/[0.035]">
+        </>}
+          {expandedMode && directionView !== "positive" && <section id="inactive-momentum-section" className="overflow-hidden border-y border-slate-400/20 bg-slate-400/[0.035]">
             <header className="border-b border-white/10 p-5 md:p-6">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-slate-400">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">No setup and negative price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the same liquidity and price-history checks. No Directional Setup means the evidence is mixed. Negative companies are classified separately as Early, Established or Stretched Downtrends and receive a Downside Pressure Score—not the positive Radar Score.</p><p className="mt-2 text-[10px] text-rose-200/80">{downsideSummary.EARLY_DOWNTREND} Early · {downsideSummary.ESTABLISHED_DOWNTREND} Established · {downsideSummary.STRETCHED_DOWNTREND} Stretched · {downsideSummary.potentiallyOversold} potentially oversold warnings</p></div>
-                <button type="button" onClick={() => setInactiveExpanded(false)} className="self-start rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Collapse companies without an active momentum setup"><ChevronUp className="h-4 w-4" /></button>
-              </div>
+                 <div><div className={`text-[9px] font-black uppercase tracking-[0.18em] ${directionView === "negative" ? "text-rose-300" : "text-slate-400"}`}>Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">{directionView === "negative" ? "Negative price direction" : "No directional setup"}</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">{directionView === "negative" ? "These companies passed the same liquidity and price-history checks and are classified as Early, Established or Stretched Downtrends. They receive a Downside Pressure Score—not the positive Radar Score." : "These companies passed the liquidity and price-history requirements, but their trend indicators do not presently agree strongly enough to establish either positive or negative direction."}</p>{directionView === "negative" && <p className="mt-2 text-[10px] text-rose-200/80">{downsideSummary.EARLY_DOWNTREND} Early · {downsideSummary.ESTABLISHED_DOWNTREND} Established · {downsideSummary.STRETCHED_DOWNTREND} Stretched · {downsideSummary.potentiallyOversold} potentially oversold warnings</p>}</div>
+               </div>
               <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {(["ALL", "DORMANT", "DETERIORATING"] as const).map((state) => {
-                    const count = state === "ALL" ? inactiveCounts.all : state === "DORMANT" ? inactiveCounts.dormant : inactiveCounts.deteriorating;
-                    const label = state === "ALL" ? "NO SETUP + NEGATIVE" : state === "DORMANT" ? "NO DIRECTIONAL SETUP" : "NEGATIVE DIRECTION";
-                    return <button key={state} type="button" onClick={() => { setInactiveFilter(state); setDownsidePhaseFilter("ALL"); }} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${inactiveFilter === state ? "border-slate-300/50 bg-slate-300/15 text-slate-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{label} {count}</button>;
-                  })}
-                </div>
-                <label className="relative block md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={inactiveQuery} onChange={(event) => setInactiveQuery(event.target.value)} placeholder="Search this company list" className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-slate-300/40" /></label>
+                <label className="relative block w-full md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={inactiveQuery} onChange={(event) => setInactiveQuery(event.target.value)} placeholder={directionView === "negative" ? "Search negative direction" : "Search no directional setup"} className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-slate-300/40" /></label>
               </div>
               {inactiveFilter === "DETERIORATING" && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
                 {([
@@ -523,7 +523,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between"><span>{filteredInactiveCompanies.length.toLocaleString("en-IN")} companies match this view.</span><span>{filteredInactiveCompanies.length > displayedInactiveCompanies.length ? `Showing the first ${displayedInactiveCompanies.length}; search to locate a specific company.` : `Showing all ${displayedInactiveCompanies.length}.`}</span></div>
               <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <table className="w-full min-w-[1290px] table-fixed text-left">
-                  <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="w-[175px] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">Directional State / Downside Pressure</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
+                  <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="w-[175px] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">{directionView === "negative" ? "Directional State / Downside Pressure" : "Directional State"}</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
                   <tbody className="divide-y divide-white/[0.07]">{displayedInactiveCompanies.map((company) => <tr key={company.symbol} className="hover:bg-white/[0.025]">
                     <td className="px-4 py-4"><div className="font-semibold text-white">{company.symbol}</div><div className="mt-1 truncate text-[11px] text-zinc-300">{company.company_name}</div><div className="mt-2"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-100">{segmentLabel(company.market_cap_segment.label)}</span></div><div className="mt-2 truncate text-[9px] text-zinc-400" title={company.market_cap_segment.source_index ?? "Outside official size indices"}>{company.market_cap_segment.source_index ?? "Outside official size indices"}</div></td>
                     <td className="px-4 py-4"><div className="flex items-center justify-between gap-3"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${stateStyle[company.radar_state as RadarState]}`}>{directionalStateLabel(company)}</span><span className="font-mono text-xl font-bold text-white">{downsideAssessment(company)?.downsidePressureScore ?? "—"}</span></div><div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${directionPresentation[momentumDirection(company.radar_state as RadarState)].style}`}>{directionPresentation[momentumDirection(company.radar_state as RadarState)].label}</div><div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{stateMeaning[company.radar_state as RadarState]}</div>{downsideAssessment(company)?.potentiallyOversold && <div className="mt-2 rounded-lg border border-amber-300/20 bg-amber-300/[0.06] px-2 py-1.5 text-[9px] font-semibold text-amber-100">Potentially Oversold · {downsideAssessment(company)?.recoveryConfirmed ? "recovery trigger confirmed" : "reversal not confirmed"}</div>}<div className="mt-3 border-t border-white/[0.07] pt-3"><div className={`text-[9px] font-black uppercase tracking-[0.08em] ${fundamentalRelationship(company).style}`}>{fundamentalRelationship(company).label}</div><div className="mt-1 text-[9px] leading-relaxed text-zinc-400">{fundamentalRelationship(company).detail}</div></div></td>
@@ -537,7 +537,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               </div>
             </div>
           </section>}
-          {!filtered.length && <div className="py-16 text-center">
+          {directionView === "positive" && !filtered.length && <div className="py-16 text-center">
             <div className="text-sm font-semibold text-zinc-300">No companies match this combination of filters.</div>
             <div className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-zinc-500">The companies have not disappeared from the radar. This state, segment or gate intersection is empty. Return to the full universe to inspect every category.</div>
             <button type="button" onClick={() => { setFilter("ALL"); setSegment("ALL"); setQuery(""); }} className="mt-4 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 hover:text-white">Show all active signals</button>
