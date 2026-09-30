@@ -355,7 +355,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
   }
 
   if (studyMode === "library") {
-    return <FundamentalChangeLibrary onBack={() => changeMode("momentum")} />;
+    return <FundamentalChangeLibrary onBack={() => changeMode("momentum")} onDeepDive={onDeepDive} />;
   }
 
   if (evidenceOpen) {

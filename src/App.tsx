@@ -587,6 +587,7 @@ export default function App() {
   const openSignalTracker = (mode: 'v2' | 'momentum' | 'library' = 'momentum') => {
     const url = new URL(window.location.href);
     url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
+    if (mode === 'momentum' || mode === 'library') url.searchParams.set('radar', 'expanded');
     window.history.replaceState({}, '', `${url.pathname}${url.search}`);
     setTrackerInitialMode(mode);
     setAppView('tracker');
@@ -600,6 +601,10 @@ export default function App() {
   const [bmsResearchError, setBmsResearchError] = useState<string>("");
   const [reportFromCache, setReportFromCache] = useState<boolean>(false);
   const returnFromResearch = () => {
+    if (bmsResearchContext?.origin === 'fcs_library') {
+      openSignalTracker('library');
+      return;
+    }
     if (bmsResearchContext?.origin === 'momentum_radar') {
       openSignalTracker('momentum');
       return;
@@ -4125,9 +4130,9 @@ ${list}
                 type="button"
                 onClick={returnFromResearch}
                 className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg border border-sky-400/20 bg-sky-400/[0.05] text-[10px] font-black uppercase tracking-[0.14em] text-sky-300 hover:bg-sky-400/[0.10] hover:border-sky-400/35 transition-all"
-                title={bmsResearchContext?.origin === 'momentum_radar' ? 'Return to Momentum Radar' : 'Return to Fundamental Change'}
+                title={bmsResearchContext?.origin === 'fcs_library' ? 'Return to Fundamental Change Library' : 'Return to Momentum Radar'}
               >
-                ← Back to Momentum Radar
+                ← {bmsResearchContext?.origin === 'fcs_library' ? 'Back to FCS Library' : 'Back to Momentum Radar'}
               </button>
             )}
             {!standaloneResearchMode && appView !== 'research' && (
@@ -4145,6 +4150,14 @@ ${list}
                   className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'library' ? 'bg-amber/15 text-amber' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
                 >
                   Fundamental Change
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openSignalTracker('v2')}
+                  className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'v2' ? 'bg-violet-400/[0.14] text-violet-200' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
+                  title="Open the frozen-signal forward validation tracker"
+                >
+                  Validation
                 </button>
               </div>
             )}
@@ -4241,6 +4254,7 @@ ${list}
             setTrackerInitialMode(mode);
             const url = new URL(window.location.href);
             url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
+            if (mode === 'momentum' || mode === 'library') url.searchParams.set('radar', 'expanded');
             window.history.replaceState({}, '', `${url.pathname}${url.search}`);
           }}
           onDeepDive={(company) => {
@@ -4250,7 +4264,7 @@ ${list}
               company_name: company.company_name,
               period: '',
               bms: 0,
-              origin: 'momentum_radar',
+              origin: trackerInitialMode === 'library' ? 'fcs_library' : 'momentum_radar',
               workflow_status: company.bms_status,
             });
             setBmsResearchText("");
@@ -5112,7 +5126,7 @@ ${list}
                                           `Ready for institutional research on ${ticker}.`
                                         )}
                                       </div>
-                              {bmsResearchContext?.origin === 'momentum_radar' && <div className="mt-4 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3 text-[10px] leading-relaxed text-amber-100"><strong className="block uppercase tracking-[0.1em]">FCS status: {bmsResearchContext.workflow_status === 'ready' ? 'FCS & Lifecycle ready' : bmsResearchContext.workflow_status === 'fcs_ready' ? 'FCS ready · Lifecycle pending' : bmsResearchContext.workflow_status === 'processing' ? 'FCS review in progress' : 'FCS not requested'}</strong><span className="mt-1 block text-zinc-400">Running this independent Deep Dive does not start or modify the Fundamental Change evidence job. Use “Back to Momentum Radar” to review its status.</span></div>}
+                              {(bmsResearchContext?.origin === 'momentum_radar' || bmsResearchContext?.origin === 'fcs_library') && <div className="mt-4 rounded-lg border border-amber-400/20 bg-amber-400/[0.05] p-3 text-[10px] leading-relaxed text-amber-100"><strong className="block uppercase tracking-[0.1em]">FCS status: {bmsResearchContext.workflow_status === 'ready' ? 'FCS & Lifecycle ready' : bmsResearchContext.workflow_status === 'fcs_ready' ? 'FCS ready · Lifecycle pending' : bmsResearchContext.workflow_status === 'processing' ? 'FCS review in progress' : 'FCS not requested'}</strong><span className="mt-1 block text-zinc-400">Running this independent Deep Dive does not start or modify the Fundamental Change evidence job. Use “{bmsResearchContext.origin === 'fcs_library' ? 'Back to FCS Library' : 'Back to Momentum Radar'}” to review its status.</span></div>}
                             </div>
                           ) : (
                             "Click the 'Scrape NSE Data' button above to generate a real-time equity analysis for your chosen ticker."

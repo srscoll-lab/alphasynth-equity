@@ -1,11 +1,27 @@
-import { useMemo, useState } from "react";
-import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpenCheck, Calculator, FileCheck2, Library, Search, ShieldCheck } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, BookOpenCheck, Calculator, FileCheck2, Library, Search, ShieldCheck } from "lucide-react";
 import { fundamentalChangeLibrary, type FundamentalChangeRecord } from "../data/fundamentalChangeLibrary";
 import scoreDetails from "../data/fundamentalChangeScoreDetails.json";
 import FundamentalReviewLauncher from "./FundamentalReviewLauncher";
 
 type SortKey = "fcsScore" | "momentumScore" | "companyName" | "fcsAsOf";
 type SortDirection = "asc" | "desc";
+
+const librarySessionState: {
+  query: string;
+  momentumState: string;
+  capSegment: string;
+  readiness: "ALL" | "LIFECYCLE_READY" | "FCS_ONLY";
+  sortKey: SortKey;
+  sortDirection: SortDirection;
+} = {
+  query: "",
+  momentumState: "ALL",
+  capSegment: "ALL",
+  readiness: "ALL",
+  sortKey: "fcsScore",
+  sortDirection: "desc",
+};
 
 type ScoreImpact = {
   metric_id: string;
@@ -77,14 +93,24 @@ function unique(values: string[]) {
   return [...new Set(values)].sort((a, b) => a.localeCompare(b));
 }
 
-export default function FundamentalChangeLibrary({ onBack }: { onBack: () => void }) {
-  const [query, setQuery] = useState("");
-  const [momentumState, setMomentumState] = useState("ALL");
-  const [capSegment, setCapSegment] = useState("ALL");
-  const [readiness, setReadiness] = useState<"ALL" | "LIFECYCLE_READY" | "FCS_ONLY">("ALL");
-  const [sortKey, setSortKey] = useState<SortKey>("fcsScore");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+type DeepDiveCompany = {
+  symbol: string;
+  company_name: string;
+  bms_status: "ready" | "fcs_ready";
+};
+
+export default function FundamentalChangeLibrary({ onBack, onDeepDive }: { onBack: () => void; onDeepDive: (company: DeepDiveCompany) => void }) {
+  const [query, setQuery] = useState(librarySessionState.query);
+  const [momentumState, setMomentumState] = useState(librarySessionState.momentumState);
+  const [capSegment, setCapSegment] = useState(librarySessionState.capSegment);
+  const [readiness, setReadiness] = useState<"ALL" | "LIFECYCLE_READY" | "FCS_ONLY">(librarySessionState.readiness);
+  const [sortKey, setSortKey] = useState<SortKey>(librarySessionState.sortKey);
+  const [sortDirection, setSortDirection] = useState<SortDirection>(librarySessionState.sortDirection);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+
+  useEffect(() => {
+    Object.assign(librarySessionState, { query, momentumState, capSegment, readiness, sortKey, sortDirection });
+  }, [capSegment, momentumState, query, readiness, sortDirection, sortKey]);
 
   const momentumStates = useMemo(() => unique(fundamentalChangeLibrary.map((record) => record.momentumState)), []);
   const capSegments = useMemo(() => unique(fundamentalChangeLibrary.map((record) => record.capSegment)), []);
@@ -125,7 +151,7 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
   const selectedRecord = selectedSymbol ? fundamentalChangeLibrary.find((record) => record.symbol === selectedSymbol) : null;
   const selectedDetail = selectedSymbol ? scoreDetailBySymbol.get(selectedSymbol) : null;
   if (selectedRecord && selectedDetail) {
-    return <ScoreDetailView record={selectedRecord} detail={selectedDetail} onBack={() => setSelectedSymbol(null)} />;
+    return <ScoreDetailView record={selectedRecord} detail={selectedDetail} onBack={() => setSelectedSymbol(null)} onDeepDive={() => onDeepDive({ symbol: selectedRecord.symbol, company_name: selectedRecord.companyName, bms_status: selectedRecord.lifecycleReady ? "ready" : "fcs_ready" })} />;
   }
 
   return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6">
@@ -172,7 +198,7 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
         <div className="overflow-x-auto p-5 md:p-8">
           <table className="w-full min-w-[1500px] text-left">
             <thead className="text-[9px] uppercase tracking-[0.13em] text-zinc-500"><tr className="border-b border-white/10"><th className="px-3 py-3">{sortButton("companyName", "Company")}</th><th className="px-3 py-3">Segment</th><th className="px-3 py-3">Sector</th><th className="px-3 py-3">{sortButton("fcsScore", "FCS")}</th><th className="px-3 py-3">FCS period / as of</th><th className="px-3 py-3">Evidence</th><th className="px-3 py-3">Lifecycle</th><th className="px-3 py-3">Momentum state</th><th className="px-3 py-3">{sortButton("momentumScore", "Momentum score")}</th><th className="px-3 py-3">Vs universe</th><th className="px-3 py-3">Vs sector</th><th className="px-3 py-3">Momentum as of</th><th className="px-3 py-3">Report</th></tr></thead>
-            <tbody className="divide-y divide-white/[0.07]">{records.map((record) => <RecordRow key={record.symbol} record={record} onOpen={() => setSelectedSymbol(record.symbol)} />)}</tbody>
+            <tbody className="divide-y divide-white/[0.07]">{records.map((record) => <RecordRow key={record.symbol} record={record} onOpen={() => setSelectedSymbol(record.symbol)} onDeepDive={() => onDeepDive({ symbol: record.symbol, company_name: record.companyName, bms_status: record.lifecycleReady ? "ready" : "fcs_ready" })} />)}</tbody>
           </table>
           {!records.length && <div className="py-14 text-center text-sm text-zinc-500">No Fundamental Change records match these filters.</div>}
         </div>
@@ -181,7 +207,7 @@ export default function FundamentalChangeLibrary({ onBack }: { onBack: () => voi
   </main>;
 }
 
-function RecordRow({ record, onOpen }: { record: FundamentalChangeRecord; onOpen: () => void }) {
+function RecordRow({ record, onOpen, onDeepDive }: { record: FundamentalChangeRecord; onOpen: () => void; onDeepDive: () => void }) {
   return <tr className="hover:bg-white/[0.025]">
     <td className="px-3 py-4"><div className="font-semibold text-white">{record.symbol}</div><div className="mt-1 max-w-[220px] truncate text-xs text-zinc-500">{record.companyName}</div></td>
     <td className="px-3 py-4"><span className="rounded-full border border-violet-400/25 bg-violet-400/[0.08] px-2 py-1 text-[9px] font-black text-violet-200">{capLabel(record.capSegment)}</span></td>
@@ -195,7 +221,7 @@ function RecordRow({ record, onOpen }: { record: FundamentalChangeRecord; onOpen
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.universeRelativeStrength)}</td>
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.sectorRelativeStrength)}</td>
     <td className="px-3 py-4 text-xs text-zinc-500">{record.momentumAsOf}</td>
-    <td className="px-3 py-4"><button type="button" onClick={onOpen} className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-200 hover:bg-emerald-300/[0.14]">View score <ArrowRight className="h-3.5 w-3.5" /></button></td>
+    <td className="px-3 py-4"><div className="flex flex-col gap-2"><button type="button" onClick={onOpen} className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-emerald-200 hover:bg-emerald-300/[0.14]">View FCS <ArrowRight className="h-3.5 w-3.5" /></button><button type="button" onClick={onDeepDive} className="inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-lg border border-amber-300/25 bg-amber-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.1em] text-amber-200 hover:bg-amber-300/[0.14]"><BookOpen className="h-3.5 w-3.5" /> Deep Dive</button></div></td>
   </tr>;
 }
 
@@ -225,7 +251,7 @@ const directionStyle: Record<string, string> = {
   neutral: "border-zinc-400/25 bg-zinc-400/[0.08] text-zinc-300",
 };
 
-function ScoreDetailView({ record, detail, onBack }: { record: FundamentalChangeRecord; detail: ScoreDetail; onBack: () => void }) {
+function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: FundamentalChangeRecord; detail: ScoreDetail; onBack: () => void; onDeepDive: () => void }) {
   return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6">
     <div className="mx-auto max-w-7xl">
       <button type="button" onClick={onBack} className="mb-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white"><ArrowLeft className="h-4 w-4" /> Back to Fundamental Change Library</button>
@@ -248,6 +274,7 @@ function ScoreDetailView({ record, detail, onBack }: { record: FundamentalChange
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Momentum Radar</div><div className="mt-2 text-sm font-semibold text-white">{label(record.momentumState)} · {record.momentumScore ?? "—"}</div><div className="mt-1 text-xs text-zinc-500">Separate market-behaviour signal as of {record.momentumAsOf}</div></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Scoring policy</div><div className="mt-2 text-sm font-semibold text-white">27.78% / 27.78% / 27.78% / 16.66%</div><div className="mt-1 text-xs text-zinc-500">Earnings · Economics · Execution · Balance Sheet</div></div>
           </div>
+          <button type="button" onClick={onDeepDive} className="mt-5 inline-flex items-center gap-2 rounded-xl border border-amber-300/30 bg-amber-300/[0.09] px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-amber-100 hover:bg-amber-300/[0.15]"><BookOpen className="h-4 w-4" /> Open independent Deep Dive</button>
         </header>
 
         <div className="space-y-5 p-5 md:p-8">

@@ -4,6 +4,7 @@ import radarData from "../data/bmsMomentumRadar.json";
 import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
 import lifecycleV21 from "../data/momentumExpansionLifecycleV21.json";
 import expansionStudies from "../data/momentumExpansionStudies.json";
+import { fundamentalChangeLibrary } from "../data/fundamentalChangeLibrary";
 import {
   defaultFundamentalReviewMessage,
   isFundamentalReviewInProgress,
@@ -140,6 +141,7 @@ const momentumPriorityStatus = (company: Company) => {
 };
 const lifecycleBySymbol = new Map(lifecycleV21.companies.map((company) => [company.symbol, company]));
 const studyBySymbol = new Map(expansionStudies.companies.map((company) => [company.symbol, company]));
+const fcsRecordBySymbol = new Map(fundamentalChangeLibrary.map((company) => [company.symbol, company]));
 
 type MomentumDirection = "rising" | "neutral" | "falling" | "unavailable";
 
@@ -160,7 +162,7 @@ const directionPresentation: Record<MomentumDirection, { label: string; style: s
 const fundamentalRelationship = (company: Company) => {
   const lifecycle = lifecycleBySymbol.get(company.symbol);
   if (!lifecycle) {
-    if (studyBySymbol.has(company.symbol)) {
+    if (fcsRecordBySymbol.has(company.symbol)) {
       return {
         label: "Relationship awaiting history",
         detail: "FCS is available, but comparable checkpoints are not yet sufficient to establish a fundamental direction.",
@@ -226,7 +228,10 @@ type MomentumRadarProps = {
 };
 
 export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: MomentumRadarProps) {
-  const expandedMode = new URLSearchParams(window.location.search).get("radar") === "expanded";
+  const radarMode = new URLSearchParams(window.location.search).get("radar");
+  // The expanded NSE radar is the product default. The frozen 477-company radar
+  // remains available only through an explicit `radar=legacy` validation URL.
+  const expandedMode = radarMode !== "legacy";
   const activeRadarData: RadarDataset = expandedMode ? expandedRadarData : radarData as unknown as RadarDataset;
   const scannedCompanies = activeRadarData.companies as Company[];
   const momentumReadyCompanies = expandedMode
@@ -405,6 +410,10 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> FCS ready · lifecycle pending</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">The four-factor score is available. Lifecycle requires three comparable checkpoints.</div>
     <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button>
+  </> : fcsRecordBySymbol.has(company.symbol) ? <>
+    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> {fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `FCS & lifecycle ready · ${fcsRecordBySymbol.get(company.symbol)!.lifecycle}` : "FCS ready · lifecycle pending"}</span>
+    <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints are available.` : `The four-factor score is available. Lifecycle has ${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints.`}</div>
+    <button type="button" onClick={onBrowseLibrary} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open in FCS Library</button>
   </> : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewStatusLabel(reviewJobs[company.symbol].status)}</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{reviewJobs[company.symbol].message}</div>
@@ -484,7 +493,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
                 <td className="px-4 py-4">{company.current_momentum_trigger ? <div><div className={`text-[10px] font-black uppercase tracking-[0.1em] ${triggerSummary(company.current_momentum_trigger).style}`}>{triggerSummary(company.current_momentum_trigger).label}</div><div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]"><span className="text-zinc-300">20-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_20d)}</span><span className="text-zinc-300">5-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_5d)}</span><span className="text-zinc-300">Volume</span><span className="text-right font-mono text-white">{ratio(company.current_momentum_trigger.traded_value_acceleration_5_vs_prior_20)}</span><span className="text-zinc-300">Breakout</span><span className="text-right text-white">{breakoutLabel(company.current_momentum_trigger.breakout_status)}</span></div><div className="mt-2 text-[9px] text-zinc-400">As of {company.current_momentum_trigger.as_of_date}</div></div> : <span className="text-[10px] text-zinc-400">Insufficient current-session history</span>}</td>
                 <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${segmentLabel(company.universe_benchmark ?? "Unavailable")} · ${company.universe_peer_count} peers`}>{segmentLabel(company.universe_benchmark ?? "Unavailable")} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
                 <td className="px-4 py-4">{renderFcsStatus(company)}</td>
-                <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
+                <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) || fcsRecordBySymbol.get(company.symbol)?.lifecycleReady ? "ready" : fcsRecordBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
               </tr>)}</tbody>
             </table>
           </div>
@@ -526,7 +535,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
                     <td className="px-4 py-4">{company.current_momentum_trigger ? <div><div className={`text-[10px] font-black uppercase tracking-[0.1em] ${triggerSummary(company.current_momentum_trigger).style}`}>{triggerSummary(company.current_momentum_trigger).label}</div><div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10px]"><span className="text-zinc-300">20-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_20d)}</span><span className="text-zinc-300">5-day</span><span className="text-right font-mono text-white">{pct(company.current_momentum_trigger.momentum_5d)}</span><span className="text-zinc-300">Volume</span><span className="text-right font-mono text-white">{ratio(company.current_momentum_trigger.traded_value_acceleration_5_vs_prior_20)}</span><span className="text-zinc-300">Breakout</span><span className="text-right text-white">{breakoutLabel(company.current_momentum_trigger.breakout_status)}</span></div><div className="mt-2 text-[9px] text-zinc-400">As of {company.current_momentum_trigger.as_of_date}</div></div> : <span className="text-[10px] text-zinc-400">Insufficient current-session history</span>}</td>
                     <td className="px-4 py-4"><div className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-[10px]"><span className="text-zinc-300">Universe</span><span className="text-right font-mono text-white">{pct(company.relative_strength_to_universe)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${segmentLabel(company.universe_benchmark ?? "Unavailable")} · ${company.universe_peer_count} peers`}>{segmentLabel(company.universe_benchmark ?? "Unavailable")} · {company.universe_peer_count} peers</span><span className="mt-1 text-zinc-300">Sector</span><span className="mt-1 text-right font-mono text-white">{pct(company.relative_strength_to_sector)}</span><span className="col-span-2 truncate text-[9px] text-zinc-400" title={`${company.sector_benchmark ?? "Unavailable"} · ${company.sector_peer_count} peers`}>{company.sector_benchmark ?? "Unavailable"} · {company.sector_peer_count} peers</span></div></td>
                     <td className="px-4 py-4">{renderFcsStatus(company)}</td>
-                    <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) ? "ready" : studyBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
+                    <td className="px-4 py-4"><button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: lifecycleBySymbol.has(company.symbol) || fcsRecordBySymbol.get(company.symbol)?.lifecycleReady ? "ready" : fcsRecordBySymbol.has(company.symbol) ? "fcs_ready" : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? "processing" : "not_requested" })} className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-gold/35 bg-gold/[0.10] px-2 py-2 text-center text-[9px] font-black uppercase leading-relaxed tracking-[0.06em] text-gold hover:border-gold/60 hover:text-white"><BookOpen className="h-3.5 w-3.5 shrink-0" /> Open Deep Dive</button></td>
                   </tr>)}</tbody>
                 </table>
               </div>
