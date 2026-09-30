@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { BarChart3, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Compass, RefreshCw, Search, ShieldAlert, TrendingUp, X } from "lucide-react";
+import { BarChart3, BookOpen, CheckCircle2, ChevronDown, ChevronUp, Clock3, Compass, RefreshCw, Search, ShieldAlert, TrendingDown, TrendingUp, X } from "lucide-react";
 import radarData from "../data/bmsMomentumRadar.json";
 import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
 import lifecycleV21 from "../data/momentumExpansionLifecycleV21.json";
@@ -330,13 +330,9 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     setSelectedStudySymbol(symbol);
     window.setTimeout(() => document.getElementById("momentum-bms-study")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
   };
-  const toggleInactiveMomentum = () => {
-    if (inactiveExpanded) {
-      setInactiveExpanded(false);
-      return;
-    }
-    // The summary card promises the negative-direction list. Open that view
-    // directly instead of landing on the combined neutral/negative population.
+  const openNegativeMomentum = () => {
+    // Negative direction is a first-class radar view. Always open it directly
+    // rather than making the user infer that it sits inside a combined bucket.
     setInactiveFilter("DETERIORATING");
     setDownsidePhaseFilter("ALL");
     setInactiveExpanded(true);
@@ -454,17 +450,17 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
               <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div><div className="mt-2 text-2xl font-mono font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{note}</div>
             </div>)}
-            {expandedMode && <button type="button" onClick={toggleInactiveMomentum} className="rounded-2xl border border-slate-400/20 bg-slate-400/[0.055] px-4 py-4 text-left transition hover:border-slate-300/40 hover:bg-slate-400/[0.09]">
-              <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.15em] font-black text-slate-400">No setup or negative price direction</div>{inactiveExpanded ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}</div>
-              <div className="mt-2 text-2xl font-mono font-bold text-slate-200">{inactiveCounts.all}</div>
-              <div className="mt-1 text-xs text-slate-500">{inactiveCounts.dormant} No Setup · {inactiveCounts.deteriorating} Negative · view companies</div>
+            {expandedMode && <button type="button" onClick={openNegativeMomentum} className="rounded-2xl border border-rose-300/25 bg-rose-300/[0.07] px-4 py-4 text-left transition hover:border-rose-300/50 hover:bg-rose-300/[0.11]">
+              <div className="flex items-center justify-between gap-3"><div className="text-[10px] uppercase tracking-[0.15em] font-black text-rose-200">Open Negative Price Direction Radar</div><ChevronDown className="h-4 w-4 text-rose-300" /></div>
+              <div className="mt-2 text-2xl font-mono font-bold text-rose-100">{inactiveCounts.deteriorating}</div>
+              <div className="mt-1 text-xs text-rose-200/65">Early, Established and Stretched Downtrends · view companies</div>
             </button>}
           </div>
         </header>
 
         <div className="px-5 py-5 md:px-8 border-b border-white/10">
           <div className="flex flex-col gap-4">
-            <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently show an Early, Established or Stretched Uptrend. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">Positive price direction</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">These companies passed the liquidity and price-history checks and currently show an Early, Established or Stretched Uptrend. FCS relationship labels remain independent and appear only where comparable fundamental history exists.</p></div>{expandedMode && <button type="button" onClick={openNegativeMomentum} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-rose-300/30 bg-rose-300/[0.08] px-4 py-3 text-[10px] font-black uppercase tracking-[0.1em] text-rose-100 hover:border-rose-300/55 hover:text-white"><TrendingDown className="h-4 w-4" /> Negative Direction Radar · {inactiveCounts.deteriorating}</button>}</div>
             <div className="flex gap-2 overflow-x-auto pb-1">
               {visibleStates.map((state) => <button key={state} type="button" onClick={() => setFilter(state)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${filter === state ? "border-cyan-300/50 bg-cyan-300/15 text-cyan-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{state === "ALL" && expandedMode ? "ACTIVE SIGNALS" : stateLabel[state as RadarState]} {stateCounts[state] ?? 0}</button>)}
             </div>
