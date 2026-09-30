@@ -129,8 +129,8 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-7">
               {[
                 ["Companies", `${comparisonData.summary.companies}`, "Four-factor complete"],
-                ["Trajectory-backed", `${comparisonData.summary.trajectory_backed}`, "Lifecycle V2.1 supported by 3 checkpoints"],
-                ["Lifecycle pending", `${comparisonData.summary.lifecycle_pending}`, "Score complete; trajectory incomplete"],
+                ["Complete FCS histories", `${comparisonData.summary.trajectory_backed}`, "Companies with all 3 comparable FCS checkpoints"],
+                ["Lifecycle still pending", `${comparisonData.summary.lifecycle_pending}`, "Current FCS is ready; more reporting-period history is needed"],
                 ["Forward record", `${comparisonData.forwardSessionsObserved} sessions`, `From ${formatDate(comparisonData.marketEntryDate)}`],
               ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
                 <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div>
@@ -145,7 +145,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               {lifecycleSummary.map((row) => <div key={row.stage} className="rounded-xl border border-white/10 bg-black/15 p-3">
                 <div className={`inline-flex rounded-full border px-2 py-1 text-[9px] font-black uppercase ${lifecycleStyle[row.stage]}`}>{row.stage}</div>
-                <div className="mt-2 text-xs text-zinc-400">{row.count} companies · {row.trajectory} trajectory-backed</div>
+                <div className="mt-2 text-xs text-zinc-400">{row.count} companies · {row.trajectory} with complete 3-period FCS history</div>
                 <div className="mt-2 text-sm font-mono text-white">Return {percentage(row.averageReturn)}</div>
                 <div className="text-[11px] font-mono text-zinc-400">vs Nifty {points(row.averageRelative)}</div>
               </div>)}
@@ -166,7 +166,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
                     <div className="min-w-0"><div className="font-semibold text-white truncate">{company.name}</div><div className="text-[10px] font-mono text-zinc-500 mt-1">{company.symbol} · score {company.display_score_v2}</div></div>
                     <span className={`h-fit rounded-full border px-2 py-1 text-[9px] font-black uppercase ${lifecycleStyle[company.lifecycle]}`}>{company.lifecycle}</span>
                   </div>
-                  <div className={`mt-2 text-[9px] uppercase tracking-wider ${isTrajectoryBacked(company) ? "text-emerald-300" : "text-amber-200"}`}>{isTrajectoryBacked(company) ? "Trajectory-backed" : "Lifecycle pending"}</div>
+                  <div className={`mt-2 text-[9px] uppercase tracking-wider ${isTrajectoryBacked(company) ? "text-emerald-300" : "text-amber-200"}`}>{isTrajectoryBacked(company) ? "3-period FCS history complete" : "Lifecycle pending · FCS history incomplete"}</div>
                 </button>)}
               </div>
             </aside>
@@ -178,7 +178,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
               </div>
 
               <div className={`mt-5 rounded-2xl border p-4 ${isTrajectoryBacked(selected) ? "border-emerald-400/20 bg-emerald-400/[0.04]" : "border-amber-400/20 bg-amber-400/[0.04]"}`}>
-                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} comparable V2 checkpoints` : "Lifecycle pending—not classified as Watch"}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `Lifecycle V2.1 is based on the recorded path ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}. ${selected.lifecycle_reason_code?.replaceAll("_", " ") || ""}` : "All four current factors and the current score are complete, but comparable V2 history is not yet long enough for a genuine trajectory classification."}</p>{isTrajectoryBacked(selected) && selected.lifecycle_changed_from_v1 ? <p className="mt-1 text-[11px] text-cyan-300">Corrected from the frozen legacy label {selected.frozen_lifecycle_v1}; the historical record remains preserved.</p> : null}</div></div>
+                <div className="flex items-start gap-3">{isTrajectoryBacked(selected) ? <ShieldCheck className="w-5 h-5 text-emerald-300 shrink-0" /> : <TriangleAlert className="w-5 h-5 text-amber-200 shrink-0" />}<div><div className="text-sm font-semibold text-white">{isTrajectoryBacked(selected) ? `${selected.checkpoints} of 3 comparable FCS checkpoints available` : `${selected.checkpoints} of 3 comparable FCS checkpoints available · Lifecycle pending`}</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">{isTrajectoryBacked(selected) ? `The lifecycle is based on the company's recorded FCS history: ${selected.earlier_raw_score?.toFixed(4)} → ${selected.previous_raw_score?.toFixed(4)} → ${selected.raw_score.toFixed(4)}. ${selected.lifecycle_reason_code?.replaceAll("_", " ") || ""}` : "The current four-factor FCS is complete and usable. A lifecycle label needs three comparable reporting-period scores, so this company is not yet classified as Watch, Emerging, Building, Established or Fading."}</p>{isTrajectoryBacked(selected) && selected.lifecycle_changed_from_v1 ? <p className="mt-1 text-[11px] text-cyan-300">Corrected from the frozen legacy label {selected.frozen_lifecycle_v1}; the historical record remains preserved.</p> : null}</div></div>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-3 mt-5">

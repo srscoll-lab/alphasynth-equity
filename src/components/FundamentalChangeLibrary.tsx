@@ -174,8 +174,8 @@ export default function FundamentalChangeLibrary({ onBack, onDeepDive }: { onBac
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             {[
               ["Four-factor FCS records", fundamentalChangeLibrary.length, "Controlled validation, momentum expansion and final-build studies"],
-              ["Lifecycle ready", lifecycleReadyCount, "Three comparable checkpoints available"],
-              ["FCS only", fundamentalChangeLibrary.length - lifecycleReadyCount, "Score ready; trajectory remains pending"],
+              ["Lifecycle ready", lifecycleReadyCount, "All 3 comparable reporting-period FCS scores are available"],
+              ["Current FCS only", fundamentalChangeLibrary.length - lifecycleReadyCount, "Current score ready; more history is needed for a lifecycle"],
             ].map(([title, value, copy]) => <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"><div className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">{title}</div><div className="mt-2 font-mono text-2xl font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{copy}</div></div>)}
           </div>
         </header>
@@ -215,7 +215,7 @@ function RecordRow({ record, onOpen, onDeepDive }: { record: FundamentalChangeRe
     <td className="px-3 py-4"><div className="font-mono text-xl font-bold text-emerald-200">{record.fcsScore}</div><div className="mt-1 text-[9px] text-zinc-600">BMS V2 method</div></td>
     <td className="px-3 py-4"><div className="text-xs text-zinc-300">{record.fcsPeriod}</div><div className="mt-1 text-[10px] text-zinc-600">{record.fcsAsOf.slice(0, 10)}</div></td>
     <td className="px-3 py-4"><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase text-emerald-300"><ShieldCheck className="h-3.5 w-3.5" /> Four-factor ready</span></td>
-    <td className="px-3 py-4">{record.lifecycleReady ? <><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-200"><BookOpenCheck className="h-3.5 w-3.5" /> {record.lifecycle}</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints}/3 checkpoints</div></> : <><span className="text-xs text-zinc-500">Pending</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints}/3 checkpoints</div></>}</td>
+    <td className="px-3 py-4">{record.lifecycleReady ? <><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-200"><BookOpenCheck className="h-3.5 w-3.5" /> {record.lifecycle}</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints} of 3 comparable FCS periods</div></> : <><span className="text-xs text-zinc-500">Lifecycle pending</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints} of 3 comparable FCS periods available</div></>}</td>
     <td className="px-3 py-4"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${momentumStyle[record.momentumState]}`}>{momentumLabel[record.momentumState] ?? label(record.momentumState)}</span></td>
     <td className="px-3 py-4 font-mono text-sm text-white">{record.momentumScore ?? "—"}</td>
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.universeRelativeStrength)}</td>
@@ -270,7 +270,7 @@ function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: Funda
             </div>
           </div>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Lifecycle</div><div className="mt-2 text-sm font-semibold text-white">{record.lifecycleReady ? record.lifecycle : "Pending"}</div><div className="mt-1 text-xs text-zinc-500">{record.lifecycleReady ? `${record.checkpoints}/3 comparable checkpoints` : `${record.checkpoints}/3 checkpoints · no trajectory inferred`}</div></div>
+            <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Lifecycle</div><div className="mt-2 text-sm font-semibold text-white">{record.lifecycleReady ? record.lifecycle : "Pending until more FCS history is available"}</div><div className="mt-1 text-xs text-zinc-500">{record.checkpoints} of 3 comparable reporting-period FCS scores available{record.lifecycleReady ? " · lifecycle can be assessed" : " · current FCS remains usable"}</div></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Momentum Radar</div><div className="mt-2 text-sm font-semibold text-white">{label(record.momentumState)} · {record.momentumScore ?? "—"}</div><div className="mt-1 text-xs text-zinc-500">Separate market-behaviour signal as of {record.momentumAsOf}</div></div>
             <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-4"><div className="text-[9px] font-black uppercase tracking-[0.14em] text-zinc-500">Scoring policy</div><div className="mt-2 text-sm font-semibold text-white">27.78% / 27.78% / 27.78% / 16.66%</div><div className="mt-1 text-xs text-zinc-500">Earnings · Economics · Execution · Balance Sheet</div></div>
           </div>
@@ -291,7 +291,7 @@ function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: Funda
               {(impact.quoted_label || impact.document_id) && <div className="mt-3 border-t border-white/[0.07] pt-3 text-[10px] leading-relaxed text-zinc-600"><FileCheck2 className="mr-1 inline h-3.5 w-3.5" />{impact.quoted_label ?? "Hash-pinned evidence document"}{impact.source_page !== null ? ` · page ${impact.source_page}` : ""}{impact.document_id ? <div className="mt-1 break-all font-mono">{impact.document_id}</div> : null}</div>}
             </article>)}</div>
           </section>)}
-          <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.05] p-4 text-xs leading-relaxed text-zinc-400"><strong className="text-amber-100">Interpretation boundary.</strong> FCS measures reported fundamental change; it is not a valuation conclusion, expected-return forecast or recommendation. The lifecycle requires three comparable checkpoints and remains pending where that evidence does not yet exist.</div>
+          <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.05] p-4 text-xs leading-relaxed text-zinc-400"><strong className="text-amber-100">How to read this.</strong> FCS measures reported fundamental change; it is not a valuation conclusion, expected-return forecast or recommendation. The current FCS can be used on its own. A lifecycle label is shown only after three comparable reporting-period FCS scores are available, because one score cannot establish whether fundamentals are improving or weakening over time.</div>
         </div>
       </section>
     </div>
