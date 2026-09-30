@@ -261,6 +261,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     requestedDirection === "negative" ? "DETERIORATING" : requestedDirection === "neutral" ? "DORMANT" : "ALL",
   );
   const [downsidePhaseFilter, setDownsidePhaseFilter] = useState<"ALL" | DownsidePhase | "POTENTIALLY_OVERSOLD">("ALL");
+  const [inactiveSegment, setInactiveSegment] = useState<"ALL" | Segment>("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
   const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>({});
   const [requestCandidate, setRequestCandidate] = useState<Company | null>(null);
@@ -319,9 +320,20 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     if (assessment.potentiallyOversold) summary.potentiallyOversold += 1;
     return summary;
   }, { EARLY_DOWNTREND: 0, ESTABLISHED_DOWNTREND: 0, STRETCHED_DOWNTREND: 0, potentiallyOversold: 0 });
+  const inactiveSegmentCounts = useMemo(() => {
+    const normalized = inactiveQuery.trim().toLowerCase();
+    const relevant = inactiveMomentumCompanies.filter((company) => (inactiveFilter === "ALL" || company.radar_state === inactiveFilter)
+      && (downsidePhaseFilter === "ALL"
+        || (downsidePhaseFilter === "POTENTIALLY_OVERSOLD"
+          ? downsideAssessment(company)?.potentiallyOversold === true
+          : downsideAssessment(company)?.phase === downsidePhaseFilter))
+      && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized)));
+    return Object.fromEntries(segments.map((item) => [item, item === "ALL" ? relevant.length : relevant.filter((company) => company.market_cap_segment.id === item).length])) as Record<"ALL" | Segment, number>;
+  }, [downsidePhaseFilter, inactiveFilter, inactiveMomentumCompanies, inactiveQuery]);
   const filteredInactiveCompanies = inactiveMomentumCompanies.filter((company) => {
     const normalized = inactiveQuery.trim().toLowerCase();
     return (inactiveFilter === "ALL" || company.radar_state === inactiveFilter)
+      && (inactiveSegment === "ALL" || company.market_cap_segment.id === inactiveSegment)
       && (downsidePhaseFilter === "ALL"
         || (downsidePhaseFilter === "POTENTIALLY_OVERSOLD"
           ? downsideAssessment(company)?.potentiallyOversold === true
@@ -338,6 +350,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     setDirectionView(direction);
     setInactiveFilter(direction === "negative" ? "DETERIORATING" : direction === "neutral" ? "DORMANT" : "ALL");
     setDownsidePhaseFilter("ALL");
+    setInactiveSegment("ALL");
     const url = new URL(window.location.href);
     url.searchParams.set("direction", direction);
     window.history.replaceState({}, "", url);
@@ -507,6 +520,9 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
                  <div><div className={`text-[9px] font-black uppercase tracking-[0.18em] ${directionView === "negative" ? "text-rose-300" : "text-slate-400"}`}>Directional momentum review</div><h2 className="mt-2 text-2xl font-semibold text-white">{directionView === "negative" ? "Negative price direction" : "No directional setup"}</h2><p className="mt-2 max-w-3xl text-xs leading-relaxed text-zinc-400">{directionView === "negative" ? "These companies passed the same liquidity and price-history checks and are classified as Early, Established or Stretched Downtrends. They receive a Downside Pressure Score—not the positive Radar Score." : "These companies passed the liquidity and price-history requirements, but their trend indicators do not presently agree strongly enough to establish either positive or negative direction."}</p>{directionView === "negative" && <p className="mt-2 text-[10px] text-rose-200/80">{downsideSummary.EARLY_DOWNTREND} Early · {downsideSummary.ESTABLISHED_DOWNTREND} Established · {downsideSummary.STRETCHED_DOWNTREND} Stretched · {downsideSummary.potentiallyOversold} potentially oversold warnings</p>}</div>
                </div>
               <div className="mt-5 flex flex-col gap-3 md:flex-row md:items-center">
+                <div className="flex gap-2 overflow-x-auto pb-1">
+                  {segments.map((item) => <button key={item} type="button" onClick={() => setInactiveSegment(item)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${inactiveSegment === item ? "border-violet-300/50 bg-violet-300/15 text-violet-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{item === "ALL" ? "ALL" : segmentLabel(item)} {inactiveSegmentCounts[item]}</button>)}
+                </div>
                 <label className="relative block w-full md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={inactiveQuery} onChange={(event) => setInactiveQuery(event.target.value)} placeholder={directionView === "negative" ? "Search negative direction" : "Search no directional setup"} className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-slate-300/40" /></label>
               </div>
               {inactiveFilter === "DETERIORATING" && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
@@ -520,7 +536,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               </div>}
             </header>
             <div className="p-5 md:p-6">
-              <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between"><span>{filteredInactiveCompanies.length.toLocaleString("en-IN")} companies match this view.</span><span>{filteredInactiveCompanies.length > displayedInactiveCompanies.length ? `Showing the first ${displayedInactiveCompanies.length}; search to locate a specific company.` : `Showing all ${displayedInactiveCompanies.length}.`}</span></div>
+              <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between"><span>{filteredInactiveCompanies.length.toLocaleString("en-IN")} companies match this view.</span><span>{filteredInactiveCompanies.length > displayedInactiveCompanies.length ? `Showing the first ${displayedInactiveCompanies.length}; use segment, phase or search to narrow the universe.` : `Showing all ${displayedInactiveCompanies.length}.`}</span></div>
               <div className="overflow-x-auto rounded-2xl border border-white/10">
                 <table className="w-full min-w-[1290px] table-fixed text-left">
                   <thead className="bg-[#182235] text-[10px] uppercase tracking-[0.11em] text-zinc-300"><tr><th className="w-[175px] px-4 py-3.5">Company / Segment</th><th className="w-[225px] px-4 py-3.5">{directionView === "negative" ? "Directional State / Downside Pressure" : "Directional State"}</th><th className="w-[145px] px-4 py-3.5"><span className="block">Medium-term</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest month excluded</span></th><th className="w-[205px] px-4 py-3.5"><span className="block">Current trigger</span><span className="mt-1 block normal-case tracking-normal text-[9px] font-medium text-zinc-400">Latest completed session</span></th><th className="w-[180px] px-4 py-3.5">Relative strength</th><th className="w-[245px] px-4 py-3.5">FCS / Lifecycle</th><th className="w-[115px] px-4 py-3.5">Research</th></tr></thead>
