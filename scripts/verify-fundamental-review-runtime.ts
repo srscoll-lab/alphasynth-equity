@@ -8,7 +8,7 @@ const fourFactorCandidates = ["earnings", "economics", "execution", "balance_she
 const fourFactorValidations = fourFactorCandidates
   .map((candidate) => ({ candidate_id: candidate.candidate_id, status: "qualified" }));
 
-const fetchMock: typeof fetch = async (input) => {
+const fetchMock: typeof fetch = async (input, init) => {
   const url = String(input);
   if (url.endsWith("/evidence")) {
     return new Response(JSON.stringify({
@@ -22,6 +22,7 @@ const fetchMock: typeof fetch = async (input) => {
     });
   }
   if (url.endsWith("/score")) {
+    assert.equal((init?.headers as Record<string, string>)?.authorization, "Bearer test-identity-token");
     return new Response(JSON.stringify({
       fcs_score: 71.25,
       score_publishable: true,
@@ -40,6 +41,10 @@ const service = new FundamentalReviewService({
   scoringUrl: "https://worker.test/score",
   fetch: fetchMock,
   now: () => new Date("2026-09-28T08:00:00.000Z"),
+  scoringIdentityTokenProvider: async (audience) => {
+    assert.equal(audience, "https://worker.test/score");
+    return "test-identity-token";
+  },
 });
 
 const requested = await service.request({

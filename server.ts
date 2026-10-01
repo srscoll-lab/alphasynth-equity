@@ -56,6 +56,7 @@ import {
   fundamentalReviewRuntimeConfigured,
 } from "./src/fundamental-review-service";
 import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamental-review-evidence";
+import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -83,6 +84,9 @@ function getFundamentalReviewService(): FundamentalReviewService {
     scoringUrl: String(process.env.FUNDAMENTAL_REVIEW_SCORING_URL),
     internalToken: process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN,
     dossierToken: process.env.DOSSIER_INTERNAL_TOKEN,
+    scoringIdentityTokenProvider: process.env.FUNDAMENTAL_REVIEW_SCORING_IAM_AUTH === "true"
+      ? createGoogleIdentityTokenProvider()
+      : undefined,
   });
   return fundamentalReviewService;
 }

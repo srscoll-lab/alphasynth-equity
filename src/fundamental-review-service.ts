@@ -18,6 +18,7 @@ export type FundamentalReviewServiceOptions = {
   scoringUrl: string;
   internalToken?: string;
   dossierToken?: string;
+  scoringIdentityTokenProvider?: (audience: string) => Promise<string>;
   fetch?: Fetch;
   now?: () => Date;
 };
@@ -137,6 +138,9 @@ export class FundamentalReviewService {
       await this.transition(job, "scoring");
       const scoreHeaders: Record<string, string> = { "content-type": "application/json" };
       if (this.options.internalToken) scoreHeaders["x-fundamental-review-token"] = this.options.internalToken;
+      if (this.options.scoringIdentityTokenProvider) {
+        scoreHeaders.authorization = `Bearer ${await this.options.scoringIdentityTokenProvider(this.options.scoringUrl)}`;
+      }
       const scoreResponse = await this.fetchImpl(this.options.scoringUrl, {
         method: "POST",
         headers: scoreHeaders,
