@@ -4273,7 +4273,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         });
       }
       const job = normalizeFundamentalReviewJob(payload?.job || payload, { symbol, companyName });
-      if (!job.jobId || !["queued", "locating_evidence", "validating_factors", "scoring", "lifecycle_processing", "ready"].includes(job.status)) {
+      if (!job.jobId || (!["queued", "locating_evidence", "validating_factors", "scoring", "lifecycle_processing", "ready"].includes(job.status) && !job.resultAvailable)) {
         return res.status(502).json({
           error: "The review worker did not return a valid durable job acknowledgement. No start is being claimed.",
           code: "INVALID_FUNDAMENTAL_REVIEW_ACKNOWLEDGEMENT",
