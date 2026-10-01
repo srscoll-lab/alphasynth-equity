@@ -99,14 +99,20 @@ type DeepDiveCompany = {
   bms_status: "ready" | "fcs_ready";
 };
 
-export default function FundamentalChangeLibrary({ onBack, onDeepDive }: { onBack: () => void; onDeepDive: (company: DeepDiveCompany) => void }) {
+export default function FundamentalChangeLibrary({ initialSymbol = null, onBack, onDeepDive }: { initialSymbol?: string | null; onBack: () => void; onDeepDive: (company: DeepDiveCompany) => void }) {
   const [query, setQuery] = useState(librarySessionState.query);
   const [momentumState, setMomentumState] = useState(librarySessionState.momentumState);
   const [capSegment, setCapSegment] = useState(librarySessionState.capSegment);
   const [readiness, setReadiness] = useState<"ALL" | "LIFECYCLE_READY" | "FCS_ONLY">(librarySessionState.readiness);
   const [sortKey, setSortKey] = useState<SortKey>(librarySessionState.sortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>(librarySessionState.sortDirection);
-  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
+  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(
+    initialSymbol && fundamentalChangeLibrary.some((record) => record.symbol === initialSymbol) ? initialSymbol : null,
+  );
+
+  useEffect(() => {
+    setSelectedSymbol(initialSymbol && fundamentalChangeLibrary.some((record) => record.symbol === initialSymbol) ? initialSymbol : null);
+  }, [initialSymbol]);
 
   useEffect(() => {
     Object.assign(librarySessionState, { query, momentumState, capSegment, readiness, sortKey, sortDirection });
@@ -241,7 +247,7 @@ const factorCopy: Record<string, string> = {
 
 const formatMetric = (value: string) => label(value);
 const formatNumber = (value: number | null, unit: string | null) => {
-  if (value === null) return "Not carried in score export";
+  if (value === null) return "Retained in source evidence record";
   const rendered = new Intl.NumberFormat("en-IN", { maximumFractionDigits: 2 }).format(value);
   return unit ? `${rendered} ${unit}` : rendered;
 };
@@ -249,6 +255,11 @@ const directionStyle: Record<string, string> = {
   strengthens: "border-emerald-400/25 bg-emerald-400/[0.08] text-emerald-200",
   weakens: "border-rose-400/25 bg-rose-400/[0.08] text-rose-200",
   neutral: "border-zinc-400/25 bg-zinc-400/[0.08] text-zinc-300",
+};
+const changeStyle: Record<string, string> = {
+  strengthens: "border-emerald-300/35 bg-emerald-300/[0.12] text-emerald-100",
+  weakens: "border-rose-300/35 bg-rose-300/[0.12] text-rose-100",
+  neutral: "border-zinc-300/25 bg-zinc-300/[0.08] text-zinc-200",
 };
 
 function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: FundamentalChangeRecord; detail: ScoreDetail; onBack: () => void; onDeepDive: () => void }) {
@@ -285,8 +296,9 @@ function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: Funda
             </div>
             <div className="mt-5 grid gap-3 xl:grid-cols-2">{factor.impacts.map((impact, index) => <article key={`${impact.metric_id}-${index}`} className="rounded-xl border border-white/[0.08] bg-black/15 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2"><div className="font-semibold text-white">{formatMetric(impact.metric_id)}</div><span className={`rounded-full border px-2 py-1 text-[9px] font-black uppercase ${directionStyle[impact.direction]}`}>{impact.direction}</span></div>
-              <div className="mt-4 grid grid-cols-2 gap-3 text-xs"><div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Previous · {impact.previous_period ?? "period in evidence ledger"}</div><div className="mt-1 font-mono text-zinc-200">{formatNumber(impact.previous_value, impact.canonical_unit)}</div></div><div><div className="text-[9px] uppercase tracking-wider text-zinc-600">Current · {impact.current_period ?? record.fcsPeriod}</div><div className="mt-1 font-mono text-zinc-200">{formatNumber(impact.current_value, impact.canonical_unit)}</div></div></div>
-              <div className="mt-4 flex flex-wrap gap-2 text-[10px]"><span className="rounded-lg border border-white/10 px-2 py-1 text-zinc-400">Change {impact.change_percentage === null ? "—" : `${impact.change_percentage >= 0 ? "+" : ""}${impact.change_percentage.toFixed(2)}%`}</span><span className="rounded-lg border border-white/10 px-2 py-1 text-zinc-400">CSS {impact.css_score?.toFixed(2) ?? "—"}</span><span className="rounded-lg border border-white/10 px-2 py-1 text-zinc-400">Confidence {impact.evidence_confidence === null ? "—" : `${Math.round(impact.evidence_confidence * 100)}%`}</span></div>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-xs"><div><div className="text-[9px] uppercase tracking-wider text-zinc-400">Previous · {impact.previous_period ?? "verified comparison period"}</div><div className={`mt-1 font-mono ${impact.previous_value === null ? "text-amber-100" : "text-zinc-100"}`}>{formatNumber(impact.previous_value, impact.canonical_unit)}</div></div><div><div className="text-[9px] uppercase tracking-wider text-zinc-400">Current · {impact.current_period ?? record.fcsPeriod}</div><div className={`mt-1 font-mono ${impact.current_value === null ? "text-amber-100" : "text-zinc-100"}`}>{formatNumber(impact.current_value, impact.canonical_unit)}</div></div></div>
+              {(impact.previous_value === null || impact.current_value === null) && <p className="mt-3 text-[10px] leading-relaxed text-zinc-400">The compact score summary does not duplicate this raw value. The underlying comparison remains in the verified source evidence record used to create the score.</p>}
+              <div className="mt-4 flex flex-wrap gap-2 text-[10px]"><span className={`rounded-lg border px-2 py-1 font-semibold ${changeStyle[impact.direction]}`}>Change {impact.change_percentage === null ? "—" : `${impact.change_percentage >= 0 ? "+" : ""}${impact.change_percentage.toFixed(2)}%`}</span><span className="rounded-lg border border-white/15 px-2 py-1 text-zinc-300">CSS {impact.css_score?.toFixed(2) ?? "—"}</span><span className="rounded-lg border border-white/15 px-2 py-1 text-zinc-300">Confidence {impact.evidence_confidence === null ? "—" : `${Math.round(impact.evidence_confidence * 100)}%`}</span></div>
               {impact.interpretation && <p className="mt-3 text-xs leading-relaxed text-amber-100/70">{impact.interpretation}</p>}
               {(impact.quoted_label || impact.document_id) && <div className="mt-3 border-t border-white/[0.07] pt-3 text-[10px] leading-relaxed text-zinc-600"><FileCheck2 className="mr-1 inline h-3.5 w-3.5" />{impact.quoted_label ?? "Hash-pinned evidence document"}{impact.source_page !== null ? ` · page ${impact.source_page}` : ""}{impact.document_id ? <div className="mt-1 break-all font-mono">{impact.document_id}</div> : null}</div>}
             </article>)}</div>

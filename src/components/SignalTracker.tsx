@@ -238,6 +238,7 @@ type SignalTrackerProps = {
 
 export default function SignalTracker({ onBack, initialMode = "v2", onModeChange, onDeepDive }: SignalTrackerProps) {
   const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "library">(initialMode);
+  const [libraryInitialSymbol, setLibraryInitialSymbol] = useState<string | null>(null);
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
@@ -351,11 +352,11 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
   }
 
   if (studyMode === "momentum") {
-    return <MomentumRadar onBack={() => changeMode("v2")} onBrowseLibrary={() => changeMode("library")} onDeepDive={onDeepDive} />;
+    return <MomentumRadar onBack={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} onDeepDive={onDeepDive} />;
   }
 
   if (studyMode === "library") {
-    return <FundamentalChangeLibrary onBack={() => changeMode("momentum")} onDeepDive={onDeepDive} />;
+    return <FundamentalChangeLibrary initialSymbol={libraryInitialSymbol} onBack={() => { setLibraryInitialSymbol(null); changeMode("momentum"); }} onDeepDive={onDeepDive} />;
   }
 
   if (evidenceOpen) {

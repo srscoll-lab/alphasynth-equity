@@ -224,7 +224,7 @@ const reviewStatusLabel = (status: FundamentalReviewJob["status"]) => ({
 
 type MomentumRadarProps = {
   onBack: () => void;
-  onBrowseLibrary: () => void;
+  onBrowseLibrary: (symbol?: string) => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
@@ -428,9 +428,9 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">The four-factor score is available. Lifecycle requires three comparable checkpoints.</div>
     <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button>
   </> : fcsRecordBySymbol.has(company.symbol) ? <>
-    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> {fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `FCS & lifecycle ready · ${fcsRecordBySymbol.get(company.symbol)!.lifecycle}` : "FCS ready · lifecycle pending"}</span>
+    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> {fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `FCS & lifecycle available · ${fcsRecordBySymbol.get(company.symbol)!.lifecycle}` : "FCS report available · lifecycle pending"}</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints are available.` : `The four-factor score is available. Lifecycle has ${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints.`}</div>
-    <button type="button" onClick={onBrowseLibrary} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open in FCS Library</button>
+    <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open FCS report</button>
   </> : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewStatusLabel(reviewJobs[company.symbol].status)}</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{reviewJobs[company.symbol].message}</div>
@@ -456,7 +456,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               <p className="mt-2 text-xs text-cyan-100/70 max-w-3xl leading-relaxed">The first five queued companies show the trajectory-aware Lifecycle V2.1 test result. Official market-cap segments come from source-dated NSE index membership; companies outside those indices remain in a clearly labelled Broader NSE lane. Liquidity never determines company size.</p>
             </div>
             <div className="flex max-w-md flex-col gap-3">
-            <button type="button" onClick={onBrowseLibrary} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/[0.10] px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 hover:bg-emerald-300/[0.16]"><BookOpen className="h-4 w-4" /> Browse Fundamental Change Library</button>
+            <button type="button" onClick={() => onBrowseLibrary()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/[0.10] px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 hover:bg-emerald-300/[0.16]"><BookOpen className="h-4 w-4" /> Browse Fundamental Change Library</button>
             <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.07] px-4 py-3 text-xs text-amber-100 leading-relaxed">
               <strong className="block mb-1">Experimental—not a return forecast</strong>
               Rankings use provisional adjusted market data and require walk-forward validation before they can become a product gate or investment signal.
