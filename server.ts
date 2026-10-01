@@ -71,6 +71,25 @@ const SIGNAL_TRACKER_CACHE_MS = 60_000;
 let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
 let fundamentalReviewService: FundamentalReviewService | null = null;
 let canonicalEvidenceProvider: ReturnType<typeof createCanonicalEvidenceProviderFromEnvironment> | undefined;
+const fundamentalReviewWorkerIdentityTokenProvider = createGoogleIdentityTokenProvider();
+
+function fundamentalReviewSupportedSymbols(): string[] {
+  return [...new Set(String(process.env.FUNDAMENTAL_REVIEW_SUPPORTED_SYMBOLS || "")
+    .split(",")
+    .map((symbol) => cleanFundamentalReviewSymbol(symbol))
+    .filter((symbol): symbol is string => Boolean(symbol)))];
+}
+
+async function fundamentalReviewGatewayHeaders(url: string, includeContentType = false): Promise<Record<string, string>> {
+  const headers: Record<string, string> = includeContentType ? { "Content-Type": "application/json" } : {};
+  if (process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN) {
+    headers["x-fundamental-review-token"] = process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN;
+  }
+  if (process.env.FUNDAMENTAL_REVIEW_WORKER_IAM_AUTH === "true") {
+    headers.Authorization = `Bearer ${await fundamentalReviewWorkerIdentityTokenProvider(url)}`;
+  }
+  return headers;
+}
 
 function getFundamentalReviewService(): FundamentalReviewService {
   if (fundamentalReviewService) return fundamentalReviewService;
@@ -4117,12 +4136,18 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const requestConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL);
     const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
     const publicRequestsEnabled = process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED === "true";
-    const available = requestConfigured && statusConfigured && publicRequestsEnabled;
+    const supportedSymbols = fundamentalReviewSupportedSymbols();
+    const available = requestConfigured && statusConfigured && publicRequestsEnabled && supportedSymbols.length > 0;
     return res.json({
       available,
       requestConfigured,
       statusConfigured,
       publicRequestsEnabled,
+      requestScope: "controlled_beta",
+      supportedSymbols,
+      scopeMessage: supportedSymbols.length
+        ? `New FCS requests are currently enabled for ${supportedSymbols.length} approved evidence-gate companies.`
+        : "No companies are enabled for new FCS requests on this deployment.",
       activationState: available ? "available" : "not_activated",
       unavailableReason: available
         ? null
@@ -4207,6 +4232,15 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const companyName = String(req.body?.company_name || symbol).trim();
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
 
+    const supportedSymbols = fundamentalReviewSupportedSymbols();
+    if (!supportedSymbols.includes(symbol)) {
+      return res.status(409).json({
+        error: "New FCS processing for this company is not enabled in the controlled beta. No job was started.",
+        code: "FUNDAMENTAL_REVIEW_SYMBOL_NOT_ENABLED",
+        supportedSymbols,
+      });
+    }
+
     const requestUrl = process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL;
     if (!requestUrl || process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED !== "true") {
       return res.status(503).json({
@@ -4216,10 +4250,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
 
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN) {
-        headers["x-fundamental-review-token"] = process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN;
-      }
+      const headers = await fundamentalReviewGatewayHeaders(requestUrl, true);
       const response = await fetch(requestUrl, {
         method: "POST",
         headers,
@@ -4271,10 +4302,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     try {
       const url = new URL(statusUrl);
       url.searchParams.set("symbol", symbol);
-      const headers: Record<string, string> = {};
-      if (process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN) {
-        headers["x-fundamental-review-token"] = process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN;
-      }
+      const headers = await fundamentalReviewGatewayHeaders(statusUrl);
       const response = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
       const payload: any = await response.json().catch(() => ({}));
       if (!response.ok) return res.status(response.status).json({ error: payload?.error || "Review status is unavailable." });

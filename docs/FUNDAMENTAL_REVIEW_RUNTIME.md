@@ -38,6 +38,8 @@ The public interface remains disabled until both the request and status gateways
 | `FUNDAMENTAL_REVIEW_STATUS_URL` | Private worker `/internal/fundamental-review/status` URL |
 | `FUNDAMENTAL_REVIEW_INTERNAL_TOKEN` | Secret shared only between approved services |
 | `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` | Explicit release gate. Must equal `true` only after the live five-company integration gate passes. |
+| `FUNDAMENTAL_REVIEW_SUPPORTED_SYMBOLS` | Comma-separated, server-enforced controlled-beta allowlist. The current evidence gate is `BAJFINANCE,HINDALCO,INFY,LT,SUNPHARMA`. |
+| `FUNDAMENTAL_REVIEW_WORKER_IAM_AUTH` | When `true`, the public gateway authenticates to the private Cloud Run worker with the service's Google identity token. |
 
 ### Private worker
 
@@ -107,6 +109,8 @@ The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-revie
 The remaining backend dependency is a production evidence endpoint that emits the complete V2 evidence, document and validation contracts. The older factor-evidence CSV response lacks comparison basis, consolidation basis, period-end dates, raw/canonical units and immutable archive hashes, so it must not be adapted into a publishable score by assumption.
 
 Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, keep `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` unset (or `false`) and do not claim that automated FCS requests are available. Request/status URLs alone cannot enable the public button.
+
+Even after activation, the gateway fails closed unless `FUNDAMENTAL_REVIEW_SUPPORTED_SYMBOLS` contains at least one symbol. Both the API and frontend enforce this controlled-beta scope; unsupported companies remain searchable and existing reports remain viewable, but no new job can be started for them.
 
 ## Capped stage-one deployment (2026-09-30)
 

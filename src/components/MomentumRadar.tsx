@@ -270,6 +270,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
   const [reviewRequestMessage, setReviewRequestMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
+  const [reviewSupportedSymbols, setReviewSupportedSymbols] = useState<Set<string>>(new Set());
   useEffect(() => {
     let active = true;
     fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
@@ -277,6 +278,8 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
       .then((payload) => {
         if (!active) return;
         setReviewRequestsAvailable(payload?.available === true);
+        setReviewSupportedSymbols(new Set(Array.isArray(payload?.supportedSymbols) ? payload.supportedSymbols : []));
+        if (typeof payload?.scopeMessage === "string" && payload.scopeMessage) setReviewRequestMessage(payload.scopeMessage);
         if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setReviewRequestMessage(payload.unavailableReason);
       })
       .catch(() => {
@@ -435,7 +438,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   </> : <>
     <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>
-    {reviewRequestsAvailable ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> New FCS processing unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
+    {reviewRequestsAvailable && reviewSupportedSymbols.has(company.symbol) ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> Controlled beta not enabled</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
   </>;
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
