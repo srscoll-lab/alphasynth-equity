@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { FundamentalReviewService } from "../src/fundamental-review-service.ts";
 import { CloudTasksFundamentalReviewQueue, InMemoryFundamentalReviewQueue } from "../src/fundamental-review-queue.ts";
 import { FirestoreFundamentalReviewStore, InMemoryFundamentalReviewStore } from "../src/fundamental-review-store.ts";
+import { createGoogleIdentityTokenProvider } from "../src/google-cloud-runtime.ts";
 
 const fourFactorCandidates = ["earnings", "economics", "execution", "balance_sheet"]
   .map((factor) => ({ candidate_id: `candidate-${factor}`, factor_id: factor }));
@@ -137,5 +138,16 @@ await cloudQueue.enqueue({ jobId: "job-1", symbol: "LT" });
 assert.equal(queuedTask?.task?.dispatchDeadline, "900s");
 assert.equal(queuedTask?.task?.httpRequest?.oidcToken?.serviceAccountEmail, "tasks@test-project.iam.gserviceaccount.com");
 assert.equal(queuedTask?.task?.httpRequest?.headers?.["x-fundamental-review-token"], "internal-test-token");
+
+let identityRequestUrl = "";
+const identityProvider = createGoogleIdentityTokenProvider({
+  fetch: async (input) => {
+    identityRequestUrl = String(input);
+    return new Response("signed-test-token", { status: 200 });
+  },
+});
+assert.equal(await identityProvider("https://private-scorer.example/score"), "signed-test-token");
+assert.match(identityRequestUrl, /audience=https%3A%2F%2Fprivate-scorer\.example(?:&|%26)/);
+assert.doesNotMatch(identityRequestUrl, /%2Fscore/);
 
 console.log("Durable Fundamental Review runtime verified.");

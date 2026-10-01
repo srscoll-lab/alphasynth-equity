@@ -49,16 +49,17 @@ export function createGoogleIdentityTokenProvider(options: Pick<GoogleCloudRunti
   return async (audience: string): Promise<string> => {
     const normalizedAudience = String(audience || "").trim();
     if (!/^https:\/\//.test(normalizedAudience)) throw new Error("A valid HTTPS identity-token audience is required.");
-    const cached = cache.get(normalizedAudience);
+    const identityAudience = new URL(normalizedAudience).origin;
+    const cached = cache.get(identityAudience);
     if (cached && cached.expiresAt > Date.now() + 60_000) return cached.value;
-    const response = await fetchImpl(`${METADATA_IDENTITY_URL}?audience=${encodeURIComponent(normalizedAudience)}&format=full`, {
+    const response = await fetchImpl(`${METADATA_IDENTITY_URL}?audience=${encodeURIComponent(identityAudience)}&format=full`, {
       headers: { "Metadata-Flavor": "Google" },
       signal: AbortSignal.timeout(10_000),
     });
     if (!response.ok) throw new Error(`Google metadata identity-token request failed with HTTP ${response.status}.`);
     const value = (await response.text()).trim();
     if (!value) throw new Error("Google metadata identity-token response was empty.");
-    cache.set(normalizedAudience, { value, expiresAt: Date.now() + 45 * 60_000 });
+    cache.set(identityAudience, { value, expiresAt: Date.now() + 45 * 60_000 });
     return value;
   };
 }
