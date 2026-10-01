@@ -1,0 +1,39 @@
+{
+  "schema_version": "1.0.0",
+  "approval_id": "five-company-evidence-approval-2026-09-22",
+  "cohort_id": "BMS-V2-FIVE-COMPANY-EVIDENCE-GATE",
+  "approved_company_symbols": [
+    "BAJFINANCE",
+    "INFY",
+    "LT",
+    "SUNPHARMA",
+    "HINDALCO"
+  ],
+  "approved_factor_ids": [
+    "earnings",
+    "economics",
+    "execution",
+    "balance_sheet"
+  ],
+  "approved_factor_slot_count": 20,
+  "approved_comparison_count": 28,
+  "approval_scope": "source_values_periods_units_consolidation_and_provenance",
+  "qualifications": [
+    {
+      "company_symbol": "HINDALCO",
+      "factor_id": "execution",
+      "metric_id": "aluminium_upstream_shipments_india",
+      "qualification": "Operational throughput only; the reported shipment measure may include intersegment transfers and is not labelled external customer sales. Its scoring suitability remains subject to the impact-methodology gate."
+    },
+    {
+      "company_symbol": "HINDALCO",
+      "factor_id": "balance_sheet",
+      "metric_id": "net_debt_to_ebitda_ratio",
+      "qualification": "Previous value 1.33x is dated 2024-12-31; current value 1.73x is dated 2025-12-31."
+    }
+  ],
+  "score_approval": false,
+  "lifecycle_approval": false,
+  "publication_approval": false,
+  "approved_at": "2026-09-22T00:00:00+05:30"
+}

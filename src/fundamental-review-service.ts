@@ -99,6 +99,7 @@ export class FundamentalReviewService {
       await this.transition(job, "locating_evidence");
       const evidenceHeaders: Record<string, string> = { "content-type": "application/json" };
       if (this.options.dossierToken) evidenceHeaders["x-dossier-token"] = this.options.dossierToken;
+      if (this.options.internalToken) evidenceHeaders["x-fundamental-review-token"] = this.options.internalToken;
       const evidenceResponse = await this.fetchImpl(this.options.evidenceUrl, {
         method: "POST",
         headers: evidenceHeaders,

@@ -55,6 +55,7 @@ import {
   FundamentalReviewService,
   fundamentalReviewRuntimeConfigured,
 } from "./src/fundamental-review-service";
+import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamental-review-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -68,6 +69,7 @@ const BMS_LIFECYCLE_FREEZE_DATE = process.env.BMS_LIFECYCLE_FREEZE_DATE || "2026
 const SIGNAL_TRACKER_CACHE_MS = 60_000;
 let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
 let fundamentalReviewService: FundamentalReviewService | null = null;
+let canonicalEvidenceProvider: ReturnType<typeof createCanonicalEvidenceProviderFromEnvironment> | undefined;
 
 function getFundamentalReviewService(): FundamentalReviewService {
   if (fundamentalReviewService) return fundamentalReviewService;
@@ -88,6 +90,12 @@ function getFundamentalReviewService(): FundamentalReviewService {
 function hasFundamentalReviewInternalAccess(req: express.Request): boolean {
   const expected = String(process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN || "");
   return Boolean(expected) && req.header("x-fundamental-review-token") === expected;
+}
+
+function getCanonicalEvidenceProvider() {
+  if (canonicalEvidenceProvider !== undefined) return canonicalEvidenceProvider;
+  canonicalEvidenceProvider = createCanonicalEvidenceProviderFromEnvironment();
+  return canonicalEvidenceProvider;
 }
 
 async function readCloudForwardValidation(): Promise<any> {
@@ -4126,6 +4134,18 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
   // Tasks and protected by Cloud Run IAM plus the shared internal token. They
   // are deliberately separate from the public gateway above so a request is
   // acknowledged only after Firestore persistence and successful enqueueing.
+  app.post("/internal/fundamental-review/evidence", (req, res) => {
+    if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
+    const provider = getCanonicalEvidenceProvider();
+    if (!provider) {
+      return res.status(503).json({
+        error: "Canonical V2 evidence is not configured on this deployment.",
+        code: "FUNDAMENTAL_REVIEW_EVIDENCE_NOT_CONFIGURED",
+      });
+    }
+    return res.json(provider(req.body?.ticker || req.body?.symbol));
+  });
+
   app.post("/internal/fundamental-review/request", async (req, res) => {
     if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
     const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);

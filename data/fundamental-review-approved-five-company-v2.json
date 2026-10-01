@@ -1,0 +1,5857 @@
+{
+  "schema_version": "2.0.0",
+  "bundle_id": "approved-five-company-canonical-evidence-v2",
+  "generated_from": [
+    "alphasynth-bms-v2\\output\\local-official-reconstruction.json",
+    "alphasynth-bms-v2\\output\\acquired-official-reconstruction.json",
+    "alphasynth-bms-v2\\output\\remaining-official-reconstruction.json"
+  ],
+  "documents": [
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "issuer_symbol": "INFY",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749125000004/exv99w02.htm",
+      "resolved_url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749125000004/exv99w02.htm",
+      "source_type": "issuer_filing",
+      "source_tier": "authoritative",
+      "published_at": "2025-01-16T00:00:00Z",
+      "captured_at": "2026-09-18T08:49:34.837Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/infy-q3-fy25-results.html",
+      "sha256": "d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "media_type": "text/html",
+      "content_length": 89522,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "issuer_symbol": "INFY",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749126000004/exv99w02.htm",
+      "resolved_url": "https://www.sec.gov/Archives/edgar/data/1067491/000106749126000004/exv99w02.htm",
+      "source_type": "issuer_filing",
+      "source_tier": "authoritative",
+      "published_at": "2026-01-14T00:00:00Z",
+      "captured_at": "2026-09-18T08:49:35.254Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/infy-q3-fy26-results.html",
+      "sha256": "bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "media_type": "text/html",
+      "content_length": 110653,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "issuer_symbol": "HINDALCO",
+      "source_url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+      "resolved_url": "https://www.hindalco.com/media/press-releases/hindalco-results-q3-fy26",
+      "source_type": "issuer_results",
+      "source_tier": "authoritative",
+      "published_at": "2026-02-12T00:00:00Z",
+      "captured_at": "2026-09-18T11:41:43.897Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-equity/output/bms-official-document-archive/7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5.html",
+      "sha256": "7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "media_type": "text/html",
+      "content_length": 111225,
+      "acquisition_method": "legacy_archive_import",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "issuer_symbol": "BAJFINANCE",
+      "source_url": "https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1",
+      "resolved_url": "https://cms-assets.bajajfinserv.in/is/content/bajajfinance/bajaj-finance-q3-fy26-investor-presentation?fmt=pdf&scl=1",
+      "source_type": "issuer_presentation",
+      "source_tier": "authoritative",
+      "published_at": "2026-02-03T00:00:00Z",
+      "captured_at": "2026-09-21T13:19:56.440Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/bajajfinance-q3-fy26-investor-presentation.pdf",
+      "sha256": "804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "media_type": "application/pdf",
+      "content_length": 1070687,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "issuer_symbol": "LT",
+      "source_url": "https://nsearchives.nseindia.com/corporate/PAM_28012026184749_AnalystPresentationDec2025.pdf",
+      "resolved_url": "https://nsearchives.nseindia.com/corporate/PAM_28012026184749_AnalystPresentationDec2025.pdf",
+      "source_type": "nse_filing",
+      "source_tier": "authoritative",
+      "published_at": "2026-01-28T00:00:00Z",
+      "captured_at": "2026-09-21T13:25:44.930Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/lt-q3-fy26-analyst-presentation.pdf",
+      "sha256": "a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "media_type": "application/pdf",
+      "content_length": 7272883,
+      "acquisition_method": "exchange_api",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "issuer_symbol": "SUNPHARMA",
+      "source_url": "https://sunpharma.com/wp-content/uploads/2025/01/Press-Release-Sun-Pharma-Q3FY25-Financial-Result.pdf",
+      "resolved_url": "https://sunpharma.com/wp-content/uploads/2025/01/Press-Release-Sun-Pharma-Q3FY25-Financial-Result.pdf",
+      "source_type": "issuer_results",
+      "source_tier": "authoritative",
+      "published_at": "2025-01-31T00:00:00Z",
+      "captured_at": "2026-09-21T13:29:57.719Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/sunpharma-q3-fy25-results.pdf",
+      "sha256": "41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "media_type": "application/pdf",
+      "content_length": 117114,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "issuer_symbol": "SUNPHARMA",
+      "source_url": "https://sunpharma.com/wp-content/uploads/2026/01/Press-Release-Sun-Pharma-Q3FY26-Financial-Result.pdf",
+      "resolved_url": "https://sunpharma.com/wp-content/uploads/2026/01/Press-Release-Sun-Pharma-Q3FY26-Financial-Result.pdf",
+      "source_type": "issuer_results",
+      "source_tier": "authoritative",
+      "published_at": "2026-01-31T00:00:00Z",
+      "captured_at": "2026-09-21T13:29:57.385Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/sunpharma-q3-fy26-results.pdf",
+      "sha256": "f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "media_type": "application/pdf",
+      "content_length": 320985,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-5f1f721f908955bf6b1ea4f9a72d79930f660ca4e67c5e3b32f527a087eb52a1",
+      "issuer_symbol": "SUNPHARMA",
+      "source_url": "https://sunpharma.com/wp-content/uploads/2025/08/FY26-Q1-Earnings-Call-Transcript.pdf",
+      "resolved_url": "https://sunpharma.com/wp-content/uploads/2025/08/FY26-Q1-Earnings-Call-Transcript.pdf",
+      "source_type": "issuer_transcript",
+      "source_tier": "authoritative",
+      "published_at": "2025-07-31T00:00:00Z",
+      "captured_at": "2026-09-21T13:29:58.387Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/sunpharma-q1-fy26-transcript.pdf",
+      "sha256": "5f1f721f908955bf6b1ea4f9a72d79930f660ca4e67c5e3b32f527a087eb52a1",
+      "media_type": "application/pdf",
+      "content_length": 280076,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-9b56ed251bdfba9996ff28ebd05dc87b0253ad6137d3c35d6e5013f6845540c5",
+      "issuer_symbol": "SUNPHARMA",
+      "source_url": "https://sunpharma.com/wp-content/uploads/2026/02/FY26-Q3-Earnings-Call-Transcript.pdf",
+      "resolved_url": "https://sunpharma.com/wp-content/uploads/2026/02/FY26-Q3-Earnings-Call-Transcript.pdf",
+      "source_type": "issuer_transcript",
+      "source_tier": "authoritative",
+      "published_at": "2026-01-31T00:00:00Z",
+      "captured_at": "2026-09-21T13:29:58.056Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/sunpharma-q3-fy26-transcript.pdf",
+      "sha256": "9b56ed251bdfba9996ff28ebd05dc87b0253ad6137d3c35d6e5013f6845540c5",
+      "media_type": "application/pdf",
+      "content_length": 321298,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-6aa7faf833355852c6ebf9a058a9bb748882c22a5a53ce799da2009077a741b3",
+      "issuer_symbol": "HINDALCO",
+      "source_url": "https://www.hindalco.com/upload/pdf/media-release-board-meeting-hindalco-feb25.pdf",
+      "resolved_url": "https://www.hindalco.com/upload/pdf/media-release-board-meeting-hindalco-feb25.pdf",
+      "source_type": "issuer_results",
+      "source_tier": "authoritative",
+      "published_at": "2025-02-13T00:00:00Z",
+      "captured_at": "2026-09-22T04:43:46.782Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/hindalco-q3-fy25-results.pdf",
+      "sha256": "6aa7faf833355852c6ebf9a058a9bb748882c22a5a53ce799da2009077a741b3",
+      "media_type": "application/pdf",
+      "content_length": 629670,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    },
+    {
+      "schema_version": "1.0.0",
+      "document_id": "doc-b4e80d9d51c4202462390df55d6490cff883ec981a68b5e075736f7765cf849c",
+      "issuer_symbol": "HINDALCO",
+      "source_url": "https://www.hindalco.com/Upload/PDF/hindalco-investor-presentation-q3fy26.pdf",
+      "resolved_url": "https://www.hindalco.com/Upload/PDF/hindalco-investor-presentation-q3fy26.pdf",
+      "source_type": "issuer_presentation",
+      "source_tier": "authoritative",
+      "published_at": "2026-02-12T00:00:00Z",
+      "captured_at": "2026-09-22T04:43:47.621Z",
+      "archive_uri": "file:///C:/Users/admin/Documents/ChatGPT/Alphasynth%20Intelligence/alphasynth-bms-v2/archives/official/hindalco-q3-fy26-presentation.pdf",
+      "sha256": "b4e80d9d51c4202462390df55d6490cff883ec981a68b5e075736f7765cf849c",
+      "media_type": "application/pdf",
+      "content_length": 5441289,
+      "acquisition_method": "direct_http",
+      "acquisition_status": "acquired",
+      "failure_reason": null
+    }
+  ],
+  "candidates": [
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-INFY-deal_tcv-local-official-v1",
+      "run_id": "run-five-company-local-recovery-v1",
+      "company_symbol": "INFY",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "deal_tcv",
+      "source_metric_label": "large_deal_tcv",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "not_applicable",
+      "current_consolidation_basis": "not_applicable",
+      "previous_raw_value": 2.5,
+      "current_raw_value": 4.8,
+      "previous_raw_unit": "USD billion",
+      "current_raw_unit": "USD billion",
+      "previous_canonical_value": 2.5,
+      "current_canonical_value": 4.8,
+      "canonical_unit": "USD billion",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "current_document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "previous_source_locator": {
+        "section": "Q3 FY25 performance highlights",
+        "quoted_label": "Large deal TCV of $2.5 billion"
+      },
+      "current_source_locator": {
+        "section": "Q3 FY26 performance highlights",
+        "quoted_label": "TCV of large deal wins was $4.8 billion"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "legacy_migration",
+      "extractor_version": "local-official-reconstruction-v1",
+      "producer_id": "controlled-legacy-reconstruction",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T08:49:35.254Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-INFY-free_cash_flow-local-official-v1",
+      "run_id": "run-five-company-local-recovery-v1",
+      "company_symbol": "INFY",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "free_cash_flow",
+      "source_metric_label": "free_cash_flow",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 1263,
+      "current_raw_value": 915,
+      "previous_raw_unit": "USD million",
+      "current_raw_unit": "USD million",
+      "previous_canonical_value": 1263,
+      "current_canonical_value": 915,
+      "canonical_unit": "USD million",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "current_document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "previous_source_locator": {
+        "section": "Q3 FY25 performance highlights",
+        "quoted_label": "Free cash flow for Q3 was highest ever at $1,263 million"
+      },
+      "current_source_locator": {
+        "section": "Q3 FY26 performance highlights",
+        "quoted_label": "Free cash flow generation was robust at $915 million"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "legacy_migration",
+      "extractor_version": "local-official-reconstruction-v1",
+      "producer_id": "controlled-legacy-reconstruction",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T08:49:35.254Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-HINDALCO-aluminium_upstream_shipments_india-local-official-v1",
+      "run_id": "run-five-company-local-recovery-v1",
+      "company_symbol": "HINDALCO",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "aluminium_upstream_shipments_india",
+      "source_metric_label": "aluminium_upstream_shipments_india",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "not_applicable",
+      "current_consolidation_basis": "not_applicable",
+      "previous_raw_value": 338,
+      "current_raw_value": 345,
+      "previous_raw_unit": "KT",
+      "current_raw_unit": "KT",
+      "previous_canonical_value": 338,
+      "current_canonical_value": 345,
+      "canonical_unit": "kilotonnes",
+      "conversion_rule_id": "kt-to-kilotonnes-v1",
+      "previous_document_id": "doc-7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "current_document_id": "doc-7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "previous_source_locator": {
+        "section": "Segment-wise Performance in Q3 FY26 / Aluminium (India) / Aluminium Upstream",
+        "table": "Shipments",
+        "quoted_label": "Q3 FY25 338 Kt"
+      },
+      "current_source_locator": {
+        "section": "Segment-wise Performance in Q3 FY26 / Aluminium (India) / Aluminium Upstream",
+        "table": "Shipments",
+        "quoted_label": "Q3 FY26 345 Kt"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "legacy_migration",
+      "extractor_version": "local-official-reconstruction-v1",
+      "producer_id": "controlled-legacy-reconstruction",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T11:41:43.897Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-HINDALCO-net_debt_to_ebitda_ratio-local-official-v1",
+      "run_id": "run-five-company-local-recovery-v1",
+      "company_symbol": "HINDALCO",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "net_debt_to_ebitda_ratio",
+      "source_metric_label": "net_debt_to_ebitda_ratio",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 1.33,
+      "current_raw_value": 1.73,
+      "previous_raw_unit": "times",
+      "current_raw_unit": "times",
+      "previous_canonical_value": 1.33,
+      "current_canonical_value": 1.73,
+      "canonical_unit": "ratio",
+      "conversion_rule_id": "times-to-ratio-v1",
+      "previous_document_id": "doc-7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "current_document_id": "doc-7f505aabfd68eb6534c343077344d007f0508b8e5c2b2b01e0af590f178a9cd5",
+      "previous_source_locator": {
+        "section": "Key Highlights",
+        "quoted_label": "Consolidated Net Debt to EBITDA at 1.73x as of December 31, 2025 vs 1.33x a year ago"
+      },
+      "current_source_locator": {
+        "section": "Key Highlights",
+        "quoted_label": "Consolidated Net Debt to EBITDA at 1.73x as of December 31, 2025 vs 1.33x a year ago"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "legacy_migration",
+      "extractor_version": "local-official-reconstruction-v1",
+      "producer_id": "controlled-legacy-reconstruction",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T11:41:43.897Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-assets_under_management-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "assets_under_management",
+      "source_metric_label": "assets_under_management",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "point_in_time_prior_period",
+      "comparison_rule_id": "point-in-time-prior-period-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 398043,
+      "current_raw_value": 484477,
+      "previous_raw_unit": "Rs.Cr",
+      "current_raw_unit": "Rs.Cr",
+      "previous_canonical_value": 398043,
+      "current_canonical_value": 484477,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "rs-crore-to-inr-crore-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 5,
+        "table": "AUM before/after accelerated ECL provision",
+        "quoted_label": "AUM 484,477 398,043"
+      },
+      "current_source_locator": {
+        "page": 5,
+        "table": "AUM before/after accelerated ECL provision",
+        "quoted_label": "AUM 484,477 398,043"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-new_loans_booked-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "new_loans_booked",
+      "source_metric_label": "new_loans_booked",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 12.06,
+      "current_raw_value": 13.9,
+      "previous_raw_unit": "million",
+      "current_raw_unit": "million",
+      "previous_canonical_value": 12.06,
+      "current_canonical_value": 13.9,
+      "canonical_unit": "million loans",
+      "conversion_rule_id": "million-to-million-loans-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 6,
+        "section": "Balance sheet and business metrics",
+        "quoted_label": "13.90 MM in Q3 FY26 as against 12.06 MM in Q3 FY25"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "section": "Balance sheet and business metrics",
+        "quoted_label": "13.90 MM in Q3 FY26 as against 12.06 MM in Q3 FY25"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-gnpa-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "gnpa",
+      "source_metric_label": "gnpa",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "point_in_time_prior_period",
+      "comparison_rule_id": "point-in-time-prior-period-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 1.12,
+      "current_raw_value": 1.21,
+      "previous_raw_unit": "%",
+      "current_raw_unit": "%",
+      "previous_canonical_value": 1.12,
+      "current_canonical_value": 1.21,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "percent-symbol-to-percent-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 8,
+        "section": "Lead financial indicators",
+        "quoted_label": "GNPA & NNPA stood at 1.21% & 0.47% ... as against 1.12% & 0.48%"
+      },
+      "current_source_locator": {
+        "page": 8,
+        "section": "Lead financial indicators",
+        "quoted_label": "GNPA & NNPA stood at 1.21% & 0.47% ... as against 1.12% & 0.48%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-nnpa-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "nnpa",
+      "source_metric_label": "nnpa",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "point_in_time_prior_period",
+      "comparison_rule_id": "point-in-time-prior-period-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 0.48,
+      "current_raw_value": 0.47,
+      "previous_raw_unit": "%",
+      "current_raw_unit": "%",
+      "previous_canonical_value": 0.48,
+      "current_canonical_value": 0.47,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "percent-symbol-to-percent-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 8,
+        "section": "Lead financial indicators",
+        "quoted_label": "GNPA & NNPA stood at 1.21% & 0.47% ... as against 1.12% & 0.48%"
+      },
+      "current_source_locator": {
+        "page": 8,
+        "section": "Lead financial indicators",
+        "quoted_label": "GNPA & NNPA stood at 1.21% & 0.47% ... as against 1.12% & 0.48%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-order_inflow-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "order_inflow",
+      "source_metric_label": "order_inflow",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 1160,
+      "current_raw_value": 1356,
+      "previous_raw_unit": "Rs.Bn",
+      "current_raw_unit": "Rs.Bn",
+      "previous_canonical_value": 1160,
+      "current_canonical_value": 1356,
+      "canonical_unit": "INR billion",
+      "conversion_rule_id": "rs-billion-to-inr-billion-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "1160 1356 17% Order Inflow"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "1160 1356 17% Order Inflow"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-order_book-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "order_book",
+      "source_metric_label": "order_book",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "point_in_time_prior_period",
+      "comparison_rule_id": "point-in-time-prior-period-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 5642,
+      "current_raw_value": 7332,
+      "previous_raw_unit": "Rs.Bn",
+      "current_raw_unit": "Rs.Bn",
+      "previous_canonical_value": 5642,
+      "current_canonical_value": 7332,
+      "canonical_unit": "INR billion",
+      "conversion_rule_id": "rs-billion-to-inr-billion-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "Order Book 5642 7332 30%"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "Order Book 5642 7332 30%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-operating_cash_flow-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "operating_cash_flow",
+      "source_metric_label": "operating_cash_flow",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 21,
+      "current_raw_value": 79,
+      "previous_raw_unit": "Rs.Bn",
+      "current_raw_unit": "Rs.Bn",
+      "previous_canonical_value": 21,
+      "current_canonical_value": 79,
+      "canonical_unit": "INR billion",
+      "conversion_rule_id": "rs-billion-to-inr-billion-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "21 79 >100% Cash flow from Operations (excl Financial Services business)"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "21 79 >100% Cash flow from Operations (excl Financial Services business)"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-SUNPHARMA-ebitda_margin-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "SUNPHARMA",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "economics",
+      "canonical_metric_id": "ebitda_margin",
+      "source_metric_label": "ebitda_margin",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 29.3,
+      "current_raw_value": 31.9,
+      "previous_raw_unit": "%",
+      "current_raw_unit": "%",
+      "previous_canonical_value": 29.3,
+      "current_canonical_value": 31.9,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "percent-symbol-to-percent-v1",
+      "previous_document_id": "doc-41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "current_document_id": "doc-f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "previous_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY25 consolidated financials",
+        "quoted_label": "EBITDA margin of 29.3%"
+      },
+      "current_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY26 consolidated financials",
+        "quoted_label": "EBITDA margin was 31.9%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:29:57.719Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-SUNPHARMA-innovative_medicine_sales-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "SUNPHARMA",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "execution",
+      "canonical_metric_id": "innovative_medicine_sales",
+      "source_metric_label": "innovative_medicine_sales",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 370,
+      "current_raw_value": 423,
+      "previous_raw_unit": "USD.Mn",
+      "current_raw_unit": "USD.Mn",
+      "previous_canonical_value": 370,
+      "current_canonical_value": 423,
+      "canonical_unit": "USD million",
+      "conversion_rule_id": "usd-dot-million-to-usd-million-v1",
+      "previous_document_id": "doc-41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "current_document_id": "doc-f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "previous_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY25 consolidated financials",
+        "quoted_label": "Global Specialty sales at US$ 370 million"
+      },
+      "current_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY26 consolidated financials",
+        "quoted_label": "Global Innovative Medicines sales stood at US$ 423 million"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:29:57.719Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-SUNPHARMA-net_cash-acquired-official-v1",
+      "run_id": "run-five-company-acquired-official-v1",
+      "company_symbol": "SUNPHARMA",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "balance_sheet",
+      "canonical_metric_id": "net_cash",
+      "source_metric_label": "net_cash",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q1 FY26",
+        "end_date": "2025-06-30"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "point_in_time_prior_period",
+      "comparison_rule_id": "point-in-time-prior-period-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 3.1,
+      "current_raw_value": 3.2,
+      "previous_raw_unit": "USD.Bn",
+      "current_raw_unit": "USD.Bn",
+      "previous_canonical_value": 3.1,
+      "current_canonical_value": 3.2,
+      "canonical_unit": "USD billion",
+      "conversion_rule_id": "usd-dot-billion-to-usd-billion-v1",
+      "previous_document_id": "doc-5f1f721f908955bf6b1ea4f9a72d79930f660ca4e67c5e3b32f527a087eb52a1",
+      "current_document_id": "doc-9b56ed251bdfba9996ff28ebd05dc87b0253ad6137d3c35d6e5013f6845540c5",
+      "previous_source_locator": {
+        "page": 3,
+        "section": "CFO remarks",
+        "quoted_label": "net cash position of $3.1 billion at the consolidated level"
+      },
+      "current_source_locator": {
+        "page": 3,
+        "section": "CFO remarks",
+        "quoted_label": "net cash of $3.2 billion at the consolidated level"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "official-acquisition-v1",
+      "producer_id": "controlled-official-acquisition",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:29:58.387Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-net_total_income-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "net_total_income",
+      "source_metric_label": "net_total_income",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 11673,
+      "current_raw_value": 13875,
+      "previous_raw_unit": "Rs.Cr",
+      "current_raw_unit": "Rs.Cr",
+      "previous_canonical_value": 11673,
+      "current_canonical_value": 13875,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "rs-crore-to-inr-crore-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 7,
+        "section": "Operating efficiencies",
+        "quoted_label": "Net total income grew to Rs 13,875 crore as against Rs 11,673 crore"
+      },
+      "current_source_locator": {
+        "page": 7,
+        "section": "Operating efficiencies",
+        "quoted_label": "Net total income grew to Rs 13,875 crore as against Rs 11,673 crore"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-pat-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "pat",
+      "source_metric_label": "pat",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 4308,
+      "current_raw_value": 4066,
+      "previous_raw_unit": "Rs.Cr",
+      "current_raw_unit": "Rs.Cr",
+      "previous_canonical_value": 4308,
+      "current_canonical_value": 4066,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "rs-crore-to-inr-crore-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 5,
+        "section": "Profit after tax",
+        "quoted_label": "Reported PAT after accelerated ECL and new labour code charges"
+      },
+      "current_source_locator": {
+        "page": 5,
+        "section": "Profit after tax",
+        "quoted_label": "Reported PAT after accelerated ECL and new labour code charges"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-BAJFINANCE-opex_to_net_total_income-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "BAJFINANCE",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "economics",
+      "canonical_metric_id": "opex_to_net_total_income",
+      "source_metric_label": "opex_to_net_total_income",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 33.1,
+      "current_raw_value": 32.8,
+      "previous_raw_unit": "%",
+      "current_raw_unit": "%",
+      "previous_canonical_value": 33.1,
+      "current_canonical_value": 32.8,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "percent-symbol-to-percent-v1",
+      "previous_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "current_document_id": "doc-804eafda5491e74724ffb12aa5a161b3ef85d5cc10aeac9c929edc1ef0658434",
+      "previous_source_locator": {
+        "page": 7,
+        "section": "Operating efficiencies",
+        "quoted_label": "Opex to NTI improved to 32.8% as against 33.1%"
+      },
+      "current_source_locator": {
+        "page": 7,
+        "section": "Operating efficiencies",
+        "quoted_label": "Opex to NTI improved to 32.8% as against 33.1%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:19:56.440Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-INFY-revenue-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "INFY",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "revenue",
+      "source_metric_label": "revenue",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 41764,
+      "current_raw_value": 45479,
+      "previous_raw_unit": "INR crore",
+      "current_raw_unit": "INR crore",
+      "previous_canonical_value": 41764,
+      "current_canonical_value": 45479,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "current_document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "previous_source_locator": {
+        "section": "Q3 FY25 performance highlights",
+        "quoted_label": "Reported revenues at Rs 41,764 crore"
+      },
+      "current_source_locator": {
+        "section": "Q3 FY26 performance highlights",
+        "quoted_label": "Reported revenues at Rs 45,479 crore"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T08:49:35.254Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-INFY-pat-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "INFY",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "pat",
+      "source_metric_label": "pat",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 6806,
+      "current_raw_value": 6654,
+      "previous_raw_unit": "INR crore",
+      "current_raw_unit": "INR crore",
+      "previous_canonical_value": 6806,
+      "current_canonical_value": 6654,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "current_document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "previous_source_locator": {
+        "table": "Condensed consolidated statement",
+        "quoted_label": "Net profit after minority interest 6,806"
+      },
+      "current_source_locator": {
+        "table": "Condensed consolidated statement",
+        "quoted_label": "Net profit after non-controlling interest 6,654"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T08:49:35.254Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-INFY-operating_margin-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "INFY",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "economics",
+      "canonical_metric_id": "operating_margin",
+      "source_metric_label": "operating_margin",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 21.3,
+      "current_raw_value": 18.4,
+      "previous_raw_unit": "percent",
+      "current_raw_unit": "percent",
+      "previous_canonical_value": 21.3,
+      "current_canonical_value": 18.4,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-d039b862b7e237911d5c8dc590a5a4da805ef88b4c9185c08e4ef9474b833750",
+      "current_document_id": "doc-bf39ebcb051e4aaaf278f99043ffc74adefd3d9c2c7018c382e82b7ad7c99509",
+      "previous_source_locator": {
+        "section": "Q3 FY25 performance highlights",
+        "quoted_label": "Operating margin at 21.3%"
+      },
+      "current_source_locator": {
+        "section": "Q3 FY26 performance highlights",
+        "quoted_label": "Reported IFRS operating margin at 18.4%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-18T08:49:35.254Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-revenue-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "revenue",
+      "source_metric_label": "revenue",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 646.7,
+      "current_raw_value": 714.5,
+      "previous_raw_unit": "Rs.Bn",
+      "current_raw_unit": "Rs.Bn",
+      "previous_canonical_value": 646.7,
+      "current_canonical_value": 714.5,
+      "canonical_unit": "INR billion",
+      "conversion_rule_id": "rs-billion-to-inr-billion-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "Revenue 646.7 714.5"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "Revenue 646.7 714.5"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-pat-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "pat",
+      "source_metric_label": "pat",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 33.6,
+      "current_raw_value": 32.2,
+      "previous_raw_unit": "Rs.Bn",
+      "current_raw_unit": "Rs.Bn",
+      "previous_canonical_value": 33.6,
+      "current_canonical_value": 32.2,
+      "canonical_unit": "INR billion",
+      "conversion_rule_id": "rs-billion-to-inr-billion-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "PAT 33.6 32.2"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "PAT 33.6 32.2"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-LT-ebitda_margin-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "LT",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "economics",
+      "canonical_metric_id": "ebitda_margin",
+      "source_metric_label": "ebitda_margin",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 9.7,
+      "current_raw_value": 10.4,
+      "previous_raw_unit": "%",
+      "current_raw_unit": "%",
+      "previous_canonical_value": 9.7,
+      "current_canonical_value": 10.4,
+      "canonical_unit": "percent",
+      "conversion_rule_id": "percent-symbol-to-percent-v1",
+      "previous_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "current_document_id": "doc-a6594c023568422f922af4c3c90340ffacdb66c3a27ecb0530213631fdaac9b6",
+      "previous_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "EBITDA Margin 9.7% 10.4%"
+      },
+      "current_source_locator": {
+        "page": 6,
+        "table": "Key Financial Indicators",
+        "quoted_label": "EBITDA Margin 9.7% 10.4%"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:25:44.930Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-SUNPHARMA-revenue-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "SUNPHARMA",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "revenue",
+      "source_metric_label": "revenue",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 134369,
+      "current_raw_value": 154691,
+      "previous_raw_unit": "INR million",
+      "current_raw_unit": "INR million",
+      "previous_canonical_value": 13436.9,
+      "current_canonical_value": 15469.1,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "inr-million-to-crore-v1",
+      "previous_document_id": "doc-41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "current_document_id": "doc-f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "previous_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY25 consolidated financials",
+        "quoted_label": "Gross sales at Rs 134,369 million"
+      },
+      "current_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY26 consolidated financials",
+        "quoted_label": "Sales at Rs 154,691 million"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:29:57.719Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-SUNPHARMA-pat-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "SUNPHARMA",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "pat",
+      "source_metric_label": "pat",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 29034,
+      "current_raw_value": 33688,
+      "previous_raw_unit": "INR million",
+      "current_raw_unit": "INR million",
+      "previous_canonical_value": 2903.4,
+      "current_canonical_value": 3368.8,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "inr-million-to-crore-v1",
+      "previous_document_id": "doc-41132a4ee6d284859c79a976f6ab2009550e3f19939c5855e44c24f2de26c1bc",
+      "current_document_id": "doc-f3b893097a44acc45cc9d8beb1e16b7871d2a7008fd3c594262eef91160d0640",
+      "previous_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY25 consolidated financials",
+        "quoted_label": "Reported net profit at Rs 29,034 million"
+      },
+      "current_source_locator": {
+        "page": 1,
+        "section": "Highlights of Q3FY26 consolidated financials",
+        "quoted_label": "Reported net profit at Rs 33,688 million"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-21T13:29:57.719Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-HINDALCO-revenue-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "HINDALCO",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "revenue",
+      "source_metric_label": "revenue",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 58390,
+      "current_raw_value": 66521,
+      "previous_raw_unit": "INR crore",
+      "current_raw_unit": "INR crore",
+      "previous_canonical_value": 58390,
+      "current_canonical_value": 66521,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-6aa7faf833355852c6ebf9a058a9bb748882c22a5a53ce799da2009077a741b3",
+      "current_document_id": "doc-b4e80d9d51c4202462390df55d6490cff883ec981a68b5e075736f7765cf849c",
+      "previous_source_locator": {
+        "page": 3,
+        "table": "Consolidated Financial Highlights",
+        "quoted_label": "Revenue from Operations 58,390"
+      },
+      "current_source_locator": {
+        "page": 31,
+        "table": "Consolidated: Key Financials",
+        "quoted_label": "Revenue from Operations 58,390 66,521"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-22T04:43:47.621Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-HINDALCO-pat-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "HINDALCO",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "earnings",
+      "canonical_metric_id": "pat",
+      "source_metric_label": "pat",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 3735,
+      "current_raw_value": 2049,
+      "previous_raw_unit": "INR crore",
+      "current_raw_unit": "INR crore",
+      "previous_canonical_value": 3735,
+      "current_canonical_value": 2049,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-6aa7faf833355852c6ebf9a058a9bb748882c22a5a53ce799da2009077a741b3",
+      "current_document_id": "doc-b4e80d9d51c4202462390df55d6490cff883ec981a68b5e075736f7765cf849c",
+      "previous_source_locator": {
+        "page": 3,
+        "table": "Consolidated Financial Highlights",
+        "quoted_label": "Profit After Tax 3,735"
+      },
+      "current_source_locator": {
+        "page": 31,
+        "table": "Consolidated: Key Financials",
+        "quoted_label": "Profit After Tax 3,735 2,049"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-22T04:43:47.621Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "candidate_id": "candidate-HINDALCO-ebitda-remaining-official-v1",
+      "run_id": "run-five-company-remaining-official-v1",
+      "company_symbol": "HINDALCO",
+      "company_name": null,
+      "sector_profile_id": null,
+      "factor_id": "economics",
+      "canonical_metric_id": "ebitda",
+      "source_metric_label": "ebitda",
+      "metric_definition_version": "2.0.0",
+      "previous_period": {
+        "label": "Q3 FY25",
+        "end_date": "2024-12-31"
+      },
+      "current_period": {
+        "label": "Q3 FY26",
+        "end_date": "2025-12-31"
+      },
+      "comparison_basis": "same_quarter_prior_year",
+      "comparison_rule_id": "same-quarter-prior-year-v1",
+      "previous_consolidation_basis": "consolidated",
+      "current_consolidation_basis": "consolidated",
+      "previous_raw_value": 8108,
+      "current_raw_value": 8543,
+      "previous_raw_unit": "INR crore",
+      "current_raw_unit": "INR crore",
+      "previous_canonical_value": 8108,
+      "current_canonical_value": 8543,
+      "canonical_unit": "INR crore",
+      "conversion_rule_id": "identity-v1",
+      "previous_document_id": "doc-6aa7faf833355852c6ebf9a058a9bb748882c22a5a53ce799da2009077a741b3",
+      "current_document_id": "doc-b4e80d9d51c4202462390df55d6490cff883ec981a68b5e075736f7765cf849c",
+      "previous_source_locator": {
+        "page": 3,
+        "table": "Consolidated Financial Highlights",
+        "quoted_label": "EBITDA 8,108"
+      },
+      "current_source_locator": {
+        "page": 31,
+        "table": "Consolidated: Key Financials",
+        "quoted_label": "EBITDA 8,108 8,543"
+      },
+      "information_cutoff": "2026-08-25T23:59:59Z",
+      "extraction_method": "manual_verified_import",
+      "extractor_version": "remaining-official-recovery-v1",
+      "producer_id": "controlled-official-recovery",
+      "producer_confidence": 0.98,
+      "captured_at": "2026-09-22T04:43:47.621Z"
+    }
+  ],
+  "validations": [
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-INFY-deal_tcv-local-official-v1-local-official-reconstruction-validator",
+      "run_id": "run-five-company-local-recovery-v1",
+      "candidate_id": "candidate-INFY-deal_tcv-local-official-v1",
+      "validator_id": "local-official-reconstruction-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:18:58.674Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-INFY-free_cash_flow-local-official-v1-local-official-reconstruction-validator",
+      "run_id": "run-five-company-local-recovery-v1",
+      "candidate_id": "candidate-INFY-free_cash_flow-local-official-v1",
+      "validator_id": "local-official-reconstruction-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:18:58.674Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-HINDALCO-aluminium_upstream_shipments_india-local-official-v1-local-official-reconstruction-validator",
+      "run_id": "run-five-company-local-recovery-v1",
+      "candidate_id": "candidate-HINDALCO-aluminium_upstream_shipments_india-local-official-v1",
+      "validator_id": "local-official-reconstruction-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:18:58.675Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-HINDALCO-net_debt_to_ebitda_ratio-local-official-v1-local-official-reconstruction-validator",
+      "run_id": "run-five-company-local-recovery-v1",
+      "candidate_id": "candidate-HINDALCO-net_debt_to_ebitda_ratio-local-official-v1",
+      "validator_id": "local-official-reconstruction-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:18:58.676Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-assets_under_management-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-assets_under_management-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-new_loans_booked-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-new_loans_booked-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-gnpa-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-gnpa-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-nnpa-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-nnpa-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-order_inflow-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-LT-order_inflow-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-order_book-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-LT-order_book-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-operating_cash_flow-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-LT-operating_cash_flow-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-SUNPHARMA-ebitda_margin-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-SUNPHARMA-ebitda_margin-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-SUNPHARMA-innovative_medicine_sales-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-SUNPHARMA-innovative_medicine_sales-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-SUNPHARMA-net_cash-acquired-official-v1-acquired-official-deterministic-validator",
+      "run_id": "run-five-company-acquired-official-v1",
+      "candidate_id": "candidate-SUNPHARMA-net_cash-acquired-official-v1",
+      "validator_id": "acquired-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-21T13:31:16.969Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-net_total_income-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-net_total_income-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-pat-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-pat-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-BAJFINANCE-opex_to_net_total_income-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-BAJFINANCE-opex_to_net_total_income-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-INFY-revenue-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-INFY-revenue-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-INFY-pat-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-INFY-pat-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-INFY-operating_margin-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-INFY-operating_margin-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-revenue-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-LT-revenue-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-pat-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-LT-pat-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-LT-ebitda_margin-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-LT-ebitda_margin-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-SUNPHARMA-revenue-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-SUNPHARMA-revenue-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-SUNPHARMA-pat-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-SUNPHARMA-pat-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-HINDALCO-revenue-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-HINDALCO-revenue-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-HINDALCO-pat-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-HINDALCO-pat-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    },
+    {
+      "schema_version": "2.0.0",
+      "validation_id": "validation-candidate-HINDALCO-ebitda-remaining-official-v1-remaining-official-deterministic-validator",
+      "run_id": "run-five-company-remaining-official-v1",
+      "candidate_id": "candidate-HINDALCO-ebitda-remaining-official-v1",
+      "validator_id": "remaining-official-deterministic-validator",
+      "validator_version": "2.0.0",
+      "validation_kind": "deterministic",
+      "status": "qualified",
+      "confidence": 1,
+      "checks": [
+        {
+          "check_id": "domain.comparability",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.metric_known",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.factor_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "taxonomy.units_allowed",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "comparison.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.previous_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.previous_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_exists",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_document_immutable",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_tier",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_issuer_match",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "cutoff.current_published_before_cutoff",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "provenance.current_source_locator",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.rule_registered",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.previous_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_units_match_rule",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "conversion.current_arithmetic",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        },
+        {
+          "check_id": "independence.validator_not_producer",
+          "status": "pass",
+          "reason_code": null,
+          "detail": null
+        }
+      ],
+      "validated_at": "2026-09-22T04:57:36.717Z"
+    }
+  ]
+}
