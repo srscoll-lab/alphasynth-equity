@@ -3720,11 +3720,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         ? anchorPayload.known_official_sources : [])
         .filter((source: any) => /^https?:\/\//i.test(String(source?.url || "")))
         .slice(0, 12);
-      if (!anchorResponse.ok) {
-        return res.json({ ticker, cutoff, method: "stored_observation_provenance_recovery", rows: [], diagnostics: [
-          { outcome: "stored_comparison_service_unavailable", httpStatus: anchorResponse.status },
-        ] });
-      }
+      // A missing legacy observation is expected for newly requested companies.
+      // Continue into official-document discovery instead of treating the old
+      // 58-company evidence service as an eligibility gate.
+      const anchorServiceDiagnostic = !anchorResponse.ok
+        ? { outcome: "no_stored_comparison_anchor", httpStatus: anchorResponse.status }
+        : null;
       const knownCompanyDomains = knownOfficialSources
         .filter((source: any) => String(source?.source_type || "").toLowerCase() === "company_filing")
         .flatMap((source: any) => {
@@ -3837,6 +3838,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       const rows: any[] = [];
       const diagnostics: any[] = [];
+      if (anchorServiceDiagnostic) diagnostics.push(anchorServiceDiagnostic);
       const seen = new Set<string>();
       const normalizeSourceLabel = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
       const numericVariants = (value: number) => [...new Set([
