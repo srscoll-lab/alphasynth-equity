@@ -13,6 +13,7 @@ const offset = Number(arg("offset") || 0);
 const refreshCache = arg("refresh-cache") === "true";
 const policy = JSON.parse(fs.readFileSync(policyPath, "utf8"));
 const requestedAsOfDate = arg("as-of") || policy.market_data.as_of_date || null;
+const expectedCompanies = Number(arg("expected") || policy.universe.expected_companies);
 
 function arg(name) {
   return process.argv.find((value) => value.startsWith(`--${name}=`))?.split("=").slice(1).join("=");
@@ -272,9 +273,9 @@ async function mapConcurrent(items, worker, size) {
 
 async function main() {
   const includedSeries = new Set(policy.universe.included_series || []);
-  const universeRows = loadUniverse(universePath).filter((row) => !includedSeries.size || includedSeries.has(row.series));
+  const universeRows = loadUniverse(universePath).filter((row) => !includedSeries.size || !row.series || includedSeries.has(row.series));
   const deduplicated = [...new Map(universeRows.map((row) => [row.symbol, row])).values()];
-  if (deduplicated.length !== policy.universe.expected_companies) throw new Error(`Universe contains ${deduplicated.length}, expected ${policy.universe.expected_companies}`);
+  if (deduplicated.length !== expectedCompanies) throw new Error(`Universe contains ${deduplicated.length}, expected ${expectedCompanies}`);
   const selected = limit > 0 ? deduplicated.slice(offset, offset + limit) : deduplicated.slice(offset);
   let benchmark;
   let benchmarkSymbol;
@@ -325,11 +326,11 @@ async function main() {
     schema_version: "1.1.0",
     policy_id: policy.policy_id,
     generated_at: new Date().toISOString(),
-    status: selected.length === policy.universe.expected_companies && offset === 0 ? "complete_universe_scan" : "partial_test_scan",
+    status: selected.length === expectedCompanies && offset === 0 ? "complete_universe_scan" : "partial_test_scan",
     purpose: policy.purpose,
     caveat: policy.ranking.note,
     separation_rules: policy.separation_rules,
-    universe: { expected: policy.universe.expected_companies, scanned: selected.length, offset, source: policy.universe.source, included_series: policy.universe.included_series || null },
+    universe: { expected: expectedCompanies, scanned: selected.length, offset, source: policy.universe.source, included_series: policy.universe.included_series || null },
     market_data: {
       provider: policy.market_data.provisional_provider,
       price_basis: policy.market_data.price_basis,

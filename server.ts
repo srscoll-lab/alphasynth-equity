@@ -1,6 +1,7 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { createHash } from "crypto";
 import { createServer as createViteServer } from "vite";
 import { Resend } from "resend";
 import Firecrawl from "@mendable/firecrawl-js";
@@ -56,6 +57,7 @@ import {
   fundamentalReviewRuntimeConfigured,
 } from "./src/fundamental-review-service";
 import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamental-review-evidence";
+import { canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
 import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -68,9 +70,15 @@ const SIGNAL_TRACKER_BUCKET = process.env.SIGNAL_TRACKER_BUCKET || "";
 const SIGNAL_TRACKER_OBJECT = process.env.SIGNAL_TRACKER_OBJECT || "cohort-001/current.json";
 const BMS_LIFECYCLE_FREEZE_DATE = process.env.BMS_LIFECYCLE_FREEZE_DATE || "2026-08-25";
 const SIGNAL_TRACKER_CACHE_MS = 60_000;
+const MOMENTUM_RADAR_BUCKET = process.env.MOMENTUM_RADAR_BUCKET || SIGNAL_TRACKER_BUCKET;
+const MOMENTUM_RADAR_OBJECT = process.env.MOMENTUM_RADAR_OBJECT || "momentum-radar/current.json";
+const FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET = process.env.FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET || "";
+const MOMENTUM_RADAR_CACHE_MS = 5 * 60_000;
 let signalTrackerCache: { expiresAt: number; payload: any } | null = null;
+let momentumRadarCache: { expiresAt: number; payload: any } | null = null;
 let fundamentalReviewService: FundamentalReviewService | null = null;
 let canonicalEvidenceProvider: ReturnType<typeof createCanonicalEvidenceProviderFromEnvironment> | undefined;
+let momentumRadarSymbolCache: Set<string> | null = null;
 const fundamentalReviewWorkerIdentityTokenProvider = createGoogleIdentityTokenProvider();
 
 function fundamentalReviewSupportedSymbols(): string[] {
@@ -78,6 +86,31 @@ function fundamentalReviewSupportedSymbols(): string[] {
     .split(",")
     .map((symbol) => cleanFundamentalReviewSymbol(symbol))
     .filter((symbol): symbol is string => Boolean(symbol)))];
+}
+
+function fundamentalReviewRequestScope(): "controlled_beta" | "radar_universe" {
+  return process.env.FUNDAMENTAL_REVIEW_REQUEST_SCOPE === "radar_universe" ? "radar_universe" : "controlled_beta";
+}
+
+function momentumRadarSymbols(): Set<string> {
+  if (momentumRadarSymbolCache) return momentumRadarSymbolCache;
+  try {
+    const radarPath = path.resolve(process.cwd(), "src", "data", "bmsMomentumRadarExpanded.json");
+    const radar = JSON.parse(fs.readFileSync(radarPath, "utf8"));
+    momentumRadarSymbolCache = new Set((Array.isArray(radar?.companies) ? radar.companies : [])
+      .map((company: any) => cleanFundamentalReviewSymbol(company?.symbol))
+      .filter(Boolean));
+  } catch (error: any) {
+    console.error("[fundamental-review] unable to load Radar request universe:", error?.message || error);
+    momentumRadarSymbolCache = new Set();
+  }
+  return momentumRadarSymbolCache;
+}
+
+function fundamentalReviewSymbolEnabled(symbol: string): boolean {
+  return fundamentalReviewRequestScope() === "radar_universe"
+    ? momentumRadarSymbols().has(symbol)
+    : fundamentalReviewSupportedSymbols().includes(symbol);
 }
 
 async function fundamentalReviewGatewayHeaders(url: string, includeContentType = false): Promise<Record<string, string>> {
@@ -144,6 +177,54 @@ async function readCloudForwardValidation(): Promise<any> {
   const payload = await objectResponse.json();
   signalTrackerCache = { expiresAt: Date.now() + SIGNAL_TRACKER_CACHE_MS, payload };
   return payload;
+}
+
+async function readCloudMomentumRadar(): Promise<any> {
+  if (!MOMENTUM_RADAR_BUCKET) throw new Error("MOMENTUM_RADAR_BUCKET is not configured");
+  if (momentumRadarCache && momentumRadarCache.expiresAt > Date.now()) return momentumRadarCache.payload;
+  const tokenResponse = await fetch(
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+    { headers: { "Metadata-Flavor": "Google" } },
+  );
+  if (!tokenResponse.ok) throw new Error(`Metadata token request failed: ${tokenResponse.status}`);
+  const tokenPayload = await tokenResponse.json() as { access_token?: string };
+  if (!tokenPayload.access_token) throw new Error("Metadata token response did not contain an access token");
+  const objectName = encodeURIComponent(MOMENTUM_RADAR_OBJECT);
+  const response = await fetch(
+    `https://storage.googleapis.com/download/storage/v1/b/${encodeURIComponent(MOMENTUM_RADAR_BUCKET)}/o/${objectName}?alt=media`,
+    { headers: { Authorization: `Bearer ${tokenPayload.access_token}` } },
+  );
+  if (!response.ok) throw new Error(`Momentum Radar object request failed: ${response.status}`);
+  const payload = await response.json();
+  momentumRadarCache = { expiresAt: Date.now() + MOMENTUM_RADAR_CACHE_MS, payload };
+  return payload;
+}
+
+async function archiveFundamentalReviewDocument(bytes: Buffer, sha256: string, mediaType: string): Promise<string | null> {
+  if (!FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET) return null;
+  const tokenResponse = await fetch(
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+    { headers: { "Metadata-Flavor": "Google" } },
+  );
+  if (!tokenResponse.ok) throw new Error(`Archive token request failed: ${tokenResponse.status}`);
+  const tokenPayload = await tokenResponse.json() as { access_token?: string };
+  if (!tokenPayload.access_token) throw new Error("Archive token response did not contain an access token");
+  const extension = mediaType.includes("pdf") ? "pdf" : mediaType.includes("html") ? "html" : "bin";
+  const objectName = `fundamental-review-evidence/${sha256}.${extension}`;
+  const response = await fetch(
+    `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET)}/o?uploadType=media&name=${encodeURIComponent(objectName)}&ifGenerationMatch=0`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${tokenPayload.access_token}`,
+        "Content-Type": mediaType || "application/octet-stream",
+        "x-goog-content-sha256": sha256,
+      },
+      body: bytes,
+    },
+  );
+  if (!response.ok && response.status !== 412) throw new Error(`Evidence archive upload failed: ${response.status}`);
+  return `gs://${FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET}/${objectName}`;
 }
 
 function readFrozenForwardValidation(): any {
@@ -3705,9 +3786,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         all.findIndex(item => item.url === source.url) === index);
       const factorEvidenceSchema = {
         type: "OBJECT", required: ["rows"], properties: {
-          rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousValue", "currentValue", "sourceUrl", "sourceDate"], properties: {
+          rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousPeriodEndDate", "currentPeriodEndDate", "comparisonBasis", "consolidationBasis", "previousValue", "currentValue", "sourceUrl", "sourceDate", "quotedLabel"], properties: {
             factor: { type: "STRING" }, metricName: { type: "STRING" }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
+            previousPeriodEndDate: { type: "STRING" }, currentPeriodEndDate: { type: "STRING" }, comparisonBasis: { type: "STRING" }, consolidationBasis: { type: "STRING" },
             previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" }, unit: { type: "STRING" }, sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" },
+            quotedLabel: { type: "STRING" },
           } } },
         },
       };
@@ -3716,6 +3799,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         contents: [{ role: "user", parts: [{ text:
           `Convert the research below into JSON. ${anchors.length ? "Prefer comparisons present in the supplied ANCHORS with exactly matching values; when an anchor was unavailable, an alternate explicit comparison for the same requested factor is allowed." : `Keep only explicit like-for-like comparisons for the requested factors (${requestedFactors.join(", ")}).`} Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
+          + `Give the exact previousPeriodEndDate and currentPeriodEndDate as YYYY-MM-DD. Set comparisonBasis to exactly one of same_quarter_prior_year, year_to_date_prior_year, sequential_quarter, annual_prior_year, or point_in_time_prior_period. Set consolidationBasis to exactly consolidated, standalone, or not_applicable; never guess it, and return no row when it is not explicit or intrinsically inapplicable. quotedLabel must briefly identify the table or exact reported comparison. `
           + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
           + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
         }] }],
@@ -3890,7 +3974,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             contents: [{ role: "user", parts: [{ text:
               `Extract explicit, like-for-like numeric comparisons for ${companyName} (${ticker}) from the official documents below. `
               + `Return at most one strong comparison for each requested factor (${requestedFactors.join(", ")}). `
-              + `Both values, both reporting periods and the unit must appear in the same supplied document. `
+              + `Both values, both reporting periods, exact period-end dates, consolidation basis and the unit must appear in the same supplied document. `
+              + `Set comparisonBasis to one registered basis and consolidationBasis to consolidated, standalone or not_applicable. Include a short quotedLabel identifying the comparison. `
               + `Use the document's sourceUrl and sourceDate exactly as supplied. Do not infer, calculate, annualize, or use a metric outside the requested factors. `
               + `Return an empty rows array when the text does not provide an exact comparison.\n\nDOCUMENTS: ${JSON.stringify(documentBudget)}`
             }] }],
@@ -3927,6 +4012,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const sourceDate = exactEvidenceDate(candidate?.sourceDate);
         const previousPeriod = String(candidate?.previousPeriod || "").trim();
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
+        const previousPeriodEndDate = exactEvidenceDate(candidate?.previousPeriodEndDate);
+        const currentPeriodEndDate = exactEvidenceDate(candidate?.currentPeriodEndDate);
+        const comparisonBasis = String(candidate?.comparisonBasis || "").trim().toLowerCase();
+        const consolidationBasis = String(candidate?.consolidationBasis || "").trim().toLowerCase();
+        const quotedLabel = String(candidate?.quotedLabel || "").trim();
         const previousValue = Number(candidate?.previousValue);
         const currentValue = Number(candidate?.currentValue);
         const unit = String(candidate?.unit || "").trim();
@@ -3944,6 +4034,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         else if (!isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
+        else if (!previousPeriodEndDate || !currentPeriodEndDate || previousPeriodEndDate >= currentPeriodEndDate) rejection = "invalid_period_end_dates";
+        else if (!["same_quarter_prior_year", "year_to_date_prior_year", "sequential_quarter", "annual_prior_year", "point_in_time_prior_period"].includes(comparisonBasis)) rejection = "invalid_comparison_basis";
+        else if (!["consolidated", "standalone", "not_applicable"].includes(consolidationBasis)) rejection = "invalid_consolidation_basis";
+        else if (!quotedLabel) rejection = "missing_quoted_label";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
         else if (!resolvedUnit) rejection = "missing_unit";
         else if (seen.has(key)) rejection = "duplicate_comparison";
@@ -3954,6 +4048,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         seen.add(key);
         let verifiedUrl = sourceUrl;
         let verificationMethod = "direct_official_document";
+        let documentSha256: string | null = null;
+        let archivedDocumentUri: string | null = null;
+        let mediaType: string | null = null;
+        let contentLength: number | null = null;
         try {
           const verification = await fetch(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
@@ -3968,6 +4066,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           const contentType = String(verification.headers.get("content-type") || "").toLowerCase();
           const bytes = Buffer.from(await verification.arrayBuffer());
           if (!bytes.length || bytes.length > maximumBytes) throw new Error("invalid_document_size");
+          documentSha256 = createHash("sha256").update(bytes).digest("hex");
+          mediaType = contentType || "application/octet-stream";
+          contentLength = bytes.length;
           const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 40)
             : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
@@ -3979,6 +4080,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             current_value: currentValue,
           })) {
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified" });
+            continue;
+          }
+          archivedDocumentUri = await archiveFundamentalReviewDocument(bytes, documentSha256, mediaType);
+          if (!archivedDocumentUri) {
+            diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "immutable_archive_not_configured" });
             continue;
           }
         } catch {
@@ -4001,8 +4107,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             diagnostics.push({ metric: mapping.metric, sourceUrl, outcome: "official_url_not_retrievable" });
             continue;
           }
-          verifiedUrl = resolvedOfficialUrl;
-          verificationMethod = "gemini_grounded_official_fallback";
+          // A grounded citation without downloaded bytes cannot satisfy the
+          // immutable archive requirement, so it remains diagnostic-only.
+          diagnostics.push({ metric: mapping.metric, sourceUrl: resolvedOfficialUrl, outcome: "official_source_not_archivable" });
+          continue;
         }
         const hostname = new URL(verifiedUrl).hostname.toLowerCase();
         rows.push({
@@ -4013,6 +4121,15 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           source_type: hostname.endsWith("nseindia.com") ? "nse_filing" : hostname.endsWith("bseindia.com") ? "bse_filing" : "company_filing",
           source_ref: verifiedUrl, source_date: sourceDate, cutoff_date: cutoff,
           confidence: verificationMethod === "direct_official_document" ? 0.85 : 0.75,
+          previous_period_end_date: previousPeriodEndDate,
+          current_period_end_date: currentPeriodEndDate,
+          comparison_basis: comparisonBasis,
+          consolidation_basis: consolidationBasis,
+          quoted_label: quotedLabel,
+          document_sha256: documentSha256,
+          archived_document_uri: archivedDocumentUri,
+          media_type: mediaType,
+          content_length: contentLength,
         });
         diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl,
           outcome: verificationMethod === "direct_official_document" ? "admitted" : "admitted_grounded_official_fallback" });
@@ -4137,16 +4254,21 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
     const publicRequestsEnabled = process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED === "true";
     const supportedSymbols = fundamentalReviewSupportedSymbols();
-    const available = requestConfigured && statusConfigured && publicRequestsEnabled && supportedSymbols.length > 0;
+    const requestScope = fundamentalReviewRequestScope();
+    const supportedSymbolCount = requestScope === "radar_universe" ? momentumRadarSymbols().size : supportedSymbols.length;
+    const available = requestConfigured && statusConfigured && publicRequestsEnabled && supportedSymbolCount > 0;
     return res.json({
       available,
       requestConfigured,
       statusConfigured,
       publicRequestsEnabled,
-      requestScope: "controlled_beta",
-      supportedSymbols,
-      scopeMessage: supportedSymbols.length
-        ? `New FCS requests are currently enabled for ${supportedSymbols.length} approved evidence-gate companies.`
+      requestScope,
+      supportedSymbols: requestScope === "controlled_beta" ? supportedSymbols : [],
+      supportedSymbolCount,
+      scopeMessage: supportedSymbolCount
+        ? requestScope === "radar_universe"
+          ? `New FCS requests are enabled for the ${supportedSymbolCount.toLocaleString("en-IN")}-company scanned NSE universe. A score is published only when all four evidence factors pass the V2 contract.`
+          : `New FCS requests are currently enabled for ${supportedSymbolCount} approved evidence-gate companies.`
         : "No companies are enabled for new FCS requests on this deployment.",
       activationState: available ? "available" : "not_activated",
       unavailableReason: available
@@ -4163,16 +4285,81 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
   // Tasks and protected by Cloud Run IAM plus the shared internal token. They
   // are deliberately separate from the public gateway above so a request is
   // acknowledged only after Firestore persistence and successful enqueueing.
-  app.post("/internal/fundamental-review/evidence", (req, res) => {
+  app.post("/internal/fundamental-review/evidence", async (req, res) => {
     if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
+    const symbol = cleanFundamentalReviewSymbol(req.body?.ticker || req.body?.symbol);
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
     const provider = getCanonicalEvidenceProvider();
-    if (!provider) {
+    const canonical = provider?.(symbol);
+    if (canonical?.candidates?.length) return res.json(canonical);
+
+    const dynamicEvidenceUrl = String(process.env.FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_URL || "").trim();
+    if (!dynamicEvidenceUrl) {
       return res.status(503).json({
-        error: "Canonical V2 evidence is not configured on this deployment.",
-        code: "FUNDAMENTAL_REVIEW_EVIDENCE_NOT_CONFIGURED",
+        error: "No approved canonical evidence exists and dynamic evidence retrieval is not configured.",
+        code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_NOT_CONFIGURED",
       });
     }
-    return res.json(provider(req.body?.ticker || req.body?.symbol));
+    try {
+      const response = await fetch(dynamicEvidenceUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          ...(process.env.DOSSIER_INTERNAL_TOKEN ? { "x-dossier-token": process.env.DOSSIER_INTERNAL_TOKEN } : {}),
+        },
+        body: JSON.stringify({
+          ticker: symbol,
+          company_name: String(req.body?.company_name || symbol),
+          sector: String(req.body?.sector || "Unclassified"),
+          information_cutoff: String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10)),
+          missing_factor_ids: ["earnings", "economics", "execution", "balance_sheet"],
+        }),
+        signal: AbortSignal.timeout(12 * 60_000),
+      });
+      const payload: any = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        return res.status(502).json({
+          error: "Dynamic official-document evidence retrieval failed.",
+          code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_FAILED",
+          upstreamStatus: response.status,
+        });
+      }
+      return res.json(canonicalizeDynamicEvidence({
+        ...payload,
+        ticker: symbol,
+        company_name: String(req.body?.company_name || symbol),
+        information_cutoff: String(req.body?.information_cutoff || payload?.cutoff || ""),
+      }));
+    } catch (error: any) {
+      console.error("[fundamental-review] dynamic evidence failed:", error?.message || error);
+      return res.status(502).json({
+        error: "Dynamic official-document evidence retrieval could not be completed.",
+        code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_UNAVAILABLE",
+      });
+    }
+  });
+
+  app.get("/api/bms/momentum-radar", async (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    const validate = (payload: any) => {
+      if (!payload || !Array.isArray(payload.companies) || !payload.companies.length) throw new Error("Momentum Radar payload has no companies");
+      if (!payload.generated_at || !payload.market_data?.as_of_date) throw new Error("Momentum Radar payload is missing freshness metadata");
+      if (Number(payload.universe?.scanned) !== payload.companies.length) throw new Error("Momentum Radar universe count does not match companies");
+      return payload;
+    };
+    try {
+      const payload = validate(await readCloudMomentumRadar());
+      return res.json({ ...payload, runtime_source: "cloud_daily_snapshot" });
+    } catch (error: any) {
+      console.error("momentum-radar cloud read failed; serving bundled safety copy:", error?.message || error);
+      try {
+        const fallbackPath = path.join(process.cwd(), "src", "data", "bmsMomentumRadarExpanded.json");
+        const payload = validate(JSON.parse(fs.readFileSync(fallbackPath, "utf8")));
+        return res.json({ ...payload, runtime_source: "bundled_fallback", refresh_warning: "The daily cloud snapshot is unavailable; this is the last bundled verified snapshot." });
+      } catch {
+        return res.status(503).json({ error: "Momentum Radar data is temporarily unavailable" });
+      }
+    }
   });
 
   app.post("/internal/fundamental-review/request", async (req, res) => {
@@ -4233,9 +4420,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
 
     const supportedSymbols = fundamentalReviewSupportedSymbols();
-    if (!supportedSymbols.includes(symbol)) {
+    if (!fundamentalReviewSymbolEnabled(symbol)) {
       return res.status(409).json({
-        error: "New FCS processing for this company is not enabled in the controlled beta. No job was started.",
+        error: fundamentalReviewRequestScope() === "radar_universe"
+          ? "This symbol is outside the scanned NSE Momentum Radar universe. No job was started."
+          : "New FCS processing for this company is not enabled in the controlled beta. No job was started.",
         code: "FUNDAMENTAL_REVIEW_SYMBOL_NOT_ENABLED",
         supportedSymbols,
       });

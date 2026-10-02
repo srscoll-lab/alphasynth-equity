@@ -32,6 +32,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
   const [capabilityAvailable, setCapabilityAvailable] = useState(false);
   const [capabilityMessage, setCapabilityMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [supportedSymbols, setSupportedSymbols] = useState<Set<string>>(new Set());
+  const [requestScope, setRequestScope] = useState<"controlled_beta" | "radar_universe">("controlled_beta");
   const [candidate, setCandidate] = useState<UniverseCompany | null>(null);
   const [job, setJob] = useState<FundamentalReviewJob | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -45,6 +46,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
       .then((payload) => {
         if (!active) return;
         setCapabilityAvailable(payload?.available === true);
+        setRequestScope(payload?.requestScope === "radar_universe" ? "radar_universe" : "controlled_beta");
         setSupportedSymbols(new Set(Array.isArray(payload?.supportedSymbols) ? payload.supportedSymbols : []));
         if (typeof payload?.scopeMessage === "string" && payload.scopeMessage) setCapabilityMessage(payload.scopeMessage);
         if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setCapabilityMessage(payload.unavailableReason);
@@ -120,14 +122,14 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
         {!!matches.length && <div className="mt-2 max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0d1626]">
           {matches.map((company) => {
             const alreadyAvailable = availableSymbols.has(company.symbol);
-            const requestEnabled = capabilityAvailable && supportedSymbols.has(company.symbol);
+            const requestEnabled = capabilityAvailable && (requestScope === "radar_universe" || supportedSymbols.has(company.symbol));
             return <div key={company.symbol} className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between">
               <div><div className="font-semibold text-white">{company.symbol}</div><div className="text-xs text-zinc-500">{company.company_name}</div></div>
               {alreadyAvailable
                 ? <button type="button" onClick={() => onOpenAvailable(company.symbol)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-emerald-200"><CheckCircle2 className="h-3.5 w-3.5" /> View existing FCS</button>
                 : requestEnabled
                   ? <button type="button" onClick={() => { setError(""); setCandidate(company); }} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button>
-                  : <div className="max-w-[18rem] text-right"><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">Controlled beta not enabled</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-600">{capabilityMessage}</div></div>}
+                  : <div className="max-w-[18rem] text-right"><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">New FCS request unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-600">{capabilityMessage}</div></div>}
             </div>;
           })}
         </div>}

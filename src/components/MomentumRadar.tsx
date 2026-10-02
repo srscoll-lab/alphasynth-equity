@@ -233,7 +233,27 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   // The expanded NSE radar is the product default. The frozen 477-company radar
   // remains available only through an explicit `radar=legacy` validation URL.
   const expandedMode = radarMode !== "legacy";
-  const activeRadarData: RadarDataset = expandedMode ? expandedRadarData : radarData as unknown as RadarDataset;
+  const [runtimeRadarData, setRuntimeRadarData] = useState<RadarDataset | null>(null);
+  const [radarRefreshWarning, setRadarRefreshWarning] = useState("");
+  useEffect(() => {
+    if (!expandedMode) return;
+    let active = true;
+    fetch("/api/bms/momentum-radar", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active || !Array.isArray(payload?.companies) || !payload.companies.length) return;
+        setRuntimeRadarData(payload as RadarDataset);
+        setRadarRefreshWarning(typeof payload.refresh_warning === "string" ? payload.refresh_warning : "");
+      })
+      .catch(() => {
+        if (active) setRadarRefreshWarning("The live daily snapshot is unavailable; showing the last bundled verified snapshot.");
+      });
+    return () => { active = false; };
+  }, [expandedMode]);
+  const activeRadarData: RadarDataset = expandedMode ? runtimeRadarData ?? expandedRadarData : radarData as unknown as RadarDataset;
   const scannedCompanies = activeRadarData.companies as Company[];
   const momentumReadyCompanies = expandedMode
     ? scannedCompanies.filter((company) => company.liquidity_gate?.qualified && company.data_status === "full_history")
@@ -271,6 +291,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
   const [reviewRequestMessage, setReviewRequestMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [reviewSupportedSymbols, setReviewSupportedSymbols] = useState<Set<string>>(new Set());
+  const [reviewRequestScope, setReviewRequestScope] = useState<"controlled_beta" | "radar_universe">("controlled_beta");
   useEffect(() => {
     let active = true;
     fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
@@ -278,6 +299,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
       .then((payload) => {
         if (!active) return;
         setReviewRequestsAvailable(payload?.available === true);
+        setReviewRequestScope(payload?.requestScope === "radar_universe" ? "radar_universe" : "controlled_beta");
         setReviewSupportedSymbols(new Set(Array.isArray(payload?.supportedSymbols) ? payload.supportedSymbols : []));
         if (typeof payload?.scopeMessage === "string" && payload.scopeMessage) setReviewRequestMessage(payload.scopeMessage);
         if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setReviewRequestMessage(payload.unavailableReason);
@@ -438,7 +460,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   </> : <>
     <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>
-    {reviewRequestsAvailable && reviewSupportedSymbols.has(company.symbol) ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> Controlled beta not enabled</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
+    {reviewRequestsAvailable && (reviewRequestScope === "radar_universe" || reviewSupportedSymbols.has(company.symbol)) ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> New FCS request unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
   </>;
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
@@ -454,6 +476,8 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
               <h1 className="text-3xl md:text-5xl font-display font-semibold tracking-tight text-white">Momentum Radar</h1>
               <p className="mt-3 text-sm md:text-base text-zinc-400 max-w-3xl leading-relaxed">A deterministic market-guided queue for deciding which companies should receive Fundamental Change evidence work next. It does not alter Fundamental Change Scores or lifecycles.</p>
               <p className="mt-2 text-xs text-cyan-100/70 max-w-3xl leading-relaxed">The first five queued companies show the trajectory-aware Lifecycle V2.1 test result. Official market-cap segments come from source-dated NSE index membership; companies outside those indices remain in a clearly labelled Broader NSE lane. Liquidity never determines company size.</p>
+              <p className="mt-2 text-[11px] font-semibold text-zinc-300">Market data through {activeRadarData.market_data.as_of_date} · snapshot generated {new Date(activeRadarData.generated_at).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" })}</p>
+              {radarRefreshWarning && <p className="mt-2 max-w-3xl rounded-lg border border-amber-300/20 bg-amber-300/[0.06] px-3 py-2 text-[10px] leading-relaxed text-amber-100">{radarRefreshWarning}</p>}
             </div>
             <div className="flex max-w-md flex-col gap-3">
             <button type="button" onClick={() => onBrowseLibrary()} className="inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/[0.10] px-4 py-3 text-[10px] font-black uppercase tracking-[0.12em] text-emerald-100 hover:bg-emerald-300/[0.16]"><BookOpen className="h-4 w-4" /> Browse Fundamental Change Library</button>
