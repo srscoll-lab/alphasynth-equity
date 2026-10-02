@@ -56,7 +56,7 @@ async function main() {
   fs.mkdirSync(outputRoot, { recursive: true });
   const completedSession = process.env.MOMENTUM_RADAR_AS_OF || latestCompletedIndianSessionDate();
   await run("scripts/build-bms-momentum-radar.mjs", [
-    `--universe=${seedPath}`, "--expected=2558", `--output=${basePath}`, `--cache=${cacheRoot}`,
+    "--policy=config/momentum-radar-policy-v1.json", `--universe=${seedPath}`, "--expected=2558", `--output=${basePath}`, `--cache=${cacheRoot}`,
     "--refresh-cache=true", `--as-of=${completedSession}`, `--concurrency=${process.env.MOMENTUM_RADAR_FETCH_CONCURRENCY || 12}`,
   ]);
   await run("scripts/finalize-expanded-momentum-radar.mjs", [`--input=${basePath}`, `--seed=${seedPath}`, `--output=${finalPath}`]);

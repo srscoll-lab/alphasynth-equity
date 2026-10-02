@@ -1,0 +1,74 @@
+{
+  "policy_id": "ALPHASYNTH_MOMENTUM_RADAR_V1_EXPERIMENTAL",
+  "schema_version": "1.0.0",
+  "status": "experimental_discovery_policy",
+  "purpose": "Prioritize the monitored India universe for subsequent BMS V2 evidence work using reproducible market-price observations.",
+  "separation_rules": {
+    "changes_bms_factor_scores": false,
+    "changes_bms_lifecycle": false,
+    "changes_publication_eligibility": false,
+    "is_return_forecast": false,
+    "is_investment_recommendation": false
+  },
+  "universe": {
+    "source": "nifty500_bms_v1_product_view_final.csv",
+    "expected_companies": 477,
+    "deduplicate_by": "symbol"
+  },
+  "market_data": {
+    "price_basis": "adjusted_close",
+    "benchmark": "NIFTY_500",
+    "minimum_full_history_sessions": 252,
+    "minimum_partial_history_sessions": 126,
+    "provisional_provider": "Yahoo Finance chart endpoint",
+    "production_requirement": "Replace or corroborate the provisional provider with a licensed corporate-action-adjusted market-data feed before commercial release."
+  },
+  "features": [
+    { "id": "momentum_12_1", "weight": 0.25, "definition": "Adjusted-close return from 252 sessions ago to 21 sessions ago." },
+    { "id": "momentum_6_1", "weight": 0.2, "definition": "Adjusted-close return from 126 sessions ago to 21 sessions ago." },
+    { "id": "momentum_3m", "weight": 0.15, "definition": "Adjusted-close return over 63 sessions." },
+    { "id": "relative_strength", "weight": 0.2, "definition": "Equal blend of 6-1 and 3-month excess return versus Nifty 500." },
+    { "id": "trend_structure", "weight": 0.1, "definition": "Share of close above SMA50, SMA50 above SMA200, and close above SMA200 conditions satisfied." },
+    { "id": "high_proximity", "weight": 0.05, "definition": "Current adjusted close divided by the 252-session adjusted-close high." },
+    { "id": "volume_confirmation", "weight": 0.05, "definition": "Twenty-session average volume divided by sixty-session average volume, capped before ranking." }
+  ],
+  "ranking": {
+    "method": "cross_sectional_percentile_weighted_sum",
+    "score_range": [0, 100],
+    "note": "The score is an experimental priority rank, not a BMS score or expected return."
+  },
+  "states": ["DORMANT", "STARTING", "CONFIRMED", "EXTENDED", "DETERIORATING", "INSUFFICIENT_HISTORY"],
+  "quality_flags": ["partial_history", "illiquid", "high_volatility", "stale_price", "provider_unavailable"],
+  "market_cap_segmentation": {
+    "basis": "Official, source-dated NSE Indices membership",
+    "large_cap_index": "NIFTY 100",
+    "mid_cap_index": "NIFTY Midcap 150",
+    "small_cap_index": "NIFTY Smallcap 250",
+    "unmatched_treatment": "UNCLASSIFIED; never infer size from liquidity"
+  },
+  "selection_gate": {
+    "minimum_history_sessions": 252,
+    "minimum_average_traded_value_20_inr": 10000000,
+    "allowed_states": ["STARTING", "CONFIRMED"],
+    "held_back_states": ["EXTENDED"],
+    "requires_official_segment": true,
+    "bms_score_effect": "none",
+    "lifecycle_effect": "none"
+  },
+  "peer_relative_strength": {
+    "company_measure": "Equal blend of 6-1 and 3-month momentum",
+    "universe_comparison": "Difference from the median blend of the official large-, mid-, or small-cap peer group",
+    "sector_comparison": "Difference from the median blend of the official NSE Indices Industry peer group",
+    "minimum_sector_peers": 5,
+    "score_effect": "none"
+  },
+  "validation": {
+    "required_before_using_as_gate": [
+      "freeze the policy",
+      "walk-forward validation without survivorship leakage",
+      "turnover and transaction-cost analysis",
+      "stability analysis across market regimes"
+    ],
+    "current_allowed_use": "discovery_and_work_queue_priority_only"
+  }
+}
