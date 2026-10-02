@@ -10,6 +10,17 @@ const finalPath = path.join(outputRoot, "current.json");
 const seedPath = path.resolve(process.env.MOMENTUM_RADAR_SEED || "src/data/bmsMomentumRadarExpanded.json");
 const objectName = process.env.MOMENTUM_RADAR_OBJECT || "momentum-radar/current.json";
 
+function latestCompletedIndianSessionDate(now = new Date()) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23",
+  }).formatToParts(now);
+  const read = (type) => Number(parts.find((part) => part.type === type)?.value);
+  const istDate = new Date(Date.UTC(read("year"), read("month") - 1, read("day")));
+  if (read("hour") < 16) istDate.setUTCDate(istDate.getUTCDate() - 1);
+  while (istDate.getUTCDay() === 0 || istDate.getUTCDay() === 6) istDate.setUTCDate(istDate.getUTCDate() - 1);
+  return istDate.toISOString().slice(0, 10);
+}
+
 function run(script, args) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, [script, ...args], { cwd: root, stdio: "inherit", env: process.env });
@@ -43,16 +54,17 @@ async function uploadVerifiedSnapshot() {
 
 async function main() {
   fs.mkdirSync(outputRoot, { recursive: true });
+  const completedSession = process.env.MOMENTUM_RADAR_AS_OF || latestCompletedIndianSessionDate();
   await run("scripts/build-bms-momentum-radar.mjs", [
     `--universe=${seedPath}`, "--expected=2558", `--output=${basePath}`, `--cache=${cacheRoot}`,
-    "--refresh-cache=true", `--concurrency=${process.env.MOMENTUM_RADAR_FETCH_CONCURRENCY || 12}`,
+    "--refresh-cache=true", `--as-of=${completedSession}`, `--concurrency=${process.env.MOMENTUM_RADAR_FETCH_CONCURRENCY || 12}`,
   ]);
   await run("scripts/finalize-expanded-momentum-radar.mjs", [`--input=${basePath}`, `--seed=${seedPath}`, `--output=${finalPath}`]);
   await run("scripts/enrich-momentum-current-triggers.mjs", [`--radar=${finalPath}`, `--cache=${cacheRoot}`]);
   await run("scripts/verify-bms-momentum-radar.mjs", [`--input=${finalPath}`]);
   await uploadVerifiedSnapshot();
   const radar = JSON.parse(fs.readFileSync(finalPath, "utf8"));
-  console.log(JSON.stringify({ status: "published", generated_at: radar.generated_at, market_data_through: radar.market_data.as_of_date, companies: radar.companies.length, bucket: process.env.MOMENTUM_RADAR_BUCKET, object: objectName }, null, 2));
+  console.log(JSON.stringify({ status: "published", requested_completed_session: completedSession, generated_at: radar.generated_at, market_data_through: radar.market_data.as_of_date, companies: radar.companies.length, bucket: process.env.MOMENTUM_RADAR_BUCKET, object: objectName }, null, 2));
 }
 
 main().catch((error) => {
