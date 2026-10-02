@@ -4011,6 +4011,16 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const indexedUrl = groundedSources.find((source: any) =>
           normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl))?.url;
         const sourceUrl = markdownUrl || (/^https?:\/\//i.test(rawSourceUrl) ? rawSourceUrl : indexedUrl || rawSourceUrl);
+        let identityMatchedCompanyDomain = false;
+        try {
+          const hostname = new URL(sourceUrl).hostname.toLowerCase().replace(/^www\./, "");
+          const compactHost = hostname.replace(/[^a-z0-9]/g, "");
+          const excludedHost = ["moneycontrol.com", "screener.in", "yahoo.com", "reuters.com", "bloomberg.com", "google.com", "googleusercontent.com"]
+            .some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
+          identityMatchedCompanyDomain = !excludedHost
+            && identityTokens.some((token) => compactHost.includes(token.replace(/[^a-z0-9]/g, "")));
+          if (identityMatchedCompanyDomain) trustedOfficialDomains = [...new Set([...trustedOfficialDomains, hostname])];
+        } catch { /* malformed URLs are rejected below */ }
         const sourceDate = exactEvidenceDate(candidate?.sourceDate);
         const previousPeriod = String(candidate?.previousPeriod || "").trim();
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
@@ -4033,7 +4043,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         else if (!anchor && !requestedFactors.includes(mapping.factor)) rejection = "factor_not_requested";
         else if (!sourceDate) rejection = "missing_exact_source_date";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
-        else if (!isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
+        else if (!identityMatchedCompanyDomain && !isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!previousPeriodEndDate || !currentPeriodEndDate || previousPeriodEndDate >= currentPeriodEndDate) rejection = "invalid_period_end_dates";
