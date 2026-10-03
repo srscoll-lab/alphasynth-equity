@@ -143,6 +143,21 @@ const momentumPriorityStatus = (company: Company) => {
 const lifecycleBySymbol = new Map(lifecycleV21.companies.map((company) => [company.symbol, company]));
 const studyBySymbol = new Map(expansionStudies.companies.map((company) => [company.symbol, company]));
 const fcsRecordBySymbol = new Map(fundamentalChangeLibrary.map((company) => [company.symbol, company]));
+const REVIEW_JOBS_STORAGE_KEY = "alphasynth.fcs.review-jobs.v1";
+
+const loadStoredReviewJobs = (): Record<string, FundamentalReviewJob> => {
+  if (typeof window === "undefined") return {};
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(REVIEW_JOBS_STORAGE_KEY) || "{}");
+    if (!stored || typeof stored !== "object" || Array.isArray(stored)) return {};
+    return Object.fromEntries(Object.entries(stored).map(([symbol, value]) => {
+      const normalizedSymbol = symbol.trim().toUpperCase();
+      return [normalizedSymbol, normalizeFundamentalReviewJob(value, { symbol: normalizedSymbol })];
+    }).filter(([symbol]) => Boolean(symbol)));
+  } catch {
+    return {};
+  }
+};
 
 type MomentumDirection = "rising" | "neutral" | "falling" | "unavailable";
 
@@ -283,7 +298,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [downsidePhaseFilter, setDownsidePhaseFilter] = useState<"ALL" | DownsidePhase | "POTENTIALLY_OVERSOLD">("ALL");
   const [inactiveSegment, setInactiveSegment] = useState<"ALL" | Segment>("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
-  const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>({});
+  const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>(loadStoredReviewJobs);
   const [requestCandidate, setRequestCandidate] = useState<Company | null>(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState("");
@@ -311,6 +326,13 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
       });
     return () => { active = false; };
   }, []);
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(REVIEW_JOBS_STORAGE_KEY, JSON.stringify(reviewJobs));
+    } catch {
+      // Tracking remains available for this session when browser storage is unavailable.
+    }
+  }, [reviewJobs]);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return companies.filter((company) => (filter === "ALL" || company.radar_state === filter)
@@ -331,8 +353,11 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     return Object.fromEntries(segments.map((item) => [item, item === "ALL" ? relevant.length : relevant.filter((company) => company.market_cap_segment.id === item).length])) as Record<"ALL" | Segment, number>;
   }, [companies, filter, query]);
   const selectedStudy = selectedStudySymbol ? studyBySymbol.get(selectedStudySymbol) : null;
-  const selectedStatusCompany = selectedStatusSymbol ? companies.find((company) => company.symbol === selectedStatusSymbol) : null;
-  const selectedRuntimeJob = selectedStatusCompany ? reviewJobs[selectedStatusCompany.symbol] : null;
+  const selectedStatusCompany = selectedStatusSymbol ? scannedCompanies.find((company) => company.symbol === selectedStatusSymbol) : null;
+  const selectedRuntimeJob = selectedStatusSymbol ? reviewJobs[selectedStatusSymbol] : null;
+  const trackedReviewJobs = useMemo(() => Object.values(reviewJobs)
+    .filter((job) => job.status !== "not_started")
+    .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt)), [reviewJobs]);
   const inactiveCounts = {
     all: inactiveMomentumCompanies.length,
     dormant: inactiveMomentumCompanies.filter((company) => company.radar_state === "DORMANT").length,
@@ -416,52 +441,96 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     }
   };
 
+  const fetchFundamentalReviewStatus = async (symbol: string, companyName: string, reportError = false) => {
+    try {
+      const response = await fetch(`/api/bms/fundamental-review/status/${encodeURIComponent(symbol)}`, { cache: "no-store" });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload?.error || "The latest review status is unavailable.");
+      const job = normalizeFundamentalReviewJob(payload?.job || payload, { symbol, companyName });
+      setReviewJobs((current) => ({ ...current, [job.symbol]: job }));
+    } catch (error) {
+      if (!reportError) return;
+      const message = error instanceof Error ? error.message : "The latest review status is unavailable.";
+      setReviewJobs((current) => ({
+        ...current,
+        [symbol]: current[symbol]
+          ? { ...current[symbol], message }
+          : normalizeFundamentalReviewJob({ status: "not_started", message }, { symbol, companyName }),
+      }));
+    }
+  };
+
+  const activeReviewSignature = trackedReviewJobs
+    .filter((job) => isFundamentalReviewInProgress(job.status))
+    .map((job) => `${job.symbol}:${job.status}`)
+    .join("|");
+  useEffect(() => {
+    const activeJobs = Object.values(reviewJobs).filter((job) => isFundamentalReviewInProgress(job.status));
+    if (!activeJobs.length) return;
+    let cancelled = false;
+    const refreshActiveJobs = async () => {
+      if (cancelled) return;
+      await Promise.all(activeJobs.map((job) => fetchFundamentalReviewStatus(job.symbol, job.companyName)));
+    };
+    const initialTimer = window.setTimeout(refreshActiveJobs, 1_000);
+    const pollTimer = window.setInterval(refreshActiveJobs, 15_000);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(initialTimer);
+      window.clearInterval(pollTimer);
+    };
+    // The signature intentionally restarts polling only when a tracked job changes stage.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeReviewSignature]);
+
   const refreshFundamentalReviewStatus = async () => {
     if (!selectedStatusCompany || refreshingStatus) return;
     setRefreshingStatus(true);
     try {
-      const response = await fetch(`/api/bms/fundamental-review/status/${encodeURIComponent(selectedStatusCompany.symbol)}`, { cache: "no-store" });
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(payload?.error || "The latest review status is unavailable.");
-      const job = normalizeFundamentalReviewJob(payload?.job || payload, {
-        symbol: selectedStatusCompany.symbol,
-        companyName: selectedStatusCompany.company_name,
-      });
-      setReviewJobs((current) => ({ ...current, [job.symbol]: job }));
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "The latest review status is unavailable.";
-      setReviewJobs((current) => ({
-        ...current,
-        [selectedStatusCompany.symbol]: current[selectedStatusCompany.symbol]
-          ? { ...current[selectedStatusCompany.symbol], message }
-          : normalizeFundamentalReviewJob({ status: "not_started", message }, { symbol: selectedStatusCompany.symbol, companyName: selectedStatusCompany.company_name }),
-      }));
+      await fetchFundamentalReviewStatus(selectedStatusCompany.symbol, selectedStatusCompany.company_name, true);
     } finally {
       setRefreshingStatus(false);
     }
   };
 
-  const renderFcsStatus = (company: Company) => lifecycleBySymbol.has(company.symbol) ? <>
+  const renderFcsStatus = (company: Company) => {
+    const runtimeJob = reviewJobs[company.symbol];
+    if (lifecycleBySymbol.has(company.symbol)) return <>
     <span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>READY · {lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1}</span>
     <div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")} · {lifecycleBySymbol.get(company.symbol)!.reason}</div>
     <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button>
-  </> : studyBySymbol.has(company.symbol) ? <>
+  </>;
+    if (studyBySymbol.has(company.symbol)) return <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> FCS ready · lifecycle pending</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">The four-factor score is available. Lifecycle requires three comparable checkpoints.</div>
     <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button>
-  </> : fcsRecordBySymbol.has(company.symbol) ? <>
+  </>;
+    if (fcsRecordBySymbol.has(company.symbol)) return <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> {fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `FCS & lifecycle available · ${fcsRecordBySymbol.get(company.symbol)!.lifecycle}` : "FCS report available · lifecycle pending"}</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints are available.` : `The four-factor score is available. Lifecycle has ${fcsRecordBySymbol.get(company.symbol)!.checkpoints}/3 comparable checkpoints.`}</div>
     <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open FCS report</button>
-  </> : reviewJobs[company.symbol] && isFundamentalReviewInProgress(reviewJobs[company.symbol].status) ? <>
-    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewStatusLabel(reviewJobs[company.symbol].status)}</span>
-    <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{reviewJobs[company.symbol].message}</div>
+  </>;
+    if (runtimeJob && isFundamentalReviewInProgress(runtimeJob.status)) return <>
+    <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-amber-100"><Clock3 className="h-3.5 w-3.5" /> {reviewStatusLabel(runtimeJob.status)}</span>
+    <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{runtimeJob.message}</div>
     <button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-zinc-300 hover:text-white">View processing status</button>
-  </> : <>
+  </>;
+    if (runtimeJob?.resultAvailable) return <>
+      <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-emerald-200"><CheckCircle2 className="h-3.5 w-3.5" /> {reviewStatusLabel(runtimeJob.status)}</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{runtimeJob.message}</div>
+      <button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View completed review status</button>
+    </>;
+    if (runtimeJob && (runtimeJob.status === "incomplete" || runtimeJob.status === "failed")) return <>
+      <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-rose-200"><ShieldAlert className="h-3.5 w-3.5" /> {reviewStatusLabel(runtimeJob.status)}</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{runtimeJob.message}</div>
+      <button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-zinc-300 hover:text-white">View review outcome</button>
+    </>;
+    return <>
     <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>
     {reviewRequestsAvailable && (reviewRequestScope === "radar_universe" || reviewSupportedSymbols.has(company.symbol)) ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> New FCS request unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
   </>;
+  };
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
     <div className="max-w-7xl mx-auto">
@@ -497,6 +566,25 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             </div>)}
           </div>
         </header>
+
+        {trackedReviewJobs.length > 0 && <section aria-label="Your Fundamental Change Review activity" className="border-b border-cyan-300/15 bg-cyan-300/[0.025] px-5 py-5 md:px-8" aria-live="polite">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-cyan-200">Your FCS activity</div><p className="mt-1 text-xs leading-relaxed text-zinc-400">Requests are saved in this browser and refresh automatically while work is in progress. You may leave this page and return later.</p></div>
+            <div className="text-[9px] font-semibold uppercase tracking-[0.1em] text-zinc-500">Auto-refreshes every 15 seconds</div>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            {trackedReviewJobs.slice(0, 4).map((job) => {
+              const inProgress = isFundamentalReviewInProgress(job.status);
+              const terminalStyle = job.resultAvailable ? "border-emerald-300/25 bg-emerald-300/[0.06]" : job.status === "failed" || job.status === "incomplete" ? "border-rose-300/25 bg-rose-300/[0.05]" : "border-amber-300/25 bg-amber-300/[0.05]";
+              return <button key={job.symbol} type="button" onClick={() => setSelectedStatusSymbol(job.symbol)} className={`rounded-2xl border p-4 text-left transition hover:border-cyan-200/50 ${terminalStyle}`}>
+                <div className="flex items-center justify-between gap-3"><span className="font-mono text-xs font-bold text-white">{job.symbol}</span>{inProgress ? <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-200" /> : job.resultAvailable ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-200" /> : <ShieldAlert className="h-3.5 w-3.5 text-rose-200" />}</div>
+                <div className="mt-2 text-[10px] font-black uppercase tracking-[0.08em] text-zinc-200">{reviewStatusLabel(job.status)}</div>
+                <div className="mt-1 text-[9px] text-zinc-400">{job.completedFactors} of 4 factors validated</div>
+              </button>;
+            })}
+          </div>
+          {trackedReviewJobs.length > 4 && <div className="mt-3 text-[9px] text-zinc-500">Showing the four most recently updated requests · {trackedReviewJobs.length} stored in this browser.</div>}
+        </section>}
 
         {expandedMode && <nav id="direction-radar-view" aria-label="Momentum direction" className="scroll-mt-24 grid gap-3 border-b border-white/10 bg-black/10 px-5 py-5 md:grid-cols-3 md:px-8">
           <button type="button" aria-pressed={directionView === "positive"} onClick={() => selectDirection("positive")} className={`rounded-2xl border px-5 py-4 text-left transition ${directionView === "positive" ? "border-emerald-300/55 bg-emerald-300/[0.12] text-white shadow-lg shadow-emerald-950/20" : "border-white/10 bg-white/[0.025] text-zinc-400 hover:border-emerald-300/30 hover:text-white"}`}><div className="text-[10px] font-black uppercase tracking-[0.14em]">Positive Direction</div><div className="mt-2 font-mono text-2xl font-bold">{companies.length}</div><div className="mt-1 text-[10px] opacity-70">Early, Established and Stretched Uptrends</div></button>

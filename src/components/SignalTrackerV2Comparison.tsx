@@ -76,6 +76,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
   const [filter, setFilter] = useState<"All" | Lifecycle>("All");
   const [query, setQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState(companies[0].symbol);
+  const [comparisonSort, setComparisonSort] = useState<"fcs" | "company" | "nifty" | "sector">("nifty");
   const filtered = useMemo(() => companies.filter((company) => {
     const normalized = query.trim().toLowerCase();
     return (filter === "All" || company.lifecycle === filter)
@@ -93,6 +94,16 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
       : null;
     return { stage, count: members.length, trajectory: members.filter(isTrajectoryBacked).length, averageReturn: average("company"), averageRelative: average("versusNifty") };
   }), [companies]);
+  const comparisonRows = useMemo(() => companies.map((company) => ({ company, returns: returnsFor(company) }))
+    .sort((left, right) => {
+      const value = (row: { company: Company; returns: ReturnType<typeof returnsFor> }) => {
+        if (comparisonSort === "fcs") return row.company.display_score_v2;
+        if (comparisonSort === "company") return row.returns.company ?? Number.NEGATIVE_INFINITY;
+        if (comparisonSort === "sector") return row.returns.versusSector ?? Number.NEGATIVE_INFINITY;
+        return row.returns.versusNifty ?? Number.NEGATIVE_INFINITY;
+      };
+      return value(right) - value(left);
+    }), [companies, comparisonSort]);
 
   const chooseStage = (stage: "All" | Lifecycle) => {
     setFilter(stage);
@@ -150,6 +161,23 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
                 <div className="text-[11px] font-mono text-zinc-400">vs Nifty {points(row.averageRelative)}</div>
               </div>)}
             </div>
+          </div>
+
+          <div className="border-b border-white/10 px-5 py-6 md:px-8">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div><div className="text-[10px] font-black uppercase tracking-[0.16em] text-violet-300">Company-by-company observed record</div><h2 className="mt-2 text-xl font-semibold text-white">FCS, lifecycle and forward performance at a glance</h2><p className="mt-2 max-w-4xl text-xs leading-relaxed text-zinc-400">The original information cutoff, four-factor FCS and lifecycle state remain frozen. Returns use only common observed dates through the latest aligned company, Nifty 50 and sector data.</p></div>
+              <label className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">Sort rows<select value={comparisonSort} onChange={(event) => setComparisonSort(event.target.value as typeof comparisonSort)} className="mt-2 block min-w-56 rounded-xl border border-white/10 bg-[#111827] px-3 py-2.5 text-xs font-semibold normal-case tracking-normal text-white"><option value="nifty">Vs Nifty 50 · highest first</option><option value="sector">Vs sector · highest first</option><option value="company">Company return · highest first</option><option value="fcs">Frozen FCS · highest first</option></select></label>
+            </div>
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+              <table className="min-w-[1080px] w-full border-collapse text-left">
+                <thead className="bg-white/[0.04] text-[9px] font-black uppercase tracking-[0.11em] text-zinc-400"><tr><th className="px-4 py-3">Company</th><th className="px-4 py-3">Frozen FCS</th><th className="px-4 py-3">Lifecycle</th><th className="px-4 py-3">Company return</th><th className="px-4 py-3">Vs Nifty 50</th><th className="px-4 py-3">Vs sector</th><th className="px-4 py-3">Observed sessions</th><th className="px-4 py-3">Market context</th></tr></thead>
+                <tbody className="divide-y divide-white/[0.07]">{comparisonRows.map(({ company, returns }) => {
+                  const niftyContext = returns.nifty === null ? "Benchmark unavailable" : returns.nifty <= -0.03 ? "Broad market weak" : returns.nifty >= 0.03 ? "Broad market supportive" : "Broad market mixed/flat";
+                  return <tr key={company.symbol} className="bg-black/10 hover:bg-white/[0.025]"><td className="px-4 py-3"><button type="button" onClick={() => setSelectedSymbol(company.symbol)} className="text-left"><div className="text-xs font-semibold text-white hover:text-violet-200">{company.name}</div><div className="mt-1 font-mono text-[9px] text-zinc-500">{company.symbol} · through {returns.comparisonDate ? formatDate(returns.comparisonDate) : "unavailable"}</div></button></td><td className="px-4 py-3 font-mono text-sm font-bold text-white">{company.display_score_v2}</td><td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[company.lifecycle]}`}>{isTrajectoryBacked(company) ? company.lifecycle : "Pending"}</span></td><td className={`px-4 py-3 font-mono text-xs font-bold ${returns.company === null ? "text-zinc-500" : returns.company >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{percentage(returns.company)}</td><td className={`px-4 py-3 font-mono text-xs font-bold ${returns.versusNifty === null ? "text-zinc-500" : returns.versusNifty >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{points(returns.versusNifty)}</td><td className={`px-4 py-3 font-mono text-xs font-bold ${returns.versusSector === null ? "text-zinc-500" : returns.versusSector >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{points(returns.versusSector)}<div className="mt-1 max-w-36 truncate font-sans text-[8px] font-normal text-zinc-500" title={company.sectorBenchmarkLabel}>{company.sectorBenchmarkLabel}</div></td><td className="px-4 py-3"><div className="font-mono text-xs text-zinc-200">{company.priceHistory.length}</div><div className="mt-1 text-[8px] text-zinc-500">Common aligned end date</div></td><td className="px-4 py-3 text-[10px] text-zinc-300">{niftyContext}</td></tr>;
+                })}</tbody>
+              </table>
+            </div>
+            <div className="mt-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.04] px-4 py-3 text-xs leading-relaxed text-zinc-400"><strong className="text-amber-100">Interpretation boundary:</strong> market context is descriptive, not a causal explanation. This reconstructed, short, unequal sample cannot establish predictive efficacy; unavailable values are not estimated.</div>
           </div>
 
           <div className="grid lg:grid-cols-[390px_minmax(0,1fr)]">

@@ -106,6 +106,19 @@ type ChartPoint = {
   actualSector: number | null;
 };
 
+type ForwardComparisonRow = {
+  company: PrototypeCompany;
+  observationCount: number;
+  latestDate: string | null;
+  companyReturn: number | null;
+  niftyReturn: number | null;
+  sectorReturn: number | null;
+  relativeToNifty: number | null;
+  relativeToSector: number | null;
+  marketContext: string;
+  dataNote: string;
+};
+
 const lifecycleOrder: Array<"All" | Lifecycle> = [
   "All",
   "Watch",
@@ -229,6 +242,53 @@ function genuineSeries(
   };
 }
 
+function forwardComparison(
+  company: PrototypeCompany,
+  cohortData: CohortData,
+  benchmarks: Record<string, PriceObservation[]>,
+): ForwardComparisonRow {
+  const points = genuineSeries(company, cohortData, benchmarks).points;
+  const freeze = points.find((point) => point.session === 0);
+  const comparable = points.filter((point) => point.session > 0
+    && point.company !== null && point.nifty !== null && point.sector !== null);
+  const latest = comparable.at(-1);
+  if (!freeze || !latest || freeze.company === null || freeze.nifty === null || freeze.sector === null) {
+    return {
+      company,
+      observationCount: comparable.length,
+      latestDate: latest?.date ?? null,
+      companyReturn: null,
+      niftyReturn: null,
+      sectorReturn: null,
+      relativeToNifty: null,
+      relativeToSector: null,
+      marketContext: "Awaiting comparable observations",
+      dataNote: "Unavailable rather than estimated",
+    };
+  }
+  const companyReturn = (latest.company / freeze.company) - 1;
+  const niftyReturn = (latest.nifty / freeze.nifty) - 1;
+  const sectorReturn = (latest.sector / freeze.sector) - 1;
+  const marketContext = niftyReturn <= -0.03
+    ? "Broad market weak"
+    : niftyReturn >= 0.03
+      ? "Broad market supportive"
+      : "Broad market mixed/flat";
+  const expectedSessions = Number(cohortData.forwardSessionsObserved || 0);
+  return {
+    company,
+    observationCount: comparable.length,
+    latestDate: latest.date ?? null,
+    companyReturn,
+    niftyReturn,
+    sectorReturn,
+    relativeToNifty: companyReturn - niftyReturn,
+    relativeToSector: companyReturn - sectorReturn,
+    marketContext,
+    dataNote: comparable.length < expectedSessions ? "Some common sessions unavailable" : "Comparable sessions complete",
+  };
+}
+
 type SignalTrackerProps = {
   onBack: () => void;
   initialMode?: "v1" | "v2" | "momentum" | "library";
@@ -257,6 +317,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
   const [activeSection, setActiveSection] = useState<TrackerSection>("overview");
   const [trackerView, setTrackerView] = useState<TrackerView>("all");
   const [evidenceOpen, setEvidenceOpen] = useState(false);
+  const [comparisonSort, setComparisonSort] = useState<"fcs" | "stock" | "nifty" | "sector">("nifty");
 
   useEffect(() => {
     let active = true;
@@ -321,6 +382,26 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
     ? reconstructedReturn - reconstructedNiftyReturn
     : null;
   const activeYAxisId = priceMode === "indexed" ? "indexed" : "company";
+  const comparisonRows = useMemo(() => {
+    const rows = companies.map((company) => forwardComparison(company, cohortData, benchmarks));
+    const comparisonValue = (row: ForwardComparisonRow) => {
+      if (comparisonSort === "fcs") return score100(row.company.rawBms);
+      if (comparisonSort === "stock") return row.companyReturn ?? Number.NEGATIVE_INFINITY;
+      if (comparisonSort === "sector") return row.relativeToSector ?? Number.NEGATIVE_INFINITY;
+      return row.relativeToNifty ?? Number.NEGATIVE_INFINITY;
+    };
+    return rows.sort((left, right) => comparisonValue(right) - comparisonValue(left));
+  }, [benchmarks, cohortData, companies, comparisonSort]);
+  const lifecycleComparison = useMemo(() => lifecycleStages.map((lifecycle) => {
+    const available = comparisonRows.filter((row) => row.company.lifecycle === lifecycle && row.companyReturn !== null);
+    const average = (values: number[]) => values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+    return {
+      lifecycle,
+      count: available.length,
+      stockReturn: average(available.map((row) => row.companyReturn as number)),
+      relativeToNifty: average(available.map((row) => row.relativeToNifty as number)),
+    };
+  }), [comparisonRows]);
 
   const chooseLifecycle = (stage: "All" | Lifecycle) => {
     setFilter(stage);
@@ -720,6 +801,52 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
               </div>
             </section>
           </div>
+
+          {activeSection === "overview" && <section className="border-t border-white/10 px-5 py-7 md:px-8 md:py-9">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-amber-200">Frozen FCS + lifecycle forward record</div>
+                <h2 className="mt-2 text-2xl font-semibold text-white">How the original cohort has performed since the freeze</h2>
+                <p className="mt-2 max-w-4xl text-sm leading-relaxed text-zinc-400">Every original signal, FCS, lifecycle and cohort member remains unchanged. The table appends only observed prices and compares each company with the Nifty 50 and its declared sector benchmark over common completed sessions.</p>
+              </div>
+              <label className="text-[10px] font-black uppercase tracking-[0.12em] text-zinc-500">Sort rows
+                <select value={comparisonSort} onChange={(event) => setComparisonSort(event.target.value as typeof comparisonSort)} className="mt-2 block min-w-56 rounded-xl border border-white/10 bg-[#111827] px-3 py-2.5 text-xs font-semibold normal-case tracking-normal text-white">
+                  <option value="nifty">Vs Nifty 50 · highest first</option>
+                  <option value="sector">Vs sector · highest first</option>
+                  <option value="stock">Stock return · highest first</option>
+                  <option value="fcs">Frozen FCS · highest first</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+              {lifecycleComparison.map((group) => <div key={group.lifecycle} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+                <span className={`inline-flex rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[group.lifecycle]}`}>{group.lifecycle}</span>
+                <div className="mt-3 text-[9px] uppercase tracking-[0.1em] text-zinc-500">Average stock return</div>
+                <div className={`mt-1 font-mono text-base font-bold ${group.stockReturn === null ? "text-zinc-500" : group.stockReturn >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{group.stockReturn === null ? "Unavailable" : percentage(group.stockReturn)}</div>
+                <div className="mt-2 text-[9px] text-zinc-500">Vs Nifty: <span className={group.relativeToNifty !== null && group.relativeToNifty >= 0 ? "text-emerald-300" : "text-rose-300"}>{group.relativeToNifty === null ? "Unavailable" : percentagePoints(group.relativeToNifty)}</span> · n={group.count}</div>
+              </div>)}
+            </div>
+
+            <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
+              <table className="min-w-[1120px] w-full border-collapse text-left">
+                <thead className="bg-white/[0.04] text-[9px] font-black uppercase tracking-[0.11em] text-zinc-400"><tr><th className="px-4 py-3">Company</th><th className="px-4 py-3">Frozen FCS</th><th className="px-4 py-3">Frozen lifecycle</th><th className="px-4 py-3">Stock return</th><th className="px-4 py-3">Vs Nifty 50</th><th className="px-4 py-3">Vs sector</th><th className="px-4 py-3">Observed sessions</th><th className="px-4 py-3">Market context</th></tr></thead>
+                <tbody className="divide-y divide-white/[0.07]">
+                  {comparisonRows.map((row) => <tr key={row.company.symbol} className="bg-black/10 hover:bg-white/[0.025]">
+                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedSymbol(row.company.symbol)} className="text-left"><div className="text-xs font-semibold text-white hover:text-teal-200">{row.company.name}</div><div className="mt-1 font-mono text-[9px] text-zinc-500">{row.company.symbol} · through {row.latestDate ? formatDate(row.latestDate) : "unavailable"}</div></button></td>
+                    <td className="px-4 py-3 font-mono text-sm font-bold text-white">{score100(row.company.rawBms)}</td>
+                    <td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[row.company.lifecycle]}`}>{row.company.lifecycle}</span></td>
+                    <td className={`px-4 py-3 font-mono text-xs font-bold ${row.companyReturn === null ? "text-zinc-500" : row.companyReturn >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.companyReturn === null ? "Unavailable" : percentage(row.companyReturn)}</td>
+                    <td className={`px-4 py-3 font-mono text-xs font-bold ${row.relativeToNifty === null ? "text-zinc-500" : row.relativeToNifty >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.relativeToNifty === null ? "Unavailable" : percentagePoints(row.relativeToNifty)}</td>
+                    <td className={`px-4 py-3 font-mono text-xs font-bold ${row.relativeToSector === null ? "text-zinc-500" : row.relativeToSector >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.relativeToSector === null ? "Unavailable" : percentagePoints(row.relativeToSector)}<div className="mt-1 max-w-36 truncate font-sans text-[8px] font-normal text-zinc-500" title={row.company.sectorBenchmarkLabel}>{row.company.sectorBenchmarkLabel}</div></td>
+                    <td className="px-4 py-3"><div className="font-mono text-xs text-zinc-200">{row.observationCount}</div><div className="mt-1 text-[8px] text-zinc-500">{row.dataNote}</div></td>
+                    <td className="px-4 py-3 text-[10px] leading-relaxed text-zinc-300">{row.marketContext}</td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div>
+            <div className="mt-4 rounded-xl border border-amber-300/15 bg-amber-300/[0.04] px-4 py-3 text-xs leading-relaxed text-zinc-400"><strong className="text-amber-100">Interpretation boundary:</strong> broad-market context is descriptive, not a causal explanation. Lifecycle averages are small, unequal samples and do not establish predictive efficacy. Missing or non-comparable values remain unavailable rather than being filled or estimated.</div>
+          </section>}
 
           {activeSection === "explanation" && (
             <section className="px-5 py-7 md:px-8 md:py-9">
