@@ -1,3 +1,4 @@
+import metricRegistry from '../data/fundamental-review-metric-taxonomy-v2.json' with {type:'json'};
 export type RepairFactorId = "earnings" | "economics" | "execution" | "balance_sheet";
 
 const DIRECT: Record<string, RepairFactorId> = {
@@ -51,6 +52,10 @@ export function mapBmsFactorMetric(rawMetric: unknown): { metric: string; factor
     .replace(/\([^)]*\)/g, " ")
     .replace(/[^a-z0-9]+/g, "_")
     .replace(/^_+|_+$/g, "");
+  // Exact controlled definitions take precedence over legacy substring guesses
+  // (for example PAT margin is Economics, while PAT itself is Earnings).
+  const registered=(metricRegistry.metrics as Record<string,{factor_id:RepairFactorId}>)[metric];
+  if(registered)return {metric,factor:registered.factor_id};
   const aliases: Array<[RegExp, string]> = [
     [/^gross_npa(?:_assets?)?$/, "gnpa"],
     [/^net_npa(?:_assets?)?$/, "nnpa"],

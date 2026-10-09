@@ -1,0 +1,117 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAsOf": "2026-09-09",
+  "assessmentMode": "reconstructed_today",
+  "scoreCutoff": "2025-06-02",
+  "returnStart": "2025-06-02",
+  "returnEnd": "2026-03-30",
+  "benchmark": {
+    "symbol": "ITBEES",
+    "label": "Nippon India ETF Nifty IT (investable NIFTY IT proxy)",
+    "startClose": 40.30,
+    "endClose": 31.99
+  },
+  "priceSource": {
+    "label": "EquityPandit NSE historical closing-price tables",
+    "urlPattern": "https://www.equitypandit.com/historical-data/{SYMBOL}",
+    "note": "Unadjusted NSE closing prices. No split adjustment was required for the selected window based on the reviewed company actions. Dividends are excluded."
+  },
+  "methodology": {
+    "exposureWeights": {
+      "taskAutomability": 0.25,
+      "effortBillingDependence": 0.20,
+      "pricingDeflation": 0.20,
+      "insourcingRisk": 0.15,
+      "concentrationRisk": 0.20
+    },
+    "readinessWeights": {
+      "aiRevenueEvidence": 0.25,
+      "outcomePlatformMigration": 0.20,
+      "domainMoat": 0.20,
+      "productivityConversion": 0.15,
+      "managementDelivery": 0.20
+    }
+  },
+  "companies": [
+    {
+      "symbol": "TCS", "companyName": "Tata Consultancy Services", "cohort": "Large services", "assessmentAsOf": "2025-04-10",
+      "exposure": { "taskAutomability": 75, "effortBillingDependence": 78, "pricingDeflation": 65, "insourcingRisk": 55, "concentrationRisk": 35 },
+      "readiness": { "aiRevenueEvidence": 35, "outcomePlatformMigration": 67, "domainMoat": 88, "productivityConversion": 65, "managementDelivery": 70 },
+      "startClose": 3449.80, "endClose": 2358.90,
+      "evidenceSummary": "More than one-third of engagements used AI/GenAI; AI revenue was not separately disclosed.",
+      "officialSource": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2025"
+    },
+    {
+      "symbol": "INFY", "companyName": "Infosys", "cohort": "Large services", "assessmentAsOf": "2025-04-17",
+      "exposure": { "taskAutomability": 72, "effortBillingDependence": 78, "pricingDeflation": 55, "insourcingRisk": 50, "concentrationRisk": 35 },
+      "readiness": { "aiRevenueEvidence": 25, "outcomePlatformMigration": 65, "domainMoat": 78, "productivityConversion": 55, "managementDelivery": 65 },
+      "startClose": 1553.80, "endClose": 1250.60,
+      "evidenceSummary": "Topaz and broad GenAI project delivery provided capability evidence, without separately disclosed AI revenue.",
+      "officialSource": "https://www.infosys.com/investors/reports-filings/quarterly-results/2024-2025/q4.html"
+    },
+    {
+      "symbol": "HCLTECH", "companyName": "HCL Technologies", "cohort": "Large services", "assessmentAsOf": "2025-04-22",
+      "exposure": { "taskAutomability": 72, "effortBillingDependence": 72, "pricingDeflation": 50, "insourcingRisk": 50, "concentrationRisk": 35 },
+      "readiness": { "aiRevenueEvidence": 30, "outcomePlatformMigration": 72, "domainMoat": 78, "productivityConversion": 65, "managementDelivery": 70 },
+      "startClose": 1631.50, "endClose": 1341.60,
+      "evidenceSummary": "AI propositions catalyzed bookings; AI Force deals disclosed quantified 25–30% efficiency targets.",
+      "officialSource": "https://www.hcltech.com/sites/default/files/document/open/quarter-results/2025-04/HCLTech-Q4-FY25-Investor-Release.pdf"
+    },
+    {
+      "symbol": "WIPRO", "companyName": "Wipro", "cohort": "Large services", "assessmentAsOf": "2025-04-16",
+      "exposure": { "taskAutomability": 78, "effortBillingDependence": 82, "pricingDeflation": 55, "insourcingRisk": 60, "concentrationRisk": 38 },
+      "readiness": { "aiRevenueEvidence": 20, "outcomePlatformMigration": 60, "domainMoat": 68, "productivityConversion": 52, "managementDelivery": 58 },
+      "startClose": 247.68, "endClose": 187.64,
+      "evidenceSummary": "AI-powered transformation wins were disclosed, but FY25 IT-services revenue contracted and AI revenue was unsegmented.",
+      "officialSource": "https://www.wipro.com/newsroom/press-releases/2025/wipro-announces-results-for-the-quarter-and-year-ended-march-31-2025/"
+    },
+    {
+      "symbol": "LTM", "priceSourceSymbol": "LTM", "companyName": "LTIMindtree", "cohort": "Mid-tier / digital", "assessmentAsOf": "2025-04-23",
+      "exposure": { "taskAutomability": 78, "effortBillingDependence": 80, "pricingDeflation": 50, "insourcingRisk": 55, "concentrationRisk": 42 },
+      "readiness": { "aiRevenueEvidence": 18, "outcomePlatformMigration": 58, "domainMoat": 65, "productivityConversion": 50, "managementDelivery": 55 },
+      "startClose": 5072.50, "endClose": 4013.80,
+      "evidenceSummary": "AI-led deal wins were pervasive, but monetization remained embedded in services and EBIT margin was 14.5%.",
+      "officialSource": "https://www.ltimindtree.com/wp-content/uploads/2025/04/earnings-release-factsheet-q4fy25.pdf"
+    },
+    {
+      "symbol": "PERSISTENT", "companyName": "Persistent Systems", "cohort": "Mid-tier / digital", "assessmentAsOf": "2025-04-23",
+      "exposure": { "taskAutomability": 68, "effortBillingDependence": 72, "pricingDeflation": 42, "insourcingRisk": 45, "concentrationRisk": 45 },
+      "readiness": { "aiRevenueEvidence": 25, "outcomePlatformMigration": 72, "domainMoat": 80, "productivityConversion": 60, "managementDelivery": 70 },
+      "startClose": 5519.00, "endClose": 4877.20,
+      "evidenceSummary": "AI-enabled software engineering and product-development positioning accompanied 18.8% USD revenue growth.",
+      "officialSource": "https://www.persistent.com/media/press-releases/q4-fy25-results/"
+    },
+    {
+      "symbol": "COFORGE", "companyName": "Coforge", "cohort": "Mid-tier / digital", "assessmentAsOf": "2025-05-05",
+      "exposure": { "taskAutomability": 72, "effortBillingDependence": 75, "pricingDeflation": 45, "insourcingRisk": 50, "concentrationRisk": 48 },
+      "readiness": { "aiRevenueEvidence": 20, "outcomePlatformMigration": 68, "domainMoat": 78, "productivityConversion": 60, "managementDelivery": 68 },
+      "startClose": 1717.10, "endClose": 1114.70,
+      "evidenceSummary": "A GenAI Center of Excellence and domain-led AI solutions were disclosed alongside 32% CC growth.",
+      "officialSource": "https://news.coforge.com/newsroom/press-release/coforge-closes-an-exceptional-fy25-with-32-cc-growth"
+    },
+    {
+      "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "cohort": "Specialist / engineering", "assessmentAsOf": "2025-04-17",
+      "exposure": { "taskAutomability": 70, "effortBillingDependence": 68, "pricingDeflation": 52, "insourcingRisk": 50, "concentrationRisk": 62 },
+      "readiness": { "aiRevenueEvidence": 25, "outcomePlatformMigration": 55, "domainMoat": 84, "productivityConversion": 48, "managementDelivery": 60 },
+      "startClose": 6417.00, "endClose": 3976.60,
+      "evidenceSummary": "Over 70% of talent was described as AI-ready, while revenue remained concentrated in engineering verticals.",
+      "officialSource": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-3729-crores-for-fy25-with-full-year-pbt-at-263"
+    },
+    {
+      "symbol": "KPITTECH", "companyName": "KPIT Technologies", "cohort": "Specialist / engineering", "assessmentAsOf": "2025-04-28",
+      "exposure": { "taskAutomability": 55, "effortBillingDependence": 58, "pricingDeflation": 30, "insourcingRisk": 45, "concentrationRisk": 68 },
+      "readiness": { "aiRevenueEvidence": 18, "outcomePlatformMigration": 68, "domainMoat": 90, "productivityConversion": 52, "managementDelivery": 65 },
+      "startClose": 1331.60, "endClose": 634.75,
+      "evidenceSummary": "Software-defined-vehicle specialization and 19 consecutive growth quarters supported the moat; AI revenue was unsegmented.",
+      "officialSource": "https://www.kpit.com/news/kpit-reports-fy25-results-by-meeting-increased-ebitda-outlook-of-21-while-net-profit-grows-at-41-2-yoy/"
+    },
+    {
+      "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "cohort": "Specialist / product", "assessmentAsOf": "2025-05-09",
+      "exposure": { "taskAutomability": 35, "effortBillingDependence": 15, "pricingDeflation": null, "insourcingRisk": 35, "concentrationRisk": 30 },
+      "readiness": { "aiRevenueEvidence": 28, "outcomePlatformMigration": 66, "domainMoat": 78, "productivityConversion": 52, "managementDelivery": 48 },
+      "startClose": 1192.80, "endClose": 598.55,
+      "evidenceSummary": "Purple Fabric supplied governed-AI product evidence, while reported platform revenue declined and AI revenue was unsegmented.",
+      "officialSource": "https://www.intellectdesign.com/investor/presentations/Intellect-Q4-FY-25-Investor-Deck.pdf"
+    }
+  ]
+}

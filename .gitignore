@@ -12,6 +12,19 @@ stock_intelligence.db
 *.log
 .env*
 !.env.example
+src/data/fcsPreflightEvidenceApprovals.json.bak
+src/data/fcsPreflightEvidenceApprovals.json.*.tmp
+data/official-quarter-cache/
+.chart-data-*/
+.codex-*/
+.test-tmp*/
+carousel-assets/
+carousel-build/
+carousel-output/
+output/
+tmp/
+services/bms-api/.test-tmp*/
+*.merge-audit.json
 
 # 🌟 ADDED: Explicitly protect your Google Cloud Private Credentials
 gcp-key.json

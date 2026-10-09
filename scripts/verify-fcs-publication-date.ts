@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {publicationDateSupported as supported} from '../src/fcs-publication-date.ts';
+assert.ok(supported('Mumbai – July 16th, 2026: Results for quarter ended June 30, 2026','2026-07-16','2026-06-30'));
+assert.ok(supported('Date: 16 July 2026','2026-07-16','2026-06-30'));
+assert.ok(supported('Date: 16/07/2026','2026-07-16','2026-06-30'));
+assert.ok(supported('datePublished: 2026-07-16T12:00:00+05:30','2026-07-16','2026-06-30'));
+assert.equal(supported('Quarter ended June 30, 2026','2026-06-30','2026-06-30'),false);
+assert.equal(supported('Results published July 17, 2026','2026-07-16','2026-06-30'),false);
+assert.equal(supported('x'.repeat(5001)+'July 16, 2026','2026-07-16','2026-06-30'),false);
+console.log('Publication date: explicit header dates, ordinal dates, period-date rejection and missing provenance passed.');

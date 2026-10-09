@@ -11,6 +11,30 @@ import { dossierCompanyProfile } from "./src/dossier-companies";
 import { renderDossierPdf, type DossierPdfPayload } from "./src/dossier-pdf";
 import { assessDossierReadiness } from "./src/dossier-readiness";
 import { extractPdfTextLocally } from "./src/pdf-text";
+import { discoverIndexedOfficialSources } from "./src/fundamental-review-official-index";
+import { larsenQuarterHighlights } from "./src/larsen-quarter-highlights";
+import { hclQuarterEvidence } from "./src/hcl-quarter-evidence";
+import { wiproQuarterEvidence } from "./src/wipro-quarter-evidence";
+import { techmReviewedQuarterRows } from "./src/techm-reviewed-quarter-ledger";
+import { persistentReviewedQuarterRows } from "./src/persistent-reviewed-quarter-ledger";
+import { coforgeReviewedQuarterRows } from "./src/coforge-reviewed-quarter-ledger";
+import { tcsReviewedQuarterRows } from "./src/tcs-reviewed-quarter-ledger";
+import { containsReportedNumber, containsReportingPeriod } from "./src/fundamental-review-source-match";
+import { officialDocumentFetch } from "./src/official-document-cache";
+import { retrieveGroundedFcsDocuments } from "./src/fcs-grounded-document-retrieval";
+import { publicationDateSupported } from "./src/fcs-publication-date";
+import { exchangeIssuerDomainHints } from "./src/fcs-exchange-issuer-domain";
+import { discoverFcsIssuerDomains } from "./src/fcs-issuer-source-discovery";
+import { metadataSourceCandidates } from "./src/fcs-metadata-source-candidates";
+import { verifyDirectIssuerIdentity } from "./src/fcs-direct-issuer-identity";
+import { cachedIssuerIdentity } from "./src/fcs-cached-issuer-identity";
+import { discoverIssuerIndexLinks } from "./src/fcs-issuer-index-discovery";
+import { discoverFirecrawlFcsSources } from "./src/fcs-firecrawl-discovery";
+import { createFirecrawlDocumentFetch } from "./src/fcs-firecrawl-document-fetch";
+import { extractFcsFactors } from "./src/fcs-factor-extraction";
+import { ACCOUNTING_BASES } from "./src/fundamental-review-history";
+import fundamentalMetricRegistry from "./data/fundamental-review-metric-taxonomy-v2.json" with { type: "json" };
+import { infosysQuarterHighlights } from "./src/infosys-quarter-highlights";
 import { buildExpectationDeliveryInputFromDossier } from "./src/dossier-expectation-bridge";
 import {
   BMS_FACTOR_SCHEMA_DESCRIPTION,
@@ -49,6 +73,8 @@ import { mapBmsFactorMetric } from "./src/bms-factor-evidence";
 import {
   cleanFundamentalReviewSymbol,
   normalizeFundamentalReviewJob,
+  publishedFundamentalReviewResult,
+  publicFundamentalReviewJob,
 } from "./src/fundamental-review-contract";
 import { createFundamentalReviewStoreFromEnvironment } from "./src/fundamental-review-store";
 import { createFundamentalReviewQueueFromEnvironment } from "./src/fundamental-review-queue";
@@ -57,8 +83,9 @@ import {
   fundamentalReviewRuntimeConfigured,
 } from "./src/fundamental-review-service";
 import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamental-review-evidence";
-import { canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
+import { anchorsForEvidencePeriod, canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
 import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
+import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol } from "./src/fcs-evidence-preflight";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -136,6 +163,7 @@ function getFundamentalReviewService(): FundamentalReviewService {
     scoringUrl: String(process.env.FUNDAMENTAL_REVIEW_SCORING_URL),
     internalToken: process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN,
     dossierToken: process.env.DOSSIER_INTERNAL_TOKEN,
+    historicalBackfillEnabled: process.env.FUNDAMENTAL_REVIEW_HISTORY_BACKFILL_ENABLED === "true",
     scoringIdentityTokenProvider: process.env.FUNDAMENTAL_REVIEW_SCORING_IAM_AUTH === "true"
       ? createGoogleIdentityTokenProvider()
       : undefined,
@@ -3694,6 +3722,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const companyName = String(req.body?.company_name || ticker).trim();
     const sector = String(req.body?.sector || "Unclassified").trim();
     const cutoff = String(req.body?.information_cutoff || "").trim();
+    let targetPeriodEnd = String(req.body?.target_period_end || "").trim();
+    if (targetPeriodEnd && (!/^\d{4}-(03-31|06-30|09-30|12-31)$/.test(targetPeriodEnd) || targetPeriodEnd > cutoff)) {
+      return res.status(400).json({ error: "A historical target must be a completed quarter on or before the information cutoff." });
+    }
     const officialDomains = Array.isArray(req.body?.official_domains)
       ? req.body.official_domains.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
       : [];
@@ -3706,20 +3738,215 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
 
     try {
-      const ai = getGenAI();
       const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
       const bmsBaseUrl = process.env.BMS_API_URL || "http://127.0.0.1:8000";
-      const anchorResponse = await fetch(`${bmsBaseUrl}/bms/provenance-repair/${encodeURIComponent(ticker)}`, {
-        signal: AbortSignal.timeout(20_000),
-      });
+      const deterministicIssuer = ["INFY", "LT", "HCLTECH", "WIPRO", "TECHM", "PERSISTENT", "COFORGE", "TCS"].includes(ticker);
+      const anchorResponse = deterministicIssuer ? new Response("{}", { status: 200 })
+        : await fetch(`${bmsBaseUrl}/bms/provenance-repair/${encodeURIComponent(ticker)}`, { signal: AbortSignal.timeout(20_000) });
       const anchorPayload: any = await anchorResponse.json().catch(() => ({}));
-      const anchors = (Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates : [])
+      const currentIndexedSources = await discoverIndexedOfficialSources(ticker, targetPeriodEnd, cutoff, officialDocumentFetch);
+      const indexedPeriod = targetPeriodEnd || currentIndexedSources[0]?.period_end || "";
+      const priorYearEnd = indexedPeriod ? `${Number(indexedPeriod.slice(0, 4)) - 1}${indexedPeriod.slice(4)}` : "";
+      const indexedSources = [...currentIndexedSources, ...(priorYearEnd ? await discoverIndexedOfficialSources(ticker, priorYearEnd, cutoff, officialDocumentFetch) : [])];
+      targetPeriodEnd ||= indexedSources[0]?.period_end || "";
+      const anchors = anchorsForEvidencePeriod(Array.isArray(anchorPayload?.candidates) ? anchorPayload.candidates : [], targetPeriodEnd)
         .filter((anchor: any) => requestedFactors.includes(String(anchor?.factor || "").trim().toLowerCase()))
         .slice(0, 24);
-      const knownOfficialSources = (Array.isArray(anchorPayload?.known_official_sources)
+      const knownOfficialSources = [...indexedSources, ...(Array.isArray(anchorPayload?.known_official_sources)
         ? anchorPayload.known_official_sources : [])
         .filter((source: any) => /^https?:\/\//i.test(String(source?.url || "")))
-        .slice(0, 12);
+        .slice(0, 12)].filter((source: any, index: number, all: any[]) => all.findIndex(item => item.url === source.url) === index);
+      const indexedTexts: Array<{ sourceUrl: string; sourceDate: string; text: string }> = [];
+      const indexedBytes = new Map<string, Buffer>();
+      for (const source of indexedSources.filter(source => /ifrs-usd-press-release\.pdf$/.test(source.url)
+        || (ticker === "LT" && new URL(source.url).hostname === "investors.larsentoubro.com")
+        || (ticker === "HCLTECH" && new URL(source.url).hostname === "www.hcltech.com")
+        || (ticker === "WIPRO" && new URL(source.url).hostname === "www.wipro.com")
+        || (ticker === "TECHM" && new URL(source.url).hostname === "insights.techmahindra.com")
+        || (ticker === "PERSISTENT" && new URL(source.url).hostname === "www.persistent.com")
+        || (ticker === "COFORGE" && new URL(source.url).hostname === "investors.coforge.com")
+        || (ticker === "TCS" && new URL(source.url).hostname === "www.tcs.com")).slice(0, 4)) {
+        try {
+          const response = await officialDocumentFetch(source.url, { signal: AbortSignal.timeout(15_000) });
+          if (!response.ok || !["www.infosys.com","investors.larsentoubro.com","www.hcltech.com","www.wipro.com","insights.techmahindra.com","www.persistent.com","investors.coforge.com","www.tcs.com"].includes(new URL(response.url || source.url).hostname)) continue;
+          if (Number(response.headers.get("content-length") || 0) > 20 * 1024 * 1024) continue;
+          const bytes = Buffer.from(await response.arrayBuffer());
+          if (!bytes.length || bytes.length > 20 * 1024 * 1024) continue;
+          indexedBytes.set(response.url || source.url, bytes);
+          indexedTexts.push({ sourceUrl: response.url || source.url, sourceDate: source.published_at,
+            text: await extractPdfTextLocally(bytes, 40) });
+        } catch { /* Ordinary grounded discovery remains the fallback. */ }
+      }
+      if (ticker === "TECHM" && targetPeriodEnd) {
+        const reviewedDocuments=new Map<string,any>();
+        for(const source of indexedSources) {
+          const bytes=indexedBytes.get(source.url);if(!bytes)continue;
+          const hash=createHash("sha256").update(bytes).digest("hex");
+          const archive=await archiveFundamentalReviewDocument(bytes,hash,"application/pdf");
+          if(archive)reviewedDocuments.set(source.url,{source_ref:source.url,source_date:source.published_at,document_sha256:hash,archived_document_uri:archive,media_type:"application/pdf",content_length:bytes.length});
+        }
+        const rows=techmReviewedQuarterRows(targetPeriodEnd,cutoff,(url)=>reviewedDocuments.get(url));
+        const required=Array.isArray(req.body?.required_metric_definitions)?req.body.required_metric_definitions:[];
+        const definitionsMatch=!required.length||(required.length===rows.length&&required.every((d:any)=>rows.some(r=>r.factor===d.factor&&r.metric_name===d.metric&&r.unit===d.unit&&r.consolidation_basis===d.consolidation_basis&&r.comparison_basis===d.comparison_basis)));
+        if(rows.length===5&&definitionsMatch)return res.json({ticker,cutoff,method:"reviewed_techm_official_quarter_ledger_v1",rows,diagnostics:[{outcome:"four_factor_reviewed_official_quarter_pair",target_period_end:targetPeriodEnd}]});
+      }
+      if (ticker === "PERSISTENT" && targetPeriodEnd) {
+        const reviewedDocuments = new Map<string, any>();
+        for (const source of indexedSources) {
+          const bytes = indexedBytes.get(source.url); if (!bytes) continue;
+          const hash = createHash("sha256").update(bytes).digest("hex");
+          const archive = await archiveFundamentalReviewDocument(bytes, hash, "application/pdf");
+          if (archive) reviewedDocuments.set(source.url, { source_ref: source.url, source_date: source.published_at,
+            document_sha256: hash, archived_document_uri: archive, media_type: "application/pdf", content_length: bytes.length });
+        }
+        const rows = persistentReviewedQuarterRows(targetPeriodEnd, cutoff,
+          (url, sha, date) => { const document = reviewedDocuments.get(url); return document?.document_sha256 === sha && document?.source_date === date ? document : null; },
+          Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : []);
+        if (rows.length === 4) return res.json({ ticker, cutoff, method: "reviewed_persistent_official_quarter_ledger_v1", rows,
+          diagnostics: [{ outcome: "four_factor_reviewed_official_quarter_pair", target_period_end: targetPeriodEnd }] });
+      }
+      if (ticker === "COFORGE" && targetPeriodEnd) {
+        const reviewedDocuments = new Map<string, any>();
+        for (const source of indexedSources) {
+          const bytes = indexedBytes.get(source.url); if (!bytes) continue;
+          const hash = createHash("sha256").update(bytes).digest("hex");
+          const archive = await archiveFundamentalReviewDocument(bytes, hash, "application/pdf");
+          if (archive) reviewedDocuments.set(source.url, { source_ref: source.url, source_date: source.published_at,
+            document_sha256: hash, archived_document_uri: archive, media_type: "application/pdf", content_length: bytes.length });
+        }
+        const rows = coforgeReviewedQuarterRows(targetPeriodEnd, cutoff,
+          (url, sha, date) => { const document = reviewedDocuments.get(url); return document?.document_sha256 === sha && document?.source_date === date ? document : null; },
+          Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : []);
+        if (rows.length === 4) return res.json({ ticker, cutoff, method: "reviewed_coforge_comparative_factsheet_v1", rows,
+          diagnostics: [{ outcome: "four_factor_reviewed_official_comparative_table", target_period_end: targetPeriodEnd }] });
+      }
+      if (ticker === "TCS" && targetPeriodEnd) {
+        const reviewedDocuments = new Map<string, any>();
+        for (const source of indexedSources) {
+          const bytes = indexedBytes.get(source.url); if (!bytes) continue;
+          const hash = createHash("sha256").update(bytes).digest("hex");
+          const archive = await archiveFundamentalReviewDocument(bytes, hash, "application/pdf");
+          if (archive) reviewedDocuments.set(source.url, { source_ref: source.url, source_date: source.published_at,
+            document_sha256: hash, archived_document_uri: archive, media_type: "application/pdf", content_length: bytes.length });
+        }
+        const rows = tcsReviewedQuarterRows(targetPeriodEnd, cutoff,
+          (url, sha, date) => { const document = reviewedDocuments.get(url); return document?.document_sha256 === sha && document?.source_date === date ? document : null; },
+          Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : []);
+        if (rows.length === 4) return res.json({ ticker, cutoff, method: "reviewed_tcs_fact_sheet_v1", rows,
+          diagnostics: [{ outcome: "four_factor_reviewed_official_quarter_pair", target_period_end: targetPeriodEnd }] });
+      }
+      if ((ticker === "HCLTECH" || ticker === "WIPRO") && targetPeriodEnd) {
+        const currentSource=indexedSources.find(source=>source.period_end===targetPeriodEnd);
+        const previousSource=indexedSources.find(source=>source.period_end===priorYearEnd);
+        const currentContext=indexedTexts.find(context=>context.sourceUrl===currentSource?.url);
+        const previousContext=indexedTexts.find(context=>context.sourceUrl===previousSource?.url);
+        if(currentSource && previousSource && currentContext && previousContext) {
+          const sourceRecord=async (source:typeof currentSource)=>{
+            const bytes=indexedBytes.get(source.url)!;
+            const hash=createHash("sha256").update(bytes).digest("hex");
+            const archive=await archiveFundamentalReviewDocument(bytes,hash,"application/pdf");
+            return archive?{source_ref:source.url,source_date:source.published_at,document_sha256:hash,
+              archived_document_uri:archive,media_type:"application/pdf",content_length:bytes.length}:null;
+          };
+          const currentDocument=await sourceRecord(currentSource),previousDocument=await sourceRecord(previousSource);
+          if(currentDocument && previousDocument) {
+            const adapter=ticker === "WIPRO" ? wiproQuarterEvidence : hclQuarterEvidence;
+            const rows=adapter({end:targetPeriodEnd,cutoff,currentText:currentContext.text,previousText:previousContext.text,
+              currentDocument,previousDocument,requiredDefinitions:req.body?.required_metric_definitions});
+            if(rows.length===(ticker === "WIPRO" ? 5 : 4))return res.json({ticker,cutoff,method:ticker === "WIPRO" ? "deterministic_wipro_quarter_highlights_v1" : "deterministic_hcl_quarter_tables_v1",rows,
+              diagnostics:[{outcome:"four_factor_official_quarter_pair",target_period_end:targetPeriodEnd}]});
+          }
+        }
+      }
+      if (ticker === "LT" && targetPeriodEnd) {
+        const source = indexedSources.find(item=>item.period_end === targetPeriodEnd);
+        const context = indexedTexts.find(item=>item.sourceUrl === source?.url);
+        const comparisons = context && source && larsenQuarterHighlights(context.text,targetPeriodEnd,source.published_at);
+        if (comparisons && source) {
+          const definitions = [
+            {factor:"earnings",metric:"revenue",unit:"INR billion",basis:"group_operating_basis"},
+            {factor:"economics",metric:"ebitda_margin",unit:"percent",basis:"group_operating_basis"},
+            {factor:"execution",metric:"order_inflow",unit:"INR billion",basis:"group_operating_basis"},
+            {factor:"balance_sheet",metric:"operating_cash_flow",unit:"INR billion",basis:"issuer_defined_operating_basis"},
+          ];
+          const required = Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : [];
+          const matching = definitions.filter(definition=>!required.length || required.some((item:any)=>
+            item.factor===definition.factor && item.metric===definition.metric && item.unit===definition.unit
+            && item.consolidation_basis===definition.basis && item.comparison_basis==="same_quarter_prior_year"));
+          if (matching.length===4) {
+            const bytes=indexedBytes.get(source.url)!;
+            const hash=createHash("sha256").update(bytes).digest("hex");
+            const archive=await archiveFundamentalReviewDocument(bytes,hash,"application/pdf");
+            if (archive) {
+              const year=Number(targetPeriodEnd.slice(0,4)),month=Number(targetPeriodEnd.slice(5,7));
+              const quarter=({3:4,6:1,12:3} as Record<number,number>)[month];
+              const fy=month===3?year:year+1;
+              const rows=definitions.map(definition=>{
+                const comparison=comparisons.find(item=>item.metric===definition.metric)!;
+                return {symbol:ticker,factor:definition.factor,metric_name:definition.metric,
+                  previous_period:`Q${quarter} FY${String(fy-1).slice(-2)}`,current_period:`Q${quarter} FY${String(fy).slice(-2)}`,
+                  previous_period_end_date:priorYearEnd,current_period_end_date:targetPeriodEnd,
+                  previous_value:comparison.previous,current_value:comparison.current,unit:definition.unit,
+                  comparison_basis:"same_quarter_prior_year",consolidation_basis:definition.basis,
+                  source_ref:source.url,source_date:source.published_at,document_sha256:hash,
+                  archived_document_uri:archive,media_type:"application/pdf",content_length:bytes.length,
+                  quoted_label:comparison.quotedLabel,source_page:comparison.page,source_type:"company_filing",
+                  cutoff_date:cutoff,confidence:1,extraction_method:"deterministic_larsen_quarter_highlights",
+                  extractor_version:"1.0.0",producer_id:"larsen-official-quarter-parser"};
+              });
+              return res.json({ticker,cutoff,method:"deterministic_larsen_quarter_highlights_v1",rows,
+                diagnostics:[{outcome:"four_factor_official_quarter_table",target_period_end:targetPeriodEnd}]});
+            }
+          }
+        }
+      }
+      if (ticker === "INFY" && targetPeriodEnd) {
+        const releaseFor = (end: string) => indexedSources.find(source => source.period_end === end && /ifrs-usd-press-release\.pdf$/.test(source.url));
+        const currentSource = releaseFor(targetPeriodEnd), previousSource = releaseFor(priorYearEnd);
+        const currentContext = indexedTexts.find(context => context.sourceUrl === currentSource?.url);
+        const previousContext = indexedTexts.find(context => context.sourceUrl === previousSource?.url);
+        const currentHighlights = currentContext && infosysQuarterHighlights(currentContext.text, targetPeriodEnd);
+        const previousHighlights = previousContext && infosysQuarterHighlights(previousContext.text, priorYearEnd);
+        if (currentHighlights && previousHighlights && currentSource && previousSource) {
+          const sourceRecord = async (source: typeof currentSource) => {
+            const bytes = indexedBytes.get(source.url)!;
+            const hash = createHash("sha256").update(bytes).digest("hex");
+            const archive = await archiveFundamentalReviewDocument(bytes, hash, "application/pdf");
+            return archive ? { source_ref: source.url, source_date: source.published_at, document_sha256: hash,
+              archived_document_uri: archive, media_type: "application/pdf", content_length: bytes.length } : null;
+          };
+          const currentDocument = await sourceRecord(currentSource), previousDocument = await sourceRecord(previousSource);
+          if (currentDocument && previousDocument) {
+            const quarterLabel = (end: string) => {
+              const year = Number(end.slice(0, 4)), month = Number(end.slice(5, 7));
+              return `Q${({ 3: 4, 6: 1, 9: 2, 12: 3 } as Record<number, number>)[month]} FY${String(month === 3 ? year : year + 1).slice(-2)}`;
+            };
+            const definitions = [
+              { factor: "earnings", metric: "revenue", unit: "USD million", basis: "consolidated_ifrs" },
+              { factor: "economics", metric: "operating_margin", unit: "percent", basis: "consolidated_ifrs" },
+              { factor: "execution", metric: "deal_tcv", unit: "USD billion", basis: "not_applicable" },
+              { factor: "balance_sheet", metric: "free_cash_flow", unit: "USD million", basis: "consolidated_ifrs" },
+            ];
+            const required = Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : [];
+            const directRows = definitions.filter(definition => !required.length || required.some((item: any) =>
+              item.factor === definition.factor && item.metric === definition.metric && item.unit === definition.unit
+              && item.consolidation_basis === definition.basis && item.comparison_basis === "same_quarter_prior_year"))
+              .map(definition => ({ symbol: ticker, factor: definition.factor, metric_name: definition.metric,
+                previous_period: quarterLabel(priorYearEnd), current_period: quarterLabel(targetPeriodEnd),
+                previous_period_end_date: priorYearEnd, current_period_end_date: targetPeriodEnd,
+                previous_value: previousHighlights[definition.metric], current_value: currentHighlights[definition.metric],
+                unit: definition.unit, comparison_basis: "same_quarter_prior_year", consolidation_basis: definition.basis,
+                quoted_label: `Page 1: For the quarter ended / quarterly Large Deal TCV; ${definition.metric}; reported IFRS, not adjusted or annual`,
+                source_type: "company_filing", cutoff_date: cutoff, confidence: 1,
+                extraction_method: "deterministic_infosys_quarter_highlights", extractor_version: "1.0.0",
+                producer_id: "infosys-official-quarter-parser",
+                ...currentDocument, previous_document: previousDocument }));
+            if (directRows.length === 4) return res.json({ ticker, cutoff, method: "deterministic_infosys_quarter_highlights_v1",
+              rows: directRows, diagnostics: [{ outcome: "four_factor_official_quarter_pair", target_period_end: targetPeriodEnd }] });
+          }
+        }
+      }
+      const ai = getGenAI();
       // A missing legacy observation is expected for newly requested companies.
       // Continue into official-document discovery instead of treating the old
       // 58-company evidence service as an eligibility gate.
@@ -3732,26 +3959,56 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           try { return [new URL(String(source.url)).hostname.toLowerCase().replace(/^www\./, "")]; }
           catch { return []; }
         });
-      let trustedOfficialDomains = [...new Set([...officialDomains, ...knownCompanyDomains])];
+      let trustedOfficialDomains = [...new Set([...officialDomains, ...knownCompanyDomains, ...(dossierCompanyProfile(ticker)?.officialDomains || [])])];
+      let issuerMetadataDiagnostics:any[]=[];
+      if(!trustedOfficialDomains.length) {
+        const cachedIdentity=await cachedIssuerIdentity(ticker,companyName);
+        if(cachedIdentity.domains.length) {
+          trustedOfficialDomains=cachedIdentity.domains;
+          issuerMetadataDiagnostics.push({outcome:'cached_original_issuer_identity',identity_sources:cachedIdentity.proofs});
+        }
+      }
+      if(!trustedOfficialDomains.length) {
+        const metadata=await discoverFcsIssuerDomains({ticker,companyName,fetchImpl:officialDocumentFetch,search:async(instruction)=>{
+          const result=await ai.models.generateContent({model,contents:instruction+' Include the literal official PDF URL in the response body, not just a citation. Do not invent a URL.',config:{tools:[{googleSearch:{}}],maxOutputTokens:2048}});
+          const cited=((result as any)?.candidates?.[0]?.groundingMetadata?.groundingChunks||[]).flatMap((chunk:any)=>chunk.web?.uri?[{uri:String(chunk.web.uri),title:String(chunk.web.title||'')}]:[]);
+          return [...metadataSourceCandidates(result.text||''),...cited];
+        }});
+        trustedOfficialDomains=metadata.domains;issuerMetadataDiagnostics=metadata.diagnostics;
+      }
+      const discoveryClient=getFirecrawl();
+      const firecrawlDiscovery=discoveryClient?await discoverFirecrawlFcsSources({ticker,companyName,cutoff,targetPeriodEnd,trustedIssuerDomains:trustedOfficialDomains,search:(query,options)=>discoveryClient.search(query,options)}):{candidates:[],diagnostics:[]};
+      issuerMetadataDiagnostics.push(...firecrawlDiscovery.diagnostics);
+      const issuerIndexDiscovery=trustedOfficialDomains.length&&firecrawlDiscovery.candidates.length<2?await discoverIssuerIndexLinks(trustedOfficialDomains,officialDocumentFetch):{candidates:[],diagnostics:[]};
+      issuerMetadataDiagnostics.push(...issuerIndexDiscovery.diagnostics);
       const officialScope = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com", ...trustedOfficialDomains]
         .map(domain => `site:${domain}`).join(" OR ");
       const sourceScopeGuidance = trustedOfficialDomains.length
         ? `Use only official company documents or NSE/BSE filings (${officialScope}).`
         : `Use only the company's own investor-relations website or NSE/BSE filings. Find the company's official investor-relations domain when necessary; never use an aggregator, news site, broker report or search-result page.`;
       const researchMode = anchors.length ? "anchor_or_factor_discovery" : "factor_discovery";
+      const requiredDefinitions = Array.isArray(req.body?.required_metric_definitions)
+        ? req.body.required_metric_definitions.slice(0, 24) : [];
+      const metricDefinitions = Object.entries(fundamentalMetricRegistry.metrics)
+        .filter(([, definition]) => requestedFactors.includes(definition.factor_id))
+        .map(([metric, definition]) => ({ metric, factor: definition.factor_id, units: definition.allowed_units }));
+      const definitionInstruction = requiredDefinitions.length
+        ? `History must use these exact current-score metric definitions, units, accounting bases and comparison bases: ${JSON.stringify(requiredDefinitions)}. Omit unsupported definitions; never replace them with a different metric. ` : "";
+      const registryInstruction = `Use only these registered canonical metric IDs and explicit units (no invented metric names or unit conversions): ${JSON.stringify(metricDefinitions)}. `;
       const researchInstruction = anchors.length
-        ? `First locate support for the exact stored comparisons in the ANCHORS below. Check the KNOWN OFFICIAL SOURCES first. Do not replace, recalculate, round or reinterpret an anchor value. If an anchor cannot be verified, discover one alternate, sector-appropriate, like-for-like comparison for the same requested factor. Both values and periods must be explicit in a dated official source.`
-        : `No stored comparison anchors are available. Discover one strong, sector-appropriate, like-for-like comparison for each of these missing factors: ${requestedFactors.join(", ")}. Both numeric values, both reporting periods, the unit, the publication date and the direct official URL must be explicit in the same official document. Prefer the same quarter year-on-year; otherwise use two clearly comparable consecutive reporting periods. Do not manufacture an anchor and do not return a factor when an exact comparison is unavailable.`;
-      const grounded = await ai.models.generateContent({
+        ? `First locate the requested quarter's official documents (or the latest completed published quarter on/before cutoff when no historical quarter is requested). Check the KNOWN OFFICIAL SOURCES first. ANCHORS are older comparison hints, not permission to replace newer published results with stale data. Use an anchor only if it matches the chosen current quarter exactly; preserve its values exactly. Otherwise discover a sector-appropriate like-for-like comparison for that quarter. Both values and periods must be explicit in dated official sources.`
+        : `No stored comparison anchors are available. Discover one strong, sector-appropriate, like-for-like comparison for each of these missing factors: ${requestedFactors.join(", ")}. Values may come from two dated official documents with identical metric definitions and units. Supply previousSourceUrl and previousSourceDate for the previous value, sourceUrl and sourceDate for the current value. Prefer the same quarter year-on-year. Do not manufacture values or use annual/YTD totals for a quarterly flow.`;
+      const grounded = indexedTexts.some(item => item.text.trim()) ? { text: `DIRECT OFFICIAL DOCUMENTS: ${JSON.stringify(indexedTexts.map(item=>({...item,text:item.text.length>40_000?item.text.slice(0,12_000)+"\n[Middle narrative omitted; financial appendices follow]\n"+item.text.slice(-28_000):item.text})))}` } : await ai.models.generateContent({
         model,
         contents: [{ role: "user", parts: [{ text:
           `Research ${companyName} (${ticker}), sector ${sector}, using only material published on or before ${cutoff}. `
-          + `${sourceScopeGuidance} ${researchInstruction} `
+          + (targetPeriodEnd ? `HISTORICAL CHECKPOINT: use only the three-month quarter ending ${targetPeriodEnd} as the current period for ALL factors. Use explicit comparable reported prior values. Balance-sheet figures must be as of that date. Do not substitute annual, year-to-date or latest-quarter values. ` : "")
+          + `${sourceScopeGuidance} ${researchInstruction} ${definitionInstruction} ${registryInstruction}`
           + `EARNINGS includes revenue, profit, PAT, EPS, EBITDA and operating profit. ECONOMICS includes margins, spreads, realizations, pricing, yields and unit economics. `
           + `EXECUTION means operating conversion such as volumes, capacity utilisation, orders converted or executed, project delivery, launches, market share, client additions, deal wins or sector-equivalent operating milestones. Sector examples include IT deal TCV and attrition; industrial order inflow/order book; vehicle production, domestic and export volumes; pharmaceutical specialty-product sales; and lender customer-franchise growth or new loans booked. `
           + `BALANCE SHEET means debt/net cash, working capital, cash flow, receivables, inventory, coverage, liquidity, capital adequacy or asset quality. `
           + `Do not use revenue, profit, EBITDA or margin as Execution. Do not estimate or turn qualitative language into numbers. `
-          + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. If unavailable, omit it.\n\n`
+          + `For every supported anchor state its metric, factor, exact previous period/value, exact current period/value, unit, exact publication date and direct official source URL. Include the literal official document URL in the response body as well as citations; never invent a URL. If unavailable, omit it.\n\n`
           + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nKNOWN OFFICIAL SOURCES: ${JSON.stringify(knownOfficialSources)}\n\nANCHORS: ${JSON.stringify(anchors)}`
         }] }],
         config: { tools: [{ googleSearch: {} }], maxOutputTokens: 8192 },
@@ -3762,56 +4019,109 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           url: String(chunk?.web?.uri || "").trim(),
         }))
         .filter((source: any) => source.title && /^https?:\/\//i.test(source.url));
-      // When a company was not part of the hand-reviewed seed cohort, admit a
-      // company domain only when Google Grounding returned a direct HTTPS URL
-      // whose title identifies this company. The URL is still fetched and its
-      // evidence context verified below; this only expands the domain allowlist.
+      // Identity words may help associate citations, but never establish issuer
+      // domain ownership. Trust is supplied by issuer metadata/exchange filings.
       const identityTokens = [...new Set(`${ticker} ${companyName}`.toLowerCase()
         .replace(/\b(limited|ltd|company|india|industries|corporation|plc)\b/g, " ")
         .split(/[^a-z0-9]+/).filter(token => token.length >= 4))];
-      const discoveredCompanyDomains = searchedSources.flatMap((source: any) => {
-        try {
-          const parsed = new URL(source.url);
-          const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
-          const title = String(source.title || "").toLowerCase();
-          const excluded = ["nseindia.com", "bseindia.com", "google.com", "googleusercontent.com"]
-            .some(domain => host === domain || host.endsWith(`.${domain}`));
-          return !excluded && identityTokens.some(token => title.includes(token)) ? [host] : [];
-        } catch { return []; }
-      });
-      trustedOfficialDomains = [...new Set([...trustedOfficialDomains, ...discoveredCompanyDomains])];
+      // Citation titles do not establish ownership of an issuer domain.
+      const directSourceHints=metadataSourceCandidates(grounded.text||'',trustedOfficialDomains).map(source=>({title:source.title||'Official document hint—requires verification',url:source.uri,published_at:null}));
       const groundedSources = [...knownOfficialSources.map((source: any) => ({
         title: `Known official ${source.source_type || "filing"}`,
         url: String(source.url),
-      })), ...searchedSources].filter((source: any, index: number, all: any[]) =>
+        published_at: source.published_at || null,
+      })), ...firecrawlDiscovery.candidates.map(source=>({url:source.uri,title:source.title,published_at:null})), ...issuerIndexDiscovery.candidates.map(source=>({url:source.uri,title:source.title||'Issuer results index link',published_at:null})), ...directSourceHints,...searchedSources].filter((source: any, index: number, all: any[]) =>
         all.findIndex(item => item.url === source.url) === index);
+      // Grounding often finds a filing but does not read its tables. Fetch a
+      // bounded set of direct official PDFs before asking for structured values.
+      const providerTransport=discoveryClient?createFirecrawlDocumentFetch({directFetch:officialDocumentFetch,trustedIssuerDomains:trustedOfficialDomains,scrape:(url,options)=>discoveryClient.scrape(url,options)}):null;
+      const retrieval = await retrieveGroundedFcsDocuments(groundedSources.map((s:any)=>({uri:s.url,title:s.title})),{
+        trustedIssuerDomains:trustedOfficialDomains,maxDocuments:6,maxRequests:24,timeoutMs:45_000,maximumPages:40,fetchImpl:providerTransport?.fetchImpl||officialDocumentFetch,
+      });
+      issuerMetadataDiagnostics.push(...(providerTransport?.diagnostics||[]));
+      const issuerHints=[...new Set(retrieval.documents.flatMap(doc=>exchangeIssuerDomainHints({documentUrl:doc.sourceUrl,documentText:doc.text,companyName,ticker})))];
+      if(issuerHints.some(domain=>!trustedOfficialDomains.includes(domain))) {
+        trustedOfficialDomains=[...new Set([...trustedOfficialDomains,...issuerHints])];
+        const remaining=groundedSources.filter((s:any)=>!retrieval.documents.some(d=>d.discoveryUrl===s.url||d.sourceUrl===s.url));
+        const additional=await retrieveGroundedFcsDocuments(remaining.map((s:any)=>({uri:s.url,title:s.title})),{trustedIssuerDomains:trustedOfficialDomains,maxDocuments:3,maxRequests:12,timeoutMs:25_000,maximumPages:40,fetchImpl:officialDocumentFetch});
+        for(const doc of additional.documents)if(retrieval.documents.length<6&&!retrieval.documents.some(d=>d.sha256===doc.sha256))retrieval.documents.push(doc);
+        retrieval.diagnostics.push(...additional.diagnostics);
+      }
+      const discoveredTexts=retrieval.documents.map(doc=>({sourceUrl:doc.sourceUrl,
+        sourceDate:knownOfficialSources.find((s:any)=>s.url===doc.sourceUrl)?.published_at || null,
+        text:doc.text.length>40_000?doc.text.slice(0,12_000)+'\n[Middle omitted; financial appendices follow]\n'+doc.text.slice(-28_000):doc.text}));
+      const resolveEvidenceUrl=(url:string)=>{
+        const matches=retrieval.documents.filter(doc=>doc.discoveryUrl===url||doc.sourceUrl===url);
+        return matches.length===1?matches[0].sourceUrl:url;
+      };
+      for(const doc of retrieval.documents)if(!groundedSources.some((s:any)=>s.url===doc.sourceUrl))groundedSources.push({url:doc.sourceUrl,title:doc.title||'Retrieved official document'});
+      const fetchEvidenceDocument:typeof fetch=async(input,init)=>{
+        const url=String(input),cached=retrieval.documents.find(doc=>doc.sourceUrl===url);
+        if(!cached)return officialDocumentFetch(input,init);
+        const response=new Response(new Uint8Array(cached.bytes),{headers:{'content-type':cached.mediaType}});
+        Object.defineProperty(response,'url',{value:cached.sourceUrl});return response;
+      };
       const factorEvidenceSchema = {
         type: "OBJECT", required: ["rows"], properties: {
-          rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousPeriodEndDate", "currentPeriodEndDate", "comparisonBasis", "consolidationBasis", "previousValue", "currentValue", "sourceUrl", "sourceDate", "quotedLabel"], properties: {
-            factor: { type: "STRING" }, metricName: { type: "STRING" }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
-            previousPeriodEndDate: { type: "STRING" }, currentPeriodEndDate: { type: "STRING" }, comparisonBasis: { type: "STRING" }, consolidationBasis: { type: "STRING" },
+          rows: { type: "ARRAY", items: { type: "OBJECT", required: ["factor", "metricName", "unit", "previousPeriod", "currentPeriod", "previousPeriodEndDate", "currentPeriodEndDate", "comparisonBasis", "consolidationBasis", "previousValue", "currentValue", "sourceUrl", "sourceDate", "quotedLabel"], properties: {
+            factor: { type: "STRING" }, metricName: { type: "STRING", enum: metricDefinitions.map(definition => definition.metric) }, previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" },
+            previousPeriodEndDate: { type: "STRING" }, currentPeriodEndDate: { type: "STRING" },
+            comparisonBasis: { type: "STRING", enum: ["same_quarter_prior_year", "year_to_date_prior_year", "sequential_quarter", "annual_prior_year", "point_in_time_prior_period"] },
+            consolidationBasis: { type: "STRING", enum: [...ACCOUNTING_BASES] },
             previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" }, unit: { type: "STRING" }, sourceUrl: { type: "STRING" }, sourceDate: { type: "STRING" },
+            previousSourceUrl: { type: "STRING" }, previousSourceDate: { type: "STRING" },
             quotedLabel: { type: "STRING" },
           } } },
         },
       };
-      const structured = await ai.models.generateContent({
+      // An unscored issuer with no readable original has no admissible extraction
+      // input. Do not spend another model call turning search prose into candidates.
+      if (!retrieval.documents.length && !indexedTexts.some(item => item.text.trim()) && !knownOfficialSources.length) {
+        return res.json({ ticker, cutoff, rows: [], diagnostics: [
+          ...issuerMetadataDiagnostics.map(d => d.outcome ? d : {outcome:d.code,stage:'issuer_metadata_'+d.stage,sourceUrl:d.url,detail:d.detail}),
+          ...retrieval.diagnostics.map(d => ({outcome:d.code,stage:d.stage,sourceUrl:d.url,detail:d.detail})),
+          {outcome:'official_document_retrieval_summary',source_reference_count:groundedSources.length,retrieved_document_count:0,text_character_count:0},
+          {outcome:'structured_extraction_skipped_no_readable_official_document'},
+          ...(anchorServiceDiagnostic ? [anchorServiceDiagnostic] : []),
+        ] });
+      }
+      const extractionRequest = {
         model,
         contents: [{ role: "user", parts: [{ text:
-          `Convert the research below into JSON. ${anchors.length ? "Prefer comparisons present in the supplied ANCHORS with exactly matching values; when an anchor was unavailable, an alternate explicit comparison for the same requested factor is allowed." : `Keep only explicit like-for-like comparisons for the requested factors (${requestedFactors.join(", ")}).`} Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
+          `Extract comparisons directly from the supplied original document text into JSON for ALL requested factors (${requestedFactors.join(", ")}). Search prose and stored anchors are discovery context only, not numeric evidence. Every row must have a direct official-company, NSE or BSE URL and an exact publication date. `
+          + (targetPeriodEnd ? `Every currentPeriodEndDate must equal ${targetPeriodEnd}; flow metrics must cover that quarter only, not annual or cumulative totals. ` : "")
+          + (!targetPeriodEnd ? `Choose the latest explicitly reported completed quarter supported by the documents, on or before the cutoff, and use that SAME currentPeriodEndDate for every factor. Do not combine different quarters or annual/YTD flow totals. Older stored anchors are context, not permission to replace the latest quarter with stale data. ` : "")
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
-          + `Give the exact previousPeriodEndDate and currentPeriodEndDate as YYYY-MM-DD. Set comparisonBasis to exactly one of same_quarter_prior_year, year_to_date_prior_year, sequential_quarter, annual_prior_year, or point_in_time_prior_period. Set consolidationBasis to exactly consolidated, standalone, or not_applicable; never guess it, and return no row when it is not explicit or intrinsically inapplicable. quotedLabel must briefly identify the table or exact reported comparison. `
-          + `Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
-          + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nANCHORS: ${JSON.stringify(anchors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\nRESEARCH: ${grounded.text || ""}`
+          + `Use at most two candidate comparisons per requested factor so a rejected candidate does not suppress a valid alternative. Previous and current values may come from separate supplied official documents: provide previousSourceUrl/previousSourceDate as well as sourceUrl/sourceDate. Use the supplied publication date when present; otherwise extract an explicit release/filing date from that document's header. Never use a reporting-period end or download date as a publication date. Never invent or convert values or units. `
+          + `Give the exact previousPeriodEndDate and currentPeriodEndDate as YYYY-MM-DD. Set comparisonBasis to exactly one of same_quarter_prior_year, year_to_date_prior_year, sequential_quarter, annual_prior_year, or point_in_time_prior_period. Use one of these registered consolidation bases: ${JSON.stringify([...ACCOUNTING_BASES])}; choose only a basis explicitly supported by the document, and obey required metric definitions for history. quotedLabel must briefly identify the table or exact reported comparison. `
+          + `Copy each number and unit EXACTLY as printed: INR mn means INR million, not INR crore. Do not divide or multiply values. Parentheses indicate negative amounts. EBITDAR is not EBITDA; omit an unsupported metric rather than rename it. For Economics use a separately reported registered margin when available. For Execution use a registered operating measure. For Balance Sheet look for comparable debt/liquidity tables. Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
+          + definitionInstruction
+          + registryInstruction
+          + `\nDIRECTLY RETRIEVED OFFICIAL DOCUMENT TEXT: ${JSON.stringify(discoveredTexts)}\n`
+          + `REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}\n\nSOURCE INDEX: ${JSON.stringify(groundedSources)}\n\n`
+          + (discoveredTexts.length ? '' : `RESEARCH CONTEXT (not verified values): ${grounded.text||''}`)
         }] }],
         config: {
           responseMimeType: "application/json",
           maxOutputTokens: 8192,
           responseSchema: factorEvidenceSchema,
         },
+      };
+      const factorExtraction=await extractFcsFactors(requestedFactors.map(String),async factor=>{
+        const request:any=structuredClone(extractionRequest);
+        const definitions=metricDefinitions.filter(d=>d.factor===factor);
+        request.contents[0].parts[0].text=request.contents[0].parts[0].text
+          .replace(`ALL requested factors (${requestedFactors.join(', ')})`,`the single requested factor ${factor}`)
+          .replace(registryInstruction,`Use only these metric definitions: ${JSON.stringify(definitions)}. `)
+          .replace(`REQUESTED FACTORS: ${JSON.stringify(requestedFactors)}`,`REQUESTED FACTOR: ${factor}`);
+        request.config.maxOutputTokens=3072;
+        request.config.responseSchema.properties.rows.items.properties.factor.enum=[factor];
+        request.config.responseSchema.properties.rows.items.properties.metricName.enum=definitions.map(d=>d.metric);
+        return (await ai.models.generateContent(request)).text||'{}';
       });
+      issuerMetadataDiagnostics.push(...factorExtraction.diagnostics);
       let parsed: any;
-      let structuredOutput = structured.text || "{}";
+      let structuredOutput = JSON.stringify({rows:factorExtraction.rows});
       let modelJsonRepaired = false;
       try {
         parsed = JSON.parse(sanitizeJsonShell(structuredOutput));
@@ -3838,6 +4148,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       const rows: any[] = [];
       const diagnostics: any[] = [];
+      diagnostics.push({outcome:'structured_extraction_summary',requested_factors:requestedFactors,candidate_count:Array.isArray(parsed.rows)?parsed.rows.length:0});
+      diagnostics.push(...issuerMetadataDiagnostics.map(d=>d.outcome?d:{outcome:d.code,stage:'issuer_metadata_'+d.stage,sourceUrl:d.url,detail:d.detail}));
+      diagnostics.push(...retrieval.diagnostics.map(d=>({outcome:d.code,stage:d.stage,sourceUrl:d.url,detail:d.detail})),
+        {outcome:'official_document_retrieval_summary',source_reference_count:groundedSources.length,retrieved_document_count:retrieval.documents.length,text_character_count:retrieval.documents.reduce((n,d)=>n+d.text.length,0)});
       if (anchorServiceDiagnostic) diagnostics.push(anchorServiceDiagnostic);
       const seen = new Set<string>();
       const normalizeSourceLabel = (value: unknown) => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -3845,8 +4159,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         String(value), value.toFixed(1), value.toFixed(2), Math.round(value).toString(),
       ].map(item => item.replace(/[,\.\s]/g, "")))].filter(item => item && item !== "nan");
       const containsEvidenceValue = (text: string, value: number) => {
-        const compact = text.replace(/[,\s₹$€£%]/g, "").toLowerCase();
-        return numericVariants(value).some(variant => compact.includes(variant));
+        return containsReportedNumber(text, value);
       };
       const matchingAnchor = (candidate: any, mapping: any) => anchors.find((anchor: any) =>
         anchor.factor === mapping?.factor
@@ -3858,27 +4171,21 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const groundedSourceIdentifiesCompany = (sourceUrl: string) => searchedSources.some((source: any) =>
         source.url === sourceUrl
         && identityTokens.some(token => String(source.title || "").toLowerCase().includes(token)));
-      const admitGroundedRedirectDomain = (sourceUrl: string, finalUrl: string) => {
-        if (!groundedSourceIdentifiesCompany(sourceUrl)) return;
-        try {
-          const host = new URL(finalUrl).hostname.toLowerCase().replace(/^www\./, "");
-          const excluded = ["google.com", "googleusercontent.com"]
-            .some(domain => host === domain || host.endsWith(`.${domain}`));
-          if (!excluded) trustedOfficialDomains = [...new Set([...trustedOfficialDomains, host])];
-        } catch { /* malformed redirects remain untrusted */ }
-      };
       const periodToken = (value: unknown) => String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "");
       const metricLabels = (metric: unknown) => {
         const canonical = mapBmsFactorMetric(metric)?.metric || String(metric || "").trim().toLowerCase();
         const aliases: Record<string, string[]> = {
-          pat: ["pat", "profit after tax"],
+          pat: ["pat", "profit after tax", "profit for the period", "profit attributable", "net profit"],
+          net_profit: ["net profit", "profit for the period", "profit attributable", "profit after tax"],
           revenue: ["revenue", "operating revenue"],
           eps: ["eps", "earnings per share"],
           ebitda: ["ebitda"],
           operating_margin: ["operating margin"],
+          passenger_load_factor: ["passenger load factor", "load factor"],
           financing_margin: ["financing margin"],
           nim: ["nim", "net interest margin"],
           large_deal_tcv: ["large deal tcv", "large deal wins", "large deals"],
+          deal_tcv: ["large deal", "total contract value", "tcv"],
           new_deal_wins_total_contract_value_tcv: ["new deal wins", "total contract value", "tcv"],
           automotive_quarterly_volumes: ["automotive quarterly volumes", "automotive volumes", "volumes"],
           coal_offtake: ["coal offtake", "offtake"],
@@ -3898,12 +4205,14 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         for (const label of metricLabels(anchor.metric_name)) {
           let index = lower.indexOf(label);
           while (index >= 0) {
+            // Prevent EBITDA matching EBITDAR and PAT matching unrelated words.
+            if(/[a-z0-9]/.test(lower[index-1]||'')||/[a-z0-9]/.test(lower[index+label.length]||'')) {index=lower.indexOf(label,index+label.length);continue;}
             const window = lower.slice(Math.max(0, index - 3000), index + label.length + 3000);
             const compactWindow = periodToken(window);
             if (containsEvidenceValue(window, Number(anchor.previous_value))
               && containsEvidenceValue(window, Number(anchor.current_value))
-              && compactWindow.includes(previousPeriodToken)
-              && compactWindow.includes(currentPeriodToken)) return true;
+              && containsReportingPeriod(window, anchor.previous_period, anchor.previous_period_end_date)
+              && containsReportingPeriod(window, anchor.current_period, anchor.current_period_end_date)) return true;
             index = lower.indexOf(label, index + label.length);
           }
         }
@@ -3915,7 +4224,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       // both exact stored values in the same local context.
       const knownDocumentContexts: Array<{ sourceUrl: string; sourceDate: string; documentText: string }> = [];
       for (const knownSource of knownOfficialSources) {
-        const sourceUrl = String(knownSource.url || "");
+        // Old legacy documents cannot establish an unanchored new quarter.
+        if (targetPeriodEnd && !anchors.length && !indexedSources.some(source => source.url === knownSource.url)) continue;
+          const sourceUrl = resolveEvidenceUrl(String(knownSource.url || ""));
         const sourceDate = exactEvidenceDate(knownSource.published_at);
         if (!sourceDate || sourceDate > cutoff || !isOfficialDossierSource(sourceUrl, trustedOfficialDomains)) continue;
         try {
@@ -3976,8 +4287,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             contents: [{ role: "user", parts: [{ text:
               `Extract explicit, like-for-like numeric comparisons for ${companyName} (${ticker}) from the official documents below. `
               + `Return at most one strong comparison for each requested factor (${requestedFactors.join(", ")}). `
-              + `Both values, both reporting periods, exact period-end dates, consolidation basis and the unit must appear in the same supplied document. `
-              + `Set comparisonBasis to one registered basis and consolidationBasis to consolidated, standalone or not_applicable. Include a short quotedLabel identifying the comparison. `
+              + definitionInstruction
+              + registryInstruction
+              + (targetPeriodEnd ? `Use only the three-month quarter ending ${targetPeriodEnd}; do not substitute annual, cumulative or another quarter's figures. ` : "")
+              + `Both values, both reporting periods, exact period-end dates, consolidation basis and units must appear in the supplied documents. Separate previous and current documents are permitted with their respective exact URLs and publication dates. `
+              + `Set comparisonBasis to one registered basis and consolidationBasis to a supported value from ${JSON.stringify([...ACCOUNTING_BASES])}. Include a short quotedLabel identifying the comparison. `
               + `Use the document's sourceUrl and sourceDate exactly as supplied. Do not infer, calculate, annualize, or use a metric outside the requested factors. `
               + `Return an empty rows array when the text does not provide an exact comparison.\n\nDOCUMENTS: ${JSON.stringify(documentBudget)}`
             }] }],
@@ -4010,18 +4324,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const markdownUrl = rawSourceUrl.match(/^\[[^\]]*\]\((https?:\/\/[^)]+)\)$/i)?.[1];
         const indexedUrl = groundedSources.find((source: any) =>
           normalizeSourceLabel(source.title) === normalizeSourceLabel(rawSourceUrl))?.url;
-        const sourceUrl = markdownUrl || (/^https?:\/\//i.test(rawSourceUrl) ? rawSourceUrl : indexedUrl || rawSourceUrl);
-        let identityMatchedCompanyDomain = false;
-        try {
-          const hostname = new URL(sourceUrl).hostname.toLowerCase().replace(/^www\./, "");
-          const compactHost = hostname.replace(/[^a-z0-9]/g, "");
-          const excludedHost = ["moneycontrol.com", "screener.in", "yahoo.com", "reuters.com", "bloomberg.com", "google.com", "googleusercontent.com"]
-            .some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
-          identityMatchedCompanyDomain = !excludedHost
-            && identityTokens.some((token) => compactHost.includes(token.replace(/[^a-z0-9]/g, "")));
-          if (identityMatchedCompanyDomain) trustedOfficialDomains = [...new Set([...trustedOfficialDomains, hostname])];
-        } catch { /* malformed URLs are rejected below */ }
+        const sourceUrl = resolveEvidenceUrl(markdownUrl || (/^https?:\/\//i.test(rawSourceUrl) ? rawSourceUrl : indexedUrl || rawSourceUrl));
+        // Company words in a hostname are not proof of official ownership.
         const sourceDate = exactEvidenceDate(candidate?.sourceDate);
+        const previousSourceUrl = resolveEvidenceUrl(String(candidate?.previousSourceUrl || sourceUrl).trim());
+        const previousSourceDate = exactEvidenceDate(candidate?.previousSourceDate || sourceDate);
         const previousPeriod = String(candidate?.previousPeriod || "").trim();
         const currentPeriod = String(candidate?.currentPeriod || "").trim();
         const previousPeriodEndDate = exactEvidenceDate(candidate?.previousPeriodEndDate);
@@ -4035,42 +4342,52 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const anchor = anchors.length ? matchingAnchor(candidate, mapping) : null;
         const resolvedUnit = unit || String(anchor?.unit || "").trim();
         const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
+        const candidateSnapshot={previous_period:previousPeriod,current_period:currentPeriod,previous_period_end:previousPeriodEndDate,current_period_end:currentPeriodEndDate,previous_value:previousValue,current_value:currentValue,unit:resolvedUnit,quoted_label:quotedLabel.slice(0,500)};
         let rejection: string | null = null;
         // The deterministic metric taxonomy is authoritative. Model-supplied factor
         // labels are advisory because otherwise valid metrics are often labelled
         // "operating" or "financial strength" instead of our internal IDs.
-        if (!mapping) rejection = "factor_mapping_mismatch";
+        if (!mapping || !(mapping.metric in fundamentalMetricRegistry.metrics)) rejection = "factor_mapping_mismatch";
+        else if (!(fundamentalMetricRegistry.metrics as Record<string, any>)[mapping.metric].allowed_units.includes(resolvedUnit)) rejection = "unregistered_metric_unit";
         else if (!anchor && !requestedFactors.includes(mapping.factor)) rejection = "factor_not_requested";
         else if (!sourceDate) rejection = "missing_exact_source_date";
+        else if (indexedSources.some(source => source.url === sourceUrl && source.published_at !== sourceDate)) rejection = "indexed_publication_date_mismatch";
         else if (sourceDate > cutoff) rejection = "post_cutoff_evidence";
-        else if (!identityMatchedCompanyDomain && !isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
+        else if (!previousSourceDate || previousSourceDate > cutoff
+          || !isOfficialDossierSource(previousSourceUrl, trustedOfficialDomains)) rejection = "invalid_previous_document";
+        else if (indexedSources.some(source => source.url === previousSourceUrl && source.published_at !== previousSourceDate)) rejection = "previous_indexed_publication_date_mismatch";
+        else if (!isOfficialDossierSource(sourceUrl, trustedOfficialDomains)
           && !/^https:\/\/vertexaisearch\.cloud\.google\.com\/grounding-api-redirect\//i.test(sourceUrl)) rejection = "unverified_source_domain";
         else if (!previousPeriod || !currentPeriod || previousPeriod === currentPeriod) rejection = "invalid_comparison_periods";
         else if (!previousPeriodEndDate || !currentPeriodEndDate || previousPeriodEndDate >= currentPeriodEndDate) rejection = "invalid_period_end_dates";
+        else if (targetPeriodEnd && currentPeriodEndDate !== targetPeriodEnd) rejection = "historical_target_period_mismatch";
         else if (!["same_quarter_prior_year", "year_to_date_prior_year", "sequential_quarter", "annual_prior_year", "point_in_time_prior_period"].includes(comparisonBasis)) rejection = "invalid_comparison_basis";
-        else if (!["consolidated", "standalone", "not_applicable"].includes(consolidationBasis)) rejection = "invalid_consolidation_basis";
+        else if (!ACCOUNTING_BASES.has(consolidationBasis)) rejection = "invalid_consolidation_basis";
+        else if (requiredDefinitions.length && !requiredDefinitions.some((definition: any) =>
+          definition.factor === mapping.factor && definition.metric === mapping.metric
+          && definition.unit === resolvedUnit && definition.consolidation_basis === consolidationBasis
+          && definition.comparison_basis === comparisonBasis)) rejection = "historical_metric_definition_mismatch";
         else if (!quotedLabel) rejection = "missing_quoted_label";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
         else if (!resolvedUnit) rejection = "missing_unit";
         else if (seen.has(key)) rejection = "duplicate_comparison";
         if (rejection) {
-          diagnostics.push({ metric: mapping?.metric || candidate?.metricName || null, sourceUrl, outcome: rejection });
+          diagnostics.push({ metric: mapping?.metric || candidate?.metricName || null, sourceUrl, outcome: rejection,candidate:candidateSnapshot });
           continue;
         }
-        seen.add(key);
         let verifiedUrl = sourceUrl;
         let verificationMethod = "direct_official_document";
         let documentSha256: string | null = null;
         let archivedDocumentUri: string | null = null;
         let mediaType: string | null = null;
         let contentLength: number | null = null;
+        let previousDocument: { source_ref: string; source_date: string; document_sha256: string; archived_document_uri: string; media_type: string; content_length: number } | null = null;
         try {
-          const verification = await fetch(sourceUrl, {
+          const verification = await fetchEvidenceDocument(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
             headers: { "user-agent": "AlphaSynth-Research/1.0" },
           });
           verifiedUrl = verification.url || sourceUrl;
-          admitGroundedRedirectDomain(sourceUrl, verifiedUrl);
           if (!verification.ok || !isOfficialDossierSource(verifiedUrl, trustedOfficialDomains)) throw new Error(`HTTP ${verification.status}`);
           const maximumBytes = 20 * 1024 * 1024;
           const declaredBytes = Number(verification.headers.get("content-length") || 0);
@@ -4081,23 +4398,55 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           documentSha256 = createHash("sha256").update(bytes).digest("hex");
           mediaType = contentType || "application/octet-stream";
           contentLength = bytes.length;
-          const documentText = contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
+          const documentText = retrieval.documents.find(doc=>doc.sourceUrl===verifiedUrl)?.text || (contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 40)
-            : bytes.toString("utf8").replace(/<[^>]+>/g, " ");
+            : bytes.toString("utf8").replace(/<[^>]+>/g, " "));
+          if(!indexedSources.some(s=>s.url===sourceUrl&&s.published_at===sourceDate)
+            && !publicationDateSupported(documentText,sourceDate!,currentPeriodEndDate!)) {
+            diagnostics.push({metric:mapping.metric,sourceUrl:verifiedUrl,outcome:'publication_date_not_supported_by_document_header'});continue;
+          }
           if (!documentSupportsAnchor(documentText, {
             metric_name: mapping.metric,
-            previous_period: previousPeriod,
+            previous_period: previousSourceUrl === sourceUrl ? previousPeriod : currentPeriod,
             current_period: currentPeriod,
-            previous_value: previousValue,
+            previous_period_end_date: previousSourceUrl === sourceUrl ? previousPeriodEndDate : currentPeriodEndDate,
+            current_period_end_date: currentPeriodEndDate,
+            previous_value: previousSourceUrl === sourceUrl ? previousValue : currentValue,
             current_value: currentValue,
           })) {
-            diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified" });
+            diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified",candidate:candidateSnapshot });
             continue;
           }
           archivedDocumentUri = await archiveFundamentalReviewDocument(bytes, documentSha256, mediaType);
           if (!archivedDocumentUri) {
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "immutable_archive_not_configured" });
             continue;
+          }
+          if (previousSourceUrl !== sourceUrl) {
+            const priorResponse = await fetchEvidenceDocument(previousSourceUrl, { signal: AbortSignal.timeout(15_000) });
+            const priorUrl = priorResponse.url || previousSourceUrl;
+            if (!priorResponse.ok || !isOfficialDossierSource(priorUrl, trustedOfficialDomains)
+              || Number(priorResponse.headers.get("content-length") || 0) > maximumBytes) throw new Error("previous_document_unavailable");
+            const priorBytes = Buffer.from(await priorResponse.arrayBuffer());
+            if (!priorBytes.length || priorBytes.length > maximumBytes) throw new Error("invalid_previous_document_size");
+            const priorType = priorResponse.headers.get("content-type") || "application/octet-stream";
+            const priorText = retrieval.documents.find(doc=>doc.sourceUrl===priorUrl)?.text || (priorType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(priorUrl)
+              ? await extractPdfTextLocally(priorBytes, 40) : priorBytes.toString("utf8").replace(/<[^>]+>/g, " "));
+            if(!indexedSources.some(s=>s.url===previousSourceUrl&&s.published_at===previousSourceDate)
+              && !publicationDateSupported(priorText,previousSourceDate!,previousPeriodEndDate!)) {
+              diagnostics.push({metric:mapping.metric,sourceUrl:priorUrl,outcome:'previous_publication_date_not_supported_by_document_header'});continue;
+            }
+            if (!documentSupportsAnchor(priorText, { metric_name: mapping.metric,
+              previous_period: previousPeriod, current_period: previousPeriod,
+              previous_period_end_date: previousPeriodEndDate, current_period_end_date: previousPeriodEndDate,
+              previous_value: previousValue, current_value: previousValue })) {
+              diagnostics.push({ metric: mapping.metric, outcome: "previous_source_value_not_verified" }); continue;
+            }
+            const priorHash = createHash("sha256").update(priorBytes).digest("hex");
+            const priorArchive = await archiveFundamentalReviewDocument(priorBytes, priorHash, priorType);
+            if (!priorArchive) throw new Error("previous_archive_unavailable");
+            previousDocument = { source_ref: priorUrl, source_date: previousSourceDate!, document_sha256: priorHash,
+              archived_document_uri: priorArchive, media_type: priorType, content_length: priorBytes.length };
           }
         } catch {
           // NSE/BSE frequently block server-side PDF downloads. Permit a lower-
@@ -4125,6 +4474,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           continue;
         }
         const hostname = new URL(verifiedUrl).hostname.toLowerCase();
+        seen.add(key);
         rows.push({
           symbol: ticker, factor: mapping.factor, metric_name: mapping.metric,
           previous_period: previousPeriod, current_period: currentPeriod,
@@ -4142,6 +4492,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           archived_document_uri: archivedDocumentUri,
           media_type: mediaType,
           content_length: contentLength,
+          previous_document: previousDocument,
         });
         diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl,
           outcome: verificationMethod === "direct_official_document" ? "admitted" : "admitted_grounded_official_fallback" });
@@ -4265,9 +4616,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const requestConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL);
     const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
     const publicRequestsEnabled = process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED === "true";
-    const supportedSymbols = fundamentalReviewSupportedSymbols();
+    const configuredSymbols = fundamentalReviewSupportedSymbols();
     const requestScope = fundamentalReviewRequestScope();
-    const supportedSymbolCount = requestScope === "radar_universe" ? momentumRadarSymbols().size : supportedSymbols.length;
+    const preflight = buildFcsEvidencePreflightSnapshot();
+    const supportedSymbols = preflight.priorityBatch.records.filter((record) => record.requestEnabled).map((record) => record.symbol);
+    const supportedSymbolCount = supportedSymbols.length;
     const available = requestConfigured && statusConfigured && publicRequestsEnabled && supportedSymbolCount > 0;
     return res.json({
       available,
@@ -4275,22 +4628,29 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       statusConfigured,
       publicRequestsEnabled,
       requestScope,
-      supportedSymbols: requestScope === "controlled_beta" ? supportedSymbols : [],
+      supportedSymbols,
       supportedSymbolCount,
       scopeMessage: supportedSymbolCount
-        ? requestScope === "radar_universe"
-          ? `New FCS requests are enabled for the ${supportedSymbolCount.toLocaleString("en-IN")}-company scanned NSE universe. A score is published only when all four evidence factors pass the V2 contract.`
-          : `New FCS requests are currently enabled for ${supportedSymbolCount} approved evidence-gate companies.`
-        : "No companies are enabled for new FCS requests on this deployment.",
+        ? `New FCS requests are enabled for ${supportedSymbolCount} companies whose deterministic evidence preflight passed. A score is published only when all four evidence factors pass the V2 contract.`
+        : `Preflight covers ${preflight.summary.total} priority companies, but no new request currently has verified current/comparable four-factor evidence. ${preflight.summary.byStatus.report_ready} published reports remain available.`,
       activationState: available ? "available" : "not_activated",
       unavailableReason: available
         ? null
         : "New FCS processing is not yet activated. Existing published FCS reports remain available.",
       durableRuntimeConfigured: fundamentalReviewRuntimeConfigured(),
+      preflightSummary: preflight.summary,
+      configuredSymbolCount: requestScope === "radar_universe" ? momentumRadarSymbols().size : configuredSymbols.length,
       expectedMinutes: { minimum: 10, maximum: 15 },
       currentScoreAvailableBeforeLifecycle: true,
       lifecycleRequiresComparableCheckpoints: 3,
     });
+  });
+
+  app.get("/api/bms/fundamental-review/preflight", (req, res) => {
+    const symbol = cleanFundamentalReviewSymbol(req.query.symbol);
+    res.setHeader("Cache-Control", "public, max-age=300");
+    if (symbol) return res.json(fcsEvidencePreflightForSymbol(symbol));
+    return res.json(buildFcsEvidencePreflightSnapshot());
   });
 
   // Durable worker endpoints. In production these are invoked through Cloud
@@ -4303,7 +4663,33 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
     const provider = getCanonicalEvidenceProvider();
     const canonical = provider?.(symbol);
-    if (canonical?.candidates?.length) return res.json(canonical);
+    const evidenceCutoff = String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10));
+    const targetPeriodEnd = String(req.body?.target_period_end || "");
+    if (targetPeriodEnd && (!/^\d{4}-(03-31|06-30|09-30|12-31)$/.test(targetPeriodEnd) || targetPeriodEnd > evidenceCutoff)) {
+      return res.status(400).json({ error: "Invalid historical target period." });
+    }
+    if (canonical?.candidates?.length) {
+      const documents = new Map(canonical.documents.map((document: any) => [document.document_id, document] as const));
+      const requiredDefinitions = Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : [];
+      const candidates = canonical.candidates.filter((candidate: any) => (!targetPeriodEnd || candidate.current_period?.end_date === targetPeriodEnd)
+        && (!requiredDefinitions.length || requiredDefinitions.some((definition: any) =>
+          definition.factor === candidate.factor_id && definition.metric === candidate.canonical_metric_id
+          && definition.unit === candidate.canonical_unit && definition.comparison_basis === candidate.comparison_basis
+          && definition.consolidation_basis === candidate.previous_consolidation_basis
+          && definition.consolidation_basis === candidate.current_consolidation_basis))
+        && candidate.current_period?.end_date <= evidenceCutoff
+        && String(candidate.information_cutoff || "").slice(0, 10) <= evidenceCutoff
+        && [candidate.previous_document_id, candidate.current_document_id].every((id) => {
+          const document: any = documents.get(id);
+          return document?.published_at && String(document.published_at).slice(0, 10) <= evidenceCutoff;
+        }));
+      // A frozen approval is not proof that it represents today's latest results.
+      // Reuse it for its original cutoff or an explicitly requested historical quarter.
+      if (new Set(candidates.map((candidate: any) => candidate.factor_id)).size === 4
+          && (targetPeriodEnd || candidates.every((candidate: any) => String(candidate.information_cutoff).slice(0, 10) === evidenceCutoff))) {
+        return res.json({ ...canonical, candidates });
+      }
+    }
 
     const dynamicEvidenceUrl = String(process.env.FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_URL || "").trim();
     if (!dynamicEvidenceUrl) {
@@ -4324,6 +4710,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           company_name: String(req.body?.company_name || symbol),
           sector: String(req.body?.sector || "Unclassified"),
           information_cutoff: String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10)),
+          target_period_end: targetPeriodEnd || undefined,
+          required_metric_definitions: req.body?.required_metric_definitions,
           missing_factor_ids: ["earnings", "economics", "execution", "balance_sheet"],
         }),
         signal: AbortSignal.timeout(12 * 60_000),
@@ -4395,6 +4783,20 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     }
   });
 
+  app.post("/internal/fundamental-review/source-identity", async (req,res) => {
+    if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({error:'Unauthorized.'});
+    const symbol=cleanFundamentalReviewSymbol(req.body?.symbol);
+    const companyName=String(req.body?.company_name||'').trim();
+    const sourceUrl=String(req.body?.source_url||'').trim();
+    if(!symbol||companyName.length<5||companyName.length>180||sourceUrl.length>2048)return res.status(400).json({error:'Invalid identity request.'});
+    try {
+      const identity=await verifyDirectIssuerIdentity({ticker:symbol,companyName,sourceUrl,fetchImpl:officialDocumentFetch});
+      if(req.body?.scan_current_sources===true&&identity.verified)return res.json({...identity,issuerIndex:await discoverIssuerIndexLinks(identity.proofs.map(proof=>proof.domain),officialDocumentFetch)});
+      return res.json(identity);
+    }
+    catch { return res.status(400).json({error:'The official identity source could not be checked.'}); }
+  });
+
   app.get("/internal/fundamental-review/status", async (req, res) => {
     if (!hasFundamentalReviewInternalAccess(req)) return res.status(401).json({ error: "Unauthorized." });
     const symbol = cleanFundamentalReviewSymbol(req.query.symbol);
@@ -4405,6 +4807,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     } catch (error: any) {
       console.error("[fundamental-review] durable status failed:", error?.message || error);
       return res.status(503).json({ error: "Review status is temporarily unavailable." });
+    }
+  });
+
+  app.get("/internal/fundamental-review/publications", async (req,res)=>{
+    if(!hasFundamentalReviewInternalAccess(req))return res.status(401).json({error:"Unauthorized."});
+    try {return res.json({publications:await getFundamentalReviewService().publications()});}
+    catch {return res.status(503).json({error:"Published-review list is temporarily unavailable."});}
+  });
+  let publishedReviewListCache:{checkedAt:number;payload:any}|null=null;
+  app.get("/api/bms/fundamental-review/publications",async (_req,res)=>{
+    res.setHeader("Cache-Control","no-store");
+    if(publishedReviewListCache && Date.now()-publishedReviewListCache.checkedAt<60_000)return res.json(publishedReviewListCache.payload);
+    const statusUrl=process.env.FUNDAMENTAL_REVIEW_STATUS_URL;
+    if(!statusUrl)return res.status(503).json({error:"Published-review list is not configured."});
+    try {
+      const url=new URL(statusUrl);url.pathname="/internal/fundamental-review/publications";url.search="";
+      // The private worker can cold-start after an idle period. Publication
+      // summaries are read-only, so allow enough time for that first lookup
+      // instead of making the library silently fall back to stale rows.
+      const response=await fetch(url,{headers:await fundamentalReviewGatewayHeaders(statusUrl),signal:AbortSignal.timeout(60_000)});
+      if(!response.ok)throw new Error("Publication-list lookup failed");
+      const payload:any=await response.json();if(!Array.isArray(payload.publications))throw new Error("Invalid publication list");
+      publishedReviewListCache={checkedAt:Date.now(),payload};return res.json(payload);
+    } catch(error:any) {
+      console.error("[fundamental-review] publication-list lookup failed:",error?.message||error);
+      // A previously verified list is safer than reverting the UI to older
+      // static rows during a transient worker restart.
+      if(publishedReviewListCache)return res.json({...publishedReviewListCache.payload,stale:true,warning:"Latest publication check is temporarily unavailable."});
+      return res.status(503).json({error:"Could not check new published reports. Earlier reports remain available."});
     }
   });
 
@@ -4430,6 +4861,22 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);
     const companyName = String(req.body?.company_name || symbol).trim();
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+
+    const preflight = fcsEvidencePreflightForSymbol(symbol);
+    if (preflight.status === "report_ready") {
+      return res.status(409).json({
+        error: "A published four-factor FCS already exists. Open the existing report instead of starting a paid review.",
+        code: "FUNDAMENTAL_REVIEW_ALREADY_PUBLISHED",
+        preflight,
+      });
+    }
+    if (!preflight.requestEnabled) {
+      return res.status(409).json({
+        error: "A new FCS request is not enabled because current and comparable four-factor evidence has not passed deterministic preflight. Deep Dive remains available.",
+        code: "FUNDAMENTAL_REVIEW_PREFLIGHT_NOT_READY",
+        preflight,
+      });
+    }
 
     const supportedSymbols = fundamentalReviewSupportedSymbols();
     if (!fundamentalReviewSymbolEnabled(symbol)) {
@@ -4474,7 +4921,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         });
       }
       const job = normalizeFundamentalReviewJob(payload?.job || payload, { symbol, companyName });
-      if (!job.jobId || (!["queued", "locating_evidence", "validating_factors", "scoring", "lifecycle_processing", "ready"].includes(job.status) && !job.resultAvailable)) {
+      if (!job.jobId || job.status === "not_started") {
         return res.status(502).json({
           error: "The review worker did not return a valid durable job acknowledgement. No start is being claimed.",
           code: "INVALID_FUNDAMENTAL_REVIEW_ACKNOWLEDGEMENT",
@@ -4504,13 +4951,37 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const url = new URL(statusUrl);
       url.searchParams.set("symbol", symbol);
       const headers = await fundamentalReviewGatewayHeaders(statusUrl);
-      const response = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
+      // A private Cloud Run worker may be starting from zero instances.
+      // Status reads are read-only: allow startup without resubmitting the job.
+      const response = await fetch(url, { headers, signal: AbortSignal.timeout(30_000) });
       const payload: any = await response.json().catch(() => ({}));
       if (!response.ok) return res.status(response.status).json({ error: payload?.error || "Review status is unavailable." });
-      return res.json({ job: normalizeFundamentalReviewJob(payload?.job || payload, { symbol }) });
+      return res.json({ job: publicFundamentalReviewJob(payload?.job || payload, { symbol }) });
     } catch (error: any) {
       console.error("[fundamental-review] status failed:", error?.message || error);
       return res.status(502).json({ error: "Review status is temporarily unavailable." });
+    }
+  });
+
+  app.get("/api/bms/fundamental-review/result/:symbol", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    const symbol = cleanFundamentalReviewSymbol(req.params.symbol);
+    if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
+    const statusUrl = process.env.FUNDAMENTAL_REVIEW_STATUS_URL;
+    if (!statusUrl) return res.status(503).json({ error: "Review results are not configured on this deployment." });
+    try {
+      const url = new URL(statusUrl);
+      url.searchParams.set("symbol", symbol);
+      const response = await fetch(url, { headers: await fundamentalReviewGatewayHeaders(statusUrl), signal: AbortSignal.timeout(30_000) });
+      const payload: any = await response.json().catch(() => ({}));
+      if (!response.ok) return res.status(response.status).json({ error: "The review result could not be loaded." });
+      const record = payload.job || payload;
+      const job = publicFundamentalReviewJob(record, { symbol });
+      const result = publishedFundamentalReviewResult(record);
+      if (!result) return res.status(409).json({ error: "No publishable FCS report is available from this attempt. Check the review outcome.", job });
+      return res.json({ job, informationCutoff: record.informationCutoff || "", result });
+    } catch {
+      return res.status(502).json({ error: "The report could not be loaded. Check latest status and try again." });
     }
   });
 

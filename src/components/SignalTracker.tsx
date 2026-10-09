@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Activity,
   ArrowLeft,
@@ -292,13 +292,17 @@ function forwardComparison(
 type SignalTrackerProps = {
   onBack: () => void;
   initialMode?: "v1" | "v2" | "momentum" | "library";
+  initialCompanySymbol?: string | null;
   onModeChange?: (mode: "v1" | "v2" | "momentum" | "library") => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
-export default function SignalTracker({ onBack, initialMode = "v2", onModeChange, onDeepDive }: SignalTrackerProps) {
+export default function SignalTracker({ onBack, initialMode = "v2", initialCompanySymbol = null, onModeChange, onDeepDive }: SignalTrackerProps) {
   const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "library">(initialMode);
   const [libraryInitialSymbol, setLibraryInitialSymbol] = useState<string | null>(null);
+  const [radarInitialSymbol, setRadarInitialSymbol] = useState<string | null>(null);
+  useEffect(() => { if (initialCompanySymbol && initialMode === "library") setLibraryInitialSymbol(initialCompanySymbol); }, [initialCompanySymbol, initialMode]);
+  useEffect(() => { if (initialCompanySymbol && initialMode === "momentum") setRadarInitialSymbol(initialCompanySymbol); }, [initialCompanySymbol, initialMode]);
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
   const [dataSource, setDataSource] = useState<"cloud" | "frozen-fallback">("frozen-fallback");
   const [filter, setFilter] = useState<"All" | Lifecycle>("Emerging");
@@ -313,6 +317,15 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
     onModeChange?.(mode);
   };
   const [selectedSymbol, setSelectedSymbol] = useState("SUNPHARMA");
+  const companyChartRef = useRef<HTMLElement>(null);
+  const selectCompanyChart = (symbol: string) => {
+    setSelectedSymbol(symbol);
+    requestAnimationFrame(() => {
+      const section = companyChartRef.current;
+      section?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+      section?.focus({ preventScroll: true });
+    });
+  };
   const [priceMode, setPriceMode] = useState<"indexed" | "actual">("indexed");
   const [activeSection, setActiveSection] = useState<TrackerSection>("overview");
   const [trackerView, setTrackerView] = useState<TrackerView>("all");
@@ -433,7 +446,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
   }
 
   if (studyMode === "momentum") {
-    return <MomentumRadar onBack={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} onDeepDive={onDeepDive} />;
+    return <MomentumRadar initialCompanySymbol={radarInitialSymbol} onBack={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} onDeepDive={onDeepDive} />;
   }
 
   if (studyMode === "library") {
@@ -592,7 +605,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
                   <button
                     key={company.symbol}
                     type="button"
-                    onClick={() => setSelectedSymbol(company.symbol)}
+                    onClick={() => selectCompanyChart(company.symbol)}
                     className={`w-full text-left rounded-xl px-3 py-3 border transition-all mb-1 ${selected.symbol === company.symbol ? "border-teal-400/30 bg-teal-400/[0.08]" : "border-transparent hover:bg-white/[0.035]"}`}
                   >
                     <div className="flex justify-between gap-3">
@@ -618,7 +631,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
               </div>
             </aside>
 
-            <section className="p-5 md:p-7 min-w-0">
+            <section ref={companyChartRef} tabIndex={-1} aria-label="Selected company validation chart" className="p-5 md:p-7 min-w-0 scroll-mt-24">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div>
                   <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">{selected.symbol} · Frozen period {selected.period}</div>
@@ -833,7 +846,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", onModeChange
                 <thead className="bg-white/[0.04] text-[9px] font-black uppercase tracking-[0.11em] text-zinc-400"><tr><th className="px-4 py-3">Company</th><th className="px-4 py-3">Frozen FCS</th><th className="px-4 py-3">Frozen lifecycle</th><th className="px-4 py-3">Stock return</th><th className="px-4 py-3">Vs Nifty 50</th><th className="px-4 py-3">Vs sector</th><th className="px-4 py-3">Observed sessions</th><th className="px-4 py-3">Market context</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">
                   {comparisonRows.map((row) => <tr key={row.company.symbol} className="bg-black/10 hover:bg-white/[0.025]">
-                    <td className="px-4 py-3"><button type="button" onClick={() => setSelectedSymbol(row.company.symbol)} className="text-left"><div className="text-xs font-semibold text-white hover:text-teal-200">{row.company.name}</div><div className="mt-1 font-mono text-[9px] text-zinc-500">{row.company.symbol} · through {row.latestDate ? formatDate(row.latestDate) : "unavailable"}</div></button></td>
+                    <td className="px-4 py-3"><button type="button" onClick={() => selectCompanyChart(row.company.symbol)} className="text-left"><div className="text-xs font-semibold text-white hover:text-teal-200">{row.company.name}</div><div className="mt-1 font-mono text-[9px] text-zinc-500">{row.company.symbol} · through {row.latestDate ? formatDate(row.latestDate) : "unavailable"}</div></button></td>
                     <td className="px-4 py-3 font-mono text-sm font-bold text-white">{score100(row.company.rawBms)}</td>
                     <td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[row.company.lifecycle]}`}>{row.company.lifecycle}</span></td>
                     <td className={`px-4 py-3 font-mono text-xs font-bold ${row.companyReturn === null ? "text-zinc-500" : row.companyReturn >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.companyReturn === null ? "Unavailable" : percentage(row.companyReturn)}</td>

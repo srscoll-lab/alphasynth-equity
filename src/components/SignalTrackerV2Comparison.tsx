@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ArrowLeft, BarChart3, CalendarClock, Compass, Database, ShieldCheck, TriangleAlert } from "lucide-react";
 import { CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import comparisonData from "../data/signalTrackerV2Comparison.json";
@@ -76,6 +76,11 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
   const [filter, setFilter] = useState<"All" | Lifecycle>("All");
   const [query, setQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState(companies[0].symbol);
+  const chartSectionRef = useRef<HTMLElement>(null);
+  const scrollToSelectedChart = () => requestAnimationFrame(() => {
+    chartSectionRef.current?.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    chartSectionRef.current?.focus({ preventScroll: true });
+  });
   const [comparisonSort, setComparisonSort] = useState<"fcs" | "company" | "nifty" | "sector">("nifty");
   const filtered = useMemo(() => companies.filter((company) => {
     const normalized = query.trim().toLowerCase();
@@ -169,7 +174,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
               <label className="text-[9px] font-black uppercase tracking-[0.12em] text-zinc-500">Sort rows<select value={comparisonSort} onChange={(event) => setComparisonSort(event.target.value as typeof comparisonSort)} className="mt-2 block min-w-56 rounded-xl border border-white/10 bg-[#111827] px-3 py-2.5 text-xs font-semibold normal-case tracking-normal text-white"><option value="nifty">Vs Nifty 50 · highest first</option><option value="sector">Vs sector · highest first</option><option value="company">Company return · highest first</option><option value="fcs">Frozen FCS · highest first</option></select></label>
             </div>
             <div className="mt-5 overflow-x-auto rounded-2xl border border-white/10">
-              <table className="min-w-[1080px] w-full border-collapse text-left">
+              <table onClick={(event) => { if ((event.target as HTMLElement).closest("button")) scrollToSelectedChart(); }} className="min-w-[1080px] w-full border-collapse text-left">
                 <thead className="bg-white/[0.04] text-[9px] font-black uppercase tracking-[0.11em] text-zinc-400"><tr><th className="px-4 py-3">Company</th><th className="px-4 py-3">Frozen FCS</th><th className="px-4 py-3">Lifecycle</th><th className="px-4 py-3">Company return</th><th className="px-4 py-3">Vs Nifty 50</th><th className="px-4 py-3">Vs sector</th><th className="px-4 py-3">Observed sessions</th><th className="px-4 py-3">Market context</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.07]">{comparisonRows.map(({ company, returns }) => {
                   const niftyContext = returns.nifty === null ? "Benchmark unavailable" : returns.nifty <= -0.03 ? "Broad market weak" : returns.nifty >= 0.03 ? "Broad market supportive" : "Broad market mixed/flat";
@@ -188,7 +193,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
                   {lifecycleOrder.map((stage) => <button key={stage} type="button" onClick={() => chooseStage(stage)} className={`rounded-lg border px-2.5 py-1.5 text-[9px] font-black uppercase ${filter === stage ? "border-violet-300 bg-violet-300 text-slate-950" : "border-white/10 text-zinc-400"}`}>{stage}</button>)}
                 </div>
               </div>
-              <div className="max-h-[760px] overflow-y-auto divide-y divide-white/5">
+              <div onClick={scrollToSelectedChart} className="max-h-[760px] overflow-y-auto divide-y divide-white/5">
                 {filtered.map((company) => <button key={company.symbol} type="button" onClick={() => setSelectedSymbol(company.symbol)} className={`w-full p-4 text-left hover:bg-white/[0.035] ${selected.symbol === company.symbol ? "bg-violet-400/[0.07]" : ""}`}>
                   <div className="flex gap-3 justify-between">
                     <div className="min-w-0"><div className="font-semibold text-white truncate">{company.name}</div><div className="text-[10px] font-mono text-zinc-500 mt-1">{company.symbol} · score {company.display_score_v2}</div></div>
@@ -199,7 +204,7 @@ export default function SignalTrackerV2Comparison({ onShowFrozen, onShowMomentum
               </div>
             </aside>
 
-            <section className="p-5 md:p-7 min-w-0">
+            <section ref={chartSectionRef} tabIndex={-1} aria-label="Selected company V2 validation chart" className="p-5 md:p-7 min-w-0 scroll-mt-24">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                 <div><div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">{selected.symbol} · V2 four-factor record</div><h2 className="text-2xl md:text-3xl font-semibold text-white mt-2">{selected.name}</h2><div className={`inline-flex mt-3 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase ${lifecycleStyle[selected.lifecycle]}`}>{isTrajectoryBacked(selected) ? `V2 lifecycle: ${selected.lifecycle}` : "V2 lifecycle: Pending"}</div></div>
                 <div className="sm:text-right"><div className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">V2 display score</div><div className="text-3xl font-mono font-bold text-white mt-1">{selected.display_score_v2}</div><div className="text-xs text-zinc-500">Raw {selected.raw_score.toFixed(4)}</div></div>

@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, BookOpen, BookOpenCheck, Calculator, FileCheck2, Library, Search, ShieldCheck } from "lucide-react";
-import { fundamentalChangeLibrary, type FundamentalChangeRecord } from "../data/fundamentalChangeLibrary";
+import { fundamentalChangeLibrary, onDemandLibraryRecord, type FundamentalChangeRecord } from "../data/fundamentalChangeLibrary";
 import scoreDetails from "../data/fundamentalChangeScoreDetails.json";
 import FundamentalReviewLauncher from "./FundamentalReviewLauncher";
+import LatestPublishedFcs from "./LatestPublishedFcs";
+import {mergeFcsPublications,type FcsPublicationSummary} from '../fcs-publications';
 
 type SortKey = "fcsScore" | "momentumScore" | "companyName" | "fcsAsOf";
 type SortDirection = "asc" | "desc";
@@ -100,6 +102,17 @@ type DeepDiveCompany = {
 };
 
 export default function FundamentalChangeLibrary({ initialSymbol = null, onBack, onDeepDive }: { initialSymbol?: string | null; onBack: () => void; onDeepDive: (company: DeepDiveCompany) => void }) {
+  const [publications,setPublications]=useState<FcsPublicationSummary[]>([]);
+  const [publicationLookupFailed,setPublicationLookupFailed]=useState(false);
+  useEffect(()=>{
+    const controller=new AbortController();
+    fetch('/api/bms/fundamental-review/publications',{signal:controller.signal,cache:'no-store'})
+      .then(async response=>{if(!response.ok)throw new Error('Publication lookup unavailable');return response.json();})
+      .then(payload=>{if(!controller.signal.aborted && Array.isArray(payload.publications))setPublications(payload.publications);})
+      .catch(()=>{if(!controller.signal.aborted)setPublicationLookupFailed(true);});
+    return ()=>controller.abort();
+  },[]);
+  const currentLibrary=useMemo(()=>mergeFcsPublications(fundamentalChangeLibrary,publications,onDemandLibraryRecord),[publications]);
   const [query, setQuery] = useState(librarySessionState.query);
   const [momentumState, setMomentumState] = useState(librarySessionState.momentumState);
   const [capSegment, setCapSegment] = useState(librarySessionState.capSegment);
@@ -107,22 +120,22 @@ export default function FundamentalChangeLibrary({ initialSymbol = null, onBack,
   const [sortKey, setSortKey] = useState<SortKey>(librarySessionState.sortKey);
   const [sortDirection, setSortDirection] = useState<SortDirection>(librarySessionState.sortDirection);
   const [selectedSymbol, setSelectedSymbol] = useState<string | null>(
-    initialSymbol && fundamentalChangeLibrary.some((record) => record.symbol === initialSymbol) ? initialSymbol : null,
+    initialSymbol || null,
   );
 
   useEffect(() => {
-    setSelectedSymbol(initialSymbol && fundamentalChangeLibrary.some((record) => record.symbol === initialSymbol) ? initialSymbol : null);
+    setSelectedSymbol(initialSymbol || null);
   }, [initialSymbol]);
 
   useEffect(() => {
     Object.assign(librarySessionState, { query, momentumState, capSegment, readiness, sortKey, sortDirection });
   }, [capSegment, momentumState, query, readiness, sortDirection, sortKey]);
 
-  const momentumStates = useMemo(() => unique(fundamentalChangeLibrary.map((record) => record.momentumState)), []);
-  const capSegments = useMemo(() => unique(fundamentalChangeLibrary.map((record) => record.capSegment)), []);
+  const momentumStates = useMemo(() => unique(currentLibrary.map((record) => record.momentumState)), [currentLibrary]);
+  const capSegments = useMemo(() => unique(currentLibrary.map((record) => record.capSegment)), [currentLibrary]);
   const records = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return fundamentalChangeLibrary
+    return currentLibrary
       .filter((record) => (!normalized || record.symbol.toLowerCase().includes(normalized) || record.companyName.toLowerCase().includes(normalized)))
       .filter((record) => momentumState === "ALL" || record.momentumState === momentumState)
       .filter((record) => capSegment === "ALL" || record.capSegment === capSegment)
@@ -137,9 +150,9 @@ export default function FundamentalChangeLibrary({ initialSymbol = null, onBack,
           ? leftValue - (rightValue as number)
           : String(leftValue).localeCompare(String(rightValue))) * direction;
       });
-  }, [capSegment, momentumState, query, readiness, sortDirection, sortKey]);
+  }, [capSegment, momentumState, query, readiness, sortDirection, sortKey,currentLibrary]);
 
-  const lifecycleReadyCount = fundamentalChangeLibrary.filter((record) => record.lifecycleReady).length;
+  const lifecycleReadyCount = currentLibrary.filter((record) => record.lifecycleReady).length;
   const setSort = (key: SortKey) => {
     if (key === sortKey) setSortDirection((current) => current === "asc" ? "desc" : "asc");
     else {
@@ -154,14 +167,24 @@ export default function FundamentalChangeLibrary({ initialSymbol = null, onBack,
     </button>
   );
 
-  const selectedRecord = selectedSymbol ? fundamentalChangeLibrary.find((record) => record.symbol === selectedSymbol) : null;
+  const selectedRecord = selectedSymbol ? currentLibrary.find((record) => record.symbol === selectedSymbol) : null;
   const selectedDetail = selectedSymbol ? scoreDetailBySymbol.get(selectedSymbol) : null;
+  if(selectedRecord?.livePublication)return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6"><div className="mx-auto max-w-7xl">
+    <button type="button" onClick={()=>setSelectedSymbol(null)} className="mb-6 text-cyan-100 underline">Back to Fundamental Change Library</button>
+    <LatestPublishedFcs symbol={selectedRecord.symbol} companyName={selectedRecord.companyName} hasEarlierSnapshot={false}/>
+    <button type="button" onClick={()=>onDeepDive({symbol:selectedRecord.symbol,company_name:selectedRecord.companyName,bms_status:selectedRecord.lifecycleReady?'ready':'fcs_ready'})} className="mt-4 text-gold underline">Open company Deep Dive</button>
+  </div></main>;
   if (selectedRecord && selectedDetail) {
     return <ScoreDetailView record={selectedRecord} detail={selectedDetail} onBack={() => setSelectedSymbol(null)} onDeepDive={() => onDeepDive({ symbol: selectedRecord.symbol, company_name: selectedRecord.companyName, bms_status: selectedRecord.lifecycleReady ? "ready" : "fcs_ready" })} />;
   }
+  if(selectedSymbol&&!selectedRecord)return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6"><div className="mx-auto max-w-7xl">
+    <button type="button" onClick={()=>setSelectedSymbol(null)} className="mb-6 text-cyan-100 underline">Back to Fundamental Change Library</button>
+    <LatestPublishedFcs symbol={selectedSymbol} companyName={selectedSymbol} hasEarlierSnapshot={false}/>
+  </div></main>;
 
   return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6">
     <div className="mx-auto max-w-7xl">
+      {publicationLookupFailed && <p className="mb-3 text-sm text-amber-100">Could not check for newly published reports. Earlier library records remain available; reopen the library to retry.</p>}
       <button type="button" onClick={onBack} className="mb-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white">
         <ArrowLeft className="h-4 w-4" /> Back to Momentum Radar
       </button>
@@ -179,15 +202,15 @@ export default function FundamentalChangeLibrary({ initialSymbol = null, onBack,
           </div>
           <div className="mt-7 grid gap-3 sm:grid-cols-3">
             {[
-              ["Four-factor FCS records", fundamentalChangeLibrary.length, "Controlled validation, momentum expansion and final-build studies"],
+              ["Four-factor FCS records", currentLibrary.length, "Previously qualified and newly published on-demand reports"],
               ["Lifecycle ready", lifecycleReadyCount, "All 3 comparable reporting-period FCS scores are available"],
-              ["Current FCS only", fundamentalChangeLibrary.length - lifecycleReadyCount, "Current score ready; more history is needed for a lifecycle"],
+              ["Current FCS only", currentLibrary.length - lifecycleReadyCount, "Current score ready; more history is needed for a lifecycle"],
             ].map(([title, value, copy]) => <div key={title} className="rounded-2xl border border-white/10 bg-white/[0.035] p-4"><div className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">{title}</div><div className="mt-2 font-mono text-2xl font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{copy}</div></div>)}
           </div>
         </header>
 
         <FundamentalReviewLauncher
-          availableSymbols={new Set(fundamentalChangeLibrary.map((record) => record.symbol))}
+          availableSymbols={new Set(currentLibrary.map((record) => record.symbol))}
           onOpenAvailable={(symbol) => setSelectedSymbol(symbol)}
         />
 
@@ -198,7 +221,7 @@ export default function FundamentalChangeLibrary({ initialSymbol = null, onBack,
             <select value={capSegment} onChange={(event) => setCapSegment(event.target.value)} aria-label="Filter by market-cap segment" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All cap segments</option>{capSegments.map((segment) => <option key={segment} value={segment}>{capLabel(segment)}</option>)}</select>
             <select value={readiness} onChange={(event) => setReadiness(event.target.value as typeof readiness)} aria-label="Filter by lifecycle readiness" className="rounded-xl border border-white/10 bg-[#101827] px-3 py-2.5 text-xs text-zinc-200 outline-none"><option value="ALL">All readiness</option><option value="LIFECYCLE_READY">FCS + lifecycle ready</option><option value="FCS_ONLY">FCS ready · lifecycle pending</option></select>
           </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-zinc-500"><span>{records.length} of {fundamentalChangeLibrary.length} records shown</span><span>Sorted by {sortKey === "fcsScore" ? "FCS" : sortKey === "momentumScore" ? "Momentum Radar score" : sortKey === "companyName" ? "company" : "FCS date"} · {sortDirection === "asc" ? "ascending" : "descending"}</span></div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[10px] text-zinc-500"><span>{records.length} of {currentLibrary.length} records shown</span><span>Sorted by {sortKey === "fcsScore" ? "FCS" : sortKey === "momentumScore" ? "Momentum Radar score" : sortKey === "companyName" ? "company" : "FCS date"} · {sortDirection === "asc" ? "ascending" : "descending"}</span></div>
         </div>
 
         <div className="overflow-x-auto p-5 md:p-8">
@@ -221,7 +244,7 @@ function RecordRow({ record, onOpen, onDeepDive }: { record: FundamentalChangeRe
     <td className="px-3 py-4"><div className="font-mono text-xl font-bold text-emerald-200">{record.fcsScore}</div><div className="mt-1 text-[9px] text-zinc-600">BMS V2 method</div></td>
     <td className="px-3 py-4"><div className="text-xs text-zinc-300">{record.fcsPeriod}</div><div className="mt-1 text-[10px] text-zinc-600">{record.fcsAsOf.slice(0, 10)}</div></td>
     <td className="px-3 py-4"><span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase text-emerald-300"><ShieldCheck className="h-3.5 w-3.5" /> Four-factor ready</span></td>
-    <td className="px-3 py-4">{record.lifecycleReady ? <><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-200"><BookOpenCheck className="h-3.5 w-3.5" /> {record.lifecycle}</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints} of 3 comparable FCS periods</div></> : <><span className="text-xs text-zinc-500">Lifecycle pending</span><div className="mt-1 text-[9px] text-zinc-600">{record.checkpoints} of 3 comparable FCS periods available</div></>}</td>
+    <td className="px-3 py-4">{record.lifecycleReady ? <><span className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-200"><BookOpenCheck className="h-3.5 w-3.5" /> {record.lifecycle}</span><div className="mt-1 text-[9px] text-zinc-400">{record.checkpoints} of 3 comparable FCS periods</div>{record.lifecycleAsOf && <div className="mt-1 text-[10px] text-zinc-300">History through {record.lifecycleAsOf}</div>}</> : <><span className="text-xs text-zinc-400">Lifecycle pending</span><div className="mt-1 text-[9px] text-zinc-400">{record.checkpoints} of 3 comparable FCS periods available</div></>}</td>
     <td className="px-3 py-4"><span className={`rounded-full border px-2 py-1 text-[9px] font-black ${momentumStyle[record.momentumState]}`}>{momentumLabel[record.momentumState] ?? label(record.momentumState)}</span></td>
     <td className="px-3 py-4 font-mono text-sm text-white">{record.momentumScore ?? "—"}</td>
     <td className="px-3 py-4 font-mono text-sm text-zinc-300">{pct(record.universeRelativeStrength)}</td>
@@ -266,11 +289,12 @@ function ScoreDetailView({ record, detail, onBack, onDeepDive }: { record: Funda
   return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6">
     <div className="mx-auto max-w-7xl">
       <button type="button" onClick={onBack} className="mb-7 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-400 hover:text-white"><ArrowLeft className="h-4 w-4" /> Back to Fundamental Change Library</button>
+      <LatestPublishedFcs symbol={record.symbol} companyName={record.companyName} />
       <section className="overflow-hidden rounded-[28px] border border-emerald-400/20 bg-gradient-to-br from-[#0d1728] via-[#101a2b] to-[#0b1321] shadow-2xl">
         <header className="border-b border-white/10 px-5 py-6 md:px-8 md:py-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <div className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300"><Calculator className="h-4 w-4" /> Fundamental Change Score report</div>
+              <div className="mb-3 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300"><Calculator className="h-4 w-4" /> Original library snapshot — retained for reference</div>
               <h1 className="text-3xl font-semibold text-white md:text-5xl">{record.companyName}</h1>
               <div className="mt-2 font-mono text-sm text-zinc-500">{record.symbol} · {record.fcsPeriod} · evidence as of {record.fcsAsOf.slice(0, 10)}</div>
               <p className="mt-4 max-w-3xl text-sm leading-relaxed text-zinc-400">The score below is generated from four independently qualified factors using the frozen BMS V2 weighting policy. Momentum Radar data is shown as separate context and does not enter this calculation.</p>

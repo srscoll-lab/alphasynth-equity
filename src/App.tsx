@@ -80,6 +80,7 @@ import {
 } from 'recharts';
 import BusinessMomentum from "./components/BusinessMomentum";
 import SignalTracker from "./components/SignalTracker";
+import FundamentalReviewActivity from "./components/FundamentalReviewActivity";
 import AiTransitionObservatory from "./components/AiTransitionObservatory";
 import { sanitizeDebtEquity } from "./peer-metric-validation";
 
@@ -593,6 +594,7 @@ export default function App() {
     setAppView('tracker');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+  const [fcsActivitySymbol, setFcsActivitySymbol] = useState<string | null>(null);
   const [streamingReport, setStreamingReport] = useState<string>('');
   const [bmsValidation, setBmsValidation] = useState<any>(null);
   const [bmsResearchContext, setBmsResearchContext] = useState<any>(null);
@@ -4116,15 +4118,31 @@ ${list}
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
             </div>
-            <span className="font-bold text-xl tracking-tight text-white group-hover:text-gold transition-colors">
-              Alphasynth Intelligence
-              <span className="md:hidden ml-1.5 text-sm opacity-40">⌂</span>
+            <span className="font-bold text-sm sm:text-xl tracking-tight text-white group-hover:text-gold transition-colors">
+              <span className="hidden sm:inline">Alphasynth Intelligence</span><span className="sm:hidden">AlphaSynth</span>
+              <span className="hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
               {standaloneResearchMode ? 'Open company research' : 'Open Momentum Radar'}
             </span>
           </button>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
+            <FundamentalReviewActivity
+              onOpenExisting={(symbol) => { setFcsActivitySymbol(symbol); openSignalTracker('library'); }}
+              onReturnToRadar={(symbol) => { setFcsActivitySymbol(symbol); openSignalTracker('momentum'); }}
+              onDeepDive={(company) => {
+                setTicker(company.symbol);
+                setBmsResearchContext({ symbol: company.symbol, company_name: company.company_name, period: '', bms: 0, origin: 'momentum_radar', workflow_status: company.bms_status });
+                setBmsResearchText("");
+                setBmsResearchError("");
+                setResolvedCompany({ name: company.company_name || company.symbol, symbol: company.symbol, candidates: [] });
+                resolvedCompanyRef.current = { name: company.company_name || company.symbol, symbol: company.symbol, candidates: [] };
+                setWorkflowMode('deep_dive');
+                setActiveTab('equity');
+                setAppView('research');
+                setTimeout(scrollToWorkflow, 100);
+              }}
+            />
             {appView === 'research' && !standaloneResearchMode && (
               <button
                 type="button"
@@ -4189,7 +4207,7 @@ ${list}
                 onClick={enterOpenResearch}
                 className={`px-4 py-2 text-xs font-semibold uppercase tracking-widest bg-amber text-black rounded hover:bg-amber transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(201,145,42,0.3)] active:scale-95`}
               >
-                <TrendingUp className="w-3 h-3" /> Research a Company
+                <TrendingUp className="w-3 h-3" /><span className="hidden sm:inline">Research a Company</span><span className="sr-only sm:hidden">Research a Company</span>
               </button>
             )}
           </div>
@@ -4250,6 +4268,7 @@ ${list}
       {appView === 'tracker' && (
         <SignalTracker
           initialMode={trackerInitialMode}
+          initialCompanySymbol={fcsActivitySymbol}
           onModeChange={(mode) => {
             setTrackerInitialMode(mode);
             const url = new URL(window.location.href);

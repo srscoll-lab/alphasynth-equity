@@ -1,0 +1,1999 @@
+{
+  "schemaVersion": "1.0.0",
+  "generatedAt": "2026-09-25T12:01:46.369Z",
+  "evidenceCutoff": "2026-09-25",
+  "policy": {
+    "baselineUsesModelCalls": false,
+    "requestEnablementRule": "Enable a new FCS request only after all four factor families and current/comparable official documents pass deterministic preflight.",
+    "largeCapRule": "Large-cap membership determines priority, never evidence eligibility."
+  },
+  "priorityBatch": {
+    "selection": "all_large_cap_companies",
+    "targetCount": 100,
+    "records": [
+      {
+        "symbol": "ABB",
+        "companyName": "ABB India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ADANIENSOL",
+        "companyName": "Adani Energy Solutions Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "ADANIENT",
+        "companyName": "Adani Enterprises Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "ADANIGREEN",
+        "companyName": "Adani Green Energy Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ADANIPORTS",
+        "companyName": "Adani Ports and Special Economic Zone Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ADANIPOWER",
+        "companyName": "Adani Power Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "AMBUJACEM",
+        "companyName": "Ambuja Cements Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "APOLLOHOSP",
+        "companyName": "Apollo Hospitals Enterprise Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ASIANPAINT",
+        "companyName": "Asian Paints Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "AXISBANK",
+        "companyName": "Axis Bank Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "BAJAJ-AUTO",
+        "companyName": "Bajaj Auto Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "BAJAJFINSV",
+        "companyName": "Bajaj Finserv Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "BAJAJHLDNG",
+        "companyName": "Bajaj Holdings & Investment Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "BAJFINANCE",
+        "companyName": "Bajaj Finance Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "BANKBARODA",
+        "companyName": "Bank of Baroda",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "BEL",
+        "companyName": "Bharat Electronics Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "BHARTIARTL",
+        "companyName": "Bharti Airtel Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "BOSCHLTD",
+        "companyName": "Bosch Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "BPCL",
+        "companyName": "Bharat Petroleum Corporation Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "BRITANNIA",
+        "companyName": "Britannia Industries Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "CANBK",
+        "companyName": "Canara Bank",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "CGPOWER",
+        "companyName": "CG Power and Industrial Solutions Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "CHOLAFIN",
+        "companyName": "Cholamandalam Investment and Finance Company Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "CIPLA",
+        "companyName": "Cipla Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "COALINDIA",
+        "companyName": "Coal India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "CUMMINSIND",
+        "companyName": "Cummins India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "DIVISLAB",
+        "companyName": "Divi's Laboratories Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "DLF",
+        "companyName": "DLF Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "DMART",
+        "companyName": "Avenue Supermarts Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "DRREDDY",
+        "companyName": "Dr. Reddy's Laboratories Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "EICHERMOT",
+        "companyName": "Eicher Motors Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ENRIN",
+        "companyName": "Siemens Energy India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ETERNAL",
+        "companyName": "ETERNAL LIMITED",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "GAIL",
+        "companyName": "GAIL (India) Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "GODREJCP",
+        "companyName": "Godrej Consumer Products Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "GRASIM",
+        "companyName": "Grasim Industries Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "HAL",
+        "companyName": "Hindustan Aeronautics Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "HCLTECH",
+        "companyName": "HCL Technologies Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "HDFCAMC",
+        "companyName": "HDFC Asset Management Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "HDFCBANK",
+        "companyName": "HDFC Bank Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "HDFCLIFE",
+        "companyName": "HDFC Life Insurance Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "HINDALCO",
+        "companyName": "Hindalco Industries Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "HINDUNILVR",
+        "companyName": "Hindustan Unilever Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "HINDZINC",
+        "companyName": "Hindustan Zinc Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "HYUNDAI",
+        "companyName": "Hyundai Motor India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ICICIBANK",
+        "companyName": "ICICI Bank Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "INDHOTEL",
+        "companyName": "The Indian Hotels Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "INDIGO",
+        "companyName": "InterGlobe Aviation Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "INFY",
+        "companyName": "Infosys Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "IOC",
+        "companyName": "Indian Oil Corporation Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "IRFC",
+        "companyName": "Indian Railway Finance Corporation Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ITC",
+        "companyName": "ITC Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "JINDALSTEL",
+        "companyName": "JINDAL STEEL LIMITED",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "JIOFIN",
+        "companyName": "Jio Financial Services Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "JSWSTEEL",
+        "companyName": "JSW Steel Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "KOTAKBANK",
+        "companyName": "Kotak Mahindra Bank Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "LODHA",
+        "companyName": "Lodha Developers Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "LT",
+        "companyName": "Larsen & Toubro Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "LTM",
+        "companyName": "LTM Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "M&M",
+        "companyName": "Mahindra & Mahindra Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "MARUTI",
+        "companyName": "Maruti Suzuki India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "MAXHEALTH",
+        "companyName": "Max Healthcare Institute Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "MAZDOCK",
+        "companyName": "Mazagon Dock Shipbuilders Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "MOTHERSON",
+        "companyName": "Samvardhana Motherson International Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "MUTHOOTFIN",
+        "companyName": "Muthoot Finance Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "NESTLEIND",
+        "companyName": "Nestle India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "NTPC",
+        "companyName": "NTPC Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "ONGC",
+        "companyName": "Oil & Natural Gas Corporation Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "PFC",
+        "companyName": "Power Finance Corporation Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "PIDILITIND",
+        "companyName": "Pidilite Industries Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "PNB",
+        "companyName": "Punjab National Bank",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "POWERGRID",
+        "companyName": "Power Grid Corporation of India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "RECLTD",
+        "companyName": "REC Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "RELIANCE",
+        "companyName": "Reliance Industries Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "SBILIFE",
+        "companyName": "SBI Life Insurance Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "SBIN",
+        "companyName": "State Bank of India",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "SHREECEM",
+        "companyName": "SHREE CEMENT LIMITED",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "SHRIRAMFIN",
+        "companyName": "Shriram Finance Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "SIEMENS",
+        "companyName": "Siemens Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "SOLARINDS",
+        "companyName": "Solar Industries India Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "SUNPHARMA",
+        "companyName": "Sun Pharmaceutical Industries Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TATACAP",
+        "companyName": "Tata Capital Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "TATACONSUM",
+        "companyName": "TATA CONSUMER PRODUCTS LIMITED",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "TATAPOWER",
+        "companyName": "Tata Power Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "TATASTEEL",
+        "companyName": "Tata Steel Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TCS",
+        "companyName": "Tata Consultancy Services Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TECHM",
+        "companyName": "Tech Mahindra Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TITAN",
+        "companyName": "Titan Company Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TMCV",
+        "companyName": "Tata Motors Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TMPV",
+        "companyName": "Tata Motors Passenger Vehicles Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "TORNTPHARM",
+        "companyName": "Torrent Pharmaceuticals Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "TRENT",
+        "companyName": "Trent Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "TVSMOTOR",
+        "companyName": "TVS Motor Company Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "ULTRACEMCO",
+        "companyName": "UltraTech Cement Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "UNIONBANK",
+        "companyName": "Union Bank of India",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "UNITDSPR",
+        "companyName": "United Spirits Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "VBL",
+        "companyName": "Varun Beverages Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "VEDL",
+        "companyName": "Vedanta Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      },
+      {
+        "symbol": "WIPRO",
+        "companyName": "Wipro Limited",
+        "capSegment": "Large cap",
+        "status": "report_ready",
+        "requestEnabled": false,
+        "action": "view_report",
+        "reasonCodes": [
+          "published_four_factor_report"
+        ],
+        "reason": "A four-factor FCS report is already published. Open the existing report; no new paid review is required.",
+        "evidenceCheckedAt": "2026-08-25",
+        "evidenceCutoff": "2026-08-25",
+        "evidence": {
+          "publishedFourFactorReport": true,
+          "approvedFourFactorEvidence": true,
+          "currentComparableDocumentsVerified": true
+        }
+      },
+      {
+        "symbol": "ZYDUSLIFE",
+        "companyName": "Zydus Lifesciences Limited",
+        "capSegment": "Large cap",
+        "status": "partial",
+        "requestEnabled": false,
+        "action": "deep_dive_only",
+        "reasonCodes": [
+          "priority_large_cap",
+          "four_factor_evidence_not_verified"
+        ],
+        "reason": "Selected for large-cap preflight, but current and comparable documents have not yet passed the four-factor evidence check.",
+        "evidenceCheckedAt": "2026-09-25T12:01:46.369Z",
+        "evidenceCutoff": "2026-09-25",
+        "evidence": {
+          "publishedFourFactorReport": false,
+          "approvedFourFactorEvidence": false,
+          "currentComparableDocumentsVerified": false
+        }
+      }
+    ]
+  },
+  "summary": {
+    "total": 100,
+    "byStatus": {
+      "report_ready": 34,
+      "high_probability": 0,
+      "partial": 66,
+      "unavailable": 0
+    },
+    "byCapSegment": {
+      "Large cap": {
+        "report_ready": 34,
+        "high_probability": 0,
+        "partial": 66,
+        "unavailable": 0
+      }
+    }
+  }
+}

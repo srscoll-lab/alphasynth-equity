@@ -1,6 +1,7 @@
 import type { FundamentalReviewJob } from "./fundamental-review-contract.ts";
 import { cleanFundamentalReviewSymbol, normalizeFundamentalReviewJob } from "./fundamental-review-contract.ts";
 import { createGoogleAccessTokenProvider, googleCloudProjectId } from "./google-cloud-runtime.ts";
+import type { FcsCheckpoint, FcsLifecycleAssessment } from "./fundamental-review-history.ts";
 
 type Fetch = typeof fetch;
 
@@ -10,9 +11,12 @@ export type FundamentalReviewJobRecord = FundamentalReviewJob & {
   diagnostics: unknown[];
   scoreResult: Record<string, unknown> | null;
   failureCode: string | null;
+  checkpointHistory?: FcsCheckpoint[];
+  lastCompletedLifecycle?: FcsLifecycleAssessment | null;
 };
 
 export interface FundamentalReviewStore {
+  listLatest?(limit?: number): Promise<FundamentalReviewJobRecord[]>;
   readLatest(symbol: string): Promise<FundamentalReviewJobRecord | null>;
   readJob(jobId: string): Promise<FundamentalReviewJobRecord | null>;
   save(job: FundamentalReviewJobRecord): Promise<void>;
@@ -21,6 +25,7 @@ export interface FundamentalReviewStore {
 export class InMemoryFundamentalReviewStore implements FundamentalReviewStore {
   private readonly jobs = new Map<string, FundamentalReviewJobRecord>();
   private readonly latest = new Map<string, string>();
+  async listLatest(limit=200) {return [...this.latest.values()].slice(0,limit).flatMap(id=>{const job=this.jobs.get(id);return job?[structuredClone(job)]:[];});}
 
   async readLatest(symbol: string): Promise<FundamentalReviewJobRecord | null> {
     const jobId = this.latest.get(cleanFundamentalReviewSymbol(symbol));
@@ -75,6 +80,8 @@ function recordFromDocument(payload: unknown): FundamentalReviewJobRecord | null
       ? parsed.scoreResult as Record<string, unknown>
       : null,
     failureCode: parsed.failureCode ? String(parsed.failureCode) : null,
+    checkpointHistory: Array.isArray(parsed.checkpointHistory) ? parsed.checkpointHistory : [],
+    lastCompletedLifecycle: parsed.lastCompletedLifecycle ?? null,
   };
 }
 
@@ -119,6 +126,16 @@ export class FirestoreFundamentalReviewStore implements FundamentalReviewStore {
     const normalized = cleanFundamentalReviewSymbol(symbol);
     if (!normalized) throw new Error("A valid symbol is required.");
     return this.readDocument(`${this.collection}_latest/${encodeURIComponent(normalized)}`);
+  }
+
+  async listLatest(limit=200): Promise<FundamentalReviewJobRecord[]> {
+    const bounded=Math.max(1,Math.min(200,Math.trunc(limit)));
+    const response=await this.request(`${this.baseUrl()}/${this.collection}_latest?pageSize=${bounded}`);
+    if (!response.ok) throw new Error(`Firestore publication-list read failed with HTTP ${response.status}.`);
+    const payload:any=await response.json();
+    // Explicitly fail rather than imply complete coverage beyond the capped beta.
+    if(payload.nextPageToken)throw new Error("Publication list exceeds the capped beta page; pagination required.");
+    return (Array.isArray(payload.documents)?payload.documents:[]).map(recordFromDocument).filter((item:any)=>item!==null);
   }
 
   async readJob(jobId: string): Promise<FundamentalReviewJobRecord | null> {

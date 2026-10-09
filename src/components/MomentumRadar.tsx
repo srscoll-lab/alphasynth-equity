@@ -5,6 +5,9 @@ import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
 import lifecycleV21 from "../data/momentumExpansionLifecycleV21.json";
 import expansionStudies from "../data/momentumExpansionStudies.json";
 import { fundamentalChangeLibrary } from "../data/fundamentalChangeLibrary";
+import { useReviewJobs } from "../use-fundamental-review-activity";
+import { setReviewJobs, reviewActivityLabel } from "../fundamental-review-activity";
+import type { FcsEvidencePreflightRecord } from "../fcs-evidence-preflight";
 import {
   defaultFundamentalReviewMessage,
   isFundamentalReviewInProgress,
@@ -141,24 +144,8 @@ const momentumPriorityStatus = (company: Company) => {
   };
 };
 const lifecycleBySymbol = new Map(lifecycleV21.companies.map((company) => [company.symbol, company]));
-const studyBySymbol = new Map(expansionStudies.companies.map((company) => [company.symbol, company]));
+const studyBySymbol = new Map(expansionStudies.companies.filter((company) => company.checkpoints.at(-1)?.factors.length === 4).map((company) => [company.symbol, company]));
 const fcsRecordBySymbol = new Map(fundamentalChangeLibrary.map((company) => [company.symbol, company]));
-const REVIEW_JOBS_STORAGE_KEY = "alphasynth.fcs.review-jobs.v1";
-
-const loadStoredReviewJobs = (): Record<string, FundamentalReviewJob> => {
-  if (typeof window === "undefined") return {};
-  try {
-    const stored = JSON.parse(window.localStorage.getItem(REVIEW_JOBS_STORAGE_KEY) || "{}");
-    if (!stored || typeof stored !== "object" || Array.isArray(stored)) return {};
-    return Object.fromEntries(Object.entries(stored).map(([symbol, value]) => {
-      const normalizedSymbol = symbol.trim().toUpperCase();
-      return [normalizedSymbol, normalizeFundamentalReviewJob(value, { symbol: normalizedSymbol })];
-    }).filter(([symbol]) => Boolean(symbol)));
-  } catch {
-    return {};
-  }
-};
-
 type MomentumDirection = "rising" | "neutral" | "falling" | "unavailable";
 
 const momentumDirection = (state: RadarState): MomentumDirection => {
@@ -233,17 +220,18 @@ const reviewStatusLabel = (status: FundamentalReviewJob["status"]) => ({
   lifecycle_processing: "Lifecycle processing",
   score_ready_lifecycle_pending: "FCS ready · lifecycle pending",
   ready: "FCS & lifecycle ready",
-  incomplete: "Review incomplete",
-  failed: "Review needs attention",
+  incomplete: "Review finished — no FCS generated",
+  failed: "Review failed — processing stopped",
 }[status]);
 
 type MomentumRadarProps = {
   onBack: () => void;
+  initialCompanySymbol?: string | null;
   onBrowseLibrary: (symbol?: string) => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
-export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: MomentumRadarProps) {
+export default function MomentumRadar({ onBack, initialCompanySymbol = null, onBrowseLibrary, onDeepDive }: MomentumRadarProps) {
   const radarMode = new URLSearchParams(window.location.search).get("radar");
   // The expanded NSE radar is the product default. The frozen 477-company radar
   // remains available only through an explicit `radar=legacy` validation URL.
@@ -279,11 +267,6 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const inactiveMomentumCompanies = expandedMode
     ? momentumReadyCompanies.filter((company) => company.radar_state === "DORMANT" || company.radar_state === "DETERIORATING")
     : [];
-  const activeSignalSummary = {
-    starting: companies.filter((company) => company.radar_state === "STARTING").length,
-    confirmed: companies.filter((company) => company.radar_state === "CONFIRMED").length,
-    extended: companies.filter((company) => company.radar_state === "EXTENDED").length,
-  };
   const visibleStates = expandedMode ? activeSignalStates : allStates;
   const [filter, setFilter] = useState<"ALL" | RadarState>("ALL");
   const [segment, setSegment] = useState<"ALL" | Segment>("ALL");
@@ -298,15 +281,34 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
   const [downsidePhaseFilter, setDownsidePhaseFilter] = useState<"ALL" | DownsidePhase | "POTENTIALLY_OVERSOLD">("ALL");
   const [inactiveSegment, setInactiveSegment] = useState<"ALL" | Segment>("ALL");
   const [inactiveQuery, setInactiveQuery] = useState("");
-  const [reviewJobs, setReviewJobs] = useState<Record<string, FundamentalReviewJob>>(loadStoredReviewJobs);
+  const reviewJobs = useReviewJobs();
   const [requestCandidate, setRequestCandidate] = useState<Company | null>(null);
   const [requestSubmitting, setRequestSubmitting] = useState(false);
   const [requestError, setRequestError] = useState("");
   const [refreshingStatus, setRefreshingStatus] = useState(false);
+  useEffect(() => {
+    if (!initialCompanySymbol) return;
+    const company = (activeRadarData.companies as Company[]).find((candidate) => candidate.symbol === initialCompanySymbol);
+    if (!company) return;
+    const direction = momentumDirection(company.radar_state as RadarState);
+    if (direction === "rising") {
+      setDirectionView("positive");
+      setFilter("ALL");
+      setSegment("ALL");
+      setQuery(company.symbol);
+    } else {
+      setDirectionView(direction === "falling" ? "negative" : "neutral");
+      setInactiveFilter(direction === "falling" ? "DETERIORATING" : "DORMANT");
+      setInactiveSegment("ALL");
+      setInactiveQuery(company.symbol);
+    }
+    window.setTimeout(() => document.getElementById("momentum-company-list")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+  }, [initialCompanySymbol, activeRadarData]);
   const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
   const [reviewRequestMessage, setReviewRequestMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [reviewSupportedSymbols, setReviewSupportedSymbols] = useState<Set<string>>(new Set());
   const [reviewRequestScope, setReviewRequestScope] = useState<"controlled_beta" | "radar_universe">("controlled_beta");
+  const [preflightBySymbol, setPreflightBySymbol] = useState<Map<string, FcsEvidencePreflightRecord>>(new Map());
   useEffect(() => {
     let active = true;
     fetch("/api/bms/fundamental-review/capabilities", { cache: "no-store" })
@@ -327,12 +329,22 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     return () => { active = false; };
   }, []);
   useEffect(() => {
-    try {
-      window.localStorage.setItem(REVIEW_JOBS_STORAGE_KEY, JSON.stringify(reviewJobs));
-    } catch {
-      // Tracking remains available for this session when browser storage is unavailable.
-    }
-  }, [reviewJobs]);
+    let active = true;
+    fetch("/api/bms/fundamental-review/preflight", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      })
+      .then((payload) => {
+        if (!active) return;
+        const records = Array.isArray(payload?.priorityBatch?.records) ? payload.priorityBatch.records : [];
+        setPreflightBySymbol(new Map(records.map((record: FcsEvidencePreflightRecord) => [record.symbol, record])));
+      })
+      .catch(() => {
+        if (active) setPreflightBySymbol(new Map());
+      });
+    return () => { active = false; };
+  }, []);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return companies.filter((company) => (filter === "ALL" || company.radar_state === filter)
@@ -428,7 +440,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
         symbol: requestCandidate.symbol,
         companyName: requestCandidate.company_name,
       });
-      if (!job.jobId || (!isFundamentalReviewInProgress(job.status) && !job.resultAvailable)) {
+      if (!job.jobId || job.status === "not_started") {
         throw new Error("The review service did not return a valid durable job acknowledgement. No review was started.");
       }
       setReviewJobs((current) => ({ ...current, [job.symbol]: job }));
@@ -460,28 +472,6 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     }
   };
 
-  const activeReviewSignature = trackedReviewJobs
-    .filter((job) => isFundamentalReviewInProgress(job.status))
-    .map((job) => `${job.symbol}:${job.status}`)
-    .join("|");
-  useEffect(() => {
-    const activeJobs = Object.values(reviewJobs).filter((job) => isFundamentalReviewInProgress(job.status));
-    if (!activeJobs.length) return;
-    let cancelled = false;
-    const refreshActiveJobs = async () => {
-      if (cancelled) return;
-      await Promise.all(activeJobs.map((job) => fetchFundamentalReviewStatus(job.symbol, job.companyName)));
-    };
-    const initialTimer = window.setTimeout(refreshActiveJobs, 1_000);
-    const pollTimer = window.setInterval(refreshActiveJobs, 15_000);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(initialTimer);
-      window.clearInterval(pollTimer);
-    };
-    // The signature intentionally restarts polling only when a tracked job changes stage.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeReviewSignature]);
 
   const refreshFundamentalReviewStatus = async () => {
     if (!selectedStatusCompany || refreshingStatus) return;
@@ -493,17 +483,38 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
     }
   };
 
+  const openTrackedReview = (job: FundamentalReviewJob) => {
+    if (job.resultAvailable && job.status !== "incomplete" && job.status !== "failed") {
+      onBrowseLibrary(job.symbol);
+      return;
+    }
+    setSelectedStatusSymbol(job.symbol);
+  };
+
   const renderFcsStatus = (company: Company) => {
     const runtimeJob = reviewJobs[company.symbol];
+    const preflight = preflightBySymbol.get(company.symbol);
+    if(runtimeJob?.resultAvailable&&(runtimeJob.status==='ready'||runtimeJob.status==='score_ready_lifecycle_pending'))return <>
+      <span className="text-[10px] font-semibold text-cyan-100">{reviewActivityLabel(runtimeJob.status)}</span>
+      <button type="button" onClick={()=>onBrowseLibrary(company.symbol)} className="mt-2 block text-[10px] font-semibold text-cyan-100 underline">Open published FCS report</button>
+      <button type="button" onClick={()=>setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[10px] text-zinc-200 underline">View completed review status</button>
+    </>;
+    if (runtimeJob && (isFundamentalReviewInProgress(runtimeJob.status) || runtimeJob.status === "incomplete" || runtimeJob.status === "failed")) return <>
+      <span className="text-[10px] font-semibold text-amber-100">{reviewActivityLabel(runtimeJob.status)}</span>
+      <div className="mt-2 text-[10px] leading-relaxed text-zinc-200">{runtimeJob.message}</div>
+      <button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 text-[10px] font-semibold text-cyan-100 underline">{isFundamentalReviewInProgress(runtimeJob.status) ? "View processing status" : "View review outcome — processing ended"}</button>
+      {fcsRecordBySymbol.has(company.symbol) && <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[10px] text-zinc-200 underline">View previously published FCS</button>}
+      {!isFundamentalReviewInProgress(runtimeJob.status) && <button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: "not_requested" })} className="mt-2 block text-[10px] font-semibold text-gold underline">Open company Deep Dive</button>}
+    </>;
     if (lifecycleBySymbol.has(company.symbol)) return <>
     <span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>READY · {lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1}</span>
     <div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")} · {lifecycleBySymbol.get(company.symbol)!.reason}</div>
-    <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button>
+    <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white"><CheckCircle2 className="h-3.5 w-3.5" /> View FCS &amp; lifecycle</button>
   </>;
     if (studyBySymbol.has(company.symbol)) return <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> FCS ready · lifecycle pending</span>
     <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">The four-factor score is available. Lifecycle requires three comparable checkpoints.</div>
-    <button type="button" onClick={() => openStudy(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button>
+    <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">View FCS review</button>
   </>;
     if (fcsRecordBySymbol.has(company.symbol)) return <>
     <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><CheckCircle2 className="h-3.5 w-3.5" /> {fcsRecordBySymbol.get(company.symbol)!.lifecycleReady ? `FCS & lifecycle available · ${fcsRecordBySymbol.get(company.symbol)!.lifecycle}` : "FCS report available · lifecycle pending"}</span>
@@ -525,11 +536,25 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
       <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{runtimeJob.message}</div>
       <button type="button" onClick={() => setSelectedStatusSymbol(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-zinc-300 hover:text-white">View review outcome</button>
     </>;
+    if (preflight?.status === "report_ready") return <>
+      <span className="inline-flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.08em] text-emerald-200"><CheckCircle2 className="h-3.5 w-3.5" /> FCS report ready</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-300">{preflight.reason}</div>
+      <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open FCS report</button>
+    </>;
+    if (preflight?.status === "high_probability" && preflight.requestEnabled
+        && reviewRequestsAvailable && (reviewRequestScope === "radar_universe" || reviewSupportedSymbols.has(company.symbol))) return <>
+      <span className="text-[10px] font-semibold text-emerald-200">FCS evidence preflight passed</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-300">{preflight.reason}</div>
+      <button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/35 bg-emerald-300/[0.10] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-emerald-100 hover:border-emerald-300/60 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Request FCS</button>
+      <div className="mt-1 text-[8px] leading-relaxed text-zinc-400">Usually takes 10–15 minutes · publication still requires all four evidence gates</div>
+    </>;
     return <>
-    <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
-    <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">No conclusion about FCS availability or publishability has been made.</div>
-    {reviewRequestsAvailable && (reviewRequestScope === "radar_universe" || reviewSupportedSymbols.has(company.symbol)) ? <><button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.07] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-cyan-100 hover:border-cyan-300/50 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">Usually takes 10–15 minutes · you may leave and return</div></> : <><button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> New FCS request unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div></>}
-  </>;
+      <span className="text-[10px] font-semibold text-zinc-200">No FCS report yet</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-400">{preflight?.reason || "Deterministic evidence preflight has not yet established a high-probability four-factor review."}</div>
+      <button type="button" disabled className="mt-3 inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.025] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-zinc-500"><Clock3 className="h-3.5 w-3.5" /> FCS evidence check incomplete</button>
+      <button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: "not_requested" })} className="mt-2 block text-[9px] font-black uppercase tracking-[0.06em] text-gold hover:text-white">Open company Deep Dive</button>
+      <div className="mt-1 text-[8px] leading-relaxed text-zinc-500">{reviewRequestMessage}</div>
+    </>;
   };
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
@@ -560,7 +585,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             {[
               ["Universe scanned", `${activeRadarData.universe.scanned}`, expandedMode ? "Official NSE EQ and BE universe" : "Exact monitored FCS universe"],
               ["Analysable liquid universe", `${momentumReadyCompanies.length}`, expandedMode ? "Liquidity-qualified with full price history" : "Complete market history"],
-              ["Active momentum signals", `${companies.length}`, expandedMode ? `${activeSignalSummary.starting} Early Uptrend · ${activeSignalSummary.confirmed} Established Uptrend · ${activeSignalSummary.extended} Stretched Uptrend` : "Displayed below"],
+              ["Active directional signals", `${companies.length + inactiveCounts.deteriorating}`, expandedMode ? `${companies.length} positive · ${inactiveCounts.deteriorating} negative` : "Displayed below"],
             ].map(([label, value, note]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.035] px-4 py-4">
               <div className="text-[10px] uppercase tracking-[0.15em] font-black text-zinc-500">{label}</div><div className="mt-2 text-2xl font-mono font-bold text-white">{value}</div><div className="mt-1 text-xs text-zinc-500">{note}</div>
             </div>)}
@@ -576,10 +601,12 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             {trackedReviewJobs.slice(0, 4).map((job) => {
               const inProgress = isFundamentalReviewInProgress(job.status);
               const terminalStyle = job.resultAvailable ? "border-emerald-300/25 bg-emerald-300/[0.06]" : job.status === "failed" || job.status === "incomplete" ? "border-rose-300/25 bg-rose-300/[0.05]" : "border-amber-300/25 bg-amber-300/[0.05]";
-              return <button key={job.symbol} type="button" onClick={() => setSelectedStatusSymbol(job.symbol)} className={`rounded-2xl border p-4 text-left transition hover:border-cyan-200/50 ${terminalStyle}`}>
+              const opensReport = job.resultAvailable && job.status !== "incomplete" && job.status !== "failed";
+              return <button key={job.symbol} type="button" onClick={() => openTrackedReview(job)} aria-label={opensReport ? `Open ${job.symbol} FCS report` : `View ${job.symbol} review status`} className={`rounded-2xl border p-4 text-left transition hover:border-cyan-200/50 ${terminalStyle}`}>
                 <div className="flex items-center justify-between gap-3"><span className="font-mono text-xs font-bold text-white">{job.symbol}</span>{inProgress ? <RefreshCw className="h-3.5 w-3.5 animate-spin text-amber-200" /> : job.resultAvailable ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-200" /> : <ShieldAlert className="h-3.5 w-3.5 text-rose-200" />}</div>
                 <div className="mt-2 text-[10px] font-black uppercase tracking-[0.08em] text-zinc-200">{reviewStatusLabel(job.status)}</div>
                 <div className="mt-1 text-[9px] text-zinc-400">{job.completedFactors} of 4 factors validated</div>
+                <div className={`mt-2 text-[9px] font-black uppercase tracking-[0.08em] ${opensReport ? "text-emerald-200" : "text-zinc-500"}`}>{opensReport ? "Open FCS report" : "View review status"}</div>
               </button>;
             })}
           </div>
@@ -608,7 +635,7 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
           </div>
         </div>}
 
-        <div className="p-5 md:p-8">
+        <div id="momentum-company-list" className="scroll-mt-24 p-5 md:p-8">
           {directionView === "positive" && <>
           {!!filtered.length && <div className="mb-3 flex flex-col gap-1 text-[10px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
             <span>{filtered.length.toLocaleString("en-IN")} companies match the active filters.</span>
@@ -678,7 +705,10 @@ export default function MomentumRadar({ onBack, onBrowseLibrary, onDeepDive }: M
             <div className="mt-5 grid gap-3 md:grid-cols-3"><div className="rounded-2xl border border-amber-400/20 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Current state</div><div className="mt-2 text-sm font-bold text-amber-200">{selectedRuntimeJob ? reviewStatusLabel(selectedRuntimeJob.status) : "Evidence work queued"}</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Validated factors</div><div className="mt-2 text-sm font-bold text-zinc-300">{selectedRuntimeJob ? `${selectedRuntimeJob.completedFactors} of 4` : "Pending worker update"}</div></div><div className="rounded-2xl border border-white/10 bg-black/15 p-4"><div className="text-[9px] font-black uppercase tracking-[0.13em] text-zinc-500">Lifecycle V2.1</div><div className="mt-2 text-sm font-bold text-zinc-300">{selectedRuntimeJob?.status === "ready" ? "Ready" : "Activates after publishable FCS history"}</div></div></div>
             <p className="mt-4 max-w-4xl text-xs leading-relaxed text-zinc-300">{selectedRuntimeJob?.message || "The company has been prioritised for Earnings, Economics, Execution and Balance Sheet evidence work. No score or lifecycle is estimated while the evidence contract remains incomplete."}</p>
             <p className="mt-2 text-[10px] leading-relaxed text-zinc-500">You do not need to keep this page open. Use the refresh control when you return. An incomplete result remains explicitly unavailable rather than being estimated.</p>
-            <button type="button" onClick={() => onDeepDive({ symbol: selectedStatusCompany.symbol, company_name: selectedStatusCompany.company_name, bms_status: "processing" })} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-gold hover:border-gold/50 hover:text-white"><BookOpen className="h-4 w-4" /> Open independent Deep Dive</button>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedRuntimeJob?.resultAvailable && selectedRuntimeJob.status !== "incomplete" && selectedRuntimeJob.status !== "failed" && <button type="button" onClick={() => onBrowseLibrary(selectedStatusCompany.symbol)} className="inline-flex items-center gap-2 rounded-xl border border-emerald-300/30 bg-emerald-300/[0.10] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-emerald-100 hover:border-emerald-200/60 hover:text-white"><CheckCircle2 className="h-4 w-4" /> Open FCS report</button>}
+              <button type="button" onClick={() => onDeepDive({ symbol: selectedStatusCompany.symbol, company_name: selectedStatusCompany.company_name, bms_status: selectedRuntimeJob?.resultAvailable ? "ready" : "processing" })} className="inline-flex items-center gap-2 rounded-xl border border-gold/25 bg-gold/[0.08] px-4 py-2.5 text-[10px] font-black uppercase tracking-[0.1em] text-gold hover:border-gold/50 hover:text-white"><BookOpen className="h-4 w-4" /> Open independent Deep Dive</button>
+            </div>
           </section>}
           {selectedStudy && latestCheckpoint && <section id="momentum-bms-study" className="scroll-mt-24 mt-6 rounded-3xl border border-cyan-400/20 bg-cyan-400/[0.035] overflow-hidden">
             <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 border-b border-white/10 p-5 md:p-6">

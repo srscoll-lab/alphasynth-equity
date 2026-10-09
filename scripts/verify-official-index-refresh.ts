@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {createOfficialDocumentFetch} from '../src/official-document-cache.ts';
+const url='https://www.hcltech.com/investor-relations/quarter-results';
+const cached=async (source:string)=>source.endsWith('.pdf')?{bytes:Buffer.from('%PDF-original'),mediaType:'application/pdf'}:{bytes:Buffer.from('original dated index'),mediaType:'text/html'};
+let calls=0,time=1;
+const remote=(async()=>{calls++;return new Response('new issuer index',{headers:{'content-type':'text/html'}});}) as typeof fetch;
+const acquire=createOfficialDocumentFetch(remote,cached,()=>time);
+assert.equal(await (await acquire(url)).text(),'new issuer index');assert.equal(await (await acquire(url)).text(),'new issuer index');assert.equal(calls,1);
+time+=600_001;assert.equal(await (await acquire(url)).text(),'new issuer index');assert.equal(calls,2);
+assert.equal(await (await acquire('https://www.hcltech.com/original.pdf')).text(),'%PDF-original');assert.equal(calls,2,'Immutable PDF does not make a fresh model/HTTP call');
+let failures=0;
+const denied=createOfficialDocumentFetch((async()=>{failures++;return new Response('',{status:403});}) as typeof fetch,cached);
+assert.equal(await (await denied(url)).text(),'original dated index');assert.equal(await (await denied(url)).text(),'original dated index');assert.equal(failures,1);
+const offsite=createOfficialDocumentFetch((async()=>{const response=new Response('wrong host');Object.defineProperty(response,'url',{value:'https://evil.example'});return response;}) as typeof fetch,cached);
+assert.equal(await (await offsite(url)).text(),'original dated index');
+const controller=new AbortController();controller.abort();await assert.rejects(()=>acquire(url,{signal:controller.signal}),/aborted/);
+console.log('Live issuer-index refresh: ten-minute reuse, HTTP/redirect fallback, immutable PDF reuse and cancellation passed. Mock HTTP only; no model calls or filesystem writes.');

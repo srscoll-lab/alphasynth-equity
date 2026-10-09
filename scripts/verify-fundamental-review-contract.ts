@@ -3,6 +3,8 @@ import {
   cleanFundamentalReviewSymbol,
   isFundamentalReviewInProgress,
   normalizeFundamentalReviewJob,
+  publishedFundamentalReviewResult,
+  publicFundamentalReviewJob,
 } from "../src/fundamental-review-contract.ts";
 
 assert.equal(cleanFundamentalReviewSymbol(" bajaj-auto "), "BAJAJ-AUTO");
@@ -33,3 +35,10 @@ assert.equal(scoreReady.resultAvailable, true);
 assert.equal(isFundamentalReviewInProgress(scoreReady.status), false);
 
 console.log("Fundamental Review request/status contract verified.");
+const legacyHindalco={symbol:'HINDALCO',status:'ready',completedFactors:4,resultAvailable:true,scoreResult:{score_publishable:true,fcs_score:59,factors:[{factor_id:'economics',impacts:[{metric_id:'ebitda'}]}]}};
+assert.equal(publishedFundamentalReviewResult(legacyHindalco),null);
+assert.equal(publicFundamentalReviewJob(legacyHindalco,{symbol:'HINDALCO'}).resultAvailable,false);
+assert.ok(publicFundamentalReviewJob(legacyHindalco,{symbol:'HINDALCO'}).message.includes('reconciliation'));
+assert.equal(normalizeFundamentalReviewJob({status:'ready',resultAvailable:false},{symbol:'HINDALCO'}).resultAvailable,false);
+assert.equal(publishedFundamentalReviewResult({...legacyHindalco,scoreResult:{score_publishable:true,fcs_score:41,factors:[{factor_id:'economics',impacts:[{metric_id:'ebitda_margin'}]}]}})?.fcs_score,41);
+console.log('Legacy Hindalco policy mismatch is not re-published; explicit unavailable status is preserved without ledger mutation.');

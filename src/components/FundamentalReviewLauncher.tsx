@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { CheckCircle2, Clock3, RefreshCw, Search, TrendingUp, X } from "lucide-react";
 import expandedRadarData from "../data/bmsMomentumRadarExpanded.json";
+import { useReviewJobs } from "../use-fundamental-review-activity";
+import { trackReviewJob } from "../fundamental-review-activity";
 import {
   isFundamentalReviewInProgress,
   normalizeFundamentalReviewJob,
@@ -34,7 +36,10 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
   const [supportedSymbols, setSupportedSymbols] = useState<Set<string>>(new Set());
   const [requestScope, setRequestScope] = useState<"controlled_beta" | "radar_universe">("controlled_beta");
   const [candidate, setCandidate] = useState<UniverseCompany | null>(null);
-  const [job, setJob] = useState<FundamentalReviewJob | null>(null);
+  const reviewJobs = useReviewJobs();
+  const [jobSymbol, setJobSymbol] = useState<string | null>(null);
+  const job = jobSymbol ? reviewJobs[jobSymbol] : null;
+  const setJob = (next: FundamentalReviewJob) => { trackReviewJob(next); setJobSymbol(next.symbol); };
   const [submitting, setSubmitting] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -84,7 +89,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
         symbol: candidate.symbol,
         companyName: candidate.company_name,
       });
-      if (!next.jobId || (!isFundamentalReviewInProgress(next.status) && !next.resultAvailable)) {
+      if (!next.jobId || next.status === "not_started") {
         throw new Error("The worker did not return a durable job acknowledgement. No review was started.");
       }
       setJob(next);
@@ -115,9 +120,9 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
   return <section className="border-b border-white/10 bg-cyan-300/[0.025] px-5 py-6 md:px-8">
     <div className="grid gap-5 lg:grid-cols-[1fr_0.9fr] lg:items-start">
       <div>
-        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">Request a new Fundamental Change Review</div>
-        <h2 className="mt-2 text-xl font-semibold text-white">Search beyond the Momentum shortlist</h2>
-        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">Search all {expandedRadarData.companies.length.toLocaleString("en-IN")} companies in the scanned NSE discovery universe. A request starts the separate four-factor evidence workflow; Momentum Radar inclusion is not required and does not affect the FCS.</p>
+        <div className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">Check Fundamental Change coverage</div>
+        <h2 className="mt-2 text-xl font-semibold text-white">Find a published FCS or check whether a new review can start</h2>
+        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">Search all {expandedRadarData.companies.length.toLocaleString("en-IN")} companies in the scanned NSE discovery universe. Published reports open immediately. A new review is offered only after deterministic preflight has verified suitable current and comparable four-factor evidence; Momentum Radar inclusion does not itself make an FCS available.</p>
         <label className="relative mt-4 block max-w-2xl"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Enter company name or NSE symbol" className="w-full rounded-xl border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-cyan-300/45" /></label>
         {!!matches.length && <div className="mt-2 max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0d1626]">
           {matches.map((company) => {
@@ -129,7 +134,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
                 ? <button type="button" onClick={() => onOpenAvailable(company.symbol)} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-300/25 bg-emerald-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-emerald-200"><CheckCircle2 className="h-3.5 w-3.5" /> View existing FCS</button>
                 : requestEnabled
                   ? <button type="button" onClick={() => { setError(""); setCandidate(company); }} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-cyan-300/25 bg-cyan-300/[0.08] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-cyan-100"><TrendingUp className="h-3.5 w-3.5" /> Start FCS Review</button>
-                  : <div className="max-w-[18rem] text-right"><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">New FCS request unavailable</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-600">{capabilityMessage}</div></div>}
+                  : <div className="max-w-[18rem] text-right"><button type="button" disabled className="cursor-not-allowed rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-[9px] font-black uppercase tracking-[0.08em] text-zinc-500">FCS evidence check incomplete</button><div className="mt-1 text-[8px] leading-relaxed text-zinc-500">No review can be started for this company yet. {capabilityMessage}</div></div>}
             </div>;
           })}
         </div>}
@@ -137,7 +142,7 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
 
       <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
         <div className="flex items-center justify-between gap-3"><div><div className="text-[9px] font-black uppercase tracking-[0.15em] text-zinc-500">Latest requested review</div><div className="mt-2 text-sm font-semibold text-white">{job ? `${job.symbol} · ${statusLabel[job.status]}` : "No review requested in this session"}</div></div>{job && <button type="button" onClick={refreshStatus} disabled={refreshing} className="rounded-lg border border-white/10 p-2 text-zinc-400 hover:text-white disabled:opacity-50" aria-label="Refresh FCS status"><RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /></button>}</div>
-        <p className="mt-2 text-xs leading-relaxed text-zinc-500">{job?.message || "After starting a review, its durable status appears here. You may leave and return; typical processing time is 10–15 minutes."}</p>
+        <p className="mt-2 text-xs leading-relaxed text-zinc-500">{job?.message || "No review is running. Search results distinguish reports that are ready, reviews that can be requested, and companies whose evidence check is incomplete."}</p>
         {job && <div className="mt-3 text-[10px] text-zinc-600">Validated factors: {job.completedFactors}/4 · last update {new Date(job.updatedAt).toLocaleString("en-IN")}</div>}
         {error && <div className="mt-3 rounded-lg border border-rose-400/20 bg-rose-400/[0.07] p-3 text-xs text-rose-200">{error}</div>}
       </div>

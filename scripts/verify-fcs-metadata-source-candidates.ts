@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {metadataSourceCandidates} from '../src/fcs-metadata-source-candidates.ts';
+assert.deepEqual(metadataSourceCandidates('[PDF](https://www.sebi.gov.in/sebi_data/attachdocs/123.pdf).').map(c=>c.uri),['https://www.sebi.gov.in/sebi_data/attachdocs/123.pdf']);
+assert.deepEqual(metadataSourceCandidates('https://www.sebi.gov.in/web/?file=%2Fsebi_data%2Fattachdocs%2F123.pdf').map(c=>c.uri),['https://www.sebi.gov.in/sebi_data/attachdocs/123.pdf']);
+for(const url of ['https://www.sebi.gov.in.evil.com/file.pdf','https://user:pass@www.sebi.gov.in/file.pdf','https://www.sebi.gov.in:8443/file.pdf','https://127.0.0.1/file.pdf','https://jpmorgan.com/file.pdf'])assert.deepEqual(metadataSourceCandidates(url),[]);
+assert.equal(metadataSourceCandidates('https://www.sebi.gov.in/sebi_data/attachdocs/123.pdf https://www.sebi.gov.in/sebi_data/attachdocs/123.pdf').length,1);
+console.log('Metadata discovery body URL hints: exact official hosts, wrapper normalization, deduplication and spoof rejection passed.');
+assert.deepEqual(metadataSourceCandidates('**https://www.issuer.in/results.pdf**',['issuer.in']).map(c=>c.uri),['https://www.issuer.in/results.pdf']);
+assert.deepEqual(metadataSourceCandidates('https://issuer.in.evil.com/results.pdf',['issuer.in']),[]);
+assert.deepEqual(metadataSourceCandidates('https://issuer.in/results.pdf'),[]);

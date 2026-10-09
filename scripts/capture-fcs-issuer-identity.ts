@@ -1,0 +1,22 @@
+import {readFile,writeFile,mkdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import path from 'node:path';
+import {retrieveGroundedFcsDocuments} from '../src/fcs-grounded-document-retrieval.ts';
+import {exchangeIssuerDomainHints,regulatorIssuerDomainHints} from '../src/fcs-exchange-issuer-domain.ts';
+const [ticker,companyName,sourceUrl]=process.argv.slice(2);
+if(!ticker||!companyName||!sourceUrl)throw Error('Usage: ticker, exact legal company name, official PDF URL');
+const result=await retrieveGroundedFcsDocuments([{uri:sourceUrl}],{trustedIssuerDomains:['sebi.gov.in'],maxDocuments:1,maxRequests:4,maximumPages:3,timeoutMs:30_000});
+const doc=result.documents[0];if(!doc)throw Error(JSON.stringify(result.diagnostics));
+const identity={ticker,companyName,documentUrl:doc.sourceUrl,documentText:doc.text};
+const domains=[...exchangeIssuerDomainHints(identity),...regulatorIssuerDomainHints(identity)];
+if(domains.length!==1)throw Error('Official cover identity not verified; nothing admitted');
+const base=path.join(process.cwd(),'data','official-quarter-cache');await mkdir(base,{recursive:true});
+const manifest=JSON.parse(await readFile(path.join(base,'manifest.json'),'utf8'));
+const previous=manifest.documents.find((entry:any)=>entry.source_url===doc.sourceUrl);
+if(previous&&(previous.sha256!==doc.sha256||previous.identity_ticker&&previous.identity_ticker!==ticker))throw Error('Immutable source identity conflict');
+const output=path.join(base,doc.sha256+'.pdf');
+try{await writeFile(output,doc.bytes,{flag:'wx'});}catch(error:any){if(error.code!=='EEXIST'||createHash('sha256').update(await readFile(output)).digest('hex')!==doc.sha256)throw error;}
+const entry={source_url:doc.sourceUrl,sha256:doc.sha256,media_type:'application/pdf',captured_at:new Date().toISOString(),acquisition_method:'direct_http_validated_identity',identity_ticker:ticker,identity_company_name:companyName};
+if(previous)Object.assign(previous,{identity_ticker:ticker,identity_company_name:companyName});else manifest.documents.push(entry);
+await writeFile(path.join(base,'manifest.json'),JSON.stringify(manifest,null,2));
+console.log(JSON.stringify({identity_only:true,ticker,domains,source:doc.sourceUrl,sha256:doc.sha256,financial_values_added:0}));

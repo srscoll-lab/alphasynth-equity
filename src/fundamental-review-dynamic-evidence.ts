@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import { cleanFundamentalReviewSymbol } from "./fundamental-review-contract.ts";
+import { ACCOUNTING_BASES } from "./fundamental-review-history.ts";
 
 const FACTORS = new Set(["earnings", "economics", "execution", "balance_sheet"]);
+
+/** Old comparison anchors must not override a requested historical quarter. */
+export function anchorsForEvidencePeriod(anchors: any[], targetPeriodEnd: string): any[] {
+  if (!targetPeriodEnd) return anchors;
+  return anchors.filter((anchor) => String(anchor?.current_period_end_date || "").slice(0, 10) === targetPeriodEnd);
+}
 const BASIS_RULES: Record<string, string> = {
   same_quarter_prior_year: "same-quarter-prior-year-v1",
   year_to_date_prior_year: "year-to-date-prior-year-v1",
@@ -72,13 +79,18 @@ export function canonicalizeDynamicEvidence(input: {
     const currentValue = Number(row?.current_value ?? row?.currentValue);
     const previousLabel = String(row?.previous_period || row?.previousPeriod || "").trim();
     const currentLabel = String(row?.current_period || row?.currentPeriod || "").trim();
+    const previousDocument = row.previous_document;
+    const previousHash = previousDocument ? documentHash(previousDocument) : hash;
+    const previousSourceDate = previousDocument ? isoInstant(previousDocument.source_date) : sourceDate;
+    const previousSourceUrl = previousDocument ? String(previousDocument.source_ref || "") : sourceUrl;
+    const previousArchive = previousDocument ? String(previousDocument.archived_document_uri || "") : archiveUri;
     const rejectionReasons = [
       !symbol && "invalid_symbol",
       !cutoff && "invalid_information_cutoff",
       !FACTORS.has(factorId) && "invalid_factor",
       !metricId && "missing_metric",
       !comparisonRuleId && "unregistered_comparison_basis",
-      !["consolidated", "standalone", "not_applicable"].includes(consolidationBasis) && "unknown_consolidation_basis",
+      !ACCOUNTING_BASES.has(consolidationBasis) && "unknown_consolidation_basis",
       !previousEnd && "missing_previous_period_end_date",
       !currentEnd && "missing_current_period_end_date",
       !sourceDate && "missing_source_date",
@@ -90,6 +102,8 @@ export function canonicalizeDynamicEvidence(input: {
       !Number.isFinite(currentValue) && "invalid_current_value",
       !previousLabel && "missing_previous_period_label",
       !currentLabel && "missing_current_period_label",
+      previousDocument && (!previousHash || !previousSourceDate || !/^https:\/\//i.test(previousSourceUrl) || !previousArchive) && "invalid_previous_document",
+      previousSourceDate && cutoff && previousSourceDate > cutoff && "post_cutoff_previous_document",
     ].filter(Boolean);
     if (rejectionReasons.length) {
       diagnostics.push({ outcome: "dynamic_row_not_canonical", metric: metricId || null, reasons: rejectionReasons });
@@ -97,6 +111,7 @@ export function canonicalizeDynamicEvidence(input: {
     }
 
     const documentId = `doc-${hash}`;
+    const previousDocumentId = `doc-${previousHash}`;
     if (!documentIds.has(documentId)) {
       documentIds.add(documentId);
       documents.push({
@@ -117,6 +132,15 @@ export function canonicalizeDynamicEvidence(input: {
         acquisition_status: "acquired",
         failure_reason: null,
       });
+    }
+    if (previousDocument && !documentIds.has(previousDocumentId)) {
+      documentIds.add(previousDocumentId);
+      documents.push({ schema_version: "1.0.0", document_id: previousDocumentId, issuer_symbol: symbol,
+        source_url: previousSourceUrl, resolved_url: previousSourceUrl, source_type: String(row.source_type || "issuer_filing"),
+        source_tier: "authoritative", published_at: previousSourceDate, captured_at: capturedAt,
+        archive_uri: previousArchive, sha256: previousHash, media_type: previousDocument.media_type || "application/octet-stream",
+        content_length: Number(previousDocument.content_length || 0), acquisition_method: "direct_http",
+        acquisition_status: "acquired", failure_reason: null });
     }
     const candidateId = `candidate-dynamic-${safeId(symbol)}-${safeId(metricId)}-${index + 1}`;
     const candidate = {
@@ -144,14 +168,16 @@ export function canonicalizeDynamicEvidence(input: {
       current_canonical_value: currentValue,
       canonical_unit: unit,
       conversion_rule_id: "identity-v1",
-      previous_document_id: documentId,
+      previous_document_id: previousDocumentId,
       current_document_id: documentId,
-      previous_source_locator: { quoted_label: String(row?.quoted_label || `${metricId}: ${previousLabel}`) },
-      current_source_locator: { quoted_label: String(row?.quoted_label || `${metricId}: ${currentLabel}`) },
+      previous_source_locator: { quoted_label: String(row?.previous_quoted_label || row?.quoted_label || `${metricId}: ${previousLabel}`),
+        ...(Number.isInteger(row.previous_source_page ?? row.source_page) && (row.previous_source_page ?? row.source_page) > 0 ? {page:row.previous_source_page ?? row.source_page} : {}) },
+      current_source_locator: { quoted_label: String(row?.quoted_label || `${metricId}: ${currentLabel}`),
+        ...(Number.isInteger(row.source_page) && row.source_page > 0 ? {page:row.source_page} : {}) },
       information_cutoff: cutoff,
-      extraction_method: "gemini_grounded_direct_official_document",
-      extractor_version: "dynamic-fcs-v2.0.0",
-      producer_id: "gemini-grounded-evidence-producer",
+      extraction_method: String(row.extraction_method || "gemini_grounded_direct_official_document"),
+      extractor_version: String(row.extractor_version || "dynamic-fcs-v2.0.0"),
+      producer_id: String(row.producer_id || "gemini-grounded-evidence-producer"),
       producer_confidence: Number(row?.confidence || 0.85),
       captured_at: capturedAt,
     };

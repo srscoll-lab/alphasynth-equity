@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {containsReportedNumber,containsReportingPeriod} from '../src/fundamental-review-source-match.ts';
+assert(containsReportedNumber('PAT (2,380)',-2380));
+assert(!containsReportedNumber('PAT (2,380)',2380));
+assert(containsReportedNumber('PAT margin (1.0%)',-1));
+assert(containsReportedNumber('13.30',13.3));
+assert(!containsReportedNumber('1.33 113.3 13',13.3));
+assert(containsReportingPeriod('Quarter ended Jun’26 Jun’25','Q1 FY27','2026-06-30'));
+assert(containsReportingPeriod('Quarter ended Jun’26 Jun’25','Q1 FY26','2025-06-30'));
+assert(!containsReportingPeriod('Quarter ended Jun’26','Q1 FY26','2025-06-30'));
+assert(!containsReportingPeriod('Jun-26','Q1 FY27','2026-06-29'));
+assert(!containsReportingPeriod('June 20260','Q1 FY27','2026-06-30'));
+console.log('Source matching: accounting negatives, exact numbers, abbreviated quarter headers and wrong periods passed.');

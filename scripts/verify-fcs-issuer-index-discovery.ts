@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {discoverIssuerIndexLinks} from '../src/fcs-issuer-index-discovery.ts';
+const calls:string[]=[];
+const fetchImpl=(async(input:any)=>{const url=String(input);calls.push(url);
+ if(url==='https://issuer.in/')return new Response('<a href="/investors/">Investor Relations</a><a href="https://evil.com/results.pdf">Results</a>');
+ if(url==='https://issuer.in/investors/')return new Response('<a href="/results-q1-2026.pdf">Quarterly financial results</a>');
+ return new Response('',{status:404});}) as typeof fetch;
+const result=await discoverIssuerIndexLinks(['issuer.in'],fetchImpl);
+assert.ok(result.candidates.some(c=>c.uri==='https://issuer.in/results-q1-2026.pdf'));
+assert.ok(!calls.some(url=>url.includes('evil.com')));assert.ok(calls.length<=8);
+const rejected=await discoverIssuerIndexLinks(['issuer.in'],(async()=>new Response(null,{status:302,headers:{location:'https://evil.com/private'}})) as typeof fetch);
+assert.equal(rejected.candidates.length,0);assert.ok(rejected.diagnostics.some(d=>d.outcome==='issuer_index_offsite_redirect_rejected'));
+console.log('Issuer index discovery: bounded on-site investor traversal and off-site source/redirect rejection passed. No network/model calls.');

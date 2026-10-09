@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAsOf": "2026-09-09",
+  "scoreVintage": "FY25",
+  "outcomePeriod": "FY26",
+  "assessmentMode": "reconstructed_today_with_source_cutoff",
+  "methodology": {
+    "primaryQuestion": "Do FY25 AI readiness and exposure scores relate to FY26 operating delivery?",
+    "deliveryIndex": "Equal-weight average of cross-sectional percentile ranks for FY26 revenue growth and FY26 margin change.",
+    "interaction": "readiness * (100 - exposure) / 100",
+    "notes": [
+      "Revenue growth uses constant-currency growth where officially disclosed; otherwise the closest reported annual growth measure.",
+      "Margin change uses the closest consistently disclosed operating profit measure for each company.",
+      "The delivery index is exploratory and must not be presented as a validated investment signal."
+    ]
+  },
+  "companies": [
+    {
+      "symbol": "TCS", "companyName": "Tata Consultancy Services", "cohort": "Large services",
+      "exposureScore": 62.6, "readinessScore": 63.5,
+      "revenueGrowthPct": -2.4, "revenueBasis": "constant_currency",
+      "marginChangePp": 0.7, "marginBasis": "operating_margin_excluding_one_offs",
+      "fy25Source": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2025",
+      "fy26Source": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2026"
+    },
+    {
+      "symbol": "INFY", "companyName": "Infosys", "cohort": "Large services",
+      "exposureScore": 59.1, "readinessScore": 56.1,
+      "revenueGrowthPct": 3.1, "revenueBasis": "constant_currency",
+      "marginChangePp": -0.1, "marginBasis": "adjusted_operating_margin",
+      "fy25Source": "https://www.infosys.com/investors/reports-filings/annual-report/annual-reports/ar-2024-25.html",
+      "fy26Source": "https://www.infosys.com/investors/documents/exchange-filings/2026/outcome-board-meeting-23apr2026.pdf"
+    },
+    {
+      "symbol": "HCLTECH", "companyName": "HCL Technologies", "cohort": "Large services",
+      "exposureScore": 56.9, "readinessScore": 61.3,
+      "revenueGrowthPct": 3.9, "revenueBasis": "constant_currency",
+      "marginChangePp": -0.4, "marginBasis": "adjusted_ebit_margin",
+      "fy25Source": "https://www.hcltech.com/sites/default/files/document/open/quarter-results/2025-04/HCLTech-Q4-FY25-Investor-Release.pdf",
+      "fy26Source": "https://www.hcltech.com/en-us/press-releases/hcltech-fy26-revenue-39-led-increasing-demand-advanced-ai"
+    },
+    {
+      "symbol": "WIPRO", "companyName": "Wipro", "cohort": "Large services",
+      "exposureScore": 63.5, "readinessScore": 50.0,
+      "revenueGrowthPct": -1.6, "revenueBasis": "it_services_constant_currency",
+      "marginChangePp": 0.2, "marginBasis": "it_services_operating_margin",
+      "fy25Source": "https://www.wipro.com/newsroom/press-releases/2025/wipro-announces-results-for-the-quarter-and-year-ended-march-31-2025/",
+      "fy26Source": "https://www.wipro.com/newsroom/press-releases/2026/wipro-announces-results-for-the-quarter-and-year-ended-march-31-2026/"
+    },
+    {
+      "symbol": "LTM", "companyName": "LTIMindtree", "cohort": "Mid-tier / digital",
+      "exposureScore": 62.2, "readinessScore": 47.6,
+      "revenueGrowthPct": 5.3, "revenueBasis": "constant_currency",
+      "marginChangePp": 0.9, "marginBasis": "ebit_margin",
+      "fy25Source": "https://www.ltimindtree.com/wp-content/uploads/2025/04/earnings-release-factsheet-q4fy25.pdf",
+      "fy26Source": "https://www.ltm.com/content/dam/ltimcorporatewebsite/uploads/investors/2026/05/integrated-annual-report-fy26.pdf"
+    },
+    {
+      "symbol": "PERSISTENT", "companyName": "Persistent Systems", "cohort": "Mid-tier / digital",
+      "exposureScore": 55.6, "readinessScore": 59.7,
+      "revenueGrowthPct": 17.4, "revenueBasis": "reported_usd",
+      "marginChangePp": 0.9, "marginBasis": "ebit_margin",
+      "fy25Source": "https://www.persistent.com/media/press-releases/q4-fy25-results/",
+      "fy26Source": "https://www.persistent.com/media/press-releases/q4-fy26-results/"
+    },
+    {
+      "symbol": "COFORGE", "companyName": "Coforge", "cohort": "Mid-tier / digital",
+      "exposureScore": 59.1, "readinessScore": 56.8,
+      "revenueGrowthPct": 29.2, "revenueBasis": "reported_usd",
+      "marginChangePp": 3.7, "marginBasis": "ebit_margin",
+      "fy25Source": "https://news.coforge.com/newsroom/press-release/coforge-closes-an-exceptional-fy25-with-32-cc-growth",
+      "fy26Source": "https://investors.coforge.com/hubfs/Press-Release-Intimation-05May-26.pdf"
+    },
+    {
+      "symbol": "TATAELXSI", "companyName": "Tata Elxsi", "cohort": "Specialist / engineering",
+      "exposureScore": 61.4, "readinessScore": 53.3,
+      "revenueGrowthPct": 0.8, "revenueBasis": "reported_inr",
+      "marginChangePp": -2.9, "marginBasis": "pbt_margin",
+      "fy25Source": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-3729-crores-for-fy25-with-full-year-pbt-at-263",
+      "fy26Source": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-9938-cr-registers-healthy-growth-of-42-qoq"
+    },
+    {
+      "symbol": "KPITTECH", "companyName": "KPIT Technologies", "cohort": "Specialist / engineering",
+      "exposureScore": 51.7, "readinessScore": 56.9,
+      "revenueGrowthPct": 1.3, "revenueBasis": "constant_currency",
+      "marginChangePp": -0.2, "marginBasis": "ebitda_margin",
+      "fy25Source": "https://www.kpit.com/news/kpit-reports-fy25-results-by-meeting-increased-ebitda-outlook-of-21-while-net-profit-grows-at-41-2-yoy/",
+      "fy26Source": "https://www.kpit.com/news/kpit-delivers-q4fy26-with-%E2%82%B9-yoy-growth-of-12-and-strong-deal-wins/"
+    },
+    {
+      "symbol": "INTELLECT", "companyName": "Intellect Design Arena", "cohort": "Specialist / product",
+      "exposureScore": 28.8, "readinessScore": 53.2,
+      "revenueGrowthPct": 22.7, "revenueBasis": "total_income_inr",
+      "marginChangePp": -1.4, "marginBasis": "ebitda_margin_computed_from_official_totals",
+      "fy25Source": "https://www.intellectdesign.com/investor/presentations/Intellect-Q4-FY-25-Investor-Deck.pdf",
+      "fy26Source": "https://www.intellectdesign.com/media/intellect-reports-fy26-total-income-growth-of-23-to-inr-3161-cr-ai-first-strategy-drives-34-surge-in-license-linked-revenue/"
+    }
+  ]
+}

@@ -467,13 +467,13 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   const allClaims = Object.values(dossier.sections).flat();
   const supported = allClaims.filter((claim) => claim.status === "supported").length;
   const cards = [
-    ["BMS SCORE", fmt(bms?.score)], ["LIFE-CYCLE", bms?.stage || "N/A"],
+    ["FCS", fmt(bms?.score)], ["FCS LIFE-CYCLE", bms?.stage || "N/A"],
     ["OFFICIAL SOURCES", fmt(dossier.sources.length)], ["SUPPORTED CLAIMS", fmt(supported)],
   ];
   cards.forEach(([label, value], index) => r.callout(label, value, r.margin + index * (cardWidth + cardGap), cardWidth));
   r.y += 58;
   r.heading("Investment-research orientation");
-  r.paragraph(`This dossier separates the BMS V1 assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated assessment date"} from subsequent company research. The BMS remains an evidence-based change signal; later evidence is evaluated without rewriting the recorded score or lifecycle.`, { size: 9 });
+  r.paragraph(`This dossier separates the Fundamental Change Score (FCS) for ${bms?.period || "the stated reporting period"} from subsequent company research. The FCS remains a dated, evidence-based assessment; later evidence is evaluated without rewriting the recorded score or lifecycle.`, { size: 9 });
   r.heading("Company history and identity");
   r.paragraph(enrichment?.executiveSummary?.companyHistory || "A concise verified company history was not available from the supplemental sources.", { color: enrichment?.executiveSummary?.companyHistory ? C.ink : C.slate });
   r.paragraph(enrichment?.promoterNames?.length
@@ -527,12 +527,13 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     if (score >= 20) return "NEGATIVE";
     return compact ? "STRONG -" : "STRONG NEGATIVE";
   };
-  const measuredFactors = factorAnalysis?.factors?.filter(hasStructuredComparison) || [];
-  const totalFactorWeight = factorAnalysis?.factors?.reduce((sum, factor) => sum + factor.weight, 0) || 0;
+  const fcsFactors = factorAnalysis?.factors?.filter((factor) => ["earnings", "economics", "execution", "balance_sheet"].includes(factor.id)) || [];
+  const measuredFactors = fcsFactors.filter(hasStructuredComparison);
+  const totalFactorWeight = fcsFactors.reduce((sum, factor) => sum + factor.weight, 0);
   const measuredFactorWeight = measuredFactors.reduce((sum, factor) => sum + factor.weight, 0);
   const weightCoverage = totalFactorWeight > 0 ? measuredFactorWeight / totalFactorWeight * 100 : 0;
-  const componentBars = factorAnalysis?.factors?.length
-    ? factorAnalysis.factors.map((factor) => ({
+  const componentBars = fcsFactors.length
+    ? fcsFactors.map((factor) => ({
         label: factor.label,
         value: Number(directionalScoreToDisplay(factor.current.factorScore)),
         available: hasStructuredComparison(factor),
@@ -540,12 +541,12 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
           ? directionalScoreToDisplay(factor.current.factorScore)
           : directionalBand(factor.current.factorScore, true),
       }))
-    : (bms?.components || []).map((item) => ({ label: item.label, value: item.score, available: true }));
+    : (bms?.components || []).filter((item) => item.label.toLowerCase() !== "management").map((item) => ({ label: item.label, value: item.score, available: true }));
 
-  r.title("How the BMS V1 signal was built", `Assessment recorded as of ${deliveryCheck?.input.lifecycleFreezeDate || "the stated date"}. Bar height represents the normalized directional reading. Exact factor scores are printed only for high-confidence evidence; other readings use a directional band.`);
-  r.bars("The five parts of Business Momentum", componentBars, true, [C.green]);
-  const coverageText = factorAnalysis?.factors?.length
-    ? `Comparable factor coverage: ${measuredFactors.length} of ${factorAnalysis.factors.length} factors, representing ${fmt(weightCoverage)}% of the overall score. N/A means previous and current figures were not both available; it is not neutral evidence. A high overall BMS reading must be interpreted alongside this coverage.`
+  r.title("How the FCS was built", `Score based on ${bms?.period || "the stated reporting period"}. Bar height represents the normalized directional reading. Exact factor scores are printed only for high-confidence evidence; other readings use a directional band.`);
+  r.bars("The four parts of the Fundamental Change Score", componentBars, true, [C.green]);
+  const coverageText = fcsFactors.length
+    ? `Comparable factor coverage: ${measuredFactors.length} of ${fcsFactors.length} factors, representing ${fmt(weightCoverage)}% of the overall score. N/A means previous and current figures were not both available; it is not neutral evidence. A high overall FCS must be interpreted alongside this coverage.`
     : "Comparable factor figures were not supplied. No factor-level conclusion should be inferred.";
   r.paragraph(coverageText, { size: 8, color: C.slate, bold: weightCoverage < 100 });
   const factorMetricText = (metric: BmsFactorAnalysis["factors"][number]["current"]["metrics"][number]) => {
@@ -570,9 +571,9 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
       ? `${measurement.period || "Period unavailable"}: ${metrics.join("; ")}`
       : `${measurement.period || "Period unavailable"}: comparable figures not available`;
   };
-  if (factorAnalysis?.factors?.length) {
-    r.heading("Five-part signal explanation");
-    factorAnalysis.factors.forEach((factor, index) => {
+  if (fcsFactors.length) {
+    r.heading("Four-part FCS explanation");
+    fcsFactors.forEach((factor, index) => {
       const definition = BMS_FACTOR_DEFINITIONS.find((item) => item.id === factor.id)!;
       const height = 68;
       r.ensure(height + 5);
@@ -590,7 +591,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         .text(structuredComparison ? (exactScoreVisible ? directionalScoreToDisplay(factor.current.factorScore) : directionalBand(factor.current.factorScore, true)) : partialEvidence ? "CURRENT ONLY" : "N/A", r.margin + 10, scoreY + (exactScoreVisible ? 0 : 4), { width: exactScoreVisible ? 42 : 68, lineBreak: false });
       r.doc.font("Helvetica-Bold").fontSize(6.2).fillColor(C.slate)
         .text(exactScoreVisible ? `${fmt(factor.weight * 100)}% WEIGHT` : `${fmt(factor.weight * 100)}% WT`, r.margin + (exactScoreVisible ? 52 : 80), scoreY + 4, { width: exactScoreVisible ? 56 : 30 })
-        .text(structuredComparison ? (exactScoreVisible ? `MOMENTUM SCORE / 100` : "DIRECTIONAL READING") : partialEvidence ? "NO COMPARISON" : "NO MOMENTUM SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
+        .text(structuredComparison ? (exactScoreVisible ? `FACTOR SCORE / 100` : "DIRECTIONAL READING") : partialEvidence ? "NO COMPARISON" : "NO FACTOR SCORE", r.margin + 10, wrapsFactorLabel ? top + 48 : top + 46, { width: 100 })
         .text(structuredComparison || partialEvidence ? `${factor.confidence.toUpperCase()} EVIDENCE CONFIDENCE` : "PREVIOUS/CURRENT FIGURES UNAVAILABLE", r.margin + 10, wrapsFactorLabel ? top + 57 : top + 55, { width: 100 });
       const detailX = r.margin + leftWidth;
       const detailWidth = r.width - leftWidth - 10;
@@ -609,7 +610,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     });
     r.paragraph("Only factors with comparable previous and current figures receive a momentum reading. A single dated observation is shown as current evidence only, without manufacturing a comparison. Missing factors are not treated as zero or neutral evidence.", { size: 7, color: C.slate });
   } else {
-    r.paragraph("Comparable figures for the five BMS factors were not supplied. No factor explanation has been added after the assessment.", { color: C.slate });
+    r.paragraph("Comparable figures for the four FCS factors were not supplied. No factor explanation has been added after the assessment.", { color: C.slate });
   }
 
   r.title("Market and financial evidence", usesOperatingProfit
@@ -620,7 +621,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
   r.table("Quarter-wise company performance", ["Period", "Basis", "Revenue Rs.Cr", `${profitLabel} Rs.Cr`, usesOperatingProfit ? "OPM %" : "EBITDA %", "PAT Rs.Cr", "EPS"], [20, 18, 22, 22, 18, 20, 14],
     financialRows.map((q) => [`${q.period}${q.sourceIds?.length ? ` [${q.sourceIds.join(", ")}]` : ""}`, q.basis, fmt(q.revenueCr), fmt(q.ebitdaCr), fmt(q.ebitdaMarginPct, "%"), fmt(q.patCr), fmt(q.eps)]));
 
-  r.title("Do later results support the signal?", "This separate check asks whether subsequently published results and basic business-quality evidence support further investigation within the recorded BMS V1 lifecycle. It is not a second BMS score.");
+  r.title("Do later results support the FCS?", "This separate check asks whether subsequently published results and basic business-quality evidence support further investigation within the recorded FCS lifecycle. It does not recalculate the original FCS.");
   if (deliveryAssessment && deliveryCheck) {
     const direction = deliveryAssessment.deliveryDirection.replaceAll("_", " ").toUpperCase();
     const observedGates = deliveryCheck.input.qualityGates.filter((gate) => gate.result === "pass" || gate.result === "fail").length;
@@ -629,14 +630,14 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     const confirmationGap = 8;
     const confirmationWidth = (r.width - confirmationGap * 3) / 4;
     [
-      ["BMS V1 LIFECYCLE", deliveryAssessment.lifecycle],
+      ["FCS LIFE-CYCLE", deliveryAssessment.lifecycle],
       ["LATER-RESULTS READING", direction],
       ["RESULTS COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
       ["QUALITY CHECKS COMPLETED", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
     ].forEach(([label, value], index) => r.callout(label, value, r.margin + index * (confirmationWidth + confirmationGap), confirmationWidth));
     r.y = confirmationY + 54;
     r.heading("Why this check exists");
-    r.paragraph(`The BMS V1 lifecycle records where business momentum stood as of ${deliveryCheck.input.lifecycleFreezeDate}. We then compare later published results with an earlier comparable reading and check whether basic financial, governance and operating-quality conditions have enough supporting evidence. The purpose is to prioritise research inside a lifecycle group without rewriting history.`, { size: 8.5 });
+    r.paragraph(`The FCS lifecycle records how the company's fundamental change developed across comparable reporting-period checkpoints through ${bms?.period || deliveryCheck.input.lifecycleFreezeDate}. We then compare later published results with an earlier comparable reading and check whether basic financial, governance and operating-quality conditions have enough supporting evidence. The purpose is to prioritise research without rewriting history.`, { size: 8.5 });
     if (notDueGates) r.paragraph(`${notDueGates} balance-sheet check${notDueGates === 1 ? " is" : "s are"} not due for the latest quarter because this information is normally reviewed half-yearly. This is a reporting-timing status, not a pass, concern or zero score. The latest verified half-year or annual balance-sheet evidence should retain its original date.`, { size: 8, color: C.slate });
     r.table("Later-results comparison", ["Measure", "Previous", "Current", "Change", "Direction"], [38, 15, 15, 15, 17],
       deliveryAssessment.deliveryComponents.slice(0, 3).map((component) => [
@@ -647,12 +648,12 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         component.direction.toUpperCase(),
       ]));
     r.heading("What the result means");
-    r.paragraph(`The BMS V1 lifecycle recorded as of ${deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The later-results reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% results coverage. Business-quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
+    r.paragraph(`The FCS lifecycle through ${bms?.period || deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The later-results reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% results coverage. Business-quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
     r.table("How to interpret the checks", ["What the checks show", "What it means for research"], [36, 64], [
       ["Ahead delivery + all required checks met", "Higher priority within the same recorded lifecycle; investigate durability."],
       ["Mixed delivery", "Evidence points in opposing directions; retain for monitoring."],
       ["Behind delivery", "The momentum thesis may be weakening; require stronger subsequent evidence."],
-      ["Any required check not met", "Exclude from the refined shortlist while preserving the BMS V1 lifecycle record."],
+      ["Any required check not met", "Exclude from the refined shortlist while preserving the recorded FCS lifecycle."],
       ["Limited coverage / unavailable checks", "Do not infer confirmation. Collect evidence and reassess after the next result."],
       ["Balance-sheet check not due", "Do not penalise the company. Carry the latest verified half-year or annual observation with its original date."],
     ]);
@@ -665,7 +666,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     ]);
     r.paragraph(`Calculated later using information available through ${deliveryCheck.input.expectationFreezeDate}. This comparison was not recorded prospectively on the earlier date.`, { size: 7.5, color: C.slate });
   } else {
-    r.paragraph("Previous and current results were not sufficient for comparison. The BMS V1 lifecycle recorded as of the stated date remains the only classification shown, and no later-results conclusion should be inferred.", { color: C.slate });
+    r.paragraph("Previous and current results were not sufficient for comparison. The recorded FCS lifecycle remains the only classification shown, and no later-results conclusion should be inferred.", { color: C.slate });
   }
 
   r.title("Material developments and risks", "The narrative is intentionally selective: only developments, operating evidence, commitments and risks that warrant investor attention are shown.");

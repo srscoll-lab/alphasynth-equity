@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "0.1.0",
+  "generatedAsOf": "2026-09-09",
+  "assessmentMode": "reconstructed_today",
+  "benchmark": "NIFTY IT",
+  "methodologyNote": "Scores are provisional reconstructions made with hindsight from dated official disclosures. They are suitable for hypothesis formation, not an unbiased backtest.",
+  "returnWindows": {
+    "fy26": "2025-04-01 to 2026-03-30",
+    "q1fy27": "2026-04-01 to 2026-06-30"
+  },
+  "benchmarkReturnsPct": {
+    "fy26": -19.2,
+    "q1fy27": -11.4
+  },
+  "companies": [
+    {
+      "symbol": "TCS",
+      "companyName": "Tata Consultancy Services",
+      "cohort": "Large services",
+      "assessmentAsOf": "2026-04-09",
+      "exposureScore": 61.3,
+      "readinessScore": 81.8,
+      "fy26ReturnPct": -31.3,
+      "q1fy27ReturnPct": -14.5,
+      "evidenceSummary": "Annualized AI revenue exceeded USD 2.3bn; 270,000+ employees had higher AI/ML proficiency.",
+      "officialSource": "https://www.tcs.com/who-we-are/newsroom/press-release/tcs-financial-results-q4-fy-2026"
+    },
+    {
+      "symbol": "INFY",
+      "companyName": "Infosys",
+      "cohort": "Large services",
+      "assessmentAsOf": "2026-06-02",
+      "exposureScore": 58.8,
+      "readinessScore": 62.5,
+      "fy26ReturnPct": -15.6,
+      "q1fy27ReturnPct": -19.9,
+      "evidenceSummary": "AI-led programs across 90% of top 200 clients; AI revenue remained unsegmented.",
+      "officialSource": "https://www.infosys.com/investors/reports-filings/annual-report/annual/documents/infosys-ar-26.pdf"
+    },
+    {
+      "symbol": "HCLTECH",
+      "companyName": "HCL Technologies",
+      "cohort": "Large services",
+      "assessmentAsOf": "2026-04-21",
+      "exposureScore": 55.3,
+      "readinessScore": 77.0,
+      "fy26ReturnPct": -9.3,
+      "q1fy27ReturnPct": -19.4,
+      "evidenceSummary": "USD 620m annualized Advanced AI revenue and 144,223 GenAI-trained employees.",
+      "officialSource": "https://www.hcltech.com/en-us/hcl-annual-report-2026/engineering-the-future-with-ai"
+    },
+    {
+      "symbol": "WIPRO",
+      "companyName": "Wipro",
+      "cohort": "Large services",
+      "assessmentAsOf": "2026-05-22",
+      "exposureScore": 64.3,
+      "readinessScore": 52.5,
+      "fy26ReturnPct": -25.3,
+      "q1fy27ReturnPct": -10.9,
+      "evidenceSummary": "212,663 associates completed GenAI training; AI revenue remained unsegmented.",
+      "officialSource": "https://www.wipro.com/content/dam/nexus/en/investor/annual-reports/2025-2026/20-f-fy25-26.pdf"
+    },
+    {
+      "symbol": "LTM",
+      "companyName": "LTIMindtree",
+      "cohort": "Mid-tier / digital",
+      "assessmentAsOf": "2026-05-29",
+      "exposureScore": 62.0,
+      "readinessScore": 52.8,
+      "fy26ReturnPct": -8.1,
+      "q1fy27ReturnPct": -12.7,
+      "evidenceSummary": "BlueVerse and outcome-led delivery were disclosed; 75,000 employees were GenAI-trained.",
+      "officialSource": "https://www.ltm.com/content/dam/ltimcorporatewebsite/uploads/investors/2026/05/integrated-annual-report-fy26.pdf"
+    },
+    {
+      "symbol": "PERSISTENT",
+      "companyName": "Persistent Systems",
+      "cohort": "Mid-tier / digital",
+      "assessmentAsOf": "2026-04-24",
+      "exposureScore": 57.5,
+      "readinessScore": 61.6,
+      "fy26ReturnPct": -5.8,
+      "q1fy27ReturnPct": -14.3,
+      "evidenceSummary": "AI-first positioning accompanied 17.4% USD revenue growth and 15.6% EBIT margin.",
+      "officialSource": "https://www.persistent.com/media/press-releases/q4-fy26-results/"
+    },
+    {
+      "symbol": "COFORGE",
+      "companyName": "Coforge",
+      "cohort": "Mid-tier / digital",
+      "assessmentAsOf": "2026-05-05",
+      "exposureScore": 60.8,
+      "readinessScore": 61.3,
+      "fy26ReturnPct": -27.7,
+      "q1fy27ReturnPct": 27.0,
+      "evidenceSummary": "Management linked AI-led efficiencies with prospective margin expansion; AI revenue was unsegmented.",
+      "officialSource": "https://investors.coforge.com/hubfs/Press-Release-Intimation-05May-26.pdf"
+    },
+    {
+      "symbol": "TATAELXSI",
+      "companyName": "Tata Elxsi",
+      "cohort": "Specialist / engineering",
+      "assessmentAsOf": "2026-04-21",
+      "exposureScore": 61.3,
+      "readinessScore": 64.9,
+      "fy26ReturnPct": -20.7,
+      "q1fy27ReturnPct": -5.5,
+      "evidenceSummary": "GenAI moved beyond pilots, with platform accelerators and a fixed-bid transition.",
+      "officialSource": "https://www.tataelxsi.com/news-and-events/press-releases/tata-elxsi-operating-revenue-at-rs-9938-cr-registers-healthy-growth-of-42-qoq"
+    },
+    {
+      "symbol": "KPITTECH",
+      "companyName": "KPIT Technologies",
+      "cohort": "Specialist / engineering",
+      "assessmentAsOf": "2026-04-29",
+      "exposureScore": 52.5,
+      "readinessScore": 63.3,
+      "fy26ReturnPct": -49.7,
+      "q1fy27ReturnPct": -0.4,
+      "evidenceSummary": "Automotive-domain products and AI-infused solutions were disclosed; AI revenue was unsegmented.",
+      "officialSource": "https://www.kpit.com/news/kpit-delivers-q4fy26-with-%E2%82%B9-yoy-growth-of-12-and-strong-deal-wins/"
+    },
+    {
+      "symbol": "INTELLECT",
+      "companyName": "Intellect Design Arena",
+      "cohort": "Specialist / product",
+      "assessmentAsOf": "2026-05-08",
+      "exposureScore": 25.8,
+      "readinessScore": 71.0,
+      "fy26ReturnPct": -12.0,
+      "q1fy27ReturnPct": 12.8,
+      "evidenceSummary": "Platform revenue reached INR 580cr with 91 transformations; AI revenue remained unsegmented.",
+      "officialSource": "https://www.intellectdesign.com/investor/intimations/InvestorEarningsCallPresentationQ4FY26signed.pdf"
+    }
+  ]
+}

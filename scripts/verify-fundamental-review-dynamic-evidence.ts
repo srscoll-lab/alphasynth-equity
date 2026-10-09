@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { canonicalizeDynamicEvidence } from "../src/fundamental-review-dynamic-evidence.ts";
+import { anchorsForEvidencePeriod, canonicalizeDynamicEvidence } from "../src/fundamental-review-dynamic-evidence.ts";
+
+const quarterAnchors = [{ current_period_end_date: "2025-12-31" }, { current_period_end_date: "2026-03-31" }, {}];
+assert.deepEqual(anchorsForEvidencePeriod(quarterAnchors, "2026-03-31"), [quarterAnchors[1]]);
+assert.deepEqual(anchorsForEvidencePeriod(quarterAnchors, "2026-06-30"), []);
+assert.equal(anchorsForEvidencePeriod(quarterAnchors, ""), quarterAnchors);
 
 const base = {
   ticker: "TESTCO",
@@ -50,5 +55,14 @@ const rejected = canonicalizeDynamicEvidence({
 });
 assert.equal(rejected.candidates.length, 0);
 assert.equal(rejected.diagnostics[0].outcome, "dynamic_row_not_canonical");
+const pairedRow = { ...rows[0], previous_document: { source_ref: "https://example.com/prior.pdf",
+  source_date: "2025-07-20", document_sha256: "b".repeat(64), archived_document_uri: "gs://evidence-bucket/prior.pdf",
+  media_type: "application/pdf", content_length: 1000 } };
+const paired = canonicalizeDynamicEvidence({ ...base, rows: [pairedRow] });
+assert.equal(paired.documents.length, 2);
+assert.notEqual(paired.candidates[0].previous_document_id, paired.candidates[0].current_document_id);
+assert.equal(paired.documents.find(d => d.document_id === paired.candidates[0].previous_document_id)?.published_at, "2025-07-20T00:00:00.000Z");
+assert.equal(canonicalizeDynamicEvidence({ ...base, rows: [{ ...pairedRow, previous_document: { ...pairedRow.previous_document, archived_document_uri: "" } }] }).candidates.length, 0);
+assert.equal(canonicalizeDynamicEvidence({ ...base, rows: [{ ...pairedRow, previous_document: { ...pairedRow.previous_document, source_date: "2026-10-02" } }] }).candidates.length, 0);
 
 console.log("Dynamic Fundamental Review evidence adapter verified.");

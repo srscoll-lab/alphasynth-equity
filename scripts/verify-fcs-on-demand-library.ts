@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import {createElement} from 'react';
+import {renderToStaticMarkup} from 'react-dom/server';
+import {fundamentalChangeLibrary,onDemandLibraryRecord} from '../src/data/fundamentalChangeLibrary.ts';
+import {mergeFcsPublications,type FcsPublicationSummary} from '../src/fcs-publications.ts';
+import LatestPublishedFcs from '../src/components/LatestPublishedFcs.tsx';
+const publication:FcsPublicationSummary={symbol:'NEWTEST',companyName:'New Test Limited',fcsScore:64,fcsPeriod:'Q1 FY27',informationCutoff:'2026-10-08',calculatedAt:'2026-10-08T09:00:00Z',lifecycleReady:false,lifecycle:null,historyThrough:null,checkpoints:1};
+const original=structuredClone(fundamentalChangeLibrary);
+const records=mergeFcsPublications(fundamentalChangeLibrary,[publication],onDemandLibraryRecord);
+assert.equal(records.length,fundamentalChangeLibrary.length+1);
+const row=records.find(record=>record.symbol==='NEWTEST')!;
+assert.equal(row.sourceCohort,'on_demand');assert.equal(row.momentumScore,null);assert.equal(row.lifecycleReady,false);assert.equal(row.checkpoints,1);
+assert.deepEqual(fundamentalChangeLibrary,original);
+assert.equal(mergeFcsPublications(fundamentalChangeLibrary,[publication,publication],onDemandLibraryRecord).length,records.length);
+const markup=renderToStaticMarkup(createElement(LatestPublishedFcs,{symbol:'NEWTEST',companyName:'New Test Limited',hasEarlierSnapshot:false}));
+assert.match(markup,/Loading the published FCS/);assert.doesNotMatch(markup,/earlier report remains/);
+console.log('On-demand library admission, deduplication, unavailable momentum, frozen snapshot preservation and report loading UI passed. No jobs or model calls.');

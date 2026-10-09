@@ -1,0 +1,12 @@
+import {resolve} from 'node:path';
+import {pathToFileURL} from 'node:url';
+import assert from 'node:assert/strict';
+import {techmReviewedQuarterRows} from '../src/techm-reviewed-quarter-ledger.ts';
+import {replayResearch} from './replay-researched-fcs-history.ts';
+const resolver=(url:string,sha:string,date:string)=>({source_ref:url,source_date:date,document_sha256:sha,archived_document_uri:pathToFileURL(resolve('tmp/three-company-history-20261007/'+sha+'.pdf')).href});
+const quarters=['2025-12-31','2026-03-31','2026-06-30'].map(end=>({period_end:end,rows:techmReviewedQuarterRows(end,'2026-10-07',resolver)}));
+assert.ok(quarters.every(q=>q.rows.length===5));
+assert.equal(techmReviewedQuarterRows('2026-03-31','2026-10-07',(url,sha,date)=>({...resolver(url,sha,date),document_sha256:'0'.repeat(64)})).length,0);
+assert.equal(techmReviewedQuarterRows('2026-03-31','2026-03-31',resolver).length,0);
+assert.equal(techmReviewedQuarterRows('2026-09-30','2026-10-07',resolver).length,0);
+console.log(JSON.stringify(replayResearch({information_cutoff:'2026-10-07',companies:[{symbol:'TECHM',company_name:'Tech Mahindra Limited',quarters,gaps:[]}]}),null,2));

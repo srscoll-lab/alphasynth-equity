@@ -2,6 +2,7 @@ import expandedRadarData from "./bmsMomentumRadarExpanded.json";
 import momentumExpansionStudies from "./momentumExpansionStudies.json";
 import signalTrackerV2Comparison from "./signalTrackerV2Comparison.json";
 import finalBuildFcsScores from "./finalBuildFcsScores.json";
+import type {FcsPublicationSummary} from '../fcs-publications';
 
 export type FundamentalChangeRecord = {
   symbol: string;
@@ -14,16 +15,28 @@ export type FundamentalChangeRecord = {
   evidenceReadiness: "FOUR_FACTOR_READY";
   lifecycle: string | null;
   lifecycleReady: boolean;
+  lifecycleAsOf?: string | null;
+  livePublication?: boolean;
   checkpoints: number;
   momentumState: string;
   momentumScore: number | null;
   momentumAsOf: string;
   universeRelativeStrength: number | null;
   sectorRelativeStrength: number | null;
-  sourceCohort: "controlled_50" | "momentum_expansion" | "final_build";
+  sourceCohort: "controlled_50" | "momentum_expansion" | "final_build" | "on_demand";
 };
 
 const radarBySymbol = new Map(expandedRadarData.companies.map((company) => [company.symbol, company]));
+
+export function onDemandLibraryRecord(publication:FcsPublicationSummary):FundamentalChangeRecord {
+ const radar=radarBySymbol.get(publication.symbol);
+ return {symbol:publication.symbol,companyName:publication.companyName,sector:radar?.market_cap_segment.industry||'Unclassified',capSegment:radar?.market_cap_segment.label||'Unclassified',
+  fcsScore:publication.fcsScore,fcsPeriod:publication.fcsPeriod,fcsAsOf:publication.informationCutoff,evidenceReadiness:'FOUR_FACTOR_READY',
+  lifecycle:publication.lifecycleReady?publication.lifecycle:null,lifecycleReady:publication.lifecycleReady,lifecycleAsOf:publication.historyThrough,checkpoints:publication.checkpoints,
+  momentumState:radar?.radar_state||'UNAVAILABLE',momentumScore:radar?.experimental_rank_score??null,momentumAsOf:radar?.as_of_date||'',
+  universeRelativeStrength:radar?.relative_strength_to_universe??null,sectorRelativeStrength:radar?.relative_strength_to_sector??null,
+  sourceCohort:'on_demand',livePublication:true};
+}
 
 const controlledRecords: FundamentalChangeRecord[] = signalTrackerV2Comparison.companies.map((company) => {
   const radar = radarBySymbol.get(company.symbol);

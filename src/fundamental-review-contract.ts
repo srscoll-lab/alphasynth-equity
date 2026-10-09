@@ -24,6 +24,7 @@ export type FundamentalReviewJob = {
   updatedAt: string;
   message: string;
   resultAvailable: boolean;
+  lastLifecycle?: { classification: string; latestPeriodEnd: string; calculatedAt: string; informationCutoff: string } | null;
 };
 
 const statusSet = new Set<string>(FUNDAMENTAL_REVIEW_STATUSES);
@@ -61,8 +62,14 @@ export function normalizeFundamentalReviewJob(
     requestedAt: requestedAt ? String(requestedAt) : null,
     updatedAt: updatedAt ? String(updatedAt) : new Date().toISOString(),
     message: String(raw.message || defaultFundamentalReviewMessage(status)),
-    resultAvailable: raw.resultAvailable === true || raw.result_available === true
-      || status === "score_ready_lifecycle_pending" || status === "ready",
+    lastLifecycle: (() => {
+      const assessment = (raw.lastCompletedLifecycle || raw.lastLifecycle) as Record<string, unknown> | undefined;
+      if (!assessment || typeof assessment.classification !== "string" || typeof assessment.latestPeriodEnd !== "string") return null;
+      return { classification: assessment.classification, latestPeriodEnd: assessment.latestPeriodEnd,
+        calculatedAt: String(assessment.calculatedAt || ""), informationCutoff: String(assessment.informationCutoff || "") };
+    })(),
+    resultAvailable: status !== "incomplete" && status !== "failed" && raw.resultAvailable !== false && raw.result_available !== false && (raw.resultAvailable === true || raw.result_available === true
+      || status === "score_ready_lifecycle_pending" || status === "ready"),
   };
 }
 
@@ -83,4 +90,33 @@ export function defaultFundamentalReviewMessage(status: FundamentalReviewStatus)
 
 export function isFundamentalReviewInProgress(status: FundamentalReviewStatus): boolean {
   return ["queued", "locating_evidence", "validating_factors", "scoring", "lifecycle_processing"].includes(status);
+}
+
+export function publishedFundamentalReviewResult(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const job = normalizeFundamentalReviewJob(record, { symbol: String(record.symbol || "") });
+  const score = record.scoreResult as Record<string, unknown> | null;
+  if (!["ready", "score_ready_lifecycle_pending", "lifecycle_processing"].includes(job.status)
+      || job.completedFactors !== 4 || !job.resultAvailable || !score || score.score_publishable !== true
+      || typeof score.fcs_score !== "number" || !Number.isFinite(score.fcs_score)) return null;
+  // The already-approved Hindalco policy scores derived EBITDA margin, not
+  // absolute EBITDA growth. Preserve old ledgers, but do not re-publish the
+  // pre-repair worker output as a valid current report.
+  if(job.symbol === 'HINDALCO' && Array.isArray(score.factors)) {
+    const economics=(score.factors as any[]).find(factor=>factor.factor_id==='economics');
+    if(economics?.impacts?.some((impact:any)=>impact.metric_id==='ebitda')
+      && !economics.impacts.some((impact:any)=>impact.metric_id==='ebitda_margin'))return null;
+  }
+  const permitted = ["fcs_score", "score_publishable", "raw_score", "display_score", "factor_scores", "factors", "lifecycle_ready", "lifecycle", "lifecycle_assessment", "lifecycle_status", "lifecycle_missing_periods", "lifecycle_unavailable_reason", "checkpoints", "calculated_at", "information_cutoff", "comparison_period", "previous_period", "current_period"];
+  return Object.fromEntries(permitted.filter((key) => key in score).map((key) => [key, score[key]]));
+}
+
+export function publicFundamentalReviewJob(value:unknown,fallback:{symbol:string;companyName?:string}) {
+ const raw=value && typeof value==='object'?value as Record<string,any>:{};
+ const job=normalizeFundamentalReviewJob(raw,fallback);
+ if(raw.scoreResult && ['ready','score_ready_lifecycle_pending'].includes(job.status) && !publishedFundamentalReviewResult(raw)) {
+   return {...job,resultAvailable:false,message:'This earlier worker assessment needs scoring-policy reconciliation. The original library report remains available; request a fresh review to update it.'};
+ }
+ return job;
 }

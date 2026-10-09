@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { infosysQuarterHighlights } from '../src/infosys-quarter-highlights.ts';
+const header = 'IFRS consolidated Page 1 of 8 ';
+const q4 = header + '$3.2 Bn Q4 Large Deal TCV For the quarter ended March 31, 2026 Reported IFRS revenues at $5,040 million Reported IFRS operating margin at 20.9% FCF at $833 million For the year ended March 31, 2026 revenues at $20,158 million operating margin at 20.3% FCF at $3,733 million';
+assert.deepEqual(infosysQuarterHighlights(q4, '2026-03-31'), { revenue:5040, operating_margin:20.9, free_cash_flow:833, deal_tcv:3.2 });
+assert.equal(infosysQuarterHighlights(q4, '2025-03-31'), null);
+assert.equal(infosysQuarterHighlights(q4.replace('FCF at $833 million',''), '2026-03-31'), null);
+assert.equal(infosysQuarterHighlights(q4.replace('$3.2 Bn Q4', '$14.9 Bn FY26'), '2026-03-31'), null);
+const q3 = header + 'TCV of large deal wins was $4.8 billion For the quarter ended December 31, 2025 Reported IFRS revenues at $5,099 million Reported IFRS operating margin at 18.4% Adjusted operating margin at 21.2% FCF at $915 million Adjusted FCF at $965 million For nine months ended December 31, 2025 revenues at $15,000 million FCF at $2,800 million';
+assert.deepEqual(infosysQuarterHighlights(q3, '2025-12-31'), { revenue:5099, operating_margin:18.4, free_cash_flow:915, deal_tcv:4.8 });
+assert.equal(infosysQuarterHighlights(q3.replace('FCF at $915 million', 'FCF at $915 million FCF at $900 million'), '2025-12-31'), null);
+console.log('Infosys quarterly parser: quarterly/annual/YTD/adjusted/ambiguity gates passed.');

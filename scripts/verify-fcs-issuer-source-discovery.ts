@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {discoverFcsIssuerDomains} from '../src/fcs-issuer-source-discovery.ts';
+let searches=0;
+const search=async(instruction:string)=>{searches++;assert.match(instruction,/site:(?:nsearchives.nseindia.com|sebi.gov.in)/);return [{uri:'https://nsearchives.nseindia.com/fixture.pdf',title:'Fixture Limited'}];};
+const options={ticker:'FIXTURE',companyName:'Fixture Limited',search,fetchImpl:(async()=>new Response('%PDF-fixture',{headers:{'content-type':'application/pdf'}})) as typeof fetch};
+const valid=await discoverFcsIssuerDomains({...options,extractText:async()=> 'Fixture Limited\nNSE Symbol: FIXTURE\nWebsite: www.fixture-industries.in\n'});
+assert.deepEqual(valid.domains,['fixture-industries.in']);assert.equal(searches,1);
+const wrong=await discoverFcsIssuerDomains({...options,extractText:async()=> 'Other Limited\nNSE Symbol: OTHER\nWebsite: www.fixture-industries.in\n'});
+assert.deepEqual(wrong.domains,[]);
+const fallback=await discoverFcsIssuerDomains({...options,search:async(instruction)=>instruction.includes('SEBI-hosted')?[{uri:'https://www.sebi.gov.in/sebi_data/attachdocs/fixture.pdf'}]:[],extractText:async()=> 'RED HERRING PROSPECTUS\nFixture Limited\nWebsite: www.fixture-industries.in;\nCorporate Identity Number: L12345MH2000PLC123456'});
+assert.deepEqual(fallback.domains,['fixture-industries.in']);
+const failed=await discoverFcsIssuerDomains({...options,search:async()=>{throw Error('source search unavailable');}});
+assert.deepEqual(failed.domains,[]);assert.ok(failed.diagnostics.some((d:any)=>d.outcome==='issuer_metadata_discovery_failed'));
+console.log('Issuer source discovery: bounded independent exchange identity, wrong-company rejection and service failure passed without network/model calls.');
