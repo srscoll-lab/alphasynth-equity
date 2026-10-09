@@ -16,6 +16,7 @@
     "verify:titan-management-history": "node --import tsx scripts/validate-titan-management-history.ts",
     "test:stop-line-universe": "node --import tsx scripts/test-stop-line-universe.ts",
     "build:bms-v2-forward-comparison": "node scripts/build-bms-v2-forward-comparison.mjs",
+    "update:bms-v2-forward-comparison": "node scripts/update-bms-v2-forward-comparison.mjs",
     "verify:bms-v2-forward-comparison": "node scripts/verify-bms-v2-forward-comparison.mjs",
     "build:bms-momentum-radar": "node scripts/build-bms-momentum-radar.mjs",
     "refresh:bms-momentum-radar": "node scripts/refresh-expanded-momentum-radar.mjs",
