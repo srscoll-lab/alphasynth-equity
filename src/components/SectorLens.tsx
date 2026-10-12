@@ -55,6 +55,7 @@ export default function SectorLens({ onOpenCompanies, onShowValidation, onBrowse
   const [segment, setSegment] = useState<Segment>("ALL");
   const [relationship, setRelationship] = useState<RelationshipFilter>("ALL");
   const [companyQuery, setCompanyQuery] = useState("");
+  const [scrollRequest, setScrollRequest] = useState<{ targetId: string; nonce: number } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -71,6 +72,14 @@ export default function SectorLens({ onOpenCompanies, onShowValidation, onBrowse
       });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!scrollRequest) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(scrollRequest.targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [scrollRequest]);
 
   const radar = runtimeRadarData ?? expandedRadarData;
   const classifiedCompanies = useMemo(() => eligibleSectorCompanies(radar.companies as Company[]), [radar]);
@@ -116,7 +125,7 @@ export default function SectorLens({ onOpenCompanies, onShowValidation, onBrowse
     setSegment("ALL");
     setRelationship("ALL");
     setCompanyQuery("");
-    window.setTimeout(() => document.getElementById("sector-drilldown")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    setScrollRequest({ targetId: level === "BROAD" ? "sector-drilldown" : "sector-company-shortlist", nonce: Date.now() });
   };
 
   return <main className="min-h-screen bg-app-bg px-4 pb-16 pt-24 text-zinc-100 md:px-6">
@@ -150,7 +159,7 @@ export default function SectorLens({ onOpenCompanies, onShowValidation, onBrowse
           {level === "BROAD" && selectedSummary && <section id="sector-drilldown" className="scroll-mt-24 mt-6 rounded-3xl border border-violet-300/20 bg-violet-300/[0.035] p-5 md:p-6">
             <div className="text-[9px] font-black uppercase tracking-[0.18em] text-violet-300">Operating subsectors within the selected sector</div>
             <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between"><div><h2 className="text-2xl font-semibold text-white">{selectedSummary.industry}</h2><p className="mt-1 text-xs text-zinc-400">Choose a subsector to narrow the company list. Groups with three to nine companies are marked as small samples.</p></div>{selectedSubsector && <button type="button" onClick={() => setSelectedSubsector(null)} className="text-[10px] font-bold uppercase tracking-wide text-violet-200 hover:text-white">Show the whole sector</button>}</div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{subsectorSummaries.map((summary) => <button key={summary.industry} type="button" onClick={() => { setSelectedSubsector(summary.industry); setSegment("ALL"); setRelationship("ALL"); setCompanyQuery(""); window.setTimeout(() => document.getElementById("sector-company-shortlist")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }} className={`rounded-2xl border p-4 text-left transition ${selectedSubsector === summary.industry ? "border-violet-300/50 bg-violet-300/[0.12]" : "border-white/10 bg-black/15 hover:bg-white/[0.04]"}`}><div className="flex items-start justify-between gap-3"><div className="font-semibold text-white">{summary.industry}</div><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase ${regimeStyle[summary.regime]}`}>{regimeLabel[summary.regime]}</span></div><div className="mt-2 text-[10px] text-zinc-400">{summary.constituentCount} companies · {summary.constituentCount >= 10 ? "broader sample" : "small sample"}</div><div className="mt-2 flex gap-4 text-[10px]"><span className="text-zinc-500">Positive <strong className="text-zinc-200">{share(summary.positiveBreadth)}</strong></span><span className="text-zinc-500">20-day <strong className={summary.median20Day >= 0 ? "text-emerald-200" : "text-rose-200"}>{pct(summary.median20Day)}</strong></span></div></button>)}</div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">{subsectorSummaries.map((summary) => <button key={summary.industry} type="button" onClick={() => { setSelectedSubsector(summary.industry); setSegment("ALL"); setRelationship("ALL"); setCompanyQuery(""); setScrollRequest({ targetId: "sector-company-shortlist", nonce: Date.now() }); }} className={`rounded-2xl border p-4 text-left transition ${selectedSubsector === summary.industry ? "border-violet-300/50 bg-violet-300/[0.12]" : "border-white/10 bg-black/15 hover:bg-white/[0.04]"}`}><div className="flex items-start justify-between gap-3"><div className="font-semibold text-white">{summary.industry}</div><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase ${regimeStyle[summary.regime]}`}>{regimeLabel[summary.regime]}</span></div><div className="mt-2 text-[10px] text-zinc-400">{summary.constituentCount} companies · {summary.constituentCount >= 10 ? "broader sample" : "small sample"}</div><div className="mt-2 flex gap-4 text-[10px]"><span className="text-zinc-500">Positive <strong className="text-zinc-200">{share(summary.positiveBreadth)}</strong></span><span className="text-zinc-500">20-day <strong className={summary.median20Day >= 0 ? "text-emerald-200" : "text-rose-200"}>{pct(summary.median20Day)}</strong></span></div></button>)}</div>
             {!subsectorSummaries.length && <p className="mt-4 rounded-xl border border-white/10 bg-black/15 p-4 text-xs text-zinc-400">No operating subsector has at least three dependable liquid constituents. The broad-sector company list remains available below.</p>}
           </section>}
 
