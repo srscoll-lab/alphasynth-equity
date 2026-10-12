@@ -8,6 +8,7 @@ import { fundamentalChangeLibrary } from "../data/fundamentalChangeLibrary";
 import { useReviewJobs } from "../use-fundamental-review-activity";
 import { setReviewJobs, reviewActivityLabel } from "../fundamental-review-activity";
 import type { FcsEvidencePreflightRecord } from "../fcs-evidence-preflight";
+import DiscoverTabs from "./DiscoverTabs";
 import {
   defaultFundamentalReviewMessage,
   isFundamentalReviewInProgress,
@@ -226,12 +227,14 @@ const reviewStatusLabel = (status: FundamentalReviewJob["status"]) => ({
 
 type MomentumRadarProps = {
   onBack: () => void;
+  onOpenSectorLens: () => void;
   initialCompanySymbol?: string | null;
+  initialSectorIndustry?: string | null;
   onBrowseLibrary: (symbol?: string) => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
-export default function MomentumRadar({ onBack, initialCompanySymbol = null, onBrowseLibrary, onDeepDive }: MomentumRadarProps) {
+export default function MomentumRadar({ onBack, onOpenSectorLens, initialCompanySymbol = null, initialSectorIndustry = null, onBrowseLibrary, onDeepDive }: MomentumRadarProps) {
   const radarMode = new URLSearchParams(window.location.search).get("radar");
   // The expanded NSE radar is the product default. The frozen 477-company radar
   // remains available only through an explicit `radar=legacy` validation URL.
@@ -270,6 +273,8 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
   const visibleStates = expandedMode ? activeSignalStates : allStates;
   const [filter, setFilter] = useState<"ALL" | RadarState>("ALL");
   const [segment, setSegment] = useState<"ALL" | Segment>("ALL");
+  const requestedIndustry = new URLSearchParams(window.location.search).get("sector");
+  const [industry, setIndustry] = useState(initialSectorIndustry ?? requestedIndustry ?? "ALL");
   const [query, setQuery] = useState("");
   const [selectedStudySymbol, setSelectedStudySymbol] = useState<string | null>(null);
   const [selectedStatusSymbol, setSelectedStatusSymbol] = useState<string | null>(null);
@@ -304,6 +309,18 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
     }
     window.setTimeout(() => document.getElementById("momentum-company-list")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
   }, [initialCompanySymbol, activeRadarData]);
+  useEffect(() => {
+    if (!initialSectorIndustry) return;
+    setIndustry(initialSectorIndustry);
+    setDirectionView("positive");
+    setFilter("ALL");
+    setSegment("ALL");
+    setQuery("");
+    const url = new URL(window.location.href);
+    url.searchParams.set("sector", initialSectorIndustry);
+    window.history.replaceState({}, "", url);
+    window.setTimeout(() => document.getElementById("momentum-company-list")?.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+  }, [initialSectorIndustry]);
   const [reviewRequestsAvailable, setReviewRequestsAvailable] = useState(false);
   const [reviewRequestMessage, setReviewRequestMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [reviewSupportedSymbols, setReviewSupportedSymbols] = useState<Set<string>>(new Set());
@@ -349,21 +366,27 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
     const normalized = query.trim().toLowerCase();
     return companies.filter((company) => (filter === "ALL" || company.radar_state === filter)
       && (segment === "ALL" || company.market_cap_segment.id === segment)
+      && (industry === "ALL" || company.market_cap_segment.industry === industry)
       && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized)));
-  }, [companies, filter, query, segment]);
+  }, [companies, filter, industry, query, segment]);
   const displayed = filtered.slice(0, 100);
   const stateCounts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const relevant = companies.filter((company) => (segment === "ALL" || company.market_cap_segment.id === segment)
+      && (industry === "ALL" || company.market_cap_segment.industry === industry)
       && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized)));
     return Object.fromEntries(visibleStates.map((state) => [state, state === "ALL" ? relevant.length : relevant.filter((company) => company.radar_state === state).length])) as Partial<Record<"ALL" | RadarState, number>>;
-  }, [companies, query, segment, visibleStates]);
+  }, [companies, industry, query, segment, visibleStates]);
   const segmentCounts = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     const relevant = companies.filter((company) => (filter === "ALL" || company.radar_state === filter)
+      && (industry === "ALL" || company.market_cap_segment.industry === industry)
       && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized)));
     return Object.fromEntries(segments.map((item) => [item, item === "ALL" ? relevant.length : relevant.filter((company) => company.market_cap_segment.id === item).length])) as Record<"ALL" | Segment, number>;
-  }, [companies, filter, query]);
+  }, [companies, filter, industry, query]);
+  const industryOptions = useMemo(() => Array.from(new Set(momentumReadyCompanies
+    .map((company) => company.market_cap_segment.industry)
+    .filter((value): value is string => Boolean(value)))).sort((left, right) => left.localeCompare(right)), [momentumReadyCompanies]);
   const selectedStudy = selectedStudySymbol ? studyBySymbol.get(selectedStudySymbol) : null;
   const selectedStatusCompany = selectedStatusSymbol ? scannedCompanies.find((company) => company.symbol === selectedStatusSymbol) : null;
   const selectedRuntimeJob = selectedStatusSymbol ? reviewJobs[selectedStatusSymbol] : null;
@@ -389,13 +412,15 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
         || (downsidePhaseFilter === "POTENTIALLY_OVERSOLD"
           ? downsideAssessment(company)?.potentiallyOversold === true
           : downsideAssessment(company)?.phase === downsidePhaseFilter))
+      && (industry === "ALL" || company.market_cap_segment.industry === industry)
       && (!normalized || company.symbol.toLowerCase().includes(normalized) || company.company_name.toLowerCase().includes(normalized)));
     return Object.fromEntries(segments.map((item) => [item, item === "ALL" ? relevant.length : relevant.filter((company) => company.market_cap_segment.id === item).length])) as Record<"ALL" | Segment, number>;
-  }, [downsidePhaseFilter, inactiveFilter, inactiveMomentumCompanies, inactiveQuery]);
+  }, [downsidePhaseFilter, inactiveFilter, inactiveMomentumCompanies, inactiveQuery, industry]);
   const filteredInactiveCompanies = inactiveMomentumCompanies.filter((company) => {
     const normalized = inactiveQuery.trim().toLowerCase();
     return (inactiveFilter === "ALL" || company.radar_state === inactiveFilter)
       && (inactiveSegment === "ALL" || company.market_cap_segment.id === inactiveSegment)
+      && (industry === "ALL" || company.market_cap_segment.industry === industry)
       && (downsidePhaseFilter === "ALL"
         || (downsidePhaseFilter === "POTENTIALLY_OVERSOLD"
           ? downsideAssessment(company)?.potentiallyOversold === true
@@ -559,6 +584,7 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
 
   return <main className="min-h-screen bg-app-bg pt-24 pb-16 px-4 md:px-6 text-zinc-100">
     <div className="max-w-7xl mx-auto">
+      <DiscoverTabs active="companies" onCompanies={() => undefined} onSectors={onOpenSectorLens} />
       <button type="button" onClick={onBack} className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-zinc-500 hover:text-zinc-200 mb-7 transition-colors">
         <BarChart3 className="w-4 h-4" /> Methodology &amp; validation record
       </button>
@@ -629,6 +655,7 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {segments.map((item) => <button key={item} type="button" onClick={() => setSegment(item)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${segment === item ? "border-violet-300/50 bg-violet-300/15 text-violet-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{item === "ALL" ? "ALL" : segmentLabel(item)} {segmentCounts[item]}</button>)}
               </div>
+              <select aria-label="Filter by sector" value={industry} onChange={(event) => { const next = event.target.value; setIndustry(next); const url = new URL(window.location.href); if (next === "ALL") url.searchParams.delete("sector"); else url.searchParams.set("sector", next); window.history.replaceState({}, "", url); }} className="rounded-xl border border-white/10 bg-[#111b2d] px-3 py-2.5 text-xs text-zinc-200 outline-none focus:border-cyan-300/40 md:w-60"><option value="ALL">All sectors</option>{industryOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select>
               <label className="relative block md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-600" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search active momentum signals" className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-cyan-300/40" /></label>
             </div>
             {expandedMode && <p className="text-[10px] leading-relaxed text-zinc-500">The main radar contains only liquid, full-history companies with an Early, Established or Stretched Uptrend. These labels describe current measured conditions; they are not claims that a phase will generate a particular future return.</p>}
@@ -665,6 +692,7 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   {segments.map((item) => <button key={item} type="button" onClick={() => setInactiveSegment(item)} className={`whitespace-nowrap rounded-full border px-3 py-2 text-[9px] font-black uppercase tracking-[0.12em] ${inactiveSegment === item ? "border-violet-300/50 bg-violet-300/15 text-violet-100" : "border-white/10 text-zinc-500 hover:text-white"}`}>{item === "ALL" ? "ALL" : segmentLabel(item)} {inactiveSegmentCounts[item]}</button>)}
                 </div>
+                <select aria-label="Filter by sector" value={industry} onChange={(event) => setIndustry(event.target.value)} className="rounded-xl border border-white/10 bg-[#111b2d] px-3 py-2.5 text-xs text-zinc-200 outline-none focus:border-slate-300/40 md:w-60"><option value="ALL">All sectors</option>{industryOptions.map((item) => <option key={item} value={item}>{item}</option>)}</select>
                 <label className="relative block w-full md:ml-auto md:w-72"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" /><input value={inactiveQuery} onChange={(event) => setInactiveQuery(event.target.value)} placeholder={directionView === "negative" ? "Search negative direction" : "Search no directional setup"} className="w-full rounded-xl border border-white/10 bg-black/20 py-2.5 pl-10 pr-3 text-sm text-white outline-none focus:border-slate-300/40" /></label>
               </div>
               {inactiveFilter === "DETERIORATING" && <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
@@ -698,7 +726,7 @@ export default function MomentumRadar({ onBack, initialCompanySymbol = null, onB
           {directionView === "positive" && !filtered.length && <div className="py-16 text-center">
             <div className="text-sm font-semibold text-zinc-300">No companies match this combination of filters.</div>
             <div className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-zinc-500">The companies have not disappeared from the radar. This state, segment or gate intersection is empty. Return to the full universe to inspect every category.</div>
-            <button type="button" onClick={() => { setFilter("ALL"); setSegment("ALL"); setQuery(""); }} className="mt-4 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 hover:text-white">Show all active signals</button>
+            <button type="button" onClick={() => { setFilter("ALL"); setSegment("ALL"); setIndustry("ALL"); setQuery(""); }} className="mt-4 rounded-full border border-cyan-300/30 bg-cyan-300/10 px-4 py-2 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200 hover:text-white">Show all active signals</button>
           </div>}
           {selectedStatusCompany && <section className="mt-6 rounded-3xl border border-amber-400/20 bg-amber-400/[0.035] p-5 md:p-6">
             <div className="flex items-start justify-between gap-4"><div><div className="text-[9px] font-black uppercase tracking-[0.18em] text-amber-200">Fundamental Change Review status</div><h2 className="mt-2 text-xl font-semibold text-white">{selectedStatusCompany.company_name} <span className="font-mono text-sm text-zinc-500">{selectedStatusCompany.symbol}</span></h2></div><div className="flex items-center gap-2"><button type="button" onClick={refreshFundamentalReviewStatus} disabled={refreshingStatus} className="rounded-xl border border-white/10 p-2 text-zinc-400 hover:text-white disabled:opacity-50" aria-label="Refresh review status"><RefreshCw className={`h-4 w-4 ${refreshingStatus ? "animate-spin" : ""}`} /></button><button type="button" onClick={() => setSelectedStatusSymbol(null)} className="rounded-xl border border-white/10 p-2 text-zinc-500 hover:text-white" aria-label="Close processing status"><X className="h-4 w-4" /></button></div></div>

@@ -35,6 +35,7 @@ import frozenCohortData from "../data/signalTrackerCohort001.json";
 import SignalEvidenceLayer from "./SignalEvidenceLayer";
 import SignalTrackerV2Comparison from "./SignalTrackerV2Comparison";
 import MomentumRadar from "./MomentumRadar";
+import SectorLens from "./SectorLens";
 import FundamentalChangeLibrary from "./FundamentalChangeLibrary";
 
 type Lifecycle =
@@ -291,16 +292,17 @@ function forwardComparison(
 
 type SignalTrackerProps = {
   onBack: () => void;
-  initialMode?: "v1" | "v2" | "momentum" | "library";
+  initialMode?: "v1" | "v2" | "momentum" | "sector" | "library";
   initialCompanySymbol?: string | null;
-  onModeChange?: (mode: "v1" | "v2" | "momentum" | "library") => void;
+  onModeChange?: (mode: "v1" | "v2" | "momentum" | "sector" | "library") => void;
   onDeepDive: (company: { symbol: string; company_name: string; bms_status: "ready" | "fcs_ready" | "processing" | "not_requested" }) => void;
 };
 
 export default function SignalTracker({ onBack, initialMode = "v2", initialCompanySymbol = null, onModeChange, onDeepDive }: SignalTrackerProps) {
-  const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "library">(initialMode);
+  const [studyMode, setStudyMode] = useState<"v1" | "v2" | "momentum" | "sector" | "library">(initialMode);
   const [libraryInitialSymbol, setLibraryInitialSymbol] = useState<string | null>(null);
   const [radarInitialSymbol, setRadarInitialSymbol] = useState<string | null>(null);
+  const [radarInitialSector, setRadarInitialSector] = useState<string | null>(new URLSearchParams(window.location.search).get("sector"));
   useEffect(() => { if (initialCompanySymbol && initialMode === "library") setLibraryInitialSymbol(initialCompanySymbol); }, [initialCompanySymbol, initialMode]);
   useEffect(() => { if (initialCompanySymbol && initialMode === "momentum") setRadarInitialSymbol(initialCompanySymbol); }, [initialCompanySymbol, initialMode]);
   const [cohortData, setCohortData] = useState<CohortData>(frozenCohortData);
@@ -312,7 +314,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
     setStudyMode(initialMode);
   }, [initialMode]);
 
-  const changeMode = (mode: "v1" | "v2" | "momentum" | "library") => {
+  const changeMode = (mode: "v1" | "v2" | "momentum" | "sector" | "library") => {
     setStudyMode(mode);
     onModeChange?.(mode);
   };
@@ -446,7 +448,11 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
   }
 
   if (studyMode === "momentum") {
-    return <MomentumRadar initialCompanySymbol={radarInitialSymbol} onBack={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} onDeepDive={onDeepDive} />;
+    return <MomentumRadar initialCompanySymbol={radarInitialSymbol} initialSectorIndustry={radarInitialSector} onOpenSectorLens={() => changeMode("sector")} onBack={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} onDeepDive={onDeepDive} />;
+  }
+
+  if (studyMode === "sector") {
+    return <SectorLens onOpenCompanies={(industry) => { setRadarInitialSector(industry ?? null); changeMode("momentum"); }} onShowValidation={() => changeMode("v2")} onBrowseLibrary={() => changeMode("library")} />;
   }
 
   if (studyMode === "library") {

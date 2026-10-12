@@ -536,6 +536,8 @@ export default function App() {
   const requestedView = new URLSearchParams(window.location.search).get('view');
   const requestedResearchView = requestedView === 'research';
   const requestedDiscoveryView = requestedView === 'discovery';
+  const requestedDiscoverView = requestedView === 'discover';
+  const requestedDiscoverMode = new URLSearchParams(window.location.search).get('mode');
   const requestedLibraryView = requestedView === 'fcs' || requestedView === 'library';
   const requestedValidationView = requestedView === 'tracker' || requestedView === 'validation';
   const standaloneResearchMode = window.location.hostname.startsWith('research-only---');
@@ -564,8 +566,8 @@ export default function App() {
         ? 'discovery'
         : 'tracker'
   );
-  const [trackerInitialMode, setTrackerInitialMode] = useState<'v1' | 'v2' | 'momentum' | 'library'>(
-    requestedLibraryView ? 'library' : requestedValidationView ? 'v2' : 'momentum'
+  const [trackerInitialMode, setTrackerInitialMode] = useState<'v1' | 'v2' | 'momentum' | 'sector' | 'library'>(
+    requestedLibraryView ? 'library' : requestedValidationView ? 'v2' : requestedDiscoverView && requestedDiscoverMode === 'sectors' ? 'sector' : 'momentum'
   );
   const [activeTab, setActiveTab] = useState<'news' | 'equity' | 'filings' | 'portfolio' | 'marketing' | 'community' | 'aiTransition'>('equity');
 
@@ -585,10 +587,11 @@ export default function App() {
     setAppView('discovery');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const openSignalTracker = (mode: 'v2' | 'momentum' | 'library' = 'momentum') => {
+  const openSignalTracker = (mode: 'v2' | 'momentum' | 'sector' | 'library' = 'momentum') => {
     const url = new URL(window.location.href);
-    url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
-    if (mode === 'momentum' || mode === 'library') url.searchParams.set('radar', 'expanded');
+    url.searchParams.set('view', mode === 'momentum' || mode === 'sector' ? 'discover' : mode === 'library' ? 'fcs' : 'validation');
+    if (mode === 'momentum' || mode === 'sector') url.searchParams.set('mode', mode === 'sector' ? 'sectors' : 'companies'); else url.searchParams.delete('mode');
+    if (mode === 'momentum' || mode === 'sector' || mode === 'library') url.searchParams.set('radar', 'expanded');
     window.history.replaceState({}, '', `${url.pathname}${url.search}`);
     setTrackerInitialMode(mode);
     setAppView('tracker');
@@ -609,6 +612,10 @@ export default function App() {
     }
     if (bmsResearchContext?.origin === 'momentum_radar') {
       openSignalTracker('momentum');
+      return;
+    }
+    if (bmsResearchContext?.origin === 'sector_lens') {
+      openSignalTracker('sector');
       return;
     }
     openSignalTracker('momentum');
@@ -4113,7 +4120,7 @@ ${list}
             type="button"
             onClick={standaloneResearchMode ? scrollToResearchSearch : () => openSignalTracker('momentum')}
             className="flex items-center gap-2 group relative cursor-pointer"
-            title={standaloneResearchMode ? 'Open company research' : 'Open Momentum Radar'}
+            title={standaloneResearchMode ? 'Open company research' : 'Open Discover'}
           >
             <div className={`w-8 h-8 bg-amber rounded flex items-center justify-center group-hover:scale-105 transition-transform`}>
               <TrendingUp className="text-black w-5 h-5" />
@@ -4123,7 +4130,7 @@ ${list}
               <span className="hidden ml-1.5 text-sm opacity-40">⌂</span>
             </span>
             <span className="absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-zinc-900 text-zinc-300 text-xs px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none border border-zinc-800 hidden md:block z-50">
-              {standaloneResearchMode ? 'Open company research' : 'Open Momentum Radar'}
+              {standaloneResearchMode ? 'Open company research' : 'Open Discover'}
             </span>
           </button>
           <div className="flex items-center gap-2 md:gap-4">
@@ -4158,9 +4165,9 @@ ${list}
                 <button
                   type="button"
                   onClick={() => openSignalTracker('momentum')}
-                  className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'momentum' ? 'bg-teal-400/[0.14] text-teal-200' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
+                  className={`rounded-lg px-3 py-2 text-[10px] font-black uppercase tracking-[0.14em] transition-all ${trackerInitialMode === 'momentum' || trackerInitialMode === 'sector' ? 'bg-teal-400/[0.14] text-teal-200' : 'text-zinc-400 hover:bg-white/[0.06] hover:text-white'}`}
                 >
-                  Momentum Radar
+                  Discover
                 </button>
                 <button
                   type="button"
@@ -4272,8 +4279,9 @@ ${list}
           onModeChange={(mode) => {
             setTrackerInitialMode(mode);
             const url = new URL(window.location.href);
-            url.searchParams.set('view', mode === 'momentum' ? 'momentum' : mode === 'library' ? 'fcs' : 'validation');
-            if (mode === 'momentum' || mode === 'library') url.searchParams.set('radar', 'expanded');
+            url.searchParams.set('view', mode === 'momentum' || mode === 'sector' ? 'discover' : mode === 'library' ? 'fcs' : 'validation');
+            if (mode === 'momentum' || mode === 'sector') url.searchParams.set('mode', mode === 'sector' ? 'sectors' : 'companies'); else url.searchParams.delete('mode');
+            if (mode === 'momentum' || mode === 'sector' || mode === 'library') url.searchParams.set('radar', 'expanded');
             window.history.replaceState({}, '', `${url.pathname}${url.search}`);
           }}
           onDeepDive={(company) => {
@@ -4283,7 +4291,7 @@ ${list}
               company_name: company.company_name,
               period: '',
               bms: 0,
-              origin: trackerInitialMode === 'library' ? 'fcs_library' : 'momentum_radar',
+              origin: trackerInitialMode === 'library' ? 'fcs_library' : trackerInitialMode === 'sector' ? 'sector_lens' : 'momentum_radar',
               workflow_status: company.bms_status,
             });
             setBmsResearchText("");
