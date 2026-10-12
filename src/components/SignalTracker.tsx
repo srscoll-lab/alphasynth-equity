@@ -452,7 +452,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
   }
 
   if (studyMode === "sector") {
-    return <SectorLens onOpenCompanies={(industry) => { setRadarInitialSector(industry ?? null); changeMode("momentum"); }} onShowValidation={() => changeMode("v2")} onBrowseLibrary={() => changeMode("library")} />;
+    return <SectorLens onOpenCompanies={(industry, symbol) => { setRadarInitialSector(symbol ? null : industry ?? null); setRadarInitialSymbol(symbol ?? null); changeMode("momentum"); }} onShowValidation={() => changeMode("v2")} onBrowseLibrary={(symbol) => { setLibraryInitialSymbol(symbol ?? null); changeMode("library"); }} />;
   }
 
   if (studyMode === "library") {
