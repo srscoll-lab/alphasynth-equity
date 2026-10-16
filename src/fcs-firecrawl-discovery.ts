@@ -15,11 +15,18 @@ export async function discoverFirecrawlFcsSources(input:{companyName:string;tick
     const scope=(domains.length?domains:['nsearchives.nseindia.com','bseindia.com']).map(d=>`site:${d}`).join(' OR ');
     const query=`${input.companyName} ${input.ticker} (${scope}) quarterly financial results earnings presentation ${input.targetPeriodEnd||year} pdf`;
     try {
-      const result=await input.search(query,{limit:8,sources:['web'],timeout:30000});
-      const rows=Array.isArray(result?.web)?result.web:Array.isArray(result?.data?.web)?result.data.web:[];
+      const searches=await Promise.allSettled([
+        input.search(query,{limit:8,sources:['web'],timeout:30000}),
+        // Search each comparison year independently. Combining two years and
+        // several finance terms buried the exchange's structured HTML filings.
+        input.search(`site:nsearchives.nseindia.com/corporate/ixbrl/ "${input.ticker}" "Integrated Filing" ${year}`,{limit:8,sources:['web'],timeout:30000}),
+        input.search(`site:nsearchives.nseindia.com/corporate/ixbrl/ "${input.ticker}" "Integrated Filing" ${year-1}`,{limit:8,sources:['web'],timeout:30000}),
+      ]);
+      const rows=searches.flatMap(result=>result.status==='fulfilled'
+        ? Array.isArray(result.value?.web)?result.value.web:Array.isArray(result.value?.data?.web)?result.value.data.web:[] : []);
       const found=new Map<string,GroundedDocumentCandidate>();
       const allowed=[...domains,'nsearchives.nseindia.com','archives.nseindia.com','bseindia.com','nseindia.com'];
-      for(const row of rows.slice(0,8)){
+      for(const row of rows.slice(0,24)){
         // Inspect links throughout bounded results, including links near the end
         // of a chronological investor index. Search prose is never evidence.
         const text=`${row.url||''}\n${String(row.description||'').slice(0,100000)}`;
@@ -38,10 +45,10 @@ export async function discoverFirecrawlFcsSources(input:{companyName:string;tick
         const fiscal=url.match(/\/(20\d{2})-\d{2}\/q([1-4])[-_/]/i);
         const q=fiscal?Number(fiscal[2]):0;
         const end=fiscal?`${Number(fiscal[1])+(q===4?1:0)}-${String(q===4?3:q*3+3).padStart(2,'0')}-${q===1||q===2?'30':'31'}`:'';
-        return (/\.pdf(?:\?|$)/i.test(url)?100000000:0)+(input.targetPeriodEnd&&end===input.targetPeriodEnd?1000000000:0)+(end?Number(end.replaceAll('-','')):(years.length?Math.max(...years):0)*10000)+(/earning.*presentation/i.test(url)?10:0);
+        return (/nsearchives\.nseindia\.com\/corporate\/ixbrl\//i.test(url)?200000000:0)+(/\.pdf(?:\?|$)/i.test(url)?100000000:0)+(input.targetPeriodEnd&&end===input.targetPeriodEnd?1000000000:0)+(end?Number(end.replaceAll('-','')):(years.length?Math.max(...years):0)*10000)+(/earning.*presentation/i.test(url)?10:0);
       };
       const candidates=[...found.values()].sort((a,b)=>rank(b)-rank(a)).slice(0,24);
-      return {candidates,diagnostics:[{outcome:'firecrawl_official_url_discovery',search_calls:1,result_count:rows.length,candidate_count:candidates.length}]};
+      return {candidates,diagnostics:[{outcome:'firecrawl_official_url_discovery',search_calls:3,result_count:rows.length,candidate_count:candidates.length}]};
     }catch{return {candidates:[],diagnostics:[{outcome:'firecrawl_discovery_unavailable'}]};}
   })();
   if(cache.size>=100)cache.delete(cache.keys().next().value!);

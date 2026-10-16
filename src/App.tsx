@@ -83,6 +83,7 @@ import SignalTracker from "./components/SignalTracker";
 import FundamentalReviewActivity from "./components/FundamentalReviewActivity";
 import AiTransitionObservatory from "./components/AiTransitionObservatory";
 import { sanitizeDebtEquity } from "./peer-metric-validation";
+import { lifecycleDisplay } from "./lifecycle-copy";
 
 // Inject spinner keyframe
 if (typeof document !== 'undefined') {
@@ -3703,9 +3704,10 @@ ${list}
               </span>
 
               <span className={`px-2.5 py-1 rounded-full border text-[9px] font-black uppercase tracking-wider ${momentumStageClass}`}>
-                Fundamental Change Stage: {historicalMomentumStage}
+                Fundamental Change Stage: {lifecycleDisplay(historicalMomentumStage).label}
               </span>
             </div>
+            {lifecycleDisplay(historicalMomentumStage).explanation && <p className="mt-2 text-xs text-zinc-300">{lifecycleDisplay(historicalMomentumStage).explanation}</p>}
           </div>
 
           <span

@@ -340,8 +340,8 @@ const factor100 = (value: number) =>
 
 const stageMeta = {
   WATCH: {
-    label: "Watch",
-    description: "Early evidence worth monitoring",
+    label: "No clear trend",
+    description: "Reported changes do not yet show a clear direction",
     icon: Eye,
     className: "text-sky-300 border-sky-400/20 bg-sky-400/[0.07]",
   },
@@ -1273,7 +1273,7 @@ export default function BusinessMomentum({
   const stages = [
     {
       id: "WATCH" as const,
-      label: "Watch",
+      label: "No clear trend",
       count: investorStageCounts.WATCH,
     },
     {
@@ -1293,7 +1293,7 @@ export default function BusinessMomentum({
     },
     {
       id: "FADING" as const,
-      label: "Fading",
+      label: "Recent weakening",
       count: investorStageCounts.FADING,
     },
   ];
@@ -1418,7 +1418,7 @@ export default function BusinessMomentum({
           {[
             { icon: TrendingUp, step: "01 · Discover", title: "Market recognition", copy: "Scan 477 companies for trend, relative strength, liquidity and segment-aware momentum. This prioritises research; it does not predict returns.", tone: "text-cyan-300" },
             { icon: ShieldCheck, step: "02 · Verify", title: "Fundamental Change Score", copy: "Test earnings, economics, execution and balance-sheet change using comparable, source-qualified evidence. Calculated with the BMS V2 methodology.", tone: "text-emerald-300" },
-            { icon: Layers3, step: "03 · Follow", title: "Lifecycle V2.1", copy: "Track the business across comparable checkpoints: Watch, Emerging, Building, Recovering, Rebounding, Established or Fading.", tone: "text-violet-300" },
+            { icon: Layers3, step: "03 · Follow", title: "Lifecycle V2.1", copy: "Track reported business change across comparable periods, including improvement, recovery, no clear trend and recent weakening.", tone: "text-violet-300" },
             { icon: Eye, step: "04 · Investigate", title: "Evidence and research", copy: "Open the underlying comparisons, qualifications and company research before forming a view.", tone: "text-gold" },
           ].map(({ icon: Icon, step, title, copy, tone }) => <div key={step} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
             <div className={`flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.16em] ${tone}`}><Icon className="h-4 w-4" />{step}</div>
@@ -1470,8 +1470,8 @@ export default function BusinessMomentum({
                   </p>
                   <h2 className="text-xl font-semibold text-white mt-1">
                     {activeStage === "FADING"
-                      ? "Fading momentum"
-                      : `${activeStage.charAt(0)}${activeStage.slice(1).toLowerCase()} businesses`}
+                      ? "Recent fundamental weakening"
+                      : activeStage === "WATCH" ? "No clear fundamental trend" : `${activeStage.charAt(0)}${activeStage.slice(1).toLowerCase()} businesses`}
                   </h2>
                 </div>
                 <span className="text-xs text-zinc-500">
@@ -1673,7 +1673,7 @@ export default function BusinessMomentum({
                       </span>
                       {selectedIsFading ? (
                         <>
-                          The current Fundamental Change Score remains above neutral, but it has <span className="font-bold text-amber-300">weakened materially since the last result</span>. The primary lifecycle signal is therefore Fading.
+                          The current Fundamental Change Score remains above neutral, but it has <span className="font-bold text-amber-300">weakened materially since the last result</span>. The lifecycle therefore shows recent weakening.
                         </>
                       ) : (
                         <>
@@ -1683,7 +1683,7 @@ export default function BusinessMomentum({
                     </p>
 
                     <p className="text-[9px] text-zinc-500 mt-1.5 leading-relaxed">
-                      Lifecycle shows <span className="font-bold text-zinc-400">how reported fundamental change is evolving across successive results</span> — Watch, Emerging, Building, Established or Fading. It combines current FCS strength, movement in FCS since the last result and evidence maturity. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
+                      Lifecycle shows <span className="font-bold text-zinc-400">how reported fundamental change is evolving across successive results</span> — improvement, sustained strength, no clear trend or recent weakening. It combines current FCS strength, movement in FCS since the last result and evidence maturity. It is <span className="font-bold text-zinc-400">not a company-quality, valuation or investment recommendation.</span>
                     </p>
                   </div>
 

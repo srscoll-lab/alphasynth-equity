@@ -8,7 +8,13 @@ const input={ticker:'TEST',companyName:'Test Limited',cutoff:'2026-10-08',truste
 const first=await discoverFirecrawlFcsSources(input);
 assert.equal(first.candidates[0].uri,'https://issuer.example/2026/results.pdf');
 assert.equal(first.candidates.length,3);
-await discoverFirecrawlFcsSources(input);assert.equal(calls,1);
+await discoverFirecrawlFcsSources(input);assert.equal(calls,3);
+const structured=await discoverFirecrawlFcsSources({...input,ticker:'STRUCTURED',search:async(query:string)=>({web:[{url:query.includes('/ixbrl/')?'https://nsearchives.nseindia.com/corporate/ixbrl/example.html':'https://issuer.example/2026/results.pdf'}]})});
+assert.equal(structured.candidates[0].uri,'https://nsearchives.nseindia.com/corporate/ixbrl/example.html');
+const years:string[]=[];
+await discoverFirecrawlFcsSources({...input,ticker:'YEARS',search:async(query:string)=>{years.push(query);return {web:[]};}});
+assert(years.some(query=>query.includes('"YEARS"')&&query.includes('2026')));
+assert(years.some(query=>query.includes('"YEARS"')&&query.includes('2025')));
 const failed=await discoverFirecrawlFcsSources({...input,ticker:'FAIL',search:async()=>{throw Error('secret provider details');}});
 assert.equal(failed.candidates.length,0);assert(!JSON.stringify(failed).includes('secret'));
 console.log('Firecrawl discovery: bounded search, late index links, host validation, ordering, cache and safe failure passed.');

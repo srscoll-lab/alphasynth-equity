@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "1.0.0",
+  "purpose": "Capped alternate-source accuracy trial for companies with failed or incomplete FCS evidence work.",
+  "provider": "tapetide",
+  "maximumCompanies": 10,
+  "maximumProviderCalls": 30,
+  "publicationRule": "Provider data is diagnostic only. No FCS score, lifecycle, preflight approval or user-facing request state may change until values are checked against dated issuer or exchange originals.",
+  "companies": [
+    { "symbol": "RADICO", "companyName": "Radico Khaitan Limited", "caseType": "failed_request", "knownOutcome": "0/4 factors validated" },
+    { "symbol": "MARINE", "companyName": "Marine Electricals (India) Limited", "caseType": "failed_request", "knownOutcome": "0/4 factors validated" },
+    { "symbol": "SIGMAADV", "companyName": "Sigma Advanced Systems Limited", "caseType": "failed_request", "knownOutcome": "0/4 factors validated" },
+    { "symbol": "INDIGO", "companyName": "InterGlobe Aviation Limited", "caseType": "failed_request", "knownOutcome": "Official PDFs retrieved; factor extraction remained incomplete" },
+    { "symbol": "ADANIPORTS", "companyName": "Adani Ports and Special Economic Zone Limited", "caseType": "failed_request", "knownOutcome": "User-requested review finished incomplete" },
+    { "symbol": "ABB", "companyName": "ABB India Limited", "caseType": "preflight_partial", "knownOutcome": "Current and comparable four-factor evidence not verified" },
+    { "symbol": "APOLLOHOSP", "companyName": "Apollo Hospitals Enterprise Limited", "caseType": "preflight_partial", "knownOutcome": "Current and comparable four-factor evidence not verified" },
+    { "symbol": "ASIANPAINT", "companyName": "Asian Paints Limited", "caseType": "preflight_partial", "knownOutcome": "Current and comparable four-factor evidence not verified" },
+    { "symbol": "AXISBANK", "companyName": "Axis Bank Limited", "caseType": "preflight_partial", "knownOutcome": "Current and comparable four-factor evidence not verified" },
+    { "symbol": "DIVISLAB", "companyName": "Divi's Laboratories Limited", "caseType": "preflight_partial", "knownOutcome": "Current and comparable four-factor evidence not verified" }
+  ]
+}

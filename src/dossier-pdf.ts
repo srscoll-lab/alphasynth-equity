@@ -2,6 +2,7 @@ import PDFDocument from "pdfkit";
 import type { ResearchDossier } from "./dossier";
 import { BMS_FACTOR_DEFINITIONS, type BmsFactorAnalysis } from "./bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput } from "./expectation-delivery";
+import { lifecycleDisplay } from "./lifecycle-copy";
 
 export type DossierPdfPeer = {
   ticker: string;
@@ -630,7 +631,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
     const confirmationGap = 8;
     const confirmationWidth = (r.width - confirmationGap * 3) / 4;
     [
-      ["FCS LIFE-CYCLE", deliveryAssessment.lifecycle],
+      ["FCS LIFE-CYCLE", lifecycleDisplay(deliveryAssessment.lifecycle).label],
       ["LATER-RESULTS READING", direction],
       ["RESULTS COVERAGE", `${fmt(deliveryAssessment.deliveryCoverage)}%`],
       ["QUALITY CHECKS COMPLETED", `${observedGates}/${deliveryCheck.input.qualityGates.length}`],
@@ -648,7 +649,7 @@ export async function renderDossierPdf(payload: DossierPdfPayload): Promise<Buff
         component.direction.toUpperCase(),
       ]));
     r.heading("What the result means");
-    r.paragraph(`The FCS lifecycle through ${bms?.period || deliveryCheck.input.lifecycleFreezeDate} remains ${deliveryAssessment.lifecycle}. The later-results reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% results coverage. Business-quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
+    r.paragraph(`The FCS lifecycle through ${bms?.period || deliveryCheck.input.lifecycleFreezeDate} remains ${lifecycleDisplay(deliveryAssessment.lifecycle).label} (${lifecycleDisplay(deliveryAssessment.lifecycle).explanation}). The later-results reading is ${direction}, with ${fmt(deliveryAssessment.deliveryCoverage)}% results coverage. Business-quality status is ${deliveryAssessment.qualityStatus.replaceAll("_", " ")}. This can raise or lower research priority, but it cannot rewrite the recorded lifecycle or create a buy/sell conclusion.`, { size: 8.5, bold: true });
     r.table("How to interpret the checks", ["What the checks show", "What it means for research"], [36, 64], [
       ["Ahead delivery + all required checks met", "Higher priority within the same recorded lifecycle; investigate durability."],
       ["Mixed delivery", "Evidence points in opposing directions; retain for monitoring."],

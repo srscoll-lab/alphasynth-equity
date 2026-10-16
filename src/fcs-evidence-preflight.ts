@@ -7,6 +7,7 @@ export const FCS_PREFLIGHT_SCHEMA_VERSION = "1.0.0";
 export type FcsEvidencePreflightStatus =
   | "report_ready"
   | "high_probability"
+  | "provider_assisted"
   | "partial"
   | "unavailable";
 
@@ -38,7 +39,7 @@ export type FcsEvidencePreflightSnapshot = {
     largeCapRule: string;
   };
   priorityBatch: {
-    selection: "all_large_cap_companies";
+    selection: "all_large_cap_companies" | "all_radar_companies";
     targetCount: number;
     records: FcsEvidencePreflightRecord[];
   };
@@ -169,7 +170,30 @@ export function deterministicFcsPreflight(symbol: string): FcsEvidencePreflightR
 }
 
 function blankStatusCounts(): Record<FcsEvidencePreflightStatus, number> {
-  return { report_ready: 0, high_probability: 0, partial: 0, unavailable: 0 };
+  return { report_ready: 0, high_probability: 0, provider_assisted: 0, partial: 0, unavailable: 0 };
+}
+
+export function providerAssistedFcsPreflight(record: FcsEvidencePreflightRecord, providerConfigured: boolean): FcsEvidencePreflightRecord {
+  if (!providerConfigured || record.status === "report_ready" || record.status === "high_probability") return record;
+  const controlledBetaSegment = record.capSegment === "Large cap" || record.capSegment === "Mid cap";
+  if (controlledBetaSegment) {
+    return {
+      ...record,
+      status: "provider_assisted",
+      requestEnabled: true,
+      action: "request_fcs",
+      reasonCodes: [...record.reasonCodes, "tapetide_discovery_available", "controlled_large_mid_cap_beta"],
+      reason: "A controlled FCS review can be requested for this large- or mid-cap company. Completion is not guaranteed: a report is published only if original issuer or exchange evidence verifies all four factors.",
+    };
+  }
+  return {
+    ...record,
+    status: "provider_assisted",
+    requestEnabled: false,
+    action: "deep_dive_only",
+    reasonCodes: [...record.reasonCodes, "tapetide_discovery_available", "outside_controlled_large_mid_cap_beta"],
+    reason: "Document discovery is available, but new FCS requests in this controlled beta are currently limited to large- and mid-cap companies.",
+  };
 }
 
 export function buildFcsEvidencePreflightSnapshot(): FcsEvidencePreflightSnapshot {

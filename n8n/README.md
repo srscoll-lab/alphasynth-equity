@@ -1,5 +1,37 @@
 # Research Dossier workflows
 
+## FCS structured-provider orchestration pilot
+
+`fcs-evidence-orchestrator-v1.json` is an inactive, importable workflow for the
+on-demand Fundamental Change evidence path. It validates and bounds the request,
+calls the application's protected Tapetide MCP gateway for structured candidate
+financials, then calls the existing official-document research endpoint. That
+endpoint uses Gemini only to locate and interpret evidence in original issuer or
+exchange documents. The downstream deterministic validator and scorer remain the
+only components allowed to qualify rows or calculate an FCS.
+
+The exported workflow contains no token. Both protected calls use the existing
+encrypted Header Auth credential `AlphaSynth Dossier Internal Token` (header
+`x-dossier-token`). The provider-candidate gateway accepts that credential only
+for this internal orchestration path; it also continues to accept the worker's
+separate `x-fundamental-review-token` credential.
+
+This beta workflow deliberately targets the isolated `expectation-pilot` origin
+in both HTTP nodes. That avoids silently using the older `dossier-pilot` value
+still present in the shared n8n container. When this path is promoted, update
+both node URLs to the reviewed production origin in the same release. Keep the
+internal token in encrypted Header Auth credentials. The Tapetide token remains
+in the application/worker Secret Manager configuration and is never copied into
+n8n.
+
+The live beta workflow passed credentialed controls on 2026-10-14 and its webhook
+is configured as the private worker's `FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_URL`.
+HCLTECH returned four official-quarter evidence rows; MARINE returned no admitted
+rows and remained incomplete. Provider values are still `candidate_only`, and an
+empty or failed official-source verification must remain an incomplete review.
+
+Verification: `npm run verify:fcs-evidence-orchestrator`.
+
 `dossier-orchestrator-v1.json` is the inactive end-to-end official-evidence pilot. It validates
 the public request and calls the private AlphaSynth evidence builder using environment-backed
 credentials. Its production webhook URL is the value intended for `DOSSIER_WEBHOOK_URL` after

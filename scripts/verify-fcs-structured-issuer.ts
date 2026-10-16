@@ -1,0 +1,8 @@
+import assert from 'node:assert/strict';
+import {nseStructuredFilingMatchesSymbol} from '../src/fcs-structured-issuer.ts';
+const url='https://nsearchives.nseindia.com/corporate/ixbrl/INTEGRATED_FILING_INDAS_123_iXBRL_WEB.html';
+assert(nseStructuredFilingMatchesSymbol(url,'NSE Symbol SOLARINDS Name of company Solar Industries','SOLARINDS'));
+assert(!nseStructuredFilingMatchesSymbol(url,'NSE Symbol SWELECTES Name of company Swelect','SOLARINDS'));
+assert(!nseStructuredFilingMatchesSymbol(url,'Name of company Solar Industries','SOLARINDS'));
+assert(nseStructuredFilingMatchesSymbol('https://issuer.example/results.pdf','NSE Symbol SWELECTES','SOLARINDS'));
+console.log('NSE structured issuer check: matching, mismatched and absent symbols passed.');

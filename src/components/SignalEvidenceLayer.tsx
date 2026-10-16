@@ -13,6 +13,7 @@ import {
   UserRoundCheck,
 } from "lucide-react";
 import type { ResearchDossier } from "../dossier";
+import { lifecycleDisplay } from "../lifecycle-copy";
 import { assessDossierReadiness, type DossierReadinessCheck } from "../dossier-readiness";
 import { augmentFactorAnalysisWithDeliveryEvidence, type BmsFactorAnalysis, BMS_FACTOR_DEFINITIONS } from "../bms-factor-schema";
 import type { ExpectationDeliveryAssessment, ExpectationDeliveryInput, QualityGateObservation } from "../expectation-delivery";
@@ -413,7 +414,7 @@ export default function SignalEvidenceLayer({
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">BMS display score</div>
                   <div className="mt-2 text-3xl font-mono font-bold text-white">{displayScore(company.rawBms)}</div>
-                  <div className="mt-1 text-xs text-zinc-500">{company.lifecycle} · {company.period}</div>
+                  <div className="mt-1 text-xs text-zinc-300">{lifecycleDisplay(company.lifecycle).label} · {company.period}</div><div className="mt-1 text-[10px] text-zinc-400">{lifecycleDisplay(company.lifecycle).explanation}</div>
                 </div>
                 <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                   <div className="text-[9px] font-black uppercase tracking-wider text-zinc-500">Research readiness</div>

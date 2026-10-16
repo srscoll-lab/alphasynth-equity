@@ -1,0 +1,106 @@
+{
+  "id": "FcsEvidenceOrchestratorV1",
+  "name": "AlphaSynth FCS Evidence Orchestrator v1",
+  "active": false,
+  "settings": { "executionOrder": "v1", "saveDataErrorExecution": "all", "saveDataSuccessExecution": "none" },
+  "nodes": [
+    {
+      "id": "webhook",
+      "name": "FCS Evidence Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-620, 0],
+      "webhookId": "alphasynth-fcs-evidence-v1",
+      "parameters": { "httpMethod": "POST", "path": "alphasynth-fcs-evidence-v1", "responseMode": "responseNode" }
+    },
+    {
+      "id": "validate",
+      "name": "Validate and Bound Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-390, 0],
+      "parameters": {
+        "jsCode": "const b=$json.body||$json; const ticker=String(b.ticker||b.symbol||'').trim().toUpperCase(); const cutoff=String(b.information_cutoff||'').slice(0,10); if(!/^[A-Z0-9&.-]{1,24}$/.test(ticker)||!/^20\\d{2}-\\d{2}-\\d{2}$/.test(cutoff)) throw new Error('A valid ticker and information cutoff are required.'); const factors=['earnings','economics','execution','balance_sheet']; const requested=Array.isArray(b.missing_factor_ids)?[...new Set(b.missing_factor_ids.map(v=>String(v).toLowerCase()).filter(v=>factors.includes(v)))]:factors; return [{json:{request:{ticker,company_name:String(b.company_name||ticker).slice(0,180),sector:String(b.sector||'Unclassified').slice(0,100),information_cutoff:cutoff,target_period_end:b.target_period_end||undefined,required_metric_definitions:Array.isArray(b.required_metric_definitions)?b.required_metric_definitions.slice(0,24):undefined,missing_factor_ids:requested}}}];"
+      }
+    },
+    {
+      "id": "provider",
+      "name": "Get Tapetide Candidate Financials",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-145, 0],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app/internal/fundamental-review/provider-candidates",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($('Validate and Bound Request').item.json.request) }}",
+        "options": { "timeout": 60000, "response": { "response": { "fullResponse": true, "neverError": true } } }
+      },
+      "credentials": { "httpHeaderAuth": { "name": "AlphaSynth Dossier Internal Token" } }
+    },
+    {
+      "id": "prepare",
+      "name": "Attach Candidate Hints",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [95, 0],
+      "parameters": {
+        "jsCode": "const request=$('Validate and Bound Request').item.json.request; const provider=$json.body&&typeof $json.body==='object'?$json.body:$json; const candidates=Array.isArray(provider.candidates)?provider.candidates.filter(v=>v&&v.verificationStatus==='candidate_only').slice(0,8):[]; return [{json:{...request,provider_financial_candidates:candidates,orchestration_diagnostics:[{outcome:candidates.length?'provider_candidate_hints_attached':'provider_candidate_hints_unavailable',candidate_count:candidates.length}]}}];"
+      }
+    },
+    {
+      "id": "evidence",
+      "name": "Verify Official Evidence with Gemini",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [345, 0],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "method": "POST",
+        "url": "https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app/api/bms/factor-evidence/research",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 720000, "response": { "response": { "fullResponse": true, "neverError": true } } }
+      },
+      "credentials": { "httpHeaderAuth": { "name": "AlphaSynth Dossier Internal Token" } }
+    },
+    {
+      "id": "normalize",
+      "name": "Preserve Evidence Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [590, 0],
+      "parameters": {
+        "jsCode": "const status=Number($json.statusCode||$json.status||200); const body=$json.body&&typeof $json.body==='object'?$json.body:$json; if(status>=200&&status<300) return [{json:body}]; return [{json:{error:'Official evidence verification did not complete.',code:'FCS_OFFICIAL_EVIDENCE_UNAVAILABLE',upstreamStatus:status,diagnostics:Array.isArray(body.diagnostics)?body.diagnostics:[]}}];"
+      }
+    },
+    {
+      "id": "respond",
+      "name": "Return Evidence Contract",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [820, 0],
+      "parameters": { "respondWith": "json", "responseBody": "={{ $json }}", "options": { "responseCode": "={{ $json.error ? 502 : 200 }}" } }
+    }
+  ],
+  "connections": {
+    "FCS Evidence Request": { "main": [[{ "node": "Validate and Bound Request", "type": "main", "index": 0 }]] },
+    "Validate and Bound Request": { "main": [[{ "node": "Get Tapetide Candidate Financials", "type": "main", "index": 0 }]] },
+    "Get Tapetide Candidate Financials": { "main": [[{ "node": "Attach Candidate Hints", "type": "main", "index": 0 }]] },
+    "Attach Candidate Hints": { "main": [[{ "node": "Verify Official Evidence with Gemini", "type": "main", "index": 0 }]] },
+    "Verify Official Evidence with Gemini": { "main": [[{ "node": "Preserve Evidence Outcome", "type": "main", "index": 0 }]] },
+    "Preserve Evidence Outcome": { "main": [[{ "node": "Return Evidence Contract", "type": "main", "index": 0 }]] }
+  },
+  "pinData": {},
+  "meta": { "templateCredsSetupCompleted": false },
+  "tags": []
+}

@@ -34,7 +34,6 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
   const [capabilityAvailable, setCapabilityAvailable] = useState(false);
   const [capabilityMessage, setCapabilityMessage] = useState("New FCS processing is not yet activated. Existing published reports remain available.");
   const [supportedSymbols, setSupportedSymbols] = useState<Set<string>>(new Set());
-  const [requestScope, setRequestScope] = useState<"controlled_beta" | "radar_universe">("controlled_beta");
   const [candidate, setCandidate] = useState<UniverseCompany | null>(null);
   const reviewJobs = useReviewJobs();
   const [jobSymbol, setJobSymbol] = useState<string | null>(null);
@@ -51,7 +50,6 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
       .then((payload) => {
         if (!active) return;
         setCapabilityAvailable(payload?.available === true);
-        setRequestScope(payload?.requestScope === "radar_universe" ? "radar_universe" : "controlled_beta");
         setSupportedSymbols(new Set(Array.isArray(payload?.supportedSymbols) ? payload.supportedSymbols : []));
         if (typeof payload?.scopeMessage === "string" && payload.scopeMessage) setCapabilityMessage(payload.scopeMessage);
         if (typeof payload?.unavailableReason === "string" && payload.unavailableReason) setCapabilityMessage(payload.unavailableReason);
@@ -122,12 +120,12 @@ export default function FundamentalReviewLauncher({ availableSymbols, onOpenAvai
       <div>
         <div className="text-[10px] font-black uppercase tracking-[0.18em] text-cyan-300">Check Fundamental Change coverage</div>
         <h2 className="mt-2 text-xl font-semibold text-white">Find a published FCS or check whether a new review can start</h2>
-        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">Search all {expandedRadarData.companies.length.toLocaleString("en-IN")} companies in the scanned NSE discovery universe. Published reports open immediately. A new review is offered only after deterministic preflight has verified suitable current and comparable four-factor evidence; Momentum Radar inclusion does not itself make an FCS available.</p>
+        <p className="mt-2 max-w-2xl text-xs leading-relaxed text-zinc-400">Search all {expandedRadarData.companies.length.toLocaleString("en-IN")} companies in the scanned NSE discovery universe. Published reports open immediately. During this controlled beta, new reviews can be started for large- and mid-cap companies. Starting a review does not guarantee a report: publication still requires original issuer or exchange evidence for all four factors.</p>
         <label className="relative mt-4 block max-w-2xl"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Enter company name or NSE symbol" className="w-full rounded-xl border border-white/10 bg-black/25 py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-cyan-300/45" /></label>
         {!!matches.length && <div className="mt-2 max-w-2xl overflow-hidden rounded-xl border border-white/10 bg-[#0d1626]">
           {matches.map((company) => {
             const alreadyAvailable = availableSymbols.has(company.symbol);
-            const requestEnabled = capabilityAvailable && (requestScope === "radar_universe" || supportedSymbols.has(company.symbol));
+            const requestEnabled = capabilityAvailable && supportedSymbols.has(company.symbol);
             return <div key={company.symbol} className="flex flex-col gap-3 border-b border-white/[0.06] px-4 py-3 last:border-0 sm:flex-row sm:items-center sm:justify-between">
               <div><div className="font-semibold text-white">{company.symbol}</div><div className="text-xs text-zinc-500">{company.company_name}</div></div>
               {alreadyAvailable

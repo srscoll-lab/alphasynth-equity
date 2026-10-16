@@ -57,6 +57,28 @@ The public interface remains disabled until both the request and status gateways
 | `FUNDAMENTAL_REVIEW_SCORING_URL` | Authoritative V2 scoring service `/score` endpoint |
 | `FUNDAMENTAL_REVIEW_INTERNAL_TOKEN` | Shared service secret |
 | `DOSSIER_INTERNAL_TOKEN` | Token accepted by the evidence endpoint |
+| `TAPETIDE_TOKEN` | Personal Tapetide token injected from Secret Manager. When present, the evidence service uses the supported MCP endpoint to discover filing links for any scanned Radar company. It never makes provider values publishable by themselves. |
+| `TAPETIDE_MCP_URL` | Optional override; defaults to `https://mcp.tapetide.com/mcp`. |
+
+The protected `POST /internal/fundamental-review/provider-candidates` gateway
+calls Tapetide `get_financials` and returns bounded same-quarter candidate
+comparisons. They are explicitly non-publishable. The inactive n8n workflow
+`n8n/fcs-evidence-orchestrator-v1.json` attaches those hints to the official
+document research request; Gemini may use them to locate the relevant table but
+must find the same value, period, unit and basis in an admitted original. Only the
+existing deterministic canonicalizer, validator and scorer can publish an FCS.
+
+## Tapetide-assisted admission
+
+When `TAPETIDE_TOKEN` is configured, every company in the scanned Momentum Radar universe may start an FCS review. The interface labels this **FCS review available**, not **evidence preflight passed**. The distinction is deliberate:
+
+1. Tapetide supplies structured discovery and filing-link candidates through its MCP service.
+2. Only links resolving to NSE, BSE or an independently trusted issuer domain are admitted.
+3. The existing worker downloads and archives the original document.
+4. The deterministic V2 validator still requires four comparable, source-qualified factors before scoring.
+5. An unsuccessful evidence search ends as `incomplete`; it never produces an estimated FCS.
+
+The provider token must not be exposed to the browser or committed to this repository.
 
 The worker reports itself as configured only when every mandatory runtime variable is present. Secrets must be injected from Secret Manager rather than committed to the repository.
 
@@ -94,7 +116,28 @@ npm run build
 
 The runtime test proves request idempotency, queue dispatch, the four-factor stop line, and the separation between a ready FCS and a ready lifecycle. Live Firestore, Cloud Tasks, evidence and scoring integration must still pass the five-company gate before the public request button is enabled.
 
-## Remaining activation gate
+## Provider-assisted orchestration beta (2026-10-14)
+
+The private worker now sends dynamic evidence requests to the active n8n webhook
+`alphasynth-fcs-evidence-v1`. The workflow first obtains bounded Tapetide
+financial candidates, then asks the application evidence route to locate and
+verify the same periods, values, units and accounting basis in admitted issuer
+or exchange originals. Tapetide values remain non-publishable navigation hints.
+
+Controlled acceptance produced both required outcomes:
+
+- HCL Technologies: four structured evidence rows, one for each FCS factor;
+  diagnostic outcome `four_factor_official_quarter_pair`.
+- Marine Electricals: zero admitted rows after the official-source checks;
+  processing remains incomplete and no FCS is created.
+
+The isolated application revision is `alphasynth-equity-fcsorchd1014`; normal
+application traffic remains on the pre-existing production revision. The worker
+revision `fcs-review-worker-fcsorch1014` serves worker traffic and points its
+dynamic-evidence URL to n8n. This verifies the orchestration and its fail-closed
+boundary; it does not imply that every requested company can be completed.
+
+## Current activation boundary
 
 The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-review.mjs` and directly reuses the approved deterministic V2 modules. It returns at minimum:
 
@@ -106,9 +149,12 @@ The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-revie
 }
 ```
 
-The remaining backend dependency is a production evidence endpoint that emits the complete V2 evidence, document and validation contracts. The older factor-evidence CSV response lacks comparison basis, consolidation basis, period-end dates, raw/canonical units and immutable archive hashes, so it must not be adapted into a publishable score by assumption.
-
-Until the canonical evidence endpoint, scorer deployment and five-company live gate all pass, keep `FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED` unset (or `false`) and do not claim that automated FCS requests are available. Request/status URLs alone cannot enable the public button.
+The authoritative scorer and durable worker are deployed. New evidence still
+passes through the complete V2 document, candidate and validation contracts;
+the older factor-evidence CSV response must not be adapted into a publishable
+score by assumption. Public availability should describe this as an evidence
+review request, not a guaranteed report: four verified factors publish an FCS,
+while an insufficient original-source record ends as `incomplete`.
 
 Even after activation, the gateway fails closed unless `FUNDAMENTAL_REVIEW_SUPPORTED_SYMBOLS` contains at least one symbol. Both the API and frontend enforce this controlled-beta scope; unsupported companies remain searchable and existing reports remain viewable, but no new job can be started for them.
 
@@ -125,4 +171,6 @@ The infrastructure-only smoke gate is deployed in `my-nse-research-app`, region 
 
 The synthetic `INFRA-SMOKE` request passed the capped gate: Cloud Run rejected anonymous access, the authenticated request returned HTTP 202, Firestore returned the durable queued record, and Cloud Tasks contained the matching execute task. The task was not dispatched because the queue remained paused.
 
-This stage deliberately does **not** activate evidence retrieval, scoring, public request/status routing, or the frontend request button. The evidence and scoring URL values on the private worker are non-routable placeholders. The next stage must replace both placeholders, run the live five-company gate, and only then consider resuming the queue and enabling public requests.
+This historical stage-one note is retained for the deployment record. Its
+placeholder URLs have since been replaced; see **Provider-assisted orchestration
+beta (2026-10-14)** above for the current state.

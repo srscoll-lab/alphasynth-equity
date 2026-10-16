@@ -32,6 +32,7 @@ import {
   YAxis,
 } from "recharts";
 import frozenCohortData from "../data/signalTrackerCohort001.json";
+import { lifecycleDisplay } from "../lifecycle-copy";
 import SignalEvidenceLayer from "./SignalEvidenceLayer";
 import SignalTrackerV2Comparison from "./SignalTrackerV2Comparison";
 import MomentumRadar from "./MomentumRadar";
@@ -591,7 +592,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                       onClick={() => chooseLifecycle(stage)}
                       className={`px-3 py-2 rounded-full border text-[10px] uppercase tracking-[0.1em] font-black transition-all ${filter === stage ? "border-amber-300 bg-amber-300 text-black" : "border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white hover:border-white/20"}`}
                     >
-                      {stage}
+                      {stage === "All" ? stage : lifecycleDisplay(stage).label}
                     </button>
                   ))}
                 </div>
@@ -623,7 +624,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                         </span>
                       </div>
                       <span className={`h-fit shrink-0 px-2 py-1 rounded-full border text-[9px] uppercase tracking-wider font-black ${lifecycleStyle[company.lifecycle]}`}>
-                        {company.lifecycle}
+                        {lifecycleDisplay(company.lifecycle).label}
                       </span>
                     </div>
                   </button>
@@ -643,9 +644,9 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                   <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">{selected.symbol} · Frozen period {selected.period}</div>
                   <h2 className="text-2xl md:text-3xl font-semibold text-white mt-2">{selected.name}</h2>
                   <div className={`inline-flex mt-3 px-3 py-1.5 rounded-full border text-[10px] uppercase tracking-[0.13em] font-black ${lifecycleStyle[selected.lifecycle]}`}>
-                    Frozen signal: {selected.lifecycle}
+                    Frozen signal: {lifecycleDisplay(selected.lifecycle).label}
                   </div>
-                  <div className="mt-2 text-xs text-zinc-500">#{selected.marketCapRankWithinLifecycle} by market cap within {selected.lifecycle} · {formatMarketCap(selected.marketCap)}</div>
+                  <div className="mt-2 text-xs text-zinc-300">{lifecycleMeaning[selected.lifecycle]}</div><div className="mt-1 text-xs text-zinc-500">#{selected.marketCapRankWithinLifecycle} by market cap within {lifecycleDisplay(selected.lifecycle).label} · {formatMarketCap(selected.marketCap)}</div>
                   <div className="mt-2 text-xs text-zinc-400">
                     Matching {selected.period} result: {formatDate(selected.resultDate)} · FCS recorded: {formatDate(cohortData.signalDate)}
                   </div>
@@ -840,7 +841,8 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {lifecycleComparison.map((group) => <div key={group.lifecycle} className="rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-                <span className={`inline-flex rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[group.lifecycle]}`}>{group.lifecycle}</span>
+                <span className={`inline-flex rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[group.lifecycle]}`}>{lifecycleDisplay(group.lifecycle).label}</span>
+                <div className="mt-1 text-[10px] text-zinc-300">{lifecycleMeaning[group.lifecycle]}</div>
                 <div className="mt-3 text-[9px] uppercase tracking-[0.1em] text-zinc-500">Average stock return</div>
                 <div className={`mt-1 font-mono text-base font-bold ${group.stockReturn === null ? "text-zinc-500" : group.stockReturn >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{group.stockReturn === null ? "Unavailable" : percentage(group.stockReturn)}</div>
                 <div className="mt-2 text-[9px] text-zinc-500">Vs Nifty: <span className={group.relativeToNifty !== null && group.relativeToNifty >= 0 ? "text-emerald-300" : "text-rose-300"}>{group.relativeToNifty === null ? "Unavailable" : percentagePoints(group.relativeToNifty)}</span> · n={group.count}</div>
@@ -854,7 +856,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                   {comparisonRows.map((row) => <tr key={row.company.symbol} className="bg-black/10 hover:bg-white/[0.025]">
                     <td className="px-4 py-3"><button type="button" onClick={() => selectCompanyChart(row.company.symbol)} className="text-left"><div className="text-xs font-semibold text-white hover:text-teal-200">{row.company.name}</div><div className="mt-1 font-mono text-[9px] text-zinc-500">{row.company.symbol} · through {row.latestDate ? formatDate(row.latestDate) : "unavailable"}</div></button></td>
                     <td className="px-4 py-3 font-mono text-sm font-bold text-white">{score100(row.company.rawBms)}</td>
-                    <td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[row.company.lifecycle]}`}>{row.company.lifecycle}</span></td>
+                    <td className="px-4 py-3"><span className={`rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-wider ${lifecycleStyle[row.company.lifecycle]}`}>{lifecycleDisplay(row.company.lifecycle).label}</span><div className="mt-1 text-[9px] text-zinc-300">{lifecycleMeaning[row.company.lifecycle]}</div></td>
                     <td className={`px-4 py-3 font-mono text-xs font-bold ${row.companyReturn === null ? "text-zinc-500" : row.companyReturn >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.companyReturn === null ? "Unavailable" : percentage(row.companyReturn)}</td>
                     <td className={`px-4 py-3 font-mono text-xs font-bold ${row.relativeToNifty === null ? "text-zinc-500" : row.relativeToNifty >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.relativeToNifty === null ? "Unavailable" : percentagePoints(row.relativeToNifty)}</td>
                     <td className={`px-4 py-3 font-mono text-xs font-bold ${row.relativeToSector === null ? "text-zinc-500" : row.relativeToSector >= 0 ? "text-emerald-300" : "text-rose-300"}`}>{row.relativeToSector === null ? "Unavailable" : percentagePoints(row.relativeToSector)}<div className="mt-1 max-w-36 truncate font-sans text-[8px] font-normal text-zinc-500" title={row.company.sectorBenchmarkLabel}>{row.company.sectorBenchmarkLabel}</div></td>
@@ -933,7 +935,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                 <div className="mt-4 grid sm:grid-cols-2 xl:grid-cols-5 gap-3">
                   {lifecycleStages.map((stage) => (
                     <div key={stage} className="rounded-2xl border border-white/10 bg-black/15 p-4">
-                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${lifecycleStyle[stage]}`}>{stage}</span>
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider ${lifecycleStyle[stage]}`}>{lifecycleDisplay(stage).label}</span>
                       <p className="mt-3 text-xs leading-relaxed text-zinc-400">{lifecycleMeaning[stage]}</p>
                     </div>
                   ))}
@@ -953,7 +955,7 @@ export default function SignalTracker({ onBack, initialMode = "v2", initialCompa
                   <div className="flex items-center gap-2 text-sm font-semibold text-orange-200"><TriangleAlert className="w-5 h-5" /> Inappropriate interpretation</div>
                   <ul className="mt-4 space-y-2 text-sm text-zinc-400">
                     <li>• “Emerging means the price will rise.”</li>
-                    <li>• “Fading means I must sell.”</li>
+                    <li>• “Recent weakening means I must sell.”</li>
                     <li>• “The tracker proves that FCS predicts returns.”</li>
                   </ul>
                 </div>
