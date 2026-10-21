@@ -62,7 +62,10 @@ The `TAPETIDE_TOKEN` in Secret Manager is a **Free-plan** token (50 calls/day), 
 the owner's Starter token. Free quota was exhausted on 21 Oct (resets 00:00 IST).
 Owner intends to replace it (command below). The run works on Free too, if small.
 
-## NEXT STEP (when the owner says "run the beta proof")
+## NEXT STEP (start as soon as the owner resumes on the morning of 22 Oct)
+Owner's instruction (21 Oct): run this on the **Free-plan token as it is** (50 calls/day,
+fresh after the midnight reset) when they resume work in the morning — not at midnight,
+and no token change needed. Pre-approved; start without asking again.
 1. Confirm `claude/fcs-mixed-source` at 8090b53 (or later), nothing uncommitted.
 2. Redeploy ONLY `alphasynth-fcs-claude-test` from the copy
    (`gcloud run deploy alphasynth-fcs-claude-test --source . --project=my-nse-research-app
@@ -80,6 +83,14 @@ Replace the Tapetide token (paste token when prompted):
 ```powershell
 $t = Read-Host "Paste your Starter Tapetide token" -AsSecureString; [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($t)) | & "C:/Users/admin/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd" secrets versions add TAPETIDE_TOKEN --data-file=- --project=my-nse-research-app
 ```
+
+## Owner decision: beta is the product (21 Oct)
+The owner does not need the V1 build. Main (`dossier17`) differs only by the legacy
+477-company BMS V1 "Momentum Universe" panel and old trading-style Deep Dive sections;
+the beta (`ui1016`) already covers all of main's API features plus 12 more. When the
+FCS beta is proven, main can be replaced by the beta (separate, explicitly approved step).
+Main's BMS panel occasionally shows "service unavailable" when its call to `bms-api`
+times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V1.
 
 ## Live URLs (21 Oct)
 - Main (live, 100%): https://alphasynth-equity-oqc2y4ogda-uc.a.run.app (revision dossier17)
