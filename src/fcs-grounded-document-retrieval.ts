@@ -67,7 +67,9 @@ function financialHtmlText(html: string): string | null {
   for (const match of markup.matchAll(/<[^>]*>|[^<]+/g)) {
     const token = match[0];
     if (!token.startsWith("<")) {
-      if (!stack.some(item => item.suppress)) parts.push(token);
+      // Source HTML often indents each cell onto its own line. Only structural
+      // row tags should create row breaks; source whitespace must not.
+      if (!stack.some(item => item.suppress)) parts.push(token.replace(/\s+/g, " "));
       continue;
     }
     const tagMatch = token.match(/^<\s*(\/?)\s*([\w-]+)/);
@@ -76,7 +78,11 @@ function financialHtmlText(html: string): string | null {
     if (tagMatch[1]) {
       const index = stack.map(item => item.tag).lastIndexOf(tag);
       if (index >= 0) stack.splice(index);
-      parts.push(" ");
+      if (stack.some(item => item.suppress)) continue;
+      if (tag === "td" || tag === "th") parts.push(" | ");
+      else if (tag === "tr") parts.push("\n");
+      else if (tag === "table") parts.push("\n[/TABLE]\n");
+      else if (/^(?:p|div|section|article|h[1-6]|caption|li)$/.test(tag)) parts.push("\n");
       continue;
     }
     const attrs = attributes(token);
@@ -89,9 +95,23 @@ function financialHtmlText(html: string): string | null {
       if (stack.length >= 128) return null;
       stack.push({ tag, suppress });
     }
-    parts.push(" ");
+    if (stack.some(item => item.suppress)) continue;
+    if (tag === "table") parts.push("\n[TABLE]\n");
+    else if (tag === "tr") parts.push("\n");
+    else if (tag === "td" || tag === "th") parts.push(" ");
+    else if (tag === "br" || /^(?:p|div|section|article|h[1-6]|caption|li)$/.test(tag)) parts.push("\n");
+    else parts.push(" ");
   }
-  const visibleText = decodeAttribute(parts.join(" ")).replace(/&(?:nbsp|quot|apos|lt|gt);/gi, entity => ({ "&nbsp;": " ", "&quot;": '"', "&apos;": "'", "&lt;": "<", "&gt;": ">" })[entity.toLowerCase()] ?? entity).replace(/\s+/g, " ").trim();
+  // Keep statement row/cell boundaries. Flattening all HTML tags to spaces
+  // made a metric label, numeric cells, periods, and units look like one
+  // undifferentiated paragraph and caused avoidable extraction mismatches.
+  const visibleText = decodeAttribute(parts.join(" "))
+    .replace(/&(?:nbsp|quot|apos|lt|gt);/gi, entity => ({ "&nbsp;": " ", "&quot;": '"', "&apos;": "'", "&lt;": "<", "&gt;": ">" })[entity.toLowerCase()] ?? entity)
+    .replace(/[ \t]*\|[ \t]*/g, " | ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/ *\n */g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   if (visibleText.length < 500 || !/\bfinancial\s+results\b|\bquarter(?:\s+and\s+[^.]{1,50})?\s+ended\b/i.test(visibleText) || !/\brevenue\b|\bprofit\b|\bcash[\s-]*flow\b/i.test(visibleText)) return null;
   return publicationMetadata.size ? `${[...publicationMetadata].join("\n")}\n\n${visibleText}` : visibleText;
 }

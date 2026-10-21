@@ -4281,9 +4281,11 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const aliases: Record<string, string[]> = {
           pat: ["pat", "profit after tax", "profit for the period", "profit attributable", "net profit"],
           net_profit: ["net profit", "profit for the period", "profit attributable", "profit after tax"],
-          revenue: ["revenue", "operating revenue"],
+          revenue: ["revenue", "operating revenue", "revenue from operations", "net sales"],
           eps: ["eps", "earnings per share"],
-          ebitda: ["ebitda"],
+          // Some issuer presentations print the transposed spelling EBIDTA.
+          // The same source row and values must still pass verification.
+          ebitda: ["ebitda", "ebidta"],
           operating_margin: ["operating margin"],
           passenger_load_factor: ["passenger load factor", "load factor"],
           financing_margin: ["financing margin"],
@@ -4303,18 +4305,43 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         return aliases[canonical] || [canonical.replaceAll("_", " ")];
       };
       const documentSupportsAnchor = (documentText: string, anchor: any) => {
+        const structuredTables = [...documentText.matchAll(/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g)].map(match => match[1]);
+        if (structuredTables.length) {
+          // NSE iXBRL is already tabular evidence. Require the metric label and
+          // exact source values to occur on the same preserved table row, with
+          // the requested reporting period(s) present in that table. A nearby
+          // value elsewhere in the flattened filing must not validate a row.
+          return structuredTables.some(table => {
+            if (!containsReportingPeriod(table, anchor.previous_period, anchor.previous_period_end_date)
+              || !containsReportingPeriod(table, anchor.current_period, anchor.current_period_end_date)) return false;
+            const lines = table.split(/\r?\n/);
+            return lines.some(line => {
+              const lowerLine = line.toLowerCase();
+              const hasMetric = metricLabels(anchor.metric_name).some(label => {
+                let index = lowerLine.indexOf(label);
+                while (index >= 0) {
+                  if (!/[a-z0-9]/.test(lowerLine[index - 1] || "")
+                    && !/[a-z0-9]/.test(lowerLine[index + label.length] || "")) return true;
+                  index = lowerLine.indexOf(label, index + label.length);
+                }
+                return false;
+              });
+              return hasMetric
+                && containsEvidenceValue(line, Number(anchor.previous_value))
+                && containsEvidenceValue(line, Number(anchor.current_value));
+            });
+          });
+        }
         const lower = documentText.toLowerCase().replace(/\s+/g, " ");
-        const previousPeriodToken = periodToken(anchor.previous_period);
-        const currentPeriodToken = periodToken(anchor.current_period);
         for (const label of metricLabels(anchor.metric_name)) {
           let index = lower.indexOf(label);
           while (index >= 0) {
             // Prevent EBITDA matching EBITDAR and PAT matching unrelated words.
             if(/[a-z0-9]/.test(lower[index-1]||'')||/[a-z0-9]/.test(lower[index+label.length]||'')) {index=lower.indexOf(label,index+label.length);continue;}
             const window = lower.slice(Math.max(0, index - 3000), index + label.length + 3000);
-            const compactWindow = periodToken(window);
-            if (containsEvidenceValue(window, Number(anchor.previous_value))
-              && containsEvidenceValue(window, Number(anchor.current_value))
+            const valueWindow = lower.slice(Math.max(0, index - 350), index + label.length + 350);
+            if (containsEvidenceValue(valueWindow, Number(anchor.previous_value))
+              && containsEvidenceValue(valueWindow, Number(anchor.current_value))
               && containsReportingPeriod(window, anchor.previous_period, anchor.previous_period_end_date)
               && containsReportingPeriod(window, anchor.current_period, anchor.current_period_end_date)) return true;
             index = lower.indexOf(label, index + label.length);

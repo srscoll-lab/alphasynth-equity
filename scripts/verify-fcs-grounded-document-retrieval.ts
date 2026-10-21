@@ -149,6 +149,16 @@ const releaseText = "Financial results for the quarter ended June 30, 2026. Reve
   assert.doesNotMatch(result.documents[0].text, /datePublished|article:published_time|2099/);
 }
 {
+  const html = `<html><body><article>${releaseText}<table><thead><tr><th>Financial results for quarter ended June 30, 2026 and June 30, 2025</th><th>2026</th><th>2025</th></tr></thead><tbody><tr><td>Revenue from operations</td><td>469</td><td>328</td></tr><tr><td>Profit after tax</td><td>101</td><td>47</td></tr></tbody></table></article></body></html>`;
+  const mock = mockFetch({ [`${issuer}/table`]: { body: html, headers: { "content-type": "text/html" } } });
+  const result = await retrieveGroundedFcsDocuments([{ uri: `${issuer}/table` }], options(mock.fetchImpl));
+  assert.equal(result.documents.length, 1);
+  assert.match(result.documents[0].text, /\[TABLE\]/);
+  assert.match(result.documents[0].text, /Revenue from operations \| 469 \| 328/);
+  assert.match(result.documents[0].text, /Profit after tax \| 101 \| 47/);
+  assert.doesNotMatch(result.documents[0].text, /Revenue from operations[^\n]*Profit after tax/);
+}
+{
   const mock = mockFetch({});
   const result = await retrieveGroundedFcsDocuments([{ uri: "https://broker.example/issuer-financial-results", title: "Official financial results" }], options(mock.fetchImpl));
   assert.equal(result.documents.length, 0);
