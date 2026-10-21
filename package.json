@@ -41,6 +41,7 @@
     "verify:fcs-comparison-basis": "node --experimental-strip-types scripts/verify-fcs-comparison-basis.ts",
     "verify:fcs-segment-and-debt-consistency": "node --experimental-strip-types scripts/verify-fcs-segment-and-debt-consistency.ts",
     "verify:fcs-lifecycle-pending": "node --experimental-strip-types scripts/verify-fcs-lifecycle-pending.ts",
+    "verify:tapetide-beta-sources": "node --experimental-strip-types scripts/verify-tapetide-beta-sources.ts",
     "verify:fcs-evidence-orchestrator": "node scripts/verify-fcs-evidence-orchestrator.mjs",
     "build:fundamental-review-evidence": "node --experimental-strip-types scripts/build-fundamental-review-evidence-bundle.ts",
     "verify:bms-momentum-radar": "node scripts/verify-bms-momentum-radar.mjs",

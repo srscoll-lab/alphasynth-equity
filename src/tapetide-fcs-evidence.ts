@@ -220,7 +220,9 @@ export function tapetideCanonicalEvidence(input: {
  */
 export function mergeProviderEvidence(official: { candidates: any[]; documents: any[]; validations: any[]; diagnostics: any[] },
   provider: ReturnType<typeof tapetideCanonicalEvidence>) {
-  const providerFactors = new Set<string>(PROVIDER_FACTORS);
+  // Any factor the provider bundle supplies (Earnings/Economics always; annual
+  // Balance Sheet and document Execution when found) supersedes official rows.
+  const providerFactors = new Set<string>([...PROVIDER_FACTORS, ...provider.candidates.map((candidate) => String(candidate.factor_id))]);
   const superseded = official.candidates.filter((candidate) => providerFactors.has(candidate.factor_id));
   const candidates = [...official.candidates.filter((candidate) => !providerFactors.has(candidate.factor_id)), ...provider.candidates];
   const keptIds = new Set(candidates.map((candidate) => candidate.candidate_id));

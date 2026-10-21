@@ -217,6 +217,20 @@ balance_sheet_printed_total_debt_not_found` with `lifecycle_period_gaps`
 (quarter, balance-sheet date, missing factors). The report states this in plain
 language (`src/fcs-lifecycle-pending.ts`).
 
+### Beta source policy (owner decision, 2026-10-21)
+
+For the non-commercial beta the evidence route is provider-first:
+Earnings/Economics from Tapetide quarterly financials; Balance Sheet from
+Tapetide's latest ANNUAL balance sheet (Borrowings as total debt, 31 March vs
+prior 31 March, used for every quarter and labelled "as at"); Execution from
+Tapetide-parsed presentations/concall transcripts (`list_company_documents`,
+`read_document`), where the model proposes rows and each is kept only if both
+values and periods sit beside its label in that text (page recorded). Official
+extraction runs only for a factor still missing. All provider rows are
+`secondary_discovery`, `qualified_provisional`, labelled "not cross-verified
+with NSE/BSE". A Tapetide plan-limit reply raises `tapetide_quota_exhausted`
+instead of looking like missing data. Verification: `npm run verify:tapetide-beta-sources`.
+
 Discovery also ranks documents published within 100 days after the requested
 period end first, and results filings up to 20 MB are read.
 

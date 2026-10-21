@@ -45,9 +45,20 @@ export function balanceSheetPeriodEnd(quarterEnd: string): string {
   return quarterEnd;
 }
 
-/** A Balance Sheet row may be dated the quarter itself or its latest half-year balance sheet. */
+/** The latest 31 March on or before a quarter end (annual balance sheets, e.g. Tapetide's). */
+export function latestMarchOnOrBefore(quarterEnd: string): string {
+  const year = Number(quarterEnd.slice(0, 4));
+  return quarterEnd.slice(5) >= "03-31" ? `${year}-03-31` : `${year - 1}-03-31`;
+}
+
+/**
+ * A Balance Sheet row may be dated the quarter itself, its latest half-year
+ * balance sheet, or (owner decision 21 Oct 2026, beta) the latest annual
+ * March balance sheet; never anything older.
+ */
 export function balanceSheetPeriodAllowed(quarterEnd: string, balanceSheetEnd: string): boolean {
-  return balanceSheetEnd === quarterEnd || balanceSheetEnd === balanceSheetPeriodEnd(quarterEnd);
+  return balanceSheetEnd === quarterEnd || balanceSheetEnd === balanceSheetPeriodEnd(quarterEnd)
+    || balanceSheetEnd === latestMarchOnOrBefore(quarterEnd);
 }
 
 /** Metrics whose identity includes the issuer row name (each segment is its own series). */

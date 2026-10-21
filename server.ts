@@ -93,7 +93,9 @@ import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamenta
 import { anchorsForEvidencePeriod, canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
 import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
-import { discoverTapetideFcsSources, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured } from "./src/tapetide-fcs-provider";
+import { discoverTapetideFcsSources, fetchTapetideAnnualBalanceSheet, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured, TapetideMcpClient } from "./src/tapetide-fcs-provider";
+import { tapetideBalanceSheetEvidence } from "./src/tapetide-fcs-balance-sheet";
+import { tapetideExecutionEvidence, type ExtractedRow } from "./src/tapetide-fcs-documents";
 import { OFFICIAL_FACTORS, latestProviderQuarter, mergeProviderEvidence, tapetideCanonicalEvidence } from "./src/tapetide-fcs-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -280,7 +282,8 @@ async function archiveFundamentalReviewDocument(bytes: Buffer, sha256: string, m
   if (!tokenResponse.ok) throw new Error(`Archive token request failed: ${tokenResponse.status}`);
   const tokenPayload = await tokenResponse.json() as { access_token?: string };
   if (!tokenPayload.access_token) throw new Error("Archive token response did not contain an access token");
-  const extension = mediaType.includes("pdf") ? "pdf" : mediaType.includes("html") ? "html" : mediaType.includes("json") ? "json" : "bin";
+  const extension = mediaType.includes("pdf") ? "pdf" : mediaType.includes("html") ? "html" : mediaType.includes("json") ? "json"
+    : mediaType.includes("markdown") ? "md" : "bin";
   const objectName = `fundamental-review-evidence/${sha256}.${extension}`;
   const response = await fetch(
     `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET)}/o?uploadType=media&name=${encodeURIComponent(objectName)}&ifGenerationMatch=0`,
@@ -338,6 +341,41 @@ function createFundamentalReviewOcr() {
     console.error("[fundamental-review] OCR disabled:", error instanceof Error ? error.message : error);
     return null;
   }
+}
+
+/** Registered Execution metrics and their units, as offered to the document extractor. */
+function executionMetricDefinitions() {
+  return Object.entries(fundamentalMetricRegistry.metrics as Record<string, any>)
+    .filter(([, definition]) => definition.factor_id === "execution")
+    .map(([metric, definition]) => ({ metric, units: [...definition.allowed_units] as string[] }));
+}
+
+/** Model proposes Execution rows from Tapetide-parsed document text; the caller verifies each in that text. */
+async function extractExecutionRowsFromDocument(input: { text: string; targetPeriodEnd: string; docType: string;
+  metrics: Array<{ metric: string; units: string[] }> }): Promise<ExtractedRow[]> {
+  const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+  const text = input.text.length > 60_000 ? input.text.slice(0, 60_000) : input.text;
+  const schema = { type: "OBJECT", required: ["rows"], properties: { rows: { type: "ARRAY", items: { type: "OBJECT",
+    required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousPeriodEndDate", "currentPeriodEndDate",
+      "previousValue", "currentValue", "unit", "quotedLabel", "comparisonBasis"], properties: {
+      factor: { type: "STRING", enum: ["execution"] }, metricName: { type: "STRING", enum: input.metrics.map((item) => item.metric) },
+      previousPeriod: { type: "STRING" }, currentPeriod: { type: "STRING" }, previousPeriodEndDate: { type: "STRING" },
+      currentPeriodEndDate: { type: "STRING" }, previousValue: { type: "NUMBER" }, currentValue: { type: "NUMBER" },
+      unit: { type: "STRING" }, previousUnit: { type: "STRING" }, quotedLabel: { type: "STRING" },
+      comparisonBasis: { type: "STRING", enum: ["same_quarter_prior_year", "sequential_quarter", "point_in_time_prior_period"] } } } } } };
+  const prompt = `From this company ${input.docType} text, extract up to three EXECUTION comparisons for the quarter ending ${input.targetPeriodEnd}. `
+    + `Execution means operating delivery: order book or order inflow, sales/production volumes, deal wins (TCV), capacity utilisation, store count, market share, or named business segment revenue. `
+    + `Prefer order_book when stated (balance as at ${input.targetPeriodEnd} versus the previous quarter end or a year earlier, point_in_time_prior_period). `
+    + `Each row: both values must be printed in THIS text with their periods; copy numbers and the unit exactly as printed; quotedLabel = the exact printed label; `
+    + `currentPeriodEndDate must be ${input.targetPeriodEnd}; give period end dates as YYYY-MM-DD. Never compute, infer or convert values. `
+    + `Never use revenue, profit, EBITDA or margins. Return {"rows": []} if nothing qualifies.\n\n`
+    + `Allowed metrics and units: ${JSON.stringify(input.metrics)}\n\nDOCUMENT TEXT:\n${text}`;
+  const { rows } = await extractFcsFactors(["execution"], async (_factor, attempt) => {
+    const response: any = await getGenAI().models.generateContent({ model, contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { responseMimeType: "application/json", responseSchema: schema, ...fcsExtractionGenerationConfig(model, attempt) } });
+    return { text: String(response?.text || ""), finishReason: response?.candidates?.[0]?.finishReason, usageMetadata: response?.usageMetadata };
+  });
+  return rows as ExtractedRow[];
 }
 
 function readFrozenForwardValidation(): any {
@@ -4977,16 +5015,49 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
 
       // The provider's latest reported quarter sets the target, so official
       // extraction is asked for exactly that quarter.
-      const provider = await fetchTapetideQuarterlyFinancials({ symbol });
+      const tapetideClient = new TapetideMcpClient();
+      const provider = await fetchTapetideQuarterlyFinancials({ symbol, client: tapetideClient });
       const target = targetPeriodEnd || latestProviderQuarter(provider.observations, evidenceCutoff) || "";
-      // Reg. 33: June/December results carry no balance sheet, so Balance Sheet
-      // is read from the latest half-year (March/September) results instead.
-      const balanceSheetTarget = target ? balanceSheetPeriodEnd(target) : "";
-      const officialRequests = target && balanceSheetTarget !== target
-        ? [requestOfficial(["execution"], target), requestOfficial(["balance_sheet"], balanceSheetTarget)]
-        : [requestOfficial([...OFFICIAL_FACTORS], target)];
+      const noEvidence = () => ({ candidates: [] as any[], documents: [] as any[], validations: [] as any[], diagnostics: [] as any[] });
+      const archiveSnapshot = async (bytes: Buffer, mediaType: string) => {
+        const sha256 = createHash("sha256").update(bytes).digest("hex");
+        return archiveFundamentalReviewDocument(bytes, sha256, mediaType).catch((error) => {
+          console.error("[fundamental-review] provider snapshot archive failed:", error?.message || error);
+          return null;
+        });
+      };
+      // Beta source policy (21 Oct 2026): Balance Sheet from Tapetide's latest
+      // annual balance sheet; Execution from Tapetide-parsed company documents.
+      // Official extraction runs only for whichever of the two is still missing.
+      const balance = target ? await fetchTapetideAnnualBalanceSheet({ symbol, client: tapetideClient }) : null;
+      const balanceEvidence = balance?.payloadBytes
+        ? tapetideBalanceSheetEvidence({ symbol, companyName, cutoff: evidenceCutoff, targetPeriodEnd: target,
+          observations: balance.observations, payloadBytes: balance.payloadBytes,
+          archiveUri: await archiveSnapshot(balance.payloadBytes, "application/json") })
+        : noEvidence();
+      balanceEvidence.diagnostics.unshift(...(balance?.diagnostics || []));
+      const documentEvidence = target
+        ? await tapetideExecutionEvidence({ symbol, companyName, cutoff: evidenceCutoff, targetPeriodEnd: target,
+          // History must reuse the current quarter's Execution metric so the series is like-for-like.
+          metrics: executionMetricDefinitions().filter((definition) => !requiredDefinitions?.some((item: any) => item?.factor === "execution")
+            || requiredDefinitions.some((item: any) => item?.factor === "execution" && item?.metric === definition.metric)),
+          callTool: (name, args) => tapetideClient.callTool(name, args),
+          extract: extractExecutionRowsFromDocument,
+          archive: (bytes, sha256) => archiveFundamentalReviewDocument(bytes, sha256, "text/markdown").catch(() => null) })
+        : noEvidence();
+      const officialFactors = [...(documentEvidence.candidates.length ? [] : ["execution"]),
+        ...(balanceEvidence.candidates.length ? [] : ["balance_sheet"])];
+      // Reg. 33: June/December results carry no balance sheet, so an official
+      // Balance Sheet is read from the latest half-year (March/September) results.
+      const balanceSheetTarget = target && officialFactors.includes("balance_sheet") ? balanceSheetPeriodEnd(target) : "";
+      const officialRequests = !officialFactors.length ? []
+        : balanceSheetTarget && balanceSheetTarget !== target
+          ? [...(officialFactors.includes("execution") ? [requestOfficial(["execution"], target)] : []),
+            requestOfficial(["balance_sheet"], balanceSheetTarget)]
+          : [requestOfficial(officialFactors, target)];
       const officialResults = await Promise.all(officialRequests);
-      if (officialResults.every((result) => !result.ok)) {
+      if (officialResults.length && officialResults.every((result) => !result.ok)
+          && !documentEvidence.candidates.length && !balanceEvidence.candidates.length) {
         return res.status(502).json({
           error: "Dynamic official-document evidence retrieval failed.",
           code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_FAILED",
@@ -5009,19 +5080,19 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       }
       if (balanceSheetTarget && balanceSheetTarget !== target) official.diagnostics.push({
         outcome: "balance_sheet_from_latest_half_year", quarter_end: target, balance_sheet_end: balanceSheetTarget });
-      let archiveUri: string | null = null;
-      if (provider.payloadBytes) {
-        const sha256 = createHash("sha256").update(provider.payloadBytes).digest("hex");
-        archiveUri = await archiveFundamentalReviewDocument(provider.payloadBytes, sha256, "application/json").catch((error) => {
-          console.error("[fundamental-review] provider snapshot archive failed:", error?.message || error);
-          return null;
-        });
-      }
+      const archiveUri = provider.payloadBytes ? await archiveSnapshot(provider.payloadBytes, "application/json") : null;
       const providerEvidence = provider.payloadBytes
         ? tapetideCanonicalEvidence({ symbol, companyName, cutoff: evidenceCutoff, targetPeriodEnd: target,
           observations: provider.observations, payloadBytes: provider.payloadBytes, archiveUri })
-        : { candidates: [], documents: [], validations: [], diagnostics: [] };
+        : noEvidence();
       providerEvidence.diagnostics.unshift(...provider.diagnostics);
+      // One provider bundle: Earnings/Economics + annual Balance Sheet + document Execution.
+      for (const part of [balanceEvidence, documentEvidence]) {
+        providerEvidence.candidates.push(...part.candidates);
+        providerEvidence.documents.push(...part.documents);
+        providerEvidence.validations.push(...part.validations);
+        providerEvidence.diagnostics.push(...part.diagnostics);
+      }
       return res.json(mergeProviderEvidence(preferStandardMetrics(official), providerEvidence));
     } catch (error: any) {
       console.error("[fundamental-review] dynamic evidence failed:", error?.message || error);

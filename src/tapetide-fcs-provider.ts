@@ -44,6 +44,12 @@ type TapetideClientOptions = {
 };
 
 const DEFAULT_ENDPOINT = "https://mcp.tapetide.com/mcp";
+export const TAPETIDE_QUOTA_EXHAUSTED = "tapetide_quota_exhausted";
+
+/** e.g. "You've reached the Tapetide free tier limit for today… (50 MCP tool calls/day)". */
+export function isTapetideQuotaMessage(payload: unknown): boolean {
+  return typeof payload === "string" && /reached the tapetide\b.*\blimit|mcp tool calls\s*\/\s*day/i.test(payload);
+}
 const MCP_PROTOCOL_VERSION = "2025-06-18";
 const EXCHANGE_DOMAINS = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com"];
 
@@ -187,7 +193,10 @@ export class TapetideMcpClient {
     await this.initialize();
     const response = await this.post({ jsonrpc: "2.0", id: ++this.requestId, method: "tools/call", params: { name, arguments: args } });
     if (response?.error) throw new Error(`tapetide_tool_${name}_${response.error.code || "failed"}`);
-    return toolPayload(response?.result ?? response);
+    const payload = toolPayload(response?.result ?? response);
+    // Tapetide returns its plan limit as ordinary text; never treat it as "no data".
+    if (isTapetideQuotaMessage(payload)) throw new Error(TAPETIDE_QUOTA_EXHAUSTED);
+    return payload;
   }
 }
 
@@ -228,12 +237,13 @@ export function financialMetric(label: string) {
  * deliberately structural: it accepts labelled row arrays and period/value
  * observations, but only for the four explicitly registered labels above.
  */
-export function financialObservationsFromPayload(payload: unknown): FinancialObservation[] {
+export function financialObservationsFromPayload(payload: unknown,
+  labelMatches: (label: string) => boolean = (label) => Boolean(financialMetric(label))): FinancialObservation[] {
   const observations: FinancialObservation[] = [];
   const seen = new Set<string>();
   const append = (label: unknown, period: unknown, value: unknown, availableAt: unknown) => {
     const metricLabel = String(label || "").trim();
-    if (!financialMetric(metricLabel)) return;
+    if (!labelMatches(metricLabel)) return;
     const end = periodEnd(period);
     const number = finiteNumber(value);
     if (!end || number === null) return;
@@ -285,14 +295,14 @@ export function financialObservationsFromPayload(payload: unknown): FinancialObs
         }
       }
       for (const [rowLabel, rowValues] of Object.entries(object)) {
-        if (!financialMetric(rowLabel) || !Array.isArray(rowValues)) continue;
+        if (!labelMatches(rowLabel) || !Array.isArray(rowValues)) continue;
         periods.forEach((period, index) => append(rowLabel, period, rowValues[index], availability?.[index]));
       }
       const keyedRows = object.data && typeof object.data === "object" && !Array.isArray(object.data)
         ? object.data as JsonObject : null;
       if (keyedRows) {
         for (const [rowLabel, periodValues] of Object.entries(keyedRows)) {
-          if (!financialMetric(rowLabel) || !periodValues || typeof periodValues !== "object" || Array.isArray(periodValues)) continue;
+          if (!labelMatches(rowLabel) || !periodValues || typeof periodValues !== "object" || Array.isArray(periodValues)) continue;
           const valueMap = periodValues as JsonObject;
           periods.forEach((period, index) => append(rowLabel, period, valueMap[String(period)],
             availabilityByPeriod.get(String(period)) ?? availability?.[index]));
@@ -363,27 +373,37 @@ export type TapetideQuarterlyFinancials = {
   diagnostics: Array<{ outcome: string; tool?: string; detail?: string }>;
 };
 
-/** One quarterly get_financials call; observations are not filtered by cutoff here. */
-export async function fetchTapetideQuarterlyFinancials(input: {
-  symbol: string;
-  fetchImpl?: typeof fetch;
-}): Promise<TapetideQuarterlyFinancials> {
+async function fetchTapetideSection(input: { symbol: string; fetchImpl?: typeof fetch; client?: TapetideMcpClient },
+  section: "quarterly" | "balance_sheet", periods: number, labelMatches?: (label: string) => boolean): Promise<TapetideQuarterlyFinancials> {
   const symbol = String(input.symbol || "").trim().toUpperCase();
-  const client = new TapetideMcpClient({ fetchImpl: input.fetchImpl });
+  const client = input.client ?? new TapetideMcpClient({ fetchImpl: input.fetchImpl });
   if (!client.configured()) return { configured: false, symbol, payloadBytes: null, observations: [], diagnostics: [{ outcome: "tapetide_not_configured" }] };
   try {
-    const payload = await client.callTool("get_financials", { symbol, section: "quarterly", periods: 8 });
-    const observations = financialObservationsFromPayload(payload);
+    const payload = await client.callTool("get_financials", { symbol, section, periods });
+    const observations = financialObservationsFromPayload(payload, labelMatches);
     return {
       configured: true,
       symbol,
-      payloadBytes: Buffer.from(JSON.stringify({ tool: "get_financials", symbol, section: "quarterly", periods: 8, payload }), "utf-8"),
+      payloadBytes: Buffer.from(JSON.stringify({ tool: "get_financials", symbol, section, periods, payload }), "utf-8"),
       observations,
-      diagnostics: [{ outcome: "tapetide_tool_completed", tool: "get_financials", detail: `${observations.length} registered quarterly observations` }],
+      diagnostics: [{ outcome: "tapetide_tool_completed", tool: "get_financials", detail: `${observations.length} registered ${section} observations` }],
     };
   } catch (error) {
-    return { configured: true, symbol, payloadBytes: null, observations: [], diagnostics: [{ outcome: "tapetide_tool_failed", tool: "get_financials", detail: error instanceof Error ? error.message : String(error) }] };
+    const detail = error instanceof Error ? error.message : String(error);
+    return { configured: true, symbol, payloadBytes: null, observations: [], diagnostics: [{
+      outcome: detail === TAPETIDE_QUOTA_EXHAUSTED ? TAPETIDE_QUOTA_EXHAUSTED : "tapetide_tool_failed", tool: "get_financials", detail }] };
   }
+}
+
+/** One quarterly get_financials call; observations are not filtered by cutoff here. */
+export function fetchTapetideQuarterlyFinancials(input: { symbol: string; fetchImpl?: typeof fetch; client?: TapetideMcpClient }) {
+  return fetchTapetideSection(input, "quarterly", 8);
+}
+
+/** Tapetide balance sheets are annual (March). Only the Borrowings row is used, as total debt. */
+export const isBorrowingsRow = (label: string) => /^borrowings?$/i.test(label.trim());
+export function fetchTapetideAnnualBalanceSheet(input: { symbol: string; fetchImpl?: typeof fetch; client?: TapetideMcpClient }) {
+  return fetchTapetideSection(input, "balance_sheet", 4, isBorrowingsRow);
 }
 
 export function tapetideFcsConfigured(): boolean {
