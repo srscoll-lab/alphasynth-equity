@@ -92,7 +92,8 @@ export async function extractFcsFactors(factors:readonly string[],run:(factor:st
       if(!parsed || !Array.isArray(parsed.rows)) {
         const error:any=new Error('Expected a rows array.');error.code='MODEL_SCHEMA_INVALID';throw error;
       }
-      const candidates=parsed.rows.filter((r:any)=>r && typeof r==='object' && r.factor===factor).slice(0,2);
+      // Execution may list each named segment so segments common to all quarters can be chosen.
+      const candidates=parsed.rows.filter((r:any)=>r && typeof r==='object' && r.factor===factor).slice(0,factor==='execution'?6:2);
       rows.push(...candidates);diagnostics.push({outcome:'factor_extraction_completed',factor,candidate_count:candidates.length,
         ...(typeof response !== 'string' ? safeUsageDiagnostic(response) : {})});
       break;

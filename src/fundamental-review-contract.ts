@@ -108,7 +108,7 @@ export function publishedFundamentalReviewResult(value: unknown): Record<string,
     if(economics?.impacts?.some((impact:any)=>impact.metric_id==='ebitda')
       && !economics.impacts.some((impact:any)=>impact.metric_id==='ebitda_margin'))return null;
   }
-  const permitted = ["fcs_score", "score_publishable", "raw_score", "display_score", "factor_scores", "factors", "lifecycle_ready", "lifecycle", "lifecycle_assessment", "lifecycle_status", "lifecycle_missing_periods", "lifecycle_unavailable_reason", "checkpoints", "calculated_at", "information_cutoff", "comparison_period", "previous_period", "current_period"];
+  const permitted = ["fcs_score", "score_publishable", "raw_score", "display_score", "factor_scores", "factors", "lifecycle_ready", "lifecycle", "lifecycle_assessment", "lifecycle_status", "lifecycle_missing_periods", "lifecycle_unavailable_reason", "lifecycle_period_gaps", "checkpoints", "calculated_at", "information_cutoff", "comparison_period", "previous_period", "current_period", "publication_lane"];
   return Object.fromEntries(permitted.filter((key) => key in score).map((key) => [key, score[key]]));
 }
 

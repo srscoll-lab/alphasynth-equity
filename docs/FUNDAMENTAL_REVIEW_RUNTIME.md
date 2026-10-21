@@ -137,6 +137,92 @@ revision `fcs-review-worker-fcsorch1014` serves worker traffic and points its
 dynamic-evidence URL to n8n. This verifies the orchestration and its fail-closed
 boundary; it does not imply that every requested company can be completed.
 
+## Mixed-source policy (2026-10-19)
+
+Owner decision: Earnings and Economics now come from Tapetide structured
+quarterly financials. Execution and Balance Sheet still require official-filing
+extraction. An FCS is published only when all four factors are present.
+
+- When `TAPETIDE_TOKEN` is configured, the evidence route asks n8n for
+  `execution` and `balance_sheet` only, and fetches Tapetide `get_financials`
+  (quarterly, eight periods) in parallel.
+- Earnings = revenue (Sales) and PAT (Net Profit). Economics = EBITDA margin
+  derived from unrounded Operating Profit ÷ Sales, not the rounded OPM % column.
+  All are same-quarter-prior-year comparisons in the official rows' quarter.
+- The raw provider response is archived as JSON and hashed. Provider rows use
+  `source_tier: secondary_discovery`, `qualified_provisional` validation and
+  consolidation basis `provider_reported_basis`. The scorer therefore returns
+  `publication_lane: "provisional"`; the frozen formula and weights are unchanged.
+- Official Earnings/Economics rows for that quarter are superseded, so every
+  checkpoint in a three-quarter series uses the same definitions.
+- The report shows: "Tapetide structured financial data. Not cross-verified
+  with NSE/BSE filings." Provider values with no availability date, or one
+  after the cutoff, are not used.
+- Not yet resolved: Tapetide's consolidation scope and unit scale are assumed
+  to be its INR-crore presentation; commercial/licensing permission for public
+  use of provider data is still required (see the 13 October alternate-source trial).
+
+### Balance Sheet for June/December quarters (owner decision, 2026-10-19)
+
+SEBI LODR Reg. 33 requires a balance sheet only with September and March
+results. For a June or December quarter, the evidence route asks for Execution
+for the quarter and, in parallel, Balance Sheet for the latest half-year
+(June → 31 March, December → 30 September of the same year). March/September
+quarters use one request for both. The worker and history gate accept a Balance
+Sheet row dated at the quarter or that half-year end, never older; the other
+three factors must match the quarter exactly. The report shows the balance
+sheet's "as of" date. No metric is fixed: the backfill already passes the
+current metric definitions, so all three checkpoints use the same metric.
+
+Source matching also searches the issuer's quoted row label (e.g. "Domestic
+Explosives" for segment revenue), with numbers stripped and generic labels such
+as "Total" refused; both values and both periods must still sit beside it.
+
+### Scanned results filings (OCR, off by default)
+
+Some issuers file results as scanned images (Solar Industries' 15 May 2026
+audited results: 23 pages, 53 text characters per page). With
+`FCS_OCR_ENABLED=true` and `FCS_OCR_PROCESSOR=projects/…/locations/us/processors/…`,
+a PDF with under 150 text characters per page is sent to Google Cloud Document
+AI Enterprise Document OCR (independent of the Gemini extractor): first 30
+pages, imageless mode, at most two documents per review, pages below 0.85
+confidence dropped. OCR text is cached at
+`gs://$FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET/fundamental-review-ocr/<sha256>.json`
+and reused only for the same bytes. The strict source-value checker runs on the
+OCR text unchanged; values read this way carry `text_source: document_ai_ocr`
+and the report labels them. Approximate list cost: US$1.50 per 1,000 pages.
+A PDF with a garbled embedded OCR layer (e.g. Solar's June results) is not
+re-OCR'd by this rule.
+
+Balance-sheet balances and ratios (debt, net debt, equity, current ratio, NPA,
+capital adequacy) are compared at a date, so the research route relabels any
+period basis the extractor gives them to `point_in_time_prior_period`; cash
+flows keep their flow basis. The history gate accepts Q1FY27 / Q1-FY27 / Q1 FY27
+and stores the label as "Q1 FY27".
+
+Standard measures (owner decision, 2026-10-21; `src/fcs-standard-metrics.ts`):
+Execution uses `order_book` (point in time, quarter-on-quarter, values from the
+filings that state them) when reported, otherwise named `segment_revenue` rows;
+Balance Sheet uses `total_debt` only from the issuer's printed "Total Debt"
+line, never a model-made sum. Across a three-quarter series,
+`src/fcs-segment-alignment.ts` keeps order book when every quarter has it,
+otherwise only segments common to all quarters, otherwise refuses. That
+cross-quarter step is a tested prototype and is not yet wired into the worker.
+
+Option C (owner decision, 2026-10-21): no fallback to statement borrowings. If a
+historical quarter's half-year balance sheet has no printed "Total Debt" line
+(Solar prints it only in annual March results), the current FCS is still
+published and the worker sets `lifecycle_unavailable_reason:
+balance_sheet_printed_total_debt_not_found` with `lifecycle_period_gaps`
+(quarter, balance-sheet date, missing factors). The report states this in plain
+language (`src/fcs-lifecycle-pending.ts`).
+
+Discovery also ranks documents published within 100 days after the requested
+period end first, and results filings up to 20 MB are read.
+
+Verification: `npm run verify:tapetide-fcs-evidence`, `npm run verify:fcs-source-label-match`,
+`npm run verify:fcs-target-source-ranking`, `npm run verify:fcs-scanned-document-ocr`.
+
 ## Current activation boundary
 
 The authoritative scorer now lives in `alphasynth-bms-v2/scripts/serve-fcs-review.mjs` and directly reuses the approved deterministic V2 modules. It returns at minimum:

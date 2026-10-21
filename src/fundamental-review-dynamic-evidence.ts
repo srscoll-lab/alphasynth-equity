@@ -131,6 +131,7 @@ export function canonicalizeDynamicEvidence(input: {
         acquisition_method: "direct_http",
         acquisition_status: "acquired",
         failure_reason: null,
+        ...(row.text_source === "document_ai_ocr" ? { text_source: "document_ai_ocr" } : {}),
       });
     }
     if (previousDocument && !documentIds.has(previousDocumentId)) {
@@ -140,7 +141,8 @@ export function canonicalizeDynamicEvidence(input: {
         source_tier: "authoritative", published_at: previousSourceDate, captured_at: capturedAt,
         archive_uri: previousArchive, sha256: previousHash, media_type: previousDocument.media_type || "application/octet-stream",
         content_length: Number(previousDocument.content_length || 0), acquisition_method: "direct_http",
-        acquisition_status: "acquired", failure_reason: null });
+        acquisition_status: "acquired", failure_reason: null,
+        ...(previousDocument.text_source === "document_ai_ocr" ? { text_source: "document_ai_ocr" } : {}) });
     }
     const candidateId = `candidate-dynamic-${safeId(symbol)}-${safeId(metricId)}-${index + 1}`;
     const candidate = {

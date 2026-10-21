@@ -12,6 +12,33 @@ export function containsReportedNumber(text: string, value: number): boolean {
     return (match[1] !== undefined ? -number : number) === value;
   });
 }
+// Words that cannot identify a row by themselves; "Total" must not let a
+// totals row stand in for a segment row.
+const GENERIC_LABEL_WORDS = new Set(["total", "others", "other", "net", "gross", "sales", "income", "revenue",
+  "profit", "loss", "amount", "value", "values", "particulars", "quarter", "quarterly", "ended", "year", "half",
+  "rs", "inr", "cr", "crore", "crores", "lakh", "lakhs", "million", "mn", "in", "of", "the", "and", "for", "from",
+  "operations", "on", "as", "at", "to", "result", "results", "statement", "consolidated", "standalone"]);
+
+/**
+ * The issuer's own row label quoted by the extractor (e.g. "Domestic
+ * Explosives" for segment revenue). Callers still require both values and
+ * both periods beside this label in the original document; this only widens
+ * which row label may be searched. Numbers are stripped, and labels made only
+ * of generic words are refused.
+ */
+export function sourceLabelVariants(quoted: unknown): string[] {
+  const label = String(quoted || "").toLowerCase()
+    .replace(/[₹%()]/g, " ")
+    .split(/\s+/).filter((token) => token && !/\d/.test(token)).join(" ")
+    .replace(/^[^a-z]+|[^a-z]+$/g, "").replace(/\s+/g, " ").trim();
+  const words = label.split(/[^a-z]+/).filter(Boolean);
+  if (label.length > 80 || !words.length || words.every((word) => GENERIC_LABEL_WORDS.has(word))) return [];
+  // One-word segment names ("Defence") are allowed only when distinctive;
+  // short tokens such as "CIL" or "Q4" could match unrelated rows.
+  if (words.length === 1) return words[0].length >= 5 ? [label] : [];
+  return label.length >= 6 ? [label] : [];
+}
+
 export function containsReportingPeriod(text: string, label: string, endDate?: string): boolean {
   const compact = text.toLowerCase().replace(/[^a-z0-9]+/g, "");
   if (label && compact.includes(label.toLowerCase().replace(/[^a-z0-9]+/g, ""))) return true;

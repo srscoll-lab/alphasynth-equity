@@ -7,7 +7,7 @@ import {
 } from "./fundamental-review-contract.ts";
 import type { FundamentalReviewQueue } from "./fundamental-review-queue.ts";
 import type { FundamentalReviewJobRecord, FundamentalReviewStore } from "./fundamental-review-store.ts";
-import { assessLifecycle, checkpointFromScore, mergeCheckpoint, previousQuarterEnd } from "./fundamental-review-history.ts";
+import { assessLifecycle, balanceSheetPeriodAllowed, balanceSheetPeriodEnd, checkpointFromScore, historyMetricDefinitions, mergeCheckpoint, previousQuarterEnd } from "./fundamental-review-history.ts";
 import {fcsPublicationSummaries} from './fcs-publications.ts';
 import {fcsEvidenceFailureMessage} from './fcs-evidence-failure.ts';
 
@@ -137,12 +137,18 @@ export class FundamentalReviewService {
         const status = validationByCandidate.get(candidate?.candidate_id)?.status;
         return status === "qualified" || status === "qualified_provisional";
       });
-      const periodEnds=[...new Set(qualifiedCandidates.map((c:any)=>String(c.current_period?.end_date||'')).filter(Boolean))].sort();
-      if(periodEnds.length>1) {
-        const latest=periodEnds.at(-1);
-        const excluded=qualifiedCandidates.length;
-        qualifiedCandidates=qualifiedCandidates.filter((c:any)=>c.current_period?.end_date===latest);
-        diagnostics.push({outcome:'mixed_current_periods_not_combined',selected_period:latest,excluded_comparisons:excluded-qualifiedCandidates.length});
+      // One quarter for Earnings/Economics/Execution. Balance Sheet may be dated
+      // at that quarter or its latest half-year balance sheet (Reg. 33).
+      const endOf=(c:any)=>String(c.current_period?.end_date||'');
+      const quarterEnds=[...new Set(qualifiedCandidates.filter((c:any)=>c.factor_id!=='balance_sheet').map(endOf).filter(Boolean))].sort();
+      const latest=quarterEnds.at(-1) || [...new Set(qualifiedCandidates.map(endOf).filter(Boolean))].sort().at(-1);
+      if(latest) {
+        const balanceSheetEnds=qualifiedCandidates.filter((c:any)=>c.factor_id==='balance_sheet' && balanceSheetPeriodAllowed(latest,endOf(c))).map(endOf).sort();
+        const balanceSheetEnd=balanceSheetEnds.at(-1);
+        const before=qualifiedCandidates.length;
+        qualifiedCandidates=qualifiedCandidates.filter((c:any)=>c.factor_id==='balance_sheet' ? endOf(c)===balanceSheetEnd : endOf(c)===latest);
+        if(qualifiedCandidates.length<before) diagnostics.push({outcome:'mixed_current_periods_not_combined',selected_period:latest,
+          balance_sheet_period:balanceSheetEnd||null,excluded_comparisons:before-qualifiedCandidates.length});
       }
       const factors = new Set(qualifiedCandidates.map((candidate: any) => String(candidate?.factor_id || "").trim().toLowerCase())
         .filter((factor: string) => REQUIRED_FACTORS.includes(factor as typeof REQUIRED_FACTORS[number])));
@@ -169,7 +175,8 @@ export class FundamentalReviewService {
           job_id: job.jobId,
           symbol: job.symbol,
           information_cutoff: job.informationCutoff,
-          candidates,
+          // Score exactly the period-aligned rows counted above.
+          candidates: qualifiedCandidates,
           documents,
           validations,
         }),
@@ -213,6 +220,9 @@ export class FundamentalReviewService {
       detail: "Lifecycle requires four scorer-approved factors for the same supported quarter, with consistent period and methodology metadata." });
     if (current) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, current);
     await this.transition(job, "lifecycle_processing");
+    // Which factors each historical quarter lacked, so the report can say why
+    // the lifecycle is pending (e.g. no printed Total Debt for 30 Sep).
+    const periodGaps: Array<{ period_end: string; balance_sheet_end: string; missing_factors: string[] }> = [];
     if (current && this.options.historicalBackfillEnabled) {
       // At most two missing periods, with a 3-minute TOTAL history budget.
       // No parallel model fan-out or open-ended retries.
@@ -231,18 +241,21 @@ export class FundamentalReviewService {
             method: "POST", headers: evidenceHeaders,
             body: JSON.stringify({ ticker: job.symbol, company_name: job.companyName,
               information_cutoff: job.informationCutoff, target_period_end: target,
-              required_metric_definitions: (score.factors as any[]).flatMap((factor: any) => factor.impacts.map((impact: any) => ({
-                factor: factor.factor_id, metric: impact.metric_id, unit: impact.canonical_unit,
-                consolidation_basis: impact.consolidation_basis, comparison_basis: impact.comparison_basis,
-              }))),
+              required_metric_definitions: historyMetricDefinitions(score),
               missing_factor_ids: REQUIRED_FACTORS }),
             signal: AbortSignal.timeout(Math.max(1, Math.min(90_000, deadline - Date.now()))),
           });
           if (!response.ok) throw new Error(`Historical evidence HTTP ${response.status}`);
           const evidence: any = await response.json();
           if(Array.isArray(evidence.diagnostics))job.diagnostics.push(...evidence.diagnostics.map((d:any)=>({...d,historical_period_end:target})));
-          const candidates = Array.isArray(evidence.candidates) ? evidence.candidates.filter((item: any) => item.current_period?.end_date === target) : [];
-          if (!candidates.length || Date.now() >= deadline) continue;
+          const candidates = Array.isArray(evidence.candidates) ? evidence.candidates.filter((item: any) => item.factor_id === "balance_sheet"
+            ? balanceSheetPeriodAllowed(target, String(item.current_period?.end_date || ""))
+            : item.current_period?.end_date === target) : [];
+          const presentFactors = new Set(candidates.map((item: any) => String(item.factor_id)));
+          const gap = { period_end: target, balance_sheet_end: balanceSheetPeriodEnd(target),
+            missing_factors: REQUIRED_FACTORS.filter((factor) => !presentFactors.has(factor)) as string[] };
+          if (!candidates.length) { periodGaps.push(gap); continue; }
+          if (Date.now() >= deadline) continue;
           const scored = await this.fetchImpl(this.options.scoringUrl, {
             method: "POST", headers: scoreHeaders,
             body: JSON.stringify({ symbol: job.symbol, information_cutoff: job.informationCutoff,
@@ -250,7 +263,11 @@ export class FundamentalReviewService {
             signal: AbortSignal.timeout(Math.max(1, Math.min(30_000, deadline - Date.now()))),
           });
           if (!scored.ok) throw new Error(`Historical scoring HTTP ${scored.status}`);
-          const checkpoint = checkpointFromScore({ symbol: job.symbol, score: await scored.json(),
+          const historicalScore: any = await scored.json();
+          if (historicalScore?.score_publishable !== true) periodGaps.push({ ...gap,
+            missing_factors: Array.isArray(historicalScore?.missing_factors) && historicalScore.missing_factors.length
+              ? historicalScore.missing_factors : gap.missing_factors });
+          const checkpoint = checkpointFromScore({ symbol: job.symbol, score: historicalScore,
             informationCutoff: job.informationCutoff, calculatedAt: this.now().toISOString(), sourceJobId: job.jobId!, documents: evidence.documents });
           if (checkpoint?.periodEnd === target) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, checkpoint);
           await this.transition(job, "lifecycle_processing");
@@ -281,7 +298,13 @@ export class FundamentalReviewService {
       calculated_at: this.now().toISOString(),
       lifecycle_missing_periods: current ? [previousQuarterEnd(previousQuarterEnd(current.periodEnd)), previousQuarterEnd(current.periodEnd)]
         .filter((end) => !job.checkpointHistory!.some((item) => item.periodEnd === end && item.comparabilityKey === current.comparabilityKey)) : [],
-      lifecycle_unavailable_reason: latestReady ? null : current ? "missing_or_noncomparable_quarterly_history" : "current_score_not_quarterly_comparable",
+      lifecycle_period_gaps: latestReady ? [] : periodGaps,
+      // Owner decision (Option C): Balance Sheet counts only a printed "Total
+      // Debt" line, so a half-year without one leaves the lifecycle pending.
+      lifecycle_unavailable_reason: latestReady ? null
+        : !current ? "current_score_not_quarterly_comparable"
+        : periodGaps.some((item) => item.missing_factors.includes("balance_sheet")) ? "balance_sheet_printed_total_debt_not_found"
+        : "missing_or_noncomparable_quarterly_history",
     });
   }
 }

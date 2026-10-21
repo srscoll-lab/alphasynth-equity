@@ -216,9 +216,9 @@ const finiteNumber = (value: unknown): number | null => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-type FinancialObservation = { label: string; period: string; periodEnd: string; value: number; availableAt: string | null };
+export type FinancialObservation = { label: string; period: string; periodEnd: string; value: number; availableAt: string | null };
 
-function financialMetric(label: string) {
+export function financialMetric(label: string) {
   const normalized = label.trim().replace(/\s+/g, " ");
   return FINANCIAL_METRICS.find((metric) => metric.aliases.some((alias) => alias.test(normalized)))?.metricId ?? null;
 }
@@ -351,6 +351,38 @@ export async function fetchTapetideFinancialCandidates(input: {
     };
   } catch (error) {
     return { configured: true, symbol, candidates: [], rawPeriodCount: 0, diagnostics: [{ outcome: "tapetide_tool_failed", tool: "get_financials", detail: error instanceof Error ? error.message : String(error) }] };
+  }
+}
+
+export type TapetideQuarterlyFinancials = {
+  configured: boolean;
+  symbol: string;
+  /** Exact bytes of the provider response, retained so the snapshot can be archived and hashed. */
+  payloadBytes: Buffer | null;
+  observations: FinancialObservation[];
+  diagnostics: Array<{ outcome: string; tool?: string; detail?: string }>;
+};
+
+/** One quarterly get_financials call; observations are not filtered by cutoff here. */
+export async function fetchTapetideQuarterlyFinancials(input: {
+  symbol: string;
+  fetchImpl?: typeof fetch;
+}): Promise<TapetideQuarterlyFinancials> {
+  const symbol = String(input.symbol || "").trim().toUpperCase();
+  const client = new TapetideMcpClient({ fetchImpl: input.fetchImpl });
+  if (!client.configured()) return { configured: false, symbol, payloadBytes: null, observations: [], diagnostics: [{ outcome: "tapetide_not_configured" }] };
+  try {
+    const payload = await client.callTool("get_financials", { symbol, section: "quarterly", periods: 8 });
+    const observations = financialObservationsFromPayload(payload);
+    return {
+      configured: true,
+      symbol,
+      payloadBytes: Buffer.from(JSON.stringify({ tool: "get_financials", symbol, section: "quarterly", periods: 8, payload }), "utf-8"),
+      observations,
+      diagnostics: [{ outcome: "tapetide_tool_completed", tool: "get_financials", detail: `${observations.length} registered quarterly observations` }],
+    };
+  } catch (error) {
+    return { configured: true, symbol, payloadBytes: null, observations: [], diagnostics: [{ outcome: "tapetide_tool_failed", tool: "get_financials", detail: error instanceof Error ? error.message : String(error) }] };
   }
 }
 

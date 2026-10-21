@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { extractPdfTextLocally } from "./pdf-text.ts";
+import { countPdfPages, extractPdfTextLocally } from "./pdf-text.ts";
 
 export interface GroundedDocumentCandidate { uri: string; title?: string }
 export interface RetrievedGroundedDocument {
@@ -11,6 +11,8 @@ export interface RetrievedGroundedDocument {
   sha256: string;
   byteLength: number;
   bytes: Uint8Array;
+  /** Set only when the text came from OCR of a scanned PDF. */
+  textSource?: "document_ai_ocr";
 }
 export interface RetrievalDiagnostic {
   stage: "discovery" | "download" | "extraction" | "limit";
@@ -29,6 +31,10 @@ export interface GroundedRetrievalOptions {
   maximumPages?: number;
   fetchImpl?: typeof fetch;
   extractText?: typeof extractPdfTextLocally;
+  /** Optional OCR for scanned PDFs (see fcs-scanned-document-ocr.ts); returns null when not used. */
+  ocr?: (input: { data: Uint8Array; sha256: string; text: string; pageCount: number }) =>
+    Promise<{ text: string; textSource: "document_ai_ocr" } | null>;
+  countPages?: typeof countPdfPages;
 }
 
 const EXCHANGE_DOMAINS = ["nseindia.com", "nsearchives.nseindia.com", "bseindia.com"];
@@ -235,9 +241,23 @@ export async function retrieveGroundedFcsDocuments(
             }),
           ]);
           diagnostic("extraction", "pdf_text_chars", url.href, String(text.length));
-          if (!text.trim()) { diagnostic("extraction", "empty_pdf_text", url.href); return; }
+          let documentText = text;
+          let textSource: RetrievedGroundedDocument["textSource"];
+          // Scanned results filings have almost no text layer; OCR them only
+          // when a reviewer-approved OCR hook is configured.
+          if (options.ocr && text.replace(/\s+/g, " ").trim().length < 150 * maximumPages) {
+            const pageCount = await (options.countPages ?? countPdfPages)(data).catch(() => 0);
+            const ocr = await options.ocr({ data, sha256, text, pageCount });
+            if (ocr?.text.trim()) {
+              documentText = ocr.text;
+              textSource = ocr.textSource;
+              diagnostic("extraction", "ocr_text_chars", url.href, String(ocr.text.length));
+            }
+          }
+          if (!documentText.trim()) { diagnostic("extraction", "empty_pdf_text", url.href); return; }
           hashes.add(sha256);
-          documents.push({ sourceUrl: url.href, discoveryUrl: candidate.uri, title: candidate.title, text, mediaType: "application/pdf", sha256, byteLength: data.byteLength, bytes: data });
+          documents.push({ sourceUrl: url.href, discoveryUrl: candidate.uri, title: candidate.title, text: documentText, mediaType: "application/pdf", sha256, byteLength: data.byteLength, bytes: data,
+            ...(textSource ? { textSource } : {}) });
           diagnostic("extraction", "document_retrieved", url.href);
         } catch (error) { diagnostic("extraction", "pdf_extraction_error", url.href, error instanceof Error ? error.message : String(error)); }
         finally { if (abortHandler) controller.signal.removeEventListener("abort", abortHandler); }

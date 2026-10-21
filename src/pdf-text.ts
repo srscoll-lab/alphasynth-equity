@@ -1,4 +1,4 @@
-export async function extractPdfTextLocally(data: Uint8Array, maximumPages = 20): Promise<string> {
+async function loadPdfJs() {
   // pdfjs-dist 6 uses the ES2024 Promise.withResolvers API during module
   // initialisation. Keep a small compatibility guard for older local runtimes;
   // production uses Node 22 where the API is native.
@@ -20,7 +20,22 @@ export async function extractPdfTextLocally(data: Uint8Array, maximumPages = 20)
       return { promise, resolve, reject };
     };
   }
-  const { getDocument } = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  return import("pdfjs-dist/legacy/build/pdf.mjs");
+}
+
+/** Page count only; used to decide whether a sparse text layer means a scanned PDF. */
+export async function countPdfPages(data: Uint8Array): Promise<number> {
+  const { getDocument } = await loadPdfJs();
+  const loadingTask = getDocument({ data: new Uint8Array(data), useSystemFonts: true });
+  try {
+    return (await loadingTask.promise).numPages;
+  } finally {
+    await loadingTask.destroy();
+  }
+}
+
+export async function extractPdfTextLocally(data: Uint8Array, maximumPages = 20): Promise<string> {
+  const { getDocument } = await loadPdfJs();
   const loadingTask = getDocument({
     data: new Uint8Array(data),
     useSystemFonts: true,

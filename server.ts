@@ -19,7 +19,7 @@ import { techmReviewedQuarterRows } from "./src/techm-reviewed-quarter-ledger";
 import { persistentReviewedQuarterRows } from "./src/persistent-reviewed-quarter-ledger";
 import { coforgeReviewedQuarterRows } from "./src/coforge-reviewed-quarter-ledger";
 import { tcsReviewedQuarterRows } from "./src/tcs-reviewed-quarter-ledger";
-import { containsReportedNumber, containsReportingPeriod } from "./src/fundamental-review-source-match";
+import { containsReportedNumber, containsReportingPeriod, sourceLabelVariants } from "./src/fundamental-review-source-match";
 import { officialDocumentFetch } from "./src/official-document-cache";
 import { retrieveGroundedFcsDocuments } from "./src/fcs-grounded-document-retrieval";
 import { publicationDateSupported } from "./src/fcs-publication-date";
@@ -35,7 +35,11 @@ import { extractFcsFactors, fcsExtractionGenerationConfig } from "./src/fcs-fact
 import { selectFcsFactorContext, type FcsFactor } from "./src/fcs-factor-context";
 import { nseStructuredFilingMatchesSymbol } from "./src/fcs-structured-issuer";
 import { normalizeFcsComparisonValues, normalizeFcsPeriodLabel, sourceSupportsFcsUnit } from "./src/fcs-evidence-normalization";
-import { ACCOUNTING_BASES } from "./src/fundamental-review-history";
+import { ACCOUNTING_BASES, balanceSheetPeriodEnd } from "./src/fundamental-review-history";
+import { rankSourcesForTargetPeriod } from "./src/fcs-target-source-ranking";
+import { normalizeComparisonBasis } from "./src/fcs-comparison-basis";
+import { isPrintedTotalDebtLabel, preferStandardMetrics } from "./src/fcs-standard-metrics";
+import { createFcsScannedDocumentOcr, type CachedOcr, type OcrCache } from "./src/fcs-scanned-document-ocr";
 import fundamentalMetricRegistry from "./data/fundamental-review-metric-taxonomy-v2.json" with { type: "json" };
 import { infosysQuarterHighlights } from "./src/infosys-quarter-highlights";
 import { buildExpectationDeliveryInputFromDossier } from "./src/dossier-expectation-bridge";
@@ -89,7 +93,8 @@ import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamenta
 import { anchorsForEvidencePeriod, canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
 import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
-import { discoverTapetideFcsSources, fetchTapetideFinancialCandidates, tapetideFcsConfigured } from "./src/tapetide-fcs-provider";
+import { discoverTapetideFcsSources, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured } from "./src/tapetide-fcs-provider";
+import { OFFICIAL_FACTORS, latestProviderQuarter, mergeProviderEvidence, tapetideCanonicalEvidence } from "./src/tapetide-fcs-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 
@@ -275,7 +280,7 @@ async function archiveFundamentalReviewDocument(bytes: Buffer, sha256: string, m
   if (!tokenResponse.ok) throw new Error(`Archive token request failed: ${tokenResponse.status}`);
   const tokenPayload = await tokenResponse.json() as { access_token?: string };
   if (!tokenPayload.access_token) throw new Error("Archive token response did not contain an access token");
-  const extension = mediaType.includes("pdf") ? "pdf" : mediaType.includes("html") ? "html" : "bin";
+  const extension = mediaType.includes("pdf") ? "pdf" : mediaType.includes("html") ? "html" : mediaType.includes("json") ? "json" : "bin";
   const objectName = `fundamental-review-evidence/${sha256}.${extension}`;
   const response = await fetch(
     `https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET)}/o?uploadType=media&name=${encodeURIComponent(objectName)}&ifGenerationMatch=0`,
@@ -291,6 +296,48 @@ async function archiveFundamentalReviewDocument(bytes: Buffer, sha256: string, m
   );
   if (!response.ok && response.status !== 412) throw new Error(`Evidence archive upload failed: ${response.status}`);
   return `gs://${FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET}/${objectName}`;
+}
+
+async function metadataAccessToken(): Promise<string> {
+  const tokenResponse = await fetch(
+    "http://metadata.google.internal/computeMetadata/v1/instance/service-accounts/default/token",
+    { headers: { "Metadata-Flavor": "Google" } },
+  );
+  if (!tokenResponse.ok) throw new Error(`Metadata token request failed: ${tokenResponse.status}`);
+  const tokenPayload = await tokenResponse.json() as { access_token?: string };
+  if (!tokenPayload.access_token) throw new Error("Metadata token response did not contain an access token");
+  return tokenPayload.access_token;
+}
+
+/** OCR text is cached beside the archived evidence, keyed by the PDF's SHA-256. */
+const fundamentalReviewOcrCache: OcrCache = {
+  async get(sha256) {
+    if (!FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET || !/^[a-f0-9]{64}$/.test(sha256)) return null;
+    const objectName = encodeURIComponent(`fundamental-review-ocr/${sha256}.json`);
+    const response = await fetch(`https://storage.googleapis.com/storage/v1/b/${encodeURIComponent(FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET)}/o/${objectName}?alt=media`,
+      { headers: { Authorization: `Bearer ${await metadataAccessToken()}` } });
+    if (response.status === 404) return null;
+    if (!response.ok) throw new Error(`OCR cache read failed: ${response.status}`);
+    return await response.json() as CachedOcr;
+  },
+  async put(sha256, value) {
+    if (!FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET || !/^[a-f0-9]{64}$/.test(sha256)) return;
+    const response = await fetch(`https://storage.googleapis.com/upload/storage/v1/b/${encodeURIComponent(FUNDAMENTAL_REVIEW_ARCHIVE_BUCKET)}/o?uploadType=media&name=${encodeURIComponent(`fundamental-review-ocr/${sha256}.json`)}&ifGenerationMatch=0`,
+      { method: "POST", headers: { Authorization: `Bearer ${await metadataAccessToken()}`, "Content-Type": "application/json" }, body: JSON.stringify(value) });
+    if (!response.ok && response.status !== 412) throw new Error(`OCR cache write failed: ${response.status}`);
+  },
+};
+
+/** Off unless FCS_OCR_ENABLED=true and a Document AI OCR processor is configured. */
+function createFundamentalReviewOcr() {
+  const processor = String(process.env.FCS_OCR_PROCESSOR || "").trim();
+  if (process.env.FCS_OCR_ENABLED !== "true" || !processor) return null;
+  try {
+    return createFcsScannedDocumentOcr({ processor, accessToken: metadataAccessToken, cache: fundamentalReviewOcrCache });
+  } catch (error) {
+    console.error("[fundamental-review] OCR disabled:", error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 function readFrozenForwardValidation(): any {
@@ -4071,7 +4118,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         .map(([metric, definition]) => ({ metric, factor: definition.factor_id, units: [...definition.allowed_units,
           ...(definition.allowed_units.includes('INR crore') || definition.allowed_units.includes('Rs.Cr') ? ['INR lakh'] : [])] }));
       const definitionInstruction = requiredDefinitions.length
-        ? `History must use these exact current-score metric definitions, units, accounting bases and comparison bases: ${JSON.stringify(requiredDefinitions)}. Omit unsupported definitions; never replace them with a different metric. ` : "";
+        ? `History must use these exact current-score metric definitions, units, accounting bases and comparison bases: ${JSON.stringify(requiredDefinitions)}. Omit unsupported definitions; never replace them with a different metric. Where definitions have source_label (named business segments), report those segment rows and every other named segment row in the same table, each with quotedLabel set to the printed segment name. ` : "";
       const registryInstruction = `Use only these registered canonical metric IDs and explicit units (no invented metric names or unit conversions): ${JSON.stringify(metricDefinitions)}. `;
       const researchInstruction = anchors.length
         ? `First locate the requested quarter's official documents (or the latest completed published quarter on/before cutoff when no historical quarter is requested). Check the KNOWN OFFICIAL SOURCES first. ANCHORS are older comparison hints, not permission to replace newer published results with stale data. Use an anchor only if it matches the chosen current quarter exactly; preserve its values exactly. Otherwise discover a sector-appropriate like-for-like comparison for that quarter. Both values and periods must be explicit in dated official sources.`
@@ -4111,21 +4158,29 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         published_at: source.published_at || null,
       })), ...structuredExchangeHints.map(source=>({url:source.uri,title:source.title||'NSE structured filing URL hint',published_at:null})), ...firecrawlDiscovery.candidates.map(source=>({url:source.uri,title:source.title,published_at:null})), ...issuerIndexDiscovery.candidates.map(source=>({url:source.uri,title:source.title||'Issuer results index link',published_at:null})), ...directSourceHints,...searchedSources].filter((source: any, index: number, all: any[]) =>
         all.findIndex(item => item.url === source.url) === index);
-      // Structured exchange filings avoid the damaged OCR layers found in some PDFs.
-      const structuredExchangeUrl=(url:string)=>/^https:\/\/nsearchives\.nseindia\.com\/corporate\/ixbrl\/[^?#]+\.html(?:[?#]|$)/i.test(url);
-      groundedSources.sort((a,b)=>Number(structuredExchangeUrl(b.url))-Number(structuredExchangeUrl(a.url)));
+      // Structured exchange filings avoid the damaged OCR layers found in some
+      // PDFs, so they lead within each group. Only six documents are read, so documents from the requested period's
+      // results window must come first (e.g. March results for a March balance sheet).
+      groundedSources.splice(0, groundedSources.length, ...rankSourcesForTargetPeriod(groundedSources, targetPeriodEnd));
       // Grounding often finds a filing but does not read its tables. Fetch a
       // bounded set of direct official PDFs before asking for structured values.
       const providerTransport=discoveryClient?createFirecrawlDocumentFetch({directFetch:officialDocumentFetch,trustedIssuerDomains:trustedOfficialDomains,scrape:(url,options)=>discoveryClient.scrape(url,options)}):null;
+      // One bounded OCR budget per review, for scanned results filings only.
+      const scannedDocumentOcr = createFundamentalReviewOcr();
       const retrieval = await retrieveGroundedFcsDocuments(groundedSources.map((s:any)=>({uri:s.url,title:s.title})),{
-        trustedIssuerDomains:trustedOfficialDomains,maxDocuments:6,maxRequests:24,timeoutMs:45_000,maximumPages:40,fetchImpl:providerTransport?.fetchImpl||officialDocumentFetch,
+        // Results filings with the balance sheet often run 15-16 MB (e.g. Solar's
+        // Q4 FY26 filings); text extraction stays capped at 40 pages.
+        trustedIssuerDomains:trustedOfficialDomains,maxDocuments:6,maxRequests:24,timeoutMs:45_000,maximumPages:40,
+        maxDocumentBytes:20*1024*1024,maxTotalBytes:64*1024*1024,fetchImpl:providerTransport?.fetchImpl||officialDocumentFetch,
+        ...(scannedDocumentOcr?{ocr:scannedDocumentOcr.ocr}:{}),
       });
       issuerMetadataDiagnostics.push(...(providerTransport?.diagnostics||[]));
       const issuerHints=[...new Set(retrieval.documents.flatMap(doc=>exchangeIssuerDomainHints({documentUrl:doc.sourceUrl,documentText:doc.text,companyName,ticker})))];
       if(issuerHints.some(domain=>!trustedOfficialDomains.includes(domain))) {
         trustedOfficialDomains=[...new Set([...trustedOfficialDomains,...issuerHints])];
         const remaining=groundedSources.filter((s:any)=>!retrieval.documents.some(d=>d.discoveryUrl===s.url||d.sourceUrl===s.url));
-        const additional=await retrieveGroundedFcsDocuments(remaining.map((s:any)=>({uri:s.url,title:s.title})),{trustedIssuerDomains:trustedOfficialDomains,maxDocuments:3,maxRequests:12,timeoutMs:25_000,maximumPages:40,fetchImpl:officialDocumentFetch});
+        const additional=await retrieveGroundedFcsDocuments(remaining.map((s:any)=>({uri:s.url,title:s.title})),{trustedIssuerDomains:trustedOfficialDomains,maxDocuments:3,maxRequests:12,timeoutMs:25_000,maximumPages:40,maxDocumentBytes:20*1024*1024,maxTotalBytes:64*1024*1024,fetchImpl:officialDocumentFetch,
+          ...(scannedDocumentOcr?{ocr:scannedDocumentOcr.ocr}:{})});
         for(const doc of additional.documents)if(retrieval.documents.length<6&&!retrieval.documents.some(d=>d.sha256===doc.sha256))retrieval.documents.push(doc);
         retrieval.diagnostics.push(...additional.diagnostics);
       }
@@ -4136,6 +4191,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           retrieval.documents.splice(index,1);
         }
       }
+      if (scannedDocumentOcr) issuerMetadataDiagnostics.push(...scannedDocumentOcr.diagnostics);
+      // OCR text belongs to the exact bytes that were read; if a re-download
+      // differs, fall back to the file's own text layer instead.
+      const retrievedDocumentText=(url:string,sha256:string)=>{
+        const document=retrieval.documents.find(doc=>doc.sourceUrl===url);
+        return document && (!document.textSource || document.sha256===sha256) ? document : undefined;
+      };
       const discoveredTexts=retrieval.documents.map(doc=>({sourceUrl:doc.sourceUrl,
         sourceDate:knownOfficialSources.find((s:any)=>s.url===doc.sourceUrl)?.published_at || null,
         text:doc.text}));
@@ -4182,9 +4244,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           + (!targetPeriodEnd ? `Choose the latest explicitly reported completed quarter supported by the documents, on or before the cutoff, and use that SAME currentPeriodEndDate for every factor. Do not combine different quarters or annual/YTD flow totals. Older stored anchors are context, not permission to replace the latest quarter with stale data. ` : "")
           + `Prefer official structured exchange HTML tables to PDF text when both cover the requested metric and periods. PDF text can contain OCR-corrupted digits; never repair ambiguous digits by guessing. Current-quarter and year-to-date columns are not two comparison periods. Use a separate prior-period filing when needed. `
           + `For sourceUrl, copy the exact url paired with the cited title in the supplied source index; never put a title in sourceUrl. `
-          + `Use at most two candidate comparisons per requested factor so a rejected candidate does not suppress a valid alternative. Previous and current values may come from separate supplied official documents: provide previousSourceUrl/previousSourceDate as well as sourceUrl/sourceDate. Use the supplied publication date when present; otherwise extract an explicit release/filing date from that document's header. Never use a reporting-period end or download date as a publication date. Never invent or convert values or units. `
+          + `Use at most two candidate comparisons per requested factor (Execution segment rows: up to six) so a rejected candidate does not suppress a valid alternative. Previous and current values may come from separate supplied official documents: provide previousSourceUrl/previousSourceDate as well as sourceUrl/sourceDate. Use the supplied publication date when present; otherwise extract an explicit release/filing date from that document's header. Never use a reporting-period end or download date as a publication date. Never invent or convert values or units. `
           + `Give the exact previousPeriodEndDate and currentPeriodEndDate as YYYY-MM-DD. Set comparisonBasis to exactly one of same_quarter_prior_year, year_to_date_prior_year, sequential_quarter, annual_prior_year, or point_in_time_prior_period. Use one of these registered consolidation bases: ${JSON.stringify([...ACCOUNTING_BASES])}; choose only a basis explicitly supported by the document, and obey required metric definitions for history. quotedLabel must briefly identify the table or exact reported comparison. `
-          + `Copy each number and unit EXACTLY as printed in its OWN filing. unit is the current document's denomination; previousUnit is the previous document's denomination. If the earlier filing says INR (in Actuals) and the newer filing says INR Lakhs, use those different units and copy each unscaled printed number (for example, 21544500000 and 366820), even though their magnitudes differ. Never divide or multiply source values yourself. INR mn means INR million, not INR crore. Parentheses indicate negative amounts. EBITDAR is not EBITDA; omit an unsupported metric rather than rename it. For Economics use a separately reported registered margin when available. For Execution use a registered operating measure. For Balance Sheet look for comparable debt/liquidity tables. Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
+          + `Copy each number and unit EXACTLY as printed in its OWN filing. unit is the current document's denomination; previousUnit is the previous document's denomination. If the earlier filing says INR (in Actuals) and the newer filing says INR Lakhs, use those different units and copy each unscaled printed number (for example, 21544500000 and 366820), even though their magnitudes differ. Never divide or multiply source values yourself. INR mn means INR million, not INR crore. Parentheses indicate negative amounts. EBITDAR is not EBITDA; omit an unsupported metric rather than rename it. For Economics use a separately reported registered margin when available. For Execution use a registered operating measure. When the issuer prints an order book, return order_book: the order book as at currentPeriodEndDate versus the order book as at the previous quarter end (point_in_time_prior_period), each from the filing that states it (previousSourceUrl may be the earlier filing). Otherwise return each named business segment row as segment_revenue (up to six rows, quotedLabel = that segment's printed name); never use a Total, consolidated or company-wide revenue row as segment_revenue. For Balance Sheet look for comparable debt/liquidity tables; balances and ratios as at a date (debt, net debt, equity, current ratio) use comparisonBasis point_in_time_prior_period, never annual_prior_year. total_debt must be the issuer's own printed "Total Debt" line (quotedLabel containing "Total Debt"); never add up borrowings lines yourself. Prefer consolidated statements over standalone when both exist. Never infer missing values. Return an empty rows array when evidence is inadequate.\n\n`
           + definitionInstruction
           + registryInstruction
           + `\nPROVIDER CANDIDATE HINTS (navigation only, never evidence): ${JSON.stringify(providerFinancialCandidates)}. A hinted number may be returned only if the same value, period, unit and accounting basis are explicitly visible in the original document text below. Otherwise omit it.\n`
@@ -4298,6 +4360,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           aluminium_upstream_shipments_india: ["aluminium upstream shipments", "upstream shipments", "shipments"],
           voluntary_attrition_trailing_twelve_months: ["voluntary attrition", "attrition"],
           total_equity: ["total equity", "shareholders equity"],
+          // Exchange Reg. 33/52 disclosures print "Debt equity ratio".
+          debt_to_equity: ["debt to equity", "debt equity ratio", "debt-equity ratio"],
           free_cash_flow: ["free cash flow", "fcf"],
           consolidated_cash_and_investments: ["consolidated cash and investments", "cash and investments"],
           cash_and_cash_equivalents_consolidated: ["cash and cash equivalents", "cash equivalents"],
@@ -4305,6 +4369,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         return aliases[canonical] || [canonical.replaceAll("_", " ")];
       };
       const documentSupportsAnchor = (documentText: string, anchor: any) => {
+        // Segment and issuer-named rows (e.g. "Domestic Explosives") never print
+        // the canonical metric name, so also search the quoted source label.
+        const labels = [...new Set([...metricLabels(anchor.metric_name), ...sourceLabelVariants(anchor.quoted_label)])];
         const structuredTables = [...documentText.matchAll(/\[TABLE\]([\s\S]*?)\[\/TABLE\]/g)].map(match => match[1]);
         if (structuredTables.length) {
           // NSE iXBRL is already tabular evidence. Require the metric label and
@@ -4317,7 +4384,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             const lines = table.split(/\r?\n/);
             return lines.some(line => {
               const lowerLine = line.toLowerCase();
-              const hasMetric = metricLabels(anchor.metric_name).some(label => {
+              const hasMetric = labels.some(label => {
                 let index = lowerLine.indexOf(label);
                 while (index >= 0) {
                   if (!/[a-z0-9]/.test(lowerLine[index - 1] || "")
@@ -4333,7 +4400,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           });
         }
         const lower = documentText.toLowerCase().replace(/\s+/g, " ");
-        for (const label of metricLabels(anchor.metric_name)) {
+        for (const label of labels) {
           let index = lower.indexOf(label);
           while (index >= 0) {
             // Prevent EBITDA matching EBITDAR and PAT matching unrelated words.
@@ -4464,7 +4531,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const currentPeriodEndDate = exactEvidenceDate(candidate?.currentPeriodEndDate);
         const previousPeriod = normalizeFcsPeriodLabel(candidate?.previousPeriod,previousPeriodEndDate);
         const currentPeriod = normalizeFcsPeriodLabel(candidate?.currentPeriod,currentPeriodEndDate);
-        const comparisonBasis = String(candidate?.comparisonBasis || "").trim().toLowerCase();
+        // Balances as at a date are point-in-time comparisons, whatever the model labelled them.
+        const comparisonBasis = normalizeComparisonBasis(mapping?.factor, mapping?.metric,
+          String(candidate?.comparisonBasis || "").trim().toLowerCase());
         const consolidationBasis = String(candidate?.consolidationBasis || "").trim().toLowerCase();
         const quotedLabel = String(candidate?.quotedLabel || "").trim();
         const previousValue = Number(candidate?.previousValue);
@@ -4475,7 +4544,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         const normalizedValues = normalizeFcsComparisonValues(previousUnit || anchor?.unit,unit || anchor?.unit,previousValue,currentValue,
           (fundamentalMetricRegistry.metrics as Record<string, any>)[mapping?.metric ?? '']?.allowed_units ?? []);
         const resolvedUnit = normalizedValues?.unit || unit;
-        const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}`;
+        // Distinct segments are distinct comparisons; keep each issuer segment row.
+        const segmentLabel = mapping?.metric === "segment_revenue" ? `|${sourceLabelVariants(quotedLabel)[0] ?? ""}` : "";
+        const key = `${mapping?.factor}|${mapping?.metric}|${previousPeriod}|${currentPeriod}${segmentLabel}`;
         const candidateSnapshot={previous_period:previousPeriod,current_period:currentPeriod,previous_period_end:previousPeriodEndDate,current_period_end:currentPeriodEndDate,previous_value:previousValue,current_value:currentValue,unit:resolvedUnit,original_unit:unit,original_previous_unit:previousUnit,original_previous_period:candidate?.previousPeriod,original_current_period:candidate?.currentPeriod,quoted_label:quotedLabel.slice(0,500)};
         let rejection: string | null = null;
         // The deterministic metric taxonomy is authoritative. Model-supplied factor
@@ -4501,8 +4572,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         else if (requiredDefinitions.length && !requiredDefinitions.some((definition: any) =>
           definition.factor === mapping.factor && definition.metric === mapping.metric
           && definition.unit === resolvedUnit && definition.consolidation_basis === consolidationBasis
+          // Named segments are not filtered here: segments common to every
+          // quarter are chosen afterwards (fcs-segment-alignment.ts).
           && definition.comparison_basis === comparisonBasis)) rejection = "historical_metric_definition_mismatch";
         else if (!quotedLabel) rejection = "missing_quoted_label";
+        // Owner decision: total debt is the issuer's own printed "Total Debt" line, never a model-made sum.
+        else if (mapping.metric === "total_debt" && !isPrintedTotalDebtLabel(quotedLabel)) rejection = "total_debt_not_printed_line";
         else if (!Number.isFinite(previousValue) || !Number.isFinite(currentValue)) rejection = "invalid_numeric_values";
         else if (!resolvedUnit) rejection = "missing_unit";
         else if (previousSourceUrl === sourceUrl && previousUnit !== unit) rejection = "mixed_units_same_document";
@@ -4517,7 +4592,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         let archivedDocumentUri: string | null = null;
         let mediaType: string | null = null;
         let contentLength: number | null = null;
-        let previousDocument: { source_ref: string; source_date: string; document_sha256: string; archived_document_uri: string; media_type: string; content_length: number } | null = null;
+        let previousDocument: { source_ref: string; source_date: string; document_sha256: string; archived_document_uri: string; media_type: string; content_length: number; text_source?: string } | null = null;
+        let currentTextSource: string | undefined;
         try {
           const verification = await fetchEvidenceDocument(sourceUrl, {
             method: "GET", redirect: "follow", signal: AbortSignal.timeout(20_000),
@@ -4534,7 +4610,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           documentSha256 = createHash("sha256").update(bytes).digest("hex");
           mediaType = contentType || "application/octet-stream";
           contentLength = bytes.length;
-          const documentText = retrieval.documents.find(doc=>doc.sourceUrl===verifiedUrl)?.text || (contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
+          const retrievedCurrent = retrievedDocumentText(verifiedUrl, documentSha256);
+          currentTextSource = retrievedCurrent?.textSource;
+          const documentText = retrievedCurrent?.text || (contentType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(verifiedUrl)
             ? await extractPdfTextLocally(bytes, 40)
             : bytes.toString("utf8").replace(/<[^>]+>/g, " "));
           if (!sourceSupportsFcsUnit(documentText, unit)) {
@@ -4544,15 +4622,17 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             && !publicationDateSupported(documentText,sourceDate!,currentPeriodEndDate!)) {
             diagnostics.push({metric:mapping.metric,sourceUrl:verifiedUrl,outcome:'publication_date_not_supported_by_document_header'});continue;
           }
-          if (!documentSupportsAnchor(documentText, {
+          const currentAnchor = {
             metric_name: mapping.metric,
+            quoted_label: quotedLabel,
             previous_period: previousSourceUrl === sourceUrl ? previousPeriod : currentPeriod,
             current_period: currentPeriod,
             previous_period_end_date: previousSourceUrl === sourceUrl ? previousPeriodEndDate : currentPeriodEndDate,
             current_period_end_date: currentPeriodEndDate,
             previous_value: previousSourceUrl === sourceUrl ? previousValue : currentValue,
             current_value: currentValue,
-          })) {
+          };
+          if (!documentSupportsAnchor(documentText, currentAnchor)) {
             diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl, outcome: "source_values_not_verified",candidate:candidateSnapshot });
             continue;
           }
@@ -4569,7 +4649,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             const priorBytes = Buffer.from(await priorResponse.arrayBuffer());
             if (!priorBytes.length || priorBytes.length > maximumBytes) throw new Error("invalid_previous_document_size");
             const priorType = priorResponse.headers.get("content-type") || "application/octet-stream";
-            const priorText = retrieval.documents.find(doc=>doc.sourceUrl===priorUrl)?.text || (priorType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(priorUrl)
+            const retrievedPrior = retrievedDocumentText(priorUrl, createHash("sha256").update(priorBytes).digest("hex"));
+            const priorText = retrievedPrior?.text || (priorType.includes("pdf") || /\.pdf(?:[?#]|$)/i.test(priorUrl)
               ? await extractPdfTextLocally(priorBytes, 40) : priorBytes.toString("utf8").replace(/<[^>]+>/g, " "));
             if (!sourceSupportsFcsUnit(priorText, previousUnit)) {
               diagnostics.push({metric:mapping.metric,sourceUrl:priorUrl,outcome:'previous_source_unit_not_verified',candidate:candidateSnapshot});continue;
@@ -4578,7 +4659,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
               && !publicationDateSupported(priorText,previousSourceDate!,previousPeriodEndDate!)) {
               diagnostics.push({metric:mapping.metric,sourceUrl:priorUrl,outcome:'previous_publication_date_not_supported_by_document_header'});continue;
             }
-            if (!documentSupportsAnchor(priorText, { metric_name: mapping.metric,
+            if (!documentSupportsAnchor(priorText, { metric_name: mapping.metric, quoted_label: quotedLabel,
               previous_period: previousPeriod, current_period: previousPeriod,
               previous_period_end_date: previousPeriodEndDate, current_period_end_date: previousPeriodEndDate,
               previous_value: previousValue, current_value: previousValue })) {
@@ -4588,7 +4669,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             const priorArchive = await archiveFundamentalReviewDocument(priorBytes, priorHash, priorType);
             if (!priorArchive) throw new Error("previous_archive_unavailable");
             previousDocument = { source_ref: priorUrl, source_date: previousSourceDate!, document_sha256: priorHash,
-              archived_document_uri: priorArchive, media_type: priorType, content_length: priorBytes.length };
+              archived_document_uri: priorArchive, media_type: priorType, content_length: priorBytes.length,
+              ...(retrievedPrior?.textSource ? { text_source: retrievedPrior.textSource } : {}) };
           }
         } catch {
           // NSE/BSE frequently block server-side PDF downloads. Permit a lower-
@@ -4638,6 +4720,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           media_type: mediaType,
           content_length: contentLength,
           previous_document: previousDocument,
+          ...(currentTextSource ? { text_source: currentTextSource } : {}),
         });
         diagnostics.push({ metric: mapping.metric, sourceUrl: verifiedUrl,
           outcome: verificationMethod === "direct_official_document" ? "admitted" : "admitted_grounded_official_fallback" });
@@ -4844,7 +4927,13 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_NOT_CONFIGURED",
       });
     }
-    try {
+    // Source policy (19 Oct 2026): with Tapetide configured, Earnings and
+    // Economics come from its structured quarterly financials (disclosed as not
+    // cross-verified with NSE/BSE); official extraction covers the other two.
+    const providerSourced = tapetideFcsConfigured();
+    const companyName = String(req.body?.company_name || symbol);
+    const requiredDefinitions = Array.isArray(req.body?.required_metric_definitions) ? req.body.required_metric_definitions : null;
+    const requestOfficial = async (factors: string[], target: string) => {
       const response = await fetch(dynamicEvidenceUrl, {
         method: "POST",
         headers: {
@@ -4853,29 +4942,87 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         },
         body: JSON.stringify({
           ticker: symbol,
-          company_name: String(req.body?.company_name || symbol),
+          company_name: companyName,
           sector: String(req.body?.sector || "Unclassified"),
-          information_cutoff: String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10)),
-          target_period_end: targetPeriodEnd || undefined,
-          required_metric_definitions: req.body?.required_metric_definitions,
-          missing_factor_ids: ["earnings", "economics", "execution", "balance_sheet"],
+          information_cutoff: evidenceCutoff,
+          target_period_end: target || undefined,
+          required_metric_definitions: requiredDefinitions
+            ? requiredDefinitions.filter((definition: any) => factors.includes(definition?.factor))
+            : undefined,
+          missing_factor_ids: factors,
         }),
         signal: AbortSignal.timeout(12 * 60_000),
       });
       const payload: any = await response.json().catch(() => ({}));
-      if (!response.ok) {
+      if (!response.ok) return { ok: false as const, status: response.status, factors, target };
+      return { ok: true as const, factors, target, evidence: canonicalizeDynamicEvidence({
+        ...payload,
+        ticker: symbol,
+        company_name: companyName,
+        information_cutoff: String(req.body?.information_cutoff || payload?.cutoff || ""),
+      }) };
+    };
+    try {
+      if (!providerSourced) {
+        const result = await requestOfficial(["earnings", "economics", "execution", "balance_sheet"], targetPeriodEnd);
+        if (!result.ok) {
+          return res.status(502).json({
+            error: "Dynamic official-document evidence retrieval failed.",
+            code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_FAILED",
+            upstreamStatus: result.status,
+          });
+        }
+        return res.json(result.evidence);
+      }
+
+      // The provider's latest reported quarter sets the target, so official
+      // extraction is asked for exactly that quarter.
+      const provider = await fetchTapetideQuarterlyFinancials({ symbol });
+      const target = targetPeriodEnd || latestProviderQuarter(provider.observations, evidenceCutoff) || "";
+      // Reg. 33: June/December results carry no balance sheet, so Balance Sheet
+      // is read from the latest half-year (March/September) results instead.
+      const balanceSheetTarget = target ? balanceSheetPeriodEnd(target) : "";
+      const officialRequests = target && balanceSheetTarget !== target
+        ? [requestOfficial(["execution"], target), requestOfficial(["balance_sheet"], balanceSheetTarget)]
+        : [requestOfficial([...OFFICIAL_FACTORS], target)];
+      const officialResults = await Promise.all(officialRequests);
+      if (officialResults.every((result) => !result.ok)) {
         return res.status(502).json({
           error: "Dynamic official-document evidence retrieval failed.",
           code: "FUNDAMENTAL_REVIEW_DYNAMIC_EVIDENCE_FAILED",
-          upstreamStatus: response.status,
+          upstreamStatus: officialResults.map((result) => (result.ok ? 200 : result.status)),
         });
       }
-      return res.json(canonicalizeDynamicEvidence({
-        ...payload,
-        ticker: symbol,
-        company_name: String(req.body?.company_name || symbol),
-        information_cutoff: String(req.body?.information_cutoff || payload?.cutoff || ""),
-      }));
+      const official = { candidates: [] as any[], documents: [] as any[], validations: [] as any[], diagnostics: [] as any[] };
+      for (const result of officialResults) {
+        if (!result.ok) {
+          official.diagnostics.push({ outcome: "official_evidence_request_failed", factors: result.factors,
+            target_period_end: result.target || null, upstream_status: result.status });
+          continue;
+        }
+        official.candidates.push(...result.evidence.candidates);
+        official.documents.push(...result.evidence.documents.filter((document: any) =>
+          !official.documents.some((existing) => existing.document_id === document.document_id)));
+        official.validations.push(...result.evidence.validations);
+        official.diagnostics.push(...result.evidence.diagnostics.map((diagnostic: any) =>
+          ({ ...diagnostic, requested_factors: result.factors, target_period_end: result.target || null })));
+      }
+      if (balanceSheetTarget && balanceSheetTarget !== target) official.diagnostics.push({
+        outcome: "balance_sheet_from_latest_half_year", quarter_end: target, balance_sheet_end: balanceSheetTarget });
+      let archiveUri: string | null = null;
+      if (provider.payloadBytes) {
+        const sha256 = createHash("sha256").update(provider.payloadBytes).digest("hex");
+        archiveUri = await archiveFundamentalReviewDocument(provider.payloadBytes, sha256, "application/json").catch((error) => {
+          console.error("[fundamental-review] provider snapshot archive failed:", error?.message || error);
+          return null;
+        });
+      }
+      const providerEvidence = provider.payloadBytes
+        ? tapetideCanonicalEvidence({ symbol, companyName, cutoff: evidenceCutoff, targetPeriodEnd: target,
+          observations: provider.observations, payloadBytes: provider.payloadBytes, archiveUri })
+        : { candidates: [], documents: [], validations: [], diagnostics: [] };
+      providerEvidence.diagnostics.unshift(...provider.diagnostics);
+      return res.json(mergeProviderEvidence(preferStandardMetrics(official), providerEvidence));
     } catch (error: any) {
       console.error("[fundamental-review] dynamic evidence failed:", error?.message || error);
       return res.status(502).json({

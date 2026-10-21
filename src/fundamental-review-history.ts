@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { sourceLabelVariants } from "./fundamental-review-source-match.ts";
 
 export const HISTORY_METHOD = "BMS_V2_1_TRAJECTORY_LIFECYCLE";
 const FACTORS = ["earnings", "economics", "execution", "balance_sheet"];
@@ -12,6 +13,8 @@ export const ACCOUNTING_BASES = new Set([
   "consolidated_credit_basis", "consolidated_recast_comparable_basis", "consolidated_recast_comparable",
   "consolidated_operating_basis", "consolidated_segment", "consolidated_segment_operating_basis",
   "standalone_plus_joint_operation", "consolidated_excluding_financial_services_borrowing",
+  // Tapetide does not state its consolidation scope; keep it distinct rather than assume one.
+  "provider_reported_basis",
 ]);
 export type FcsCheckpoint = {
   symbol: string; periodEnd: string; periodLabel: string; informationCutoff: string;
@@ -20,13 +23,49 @@ export type FcsCheckpoint = {
   evidenceReferences: Array<{ factorId: string; metricId: string; previousDocumentId: string;
     currentDocumentId: string; previousValue: unknown; currentValue: unknown;
     previousLocator: unknown; currentLocator: unknown }>;
-  documentReferences: Array<{ documentId: string; sourceUrl: string; archiveUri: string; sha256: string; publishedAt: string }>;
+  documentReferences: Array<{ documentId: string; sourceUrl: string; archiveUri: string; sha256: string; publishedAt: string;
+    sourceType?: string; sourceTier?: string; crossVerification?: string; textSource?: string }>;
 };
 export type FcsLifecycleAssessment = {
   classification: string; reason: string; latestPeriodEnd: string;
   informationCutoff: string; calculatedAt: string; methodologyId: string;
   checkpoints: FcsCheckpoint[];
 };
+
+/**
+ * SEBI LODR Reg. 33 requires a statement of assets and liabilities only with
+ * September and March results. For June and December quarters, the Balance
+ * Sheet factor uses the latest half-year balance sheet (Mar / Sep of the same
+ * calendar year) and is shown with its own "as of" date.
+ */
+export function balanceSheetPeriodEnd(quarterEnd: string): string {
+  const year = quarterEnd.slice(0, 4);
+  if (quarterEnd.endsWith("-06-30")) return `${year}-03-31`;
+  if (quarterEnd.endsWith("-12-31")) return `${year}-09-30`;
+  return quarterEnd;
+}
+
+/** A Balance Sheet row may be dated the quarter itself or its latest half-year balance sheet. */
+export function balanceSheetPeriodAllowed(quarterEnd: string, balanceSheetEnd: string): boolean {
+  return balanceSheetEnd === quarterEnd || balanceSheetEnd === balanceSheetPeriodEnd(quarterEnd);
+}
+
+/** Metrics whose identity includes the issuer row name (each segment is its own series). */
+const NAMED_ROW_METRICS = new Set(["segment_revenue"]);
+
+/** The issuer row name that locks a segment across quarters, or "" for other metrics. */
+export function lockedSourceLabel(impact: any): string {
+  return NAMED_ROW_METRICS.has(impact?.metric_id) ? sourceLabelVariants(impact?.current_source_locator?.quoted_label)[0] ?? "" : "";
+}
+
+/** Definitions a historical quarter must reproduce: same metrics, bases, units and named segments. */
+export function historyMetricDefinitions(score: Record<string, any>) {
+  return (Array.isArray(score.factors) ? score.factors : []).flatMap((factor: any) => (factor.impacts || []).map((impact: any) => ({
+    factor: factor.factor_id, metric: impact.metric_id, unit: impact.canonical_unit,
+    consolidation_basis: impact.consolidation_basis, comparison_basis: impact.comparison_basis,
+    ...(lockedSourceLabel(impact) ? { source_label: lockedSourceLabel(impact) } : {}),
+  })));
+}
 
 export function previousQuarterEnd(periodEnd: string): string {
   const date = new Date(`${periodEnd}T00:00:00Z`);
@@ -51,11 +90,16 @@ export function checkpointFromScore(input: {
     if (!factor || !Array.isArray(factor.impacts) || !factor.impacts.length) return null;
     for (const impact of factor.impacts) impacts.push({ ...impact, factor_id: id });
   }
-  const ends = new Set(impacts.map((impact) => impact.current_period?.end_date));
+  // The checkpoint quarter comes from the three quarterly factors; Balance
+  // Sheet may be dated at the latest half-year balance sheet (Reg. 33).
+  const ends = new Set(impacts.filter((impact) => impact.factor_id !== "balance_sheet")
+    .map((impact) => impact.current_period?.end_date));
   if (ends.size !== 1) return null;
   const periodEnd = [...ends][0];
   if (typeof periodEnd !== "string" || !/^\d{4}-(03-31|06-30|09-30|12-31)$/.test(periodEnd)
       || periodEnd > input.informationCutoff) return null;
+  if (!impacts.filter((impact) => impact.factor_id === "balance_sheet")
+    .every((impact) => balanceSheetPeriodAllowed(periodEnd, String(impact.current_period?.end_date || "")))) return null;
   for (const impact of impacts) {
     if (!impact.previous_document_id || !impact.current_document_id || !impact.metric_id
         || !impact.canonical_unit || !impact.previous_period?.end_date
@@ -63,14 +107,19 @@ export function checkpointFromScore(input: {
         || !["same_quarter_prior_year", "sequential_quarter", "point_in_time_prior_period"].includes(impact.comparison_basis)) return null;
     if (impact.comparison_basis !== "point_in_time_prior_period") {
       const label = String(impact.current_period?.label || "");
-      if (impact.current_period?.duration_months !== 3 && !/^Q[1-4]\b/i.test(label)) return null;
+      // Issuers print Q1 FY27, Q1-FY27 and Q1FY27; reject only non-quarter labels (e.g. Q12, H1).
+      if (impact.current_period?.duration_months !== 3 && !/^Q[1-4](?!\d)/i.test(label)) return null;
     }
   }
   // Deliberately strict: do not compare differently defined metrics or bases.
+  // Named segments are part of the series identity (Explosives ≠ Defence).
   const signature = impacts.map((impact) => [impact.factor_id, impact.metric_id,
-    impact.comparison_basis, impact.consolidation_basis, impact.canonical_unit].join("|")).sort();
+    impact.comparison_basis, impact.consolidation_basis, impact.canonical_unit,
+    ...(lockedSourceLabel(impact) ? [lockedSourceLabel(impact)] : [])].join("|")).sort();
   return {
-    symbol: input.symbol, periodEnd, periodLabel: String(impacts[0].current_period.label || periodEnd),
+    symbol: input.symbol, periodEnd,
+    // Publications expect "Q1 FY27"; normalise Q1FY27 / Q1-FY27 spellings.
+    periodLabel: String(impacts[0].current_period.label || periodEnd).replace(/^Q([1-4])\s*-?\s*FY\s*/i, "Q$1 FY"),
     informationCutoff: input.informationCutoff, calculatedAt: input.calculatedAt,
     rawScore: score.raw_score, fcsScore: score.fcs_score, completeFactors: 4,
     comparabilityKey: createHash("sha256").update(JSON.stringify([score.methodology_id, score.impact_policy_id, signature])).digest("hex"),
@@ -85,7 +134,11 @@ export function checkpointFromScore(input: {
     documentReferences: (input.documents ?? []).filter((document) => impacts.some((impact) =>
       [impact.previous_document_id, impact.current_document_id].includes(document.document_id)))
       .map((document) => ({ documentId: String(document.document_id), sourceUrl: String(document.source_url || ""),
-        archiveUri: String(document.archive_uri || ""), sha256: String(document.sha256 || ""), publishedAt: String(document.published_at || "") })),
+        archiveUri: String(document.archive_uri || ""), sha256: String(document.sha256 || ""), publishedAt: String(document.published_at || ""),
+        // Only provider snapshots carry these, so official checkpoints keep their existing shape.
+        ...(document.cross_verification ? { sourceType: String(document.source_type || ""),
+          sourceTier: String(document.source_tier || ""), crossVerification: String(document.cross_verification) } : {}),
+        ...(document.text_source ? { textSource: String(document.text_source) } : {}) })),
   };
 }
 
