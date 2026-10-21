@@ -18,7 +18,9 @@ const RESULTS_WINDOW_DAYS = 100;
 const MAX_READS = 3;
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
-export type TapetideDocument = { doc_id: number; doc_type: string; period: string; date?: string; num_pages?: number; pdf_url?: string };
+export type TapetideDocument = { doc_id: number; doc_type: string; period: string; date?: string; num_pages?: number; pdf_url?: string; markdown_url?: string };
+/** Plain HTTP download of a parsed document's full Markdown (not a plan tool call); null on any failure. */
+export type FetchText = (url: string) => Promise<string | null>;
 export type ExtractedRow = { metricName: string; previousPeriod: string; currentPeriod: string; previousPeriodEndDate: string;
   currentPeriodEndDate: string; previousValue: number; currentValue: number; unit: string; previousUnit?: string; quotedLabel: string; comparisonBasis: string };
 export type CallTool = (name: string, args: Record<string, unknown>) => Promise<unknown>;
@@ -40,9 +42,12 @@ export function documentsFromListing(payload: unknown): TapetideDocument[] {
     const id = Number(item?.doc_id);
     if (!Number.isInteger(id) || id <= 0) return [];   // listed but not parsed / not readable on this plan
     const links = item.links || {};
-    const pdf = [links.pdf, links.raw_pdf, links.pdf_url, item.pdf_url, item.url].find((u: unknown) => typeof u === "string" && /^https:\/\//i.test(u));
+    const https = (u: unknown) => typeof u === "string" && /^https:\/\//i.test(u);
+    const pdf = [links.pdf_url, links.pdf, links.raw_pdf, item.pdf_url, item.source_url, item.url].find(https);
+    const markdown = [links.markdown_url, links.markdown, item.markdown_url].find(https);
+    if (item.has_markdown === false) return [];
     return [{ doc_id: id, doc_type: String(item.doc_type || item.type || ""), period: String(item.period || ""),
-      date: item.date || item.filing_date, num_pages: Number(item.num_pages) || undefined, pdf_url: pdf }];
+      date: item.date || item.filing_date, num_pages: Number(item.num_pages) || undefined, pdf_url: pdf, markdown_url: markdown }];
   });
 }
 
@@ -105,20 +110,24 @@ export async function tapetideExecutionEvidence(input: {
   metrics: Array<{ metric: string; units: string[] }>;
   callTool: CallTool; extract: ExtractRows;
   archive: (bytes: Buffer, sha256: string) => Promise<string | null>;
+  fetchText?: FetchText;
   capturedAt?: string;
 }) {
   const diagnostics: Array<Record<string, unknown>> = [];
   const result = { candidates: [] as any[], documents: [] as any[], validations: [] as any[], diagnostics };
   const symbol = input.symbol.trim().toUpperCase();
   const capturedAt = input.capturedAt || new Date().toISOString();
-  let reads = 0;
+  let reads = 0, linkDownloads = 0;
   try {
     const listing = documentsFromListing(await input.callTool("list_company_documents", { symbol, limit: 15 }));
     const picks = resultsWindowDocuments(listing, input.targetPeriodEnd, input.cutoff).slice(0, 2);
     diagnostics.push({ outcome: "tapetide_documents_listed", readable: listing.length, in_results_window: picks.length, period_end: input.targetPeriodEnd });
     for (const doc of picks) {
       if (result.candidates.length) break;
-      let text = "", pages: string | null = "1-12";
+      // Full parsed Markdown via its download link costs no plan call; fall back to paged reads.
+      let text = doc.markdown_url && input.fetchText ? (await input.fetchText(doc.markdown_url).catch(() => null)) ?? "" : "";
+      if (text.trim()) { linkDownloads += 1; text = text.slice(0, 400_000); }
+      let pages: string | null = text.trim() ? null : "1-12";
       while (pages && reads < MAX_READS) {
         reads += 1;
         const page = textFromReadDocument(await input.callTool("read_document", { doc_id: doc.doc_id, pages, max_chars: 60000 }));
@@ -198,6 +207,6 @@ export async function tapetideExecutionEvidence(input: {
       detail: error instanceof Error ? error.message : String(error) });
   }
   diagnostics.push({ outcome: result.candidates.length ? "tapetide_document_execution_ready" : "tapetide_document_execution_unavailable",
-    comparison_count: result.candidates.length, document_reads: reads, period_end: input.targetPeriodEnd });
+    comparison_count: result.candidates.length, document_reads: reads, markdown_link_downloads: linkDownloads, period_end: input.targetPeriodEnd });
   return result;
 }

@@ -121,5 +121,39 @@ assert.equal(new Set(history.map((c) => c.comparabilityKey)).size, 1, "three qua
 const lifecycle = assessLifecycle(history, CUTOFF, "2026-10-21T00:00:00Z");
 assert.ok(lifecycle, "lifecycle forms from Tapetide quarterly + annual balance sheet + document Execution");
 console.log(`Lifecycle: ${lifecycle!.classification} (${lifecycle!.reason})`);
+
+// 6. Call savings: shared cache across the quarters of one review; limit errors never cached.
+TapetideMcpClient.clearCache();
+let toolCalls = 0, quota = true;
+const counting = mcpFetch((name) => { toolCalls += 1; return quota ? quotaText : { data: { periods: ["Jun 2026"], data: { Sales: { "Jun 2026": 1 } } } }; });
+assert.equal((await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) })).diagnostics[0].outcome, "tapetide_quota_exhausted");
+quota = false;
+await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) });
+await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) });
+assert.equal(toolCalls, 2, "the quota reply was not cached; the second identical request was served from cache");
+assert.ok(TapetideMcpClient.usage.cacheHits >= 1);
+
+// 7. Full Markdown via the listing link: no read_document calls; falls back when the link fails.
+const linkListing = { data: { documents: [{ doc_id: 26313284, doc_type: "concall", period: "Aug 2026", num_pages: 22, has_markdown: true,
+  links: { markdown_url: "https://tapetide.com/docs/26313284.md", pdf_url: "https://www.bseindia.com/xml-data/corpfiling/AttachHis/x.pdf" } },
+  { doc_id: 999, doc_type: "concall", period: "Aug 2026", has_markdown: false }] } };
+assert.deepEqual(documentsFromListing(linkListing).map((d) => [d.doc_id, d.markdown_url, d.pdf_url]),
+  [[26313284, "https://tapetide.com/docs/26313284.md", "https://www.bseindia.com/xml-data/corpfiling/AttachHis/x.pdf"]], "unparsed (has_markdown=false) skipped");
+const q1 = quarters[2];
+const execRow = [{ metricName: "sales_volume", previousPeriod: q1.prior, currentPeriod: q1.q, previousPeriodEndDate: q1.priorEnd, currentPeriodEndDate: q1.end,
+  previousValue: q1.prev, currentValue: q1.cur, unit: "units", quotedLabel: "Royal Enfield sales volume", comparisonBasis: "same_quarter_prior_year" }];
+for (const linkWorks of [true, false]) {
+  const used: string[] = [];
+  const evidence = await tapetideExecutionEvidence({ symbol: "EICHERMOT", companyName: "Eicher Motors", cutoff: CUTOFF, targetPeriodEnd: q1.end, metrics,
+    callTool: async (name, args: any) => { used.push(name); return name === "list_company_documents" ? linkListing : { data: { markdown: texts.get(args.doc_id) } }; },
+    fetchText: async () => (linkWorks ? texts.get(26313284)! : null), extract: async () => execRow,
+    archive: async (_b, sha) => `gs://test/${sha}.md` });
+  assert.equal(evidence.candidates.length, 1);
+  assert.equal(evidence.documents[0].source_url, "https://www.bseindia.com/xml-data/corpfiling/AttachHis/x.pdf", "links to the original PDF");
+  assert.deepEqual(used, linkWorks ? ["list_company_documents"] : ["list_company_documents", "read_document"]);
+  const usage = evidence.diagnostics.at(-1)!;
+  assert.equal(usage.markdown_link_downloads, linkWorks ? 1 : 0);
+}
+console.log("Call savings: cache reuse, uncached limit errors, Markdown link with read_document fallback.");
 assert.equal(createHash("sha256").update("x").digest("hex").length, 64);
 console.log("Tapetide beta sources (quota error, annual Balance Sheet, document Execution) verified offline end to end.");

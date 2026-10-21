@@ -343,6 +343,27 @@ function createFundamentalReviewOcr() {
   }
 }
 
+/**
+ * Download a parsed document's full Markdown from its listing link (a plain
+ * HTTP request, not a plan tool call). The Tapetide token is sent only to
+ * Tapetide's own hosts. Any failure returns null so read_document is used.
+ */
+async function fetchTapetideMarkdown(url: string): Promise<string | null> {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "https:") return null;
+    const tapetideHost = parsed.hostname === "tapetide.com" || parsed.hostname.endsWith(".tapetide.com");
+    const response = await fetch(parsed, { signal: AbortSignal.timeout(30_000), headers: {
+      Accept: "text/markdown, text/plain;q=0.9, */*;q=0.1",
+      ...(tapetideHost && process.env.TAPETIDE_TOKEN ? { Authorization: `Bearer ${process.env.TAPETIDE_TOKEN}` } : {}) } });
+    if (!response.ok || Number(response.headers.get("content-length") || 0) > 5 * 1024 * 1024) return null;
+    const text = await response.text();
+    return text.length > 200 && !/^\s*</.test(text) ? text : null;   // reject login/HTML pages
+  } catch {
+    return null;
+  }
+}
+
 /** Registered Execution metrics and their units, as offered to the document extractor. */
 function executionMetricDefinitions() {
   return Object.entries(fundamentalMetricRegistry.metrics as Record<string, any>)
@@ -354,7 +375,8 @@ function executionMetricDefinitions() {
 async function extractExecutionRowsFromDocument(input: { text: string; targetPeriodEnd: string; docType: string;
   metrics: Array<{ metric: string; units: string[] }> }): Promise<ExtractedRow[]> {
   const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
-  const text = input.text.length > 60_000 ? input.text.slice(0, 60_000) : input.text;
+  // Full concall transcripts state KPIs anywhere; ~120k chars keeps one bounded model call.
+  const text = input.text.length > 120_000 ? input.text.slice(0, 120_000) : input.text;
   const schema = { type: "OBJECT", required: ["rows"], properties: { rows: { type: "ARRAY", items: { type: "OBJECT",
     required: ["factor", "metricName", "previousPeriod", "currentPeriod", "previousPeriodEndDate", "currentPeriodEndDate",
       "previousValue", "currentValue", "unit", "quotedLabel", "comparisonBasis"], properties: {
@@ -5016,6 +5038,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       // The provider's latest reported quarter sets the target, so official
       // extraction is asked for exactly that quarter.
       const tapetideClient = new TapetideMcpClient();
+      const usageAtStart = { ...TapetideMcpClient.usage };
       const provider = await fetchTapetideQuarterlyFinancials({ symbol, client: tapetideClient });
       const target = targetPeriodEnd || latestProviderQuarter(provider.observations, evidenceCutoff) || "";
       const noEvidence = () => ({ candidates: [] as any[], documents: [] as any[], validations: [] as any[], diagnostics: [] as any[] });
@@ -5042,7 +5065,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           metrics: executionMetricDefinitions().filter((definition) => !requiredDefinitions?.some((item: any) => item?.factor === "execution")
             || requiredDefinitions.some((item: any) => item?.factor === "execution" && item?.metric === definition.metric)),
           callTool: (name, args) => tapetideClient.callTool(name, args),
-          extract: extractExecutionRowsFromDocument,
+          extract: extractExecutionRowsFromDocument, fetchText: fetchTapetideMarkdown,
           archive: (bytes, sha256) => archiveFundamentalReviewDocument(bytes, sha256, "text/markdown").catch(() => null) })
         : noEvidence();
       const officialFactors = [...(documentEvidence.candidates.length ? [] : ["execution"]),
@@ -5093,6 +5116,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
         providerEvidence.validations.push(...part.validations);
         providerEvidence.diagnostics.push(...part.diagnostics);
       }
+      // Approximate for this request (concurrent requests share the counters).
+      providerEvidence.diagnostics.push({ outcome: "tapetide_usage", network_calls: TapetideMcpClient.usage.networkCalls - usageAtStart.networkCalls,
+        cache_hits: TapetideMcpClient.usage.cacheHits - usageAtStart.cacheHits });
       return res.json(mergeProviderEvidence(preferStandardMetrics(official), providerEvidence));
     } catch (error: any) {
       console.error("[fundamental-review] dynamic evidence failed:", error?.message || error);

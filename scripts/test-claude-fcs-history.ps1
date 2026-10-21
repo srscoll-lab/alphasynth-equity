@@ -16,7 +16,8 @@ $ErrorActionPreference = 'Stop'
 $g = 'C:/Users/admin/AppData/Local/Google/Cloud SDK/google-cloud-sdk/bin/gcloud.cmd'
 $project = 'my-nse-research-app'
 $outputDir = Join-Path $PSScriptRoot "../output/claude-fcs-test-$($Cutoff.Replace('-',''))"
-$currentScoreFile = Get-ChildItem $outputDir -Filter "$Symbol-*-score.json" | Sort-Object Name | Select-Object -Last 1
+# Current-quarter results are "<SYMBOL>-2026…-score.json"; never pick a "<SYMBOL>-history-…" file.
+$currentScoreFile = Get-ChildItem $outputDir -Filter "$Symbol-20*-score.json" | Sort-Object Name | Select-Object -Last 1
 $current = Get-Content $currentScoreFile.FullName -Raw | ConvertFrom-Json
 if (-not $current.score_publishable) { throw "Latest current score $($currentScoreFile.Name) is not publishable." }
 # Mirrors historyMetricDefinitions(): segment rows are locked by their issuer name.
