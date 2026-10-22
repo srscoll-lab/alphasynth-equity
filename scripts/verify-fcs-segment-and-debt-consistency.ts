@@ -47,7 +47,7 @@ const solarSegments = alignExecutionAcrossQuarters([
 assert.equal(solarSegments.aligned, true);
 if (solarSegments.aligned) {
   assert.equal(solarSegments.measure, "segment_revenue");
-  assert.deepEqual(solarSegments.segments, ["defence"]);
+  assert.deepEqual(solarSegments.segments, ["Defence"], "canonical label keeps the issuer's own wording");
   assert.deepEqual(solarSegments.quarters.map((q) => q.candidates.map((c) => c.candidate_id).join()), ["q3-3", "q4-2", "q1-2,q1-rev"],
     "only Defence kept; a lone order book is not a series; other factors untouched");
 }

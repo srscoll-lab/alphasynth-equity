@@ -3,6 +3,7 @@ import { containsReportedNumber, containsReportingPeriod, sourceLabelVariants } 
 import { normalizeComparisonBasis } from "./fcs-comparison-basis.ts";
 import { normalizeFcsUnit } from "./fcs-evidence-normalization.ts";
 import { fiscalQuarterLabel, PROVIDER_CONSOLIDATION_BASIS } from "./tapetide-fcs-evidence.ts";
+import { canonicalUnitSpelling } from "./fcs-segment-alignment.ts";
 
 /**
  * Execution from company documents already parsed by Tapetide (investor
@@ -34,8 +35,11 @@ const VEHICLE_NOUNS = /^(?:motor ?cycles?|bikes?|scooters?|cars?|passenger vehic
 const GENERIC_COUNT_NOUNS = /^(?:nos\.?|numbers?|pieces?|pcs\.?|count)$/i;
 export function documentCountUnit(raw: string, allowed: readonly string[]): string {
   const unit = String(raw || "").trim();
-  if (VEHICLE_NOUNS.test(unit) && allowed.includes("vehicles")) return "vehicles";
-  if ((VEHICLE_NOUNS.test(unit) || GENERIC_COUNT_NOUNS.test(unit)) && allowed.includes("units")) return "units";
+  // One count unit per metric, so "motorcycles" one quarter and "units" the next stay comparable.
+  if (/^(?:vehicles?|units?)$/i.test(unit) || VEHICLE_NOUNS.test(unit) || GENERIC_COUNT_NOUNS.test(unit)) {
+    if (allowed.includes("units")) return "units";
+    if (allowed.includes("vehicles")) return "vehicles";
+  }
   return unit;
 }
 
@@ -174,10 +178,18 @@ export async function tapetideExecutionEvidence(input: {
       let archiveUri: string | null = null;
       for (const row of rows.slice(0, 6)) {
         const definition = input.metrics.find((item) => item.metric === row.metricName);
-        const unit = definition ? normalizeFcsUnit(documentCountUnit(row.unit, definition.units), definition.units) : "";
-        const previousUnit = definition ? normalizeFcsUnit(documentCountUnit(row.previousUnit || row.unit, definition.units), definition.units) : "";
+        // One spelling per unit (Rs.Cr → INR crore) so quarters compare like-for-like.
+        const preferred = (raw: string) => {
+          const unit = normalizeFcsUnit(documentCountUnit(raw, definition!.units), definition!.units);
+          const canonical = canonicalUnitSpelling(unit);
+          return definition!.units.includes(canonical) ? canonical : unit;
+        };
+        const unit = definition ? preferred(row.unit) : "";
+        const previousUnit = definition ? preferred(row.previousUnit || row.unit) : "";
         const basis = normalizeComparisonBasis("execution", row.metricName, String(row.comparisonBasis || "").toLowerCase());
         const reject = !definition ? "metric_not_execution"
+          // e.g. "International Business (% CCG)" is constant-currency revenue growth, not volume.
+          : /volume/.test(row.metricName) && /\b(ccg|constant currency|revenue|value|price|realisation|realization)\b/i.test(row.quotedLabel) ? "volume_label_is_not_volume"
           : !definition.units.includes(unit) || unit !== previousUnit ? "unregistered_or_mixed_unit"
           : row.currentPeriodEndDate !== input.targetPeriodEnd ? "target_period_mismatch"
           : !(row.previousPeriodEndDate < row.currentPeriodEndDate) ? "invalid_period_order"

@@ -39,7 +39,9 @@ foreach ($target in $Targets) {
   $seconds = [Math]::Round($watch.Elapsed.TotalSeconds)
   # Same period rule as the worker: three factors match the quarter; Balance Sheet may be its half-year end.
   $halfYear = if ($target.EndsWith('-06-30')) { "$($target.Substring(0,4))-03-31" } elseif ($target.EndsWith('-12-31')) { "$($target.Substring(0,4))-09-30" } else { $target }
-  $aligned = @($evidence.candidates | Where-Object { if ($_.factor_id -eq 'balance_sheet') { $_.current_period.end_date -in @($target, $halfYear) } else { $_.current_period.end_date -eq $target } })
+  # Mirrors balanceSheetPeriodAllowed(): quarter end, half-year end, or the latest 31 March on/before it.
+  $latestMarch = if ($target.Substring(5) -ge '03-31') { "$($target.Substring(0,4))-03-31" } else { "$([int]$target.Substring(0,4) - 1)-03-31" }
+  $aligned = @($evidence.candidates | Where-Object { if ($_.factor_id -eq 'balance_sheet') { $_.current_period.end_date -in @($target, $halfYear, $latestMarch) } else { $_.current_period.end_date -eq $target } })
   $scoreBody = @{ symbol = $Symbol; information_cutoff = $Cutoff; candidates = $aligned; documents = @($evidence.documents); validations = @($evidence.validations) }
   $score = Invoke-RestMethod $ScorerUrl -Method Post -Headers $headers -ContentType 'application/json' -Body ($scoreBody | ConvertTo-Json -Depth 50) -TimeoutSec 60
   $stamp = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ')

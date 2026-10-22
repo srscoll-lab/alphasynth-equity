@@ -78,6 +78,20 @@ and no token change needed. Pre-approved; start without asking again.
 5. If it works: propose the beta release (TAPETIDE_TOKEN + new code on the worker and a
    new beta revision; main untouched) — needs explicit owner approval.
 
+## 22 Oct results (Free-plan token, test service revision 00009)
+- Current-quarter FCS published for **5/6**: Eicher 72, Marico 67, Havells 49, KPIT 24,
+  Glenmark 86 (3 Tapetide calls each). HAL failed: no Q1 FY27 transcript in Tapetide.
+- **Lifecycle proven on live data for Glenmark**: Q3 FY26 73 → Q4 FY26 86 → Q1 FY27 86,
+  ESTABLISHED, after aligning Execution on the segments common to all three quarters
+  (India, Europe). Offline proof: `node --experimental-strip-types scripts/assess-claude-fcs-history.ts GLENMARK 2026-10-22`.
+- Other lifecycles blocked by Execution missing in earlier quarters (March-quarter calls
+  often discuss only full-year figures) — a disclosure gap, not a code bug.
+- Fixed today: Markdown wrongly rejected as HTML; read_document max_chars; counted nouns →
+  units; spoken period wording; unit spelling (Rs.Cr = INR crore, vehicles = units); CCG
+  rows refused as volume; test runner balance-sheet rule; cross-quarter Execution alignment
+  now in the worker (`verify:fcs-worker-alignment`).
+- Not yet deployed to the real worker/beta; that is the next step and needs owner approval.
+
 ## Owner commands
 Replace the Tapetide token (paste token when prompted):
 ```powershell

@@ -7,7 +7,9 @@ import {
 } from "./fundamental-review-contract.ts";
 import type { FundamentalReviewQueue } from "./fundamental-review-queue.ts";
 import type { FundamentalReviewJobRecord, FundamentalReviewStore } from "./fundamental-review-store.ts";
-import { assessLifecycle, balanceSheetPeriodAllowed, balanceSheetPeriodEnd, checkpointFromScore, historyMetricDefinitions, mergeCheckpoint, previousQuarterEnd } from "./fundamental-review-history.ts";
+import { assessLifecycle, balanceSheetPeriodAllowed, balanceSheetPeriodEnd, checkpointFromScore, historyMetricDefinitions, mergeCheckpoint, previousQuarterEnd,
+  type FcsCheckpoint } from "./fundamental-review-history.ts";
+import { alignExecutionAcrossQuarters, type QuarterEvidence } from "./fcs-segment-alignment.ts";
 import {fcsPublicationSummaries} from './fcs-publications.ts';
 import {fcsEvidenceFailureMessage} from './fcs-evidence-failure.ts';
 
@@ -195,7 +197,7 @@ export class FundamentalReviewService {
       job.scoreResult = { ...scorePayload, information_cutoff: job.informationCutoff };
       job.resultAvailable = true;
       // The worker, not a model's assertion, decides whether history is complete.
-      await this.completeHistory(job, scoreHeaders, evidenceHeaders, documents);
+      await this.completeHistory(job, scoreHeaders, evidenceHeaders, documents, { candidates: qualifiedCandidates, validations });
       return this.transition(job, job.scoreResult.lifecycle_ready === true ? "ready" : "score_ready_lifecycle_pending", {
         message: job.scoreResult.lifecycle_ready === true
           ? "FCS and three-period lifecycle are ready. The assessed reporting periods are shown in the report."
@@ -211,10 +213,14 @@ export class FundamentalReviewService {
     }
   }
 
-  private async completeHistory(job: FundamentalReviewJobRecord, scoreHeaders: Record<string, string>, evidenceHeaders: Record<string, string>, documents: Array<Record<string, any>>) {
+  private async completeHistory(job: FundamentalReviewJobRecord, scoreHeaders: Record<string, string>, evidenceHeaders: Record<string, string>,
+    documents: Array<Record<string, any>>, currentEvidence: { candidates: any[]; validations: any[] }) {
     const score = job.scoreResult!;
-    const current = checkpointFromScore({ symbol: job.symbol, score, informationCutoff: job.informationCutoff,
+    let current = checkpointFromScore({ symbol: job.symbol, score, informationCutoff: job.informationCutoff,
       calculatedAt: this.now().toISOString(), sourceJobId: job.jobId!, documents });
+    // Evidence of every quarter that published, kept so Execution can be aligned across them.
+    const quarterEvidence: QuarterEvidence[] = current
+      ? [{ periodEnd: current.periodEnd, candidates: currentEvidence.candidates, documents, validations: currentEvidence.validations }] : [];
     job.checkpointHistory ??= [];
     if (!current) job.diagnostics.push({ outcome: "current_score_not_quarterly_comparable",
       detail: "Lifecycle requires four scorer-approved factors for the same supported quarter, with consistent period and methodology metadata." });
@@ -267,6 +273,7 @@ export class FundamentalReviewService {
           if (historicalScore?.score_publishable !== true) periodGaps.push({ ...gap,
             missing_factors: Array.isArray(historicalScore?.missing_factors) && historicalScore.missing_factors.length
               ? historicalScore.missing_factors : gap.missing_factors });
+          else quarterEvidence.push({ periodEnd: target, candidates, documents: evidence.documents || [], validations: evidence.validations || [] });
           const checkpoint = checkpointFromScore({ symbol: job.symbol, score: historicalScore,
             informationCutoff: job.informationCutoff, calculatedAt: this.now().toISOString(), sourceJobId: job.jobId!, documents: evidence.documents });
           if (checkpoint?.periodEnd === target) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, checkpoint);
@@ -276,7 +283,51 @@ export class FundamentalReviewService {
         }
       }
     }
-    const assessment = assessLifecycle(job.checkpointHistory, job.informationCutoff, this.now().toISOString());
+    let assessment = assessLifecycle(job.checkpointHistory, job.informationCutoff, this.now().toISOString());
+    // Three quarters published but Execution was measured differently (e.g. segments
+    // worded or cut differently): align to the measures common to all three, rescore
+    // with the authoritative scorer, and replace only checkpoints created by this job.
+    if (!assessment && current && quarterEvidence.length === 3
+        && quarterEvidence.every((quarter) => {
+          const existing = job.checkpointHistory!.find((item) => item.periodEnd === quarter.periodEnd);
+          return !existing || existing.sourceJobId === job.jobId;
+        })) {
+      const alignment = alignExecutionAcrossQuarters(quarterEvidence);
+      if (!alignment.aligned) {
+        job.diagnostics.push({ outcome: "execution_not_comparable_across_quarters", detail: alignment.reason, measures: alignment.segmentsByQuarter });
+      } else {
+        try {
+          const rescored: Array<{ periodEnd: string; score: Record<string, any>; checkpoint: FcsCheckpoint | null }> = [];
+          for (const quarter of alignment.quarters) {
+            const response = await this.fetchImpl(this.options.scoringUrl, { method: "POST", headers: scoreHeaders,
+              body: JSON.stringify({ symbol: job.symbol, information_cutoff: job.informationCutoff,
+                candidates: quarter.candidates, documents: quarter.documents, validations: quarter.validations }),
+              signal: AbortSignal.timeout(30_000) });
+            if (!response.ok) throw new Error(`Aligned scoring HTTP ${response.status}`);
+            const alignedScore: any = await response.json();
+            rescored.push({ periodEnd: quarter.periodEnd, score: alignedScore, checkpoint: alignedScore?.score_publishable === true
+              ? checkpointFromScore({ symbol: job.symbol, score: alignedScore, informationCutoff: job.informationCutoff,
+                calculatedAt: this.now().toISOString(), sourceJobId: job.jobId!, documents: quarter.documents }) : null });
+          }
+          const keys = new Set(rescored.map((item) => item.checkpoint?.comparabilityKey));
+          if (rescored.every((item) => item.checkpoint) && keys.size === 1) {
+            const periods = new Set(rescored.map((item) => item.periodEnd));
+            job.checkpointHistory = job.checkpointHistory!.filter((item) => !periods.has(item.periodEnd));
+            for (const item of rescored) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, item.checkpoint!);
+            const latest = rescored.find((item) => item.periodEnd === current!.periodEnd)!;
+            // The published FCS uses the same like-for-like measures as its lifecycle.
+            Object.assign(score, latest.score, { information_cutoff: job.informationCutoff });
+            current = latest.checkpoint;
+            job.diagnostics.push({ outcome: "execution_aligned_across_quarters", measure: alignment.measure, segments: alignment.segments });
+            assessment = assessLifecycle(job.checkpointHistory, job.informationCutoff, this.now().toISOString());
+          } else {
+            job.diagnostics.push({ outcome: "execution_alignment_not_publishable", periods: rescored.map((item) => item.periodEnd) });
+          }
+        } catch (error) {
+          job.diagnostics.push({ outcome: "execution_alignment_failed", detail: error instanceof Error ? error.message : String(error) });
+        }
+      }
+    }
     if (assessment && (!job.lastCompletedLifecycle || assessment.latestPeriodEnd > job.lastCompletedLifecycle.latestPeriodEnd)) job.lastCompletedLifecycle = assessment;
     const publishedCurrent = current && job.checkpointHistory.find((item) => item.periodEnd === current.periodEnd);
     const latestReady = Boolean(current && assessment?.latestPeriodEnd === current.periodEnd
