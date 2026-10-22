@@ -26,6 +26,24 @@ export type ExtractedRow = { metricName: string; previousPeriod: string; current
 export type CallTool = (name: string, args: Record<string, unknown>) => Promise<unknown>;
 export type ExtractRows = (input: { text: string; targetPeriodEnd: string; docType: string; metrics: Array<{ metric: string; units: string[] }> }) => Promise<ExtractedRow[]>;
 
+/**
+ * Counts are printed with the counted noun ("332,940 motorcycles"). Map such
+ * nouns to the registered count unit; values are never changed.
+ */
+const VEHICLE_NOUNS = /^(?:motor ?cycles?|bikes?|scooters?|cars?|passenger vehicles?|tractors?|trucks?|buses|bus|two[- ]wheelers?|three[- ]wheelers?|commercial vehicles?|cvs?|evs?)$/i;
+const GENERIC_COUNT_NOUNS = /^(?:nos\.?|numbers?|pieces?|pcs\.?|count)$/i;
+export function documentCountUnit(raw: string, allowed: readonly string[]): string {
+  const unit = String(raw || "").trim();
+  if (VEHICLE_NOUNS.test(unit) && allowed.includes("vehicles")) return "vehicles";
+  if ((VEHICLE_NOUNS.test(unit) || GENERIC_COUNT_NOUNS.test(unit)) && allowed.includes("units")) return "units";
+  return unit;
+}
+
+/** Parsed Markdown starts with "<!-- page 1 -->"; only real HTML/login pages are rejected. */
+export function isUsableMarkdown(text: string | null | undefined): boolean {
+  return typeof text === "string" && text.length > 200 && !/^\s*<(?:!doctype|html|head|body)\b/i.test(text);
+}
+
 /** "May 2026" or an ISO date → ISO date (first of month for a bare month). */
 export function documentDate(doc: { date?: string; period?: string }): string | null {
   const iso = String(doc.date || "").match(/^\d{4}-\d{2}-\d{2}/)?.[0];
@@ -47,7 +65,7 @@ export function documentsFromListing(payload: unknown): TapetideDocument[] {
     const markdown = [links.markdown_url, links.markdown, item.markdown_url].find(https);
     if (item.has_markdown === false) return [];
     return [{ doc_id: id, doc_type: String(item.doc_type || item.type || ""), period: String(item.period || ""),
-      date: item.date || item.filing_date, num_pages: Number(item.num_pages) || undefined, pdf_url: pdf, markdown_url: markdown }];
+      date: item.doc_date || item.date || item.filing_date, num_pages: Number(item.num_pages) || undefined, pdf_url: pdf, markdown_url: markdown }];
   });
 }
 
@@ -75,7 +93,8 @@ export function textFromReadDocument(payload: unknown): { text: string; nextPage
   if (typeof payload === "string") return { text: payload, nextPages: null };
   const root: any = payload && typeof payload === "object" ? payload : {};
   const data = root.data ?? root;
-  const text = [data.markdown, data.text, data.content].find((value) => typeof value === "string") ?? "";
+  const pages = Array.isArray(data.pages) ? data.pages.map((page: any) => page?.markdown ?? page?.text ?? "").filter(Boolean).join("\n") : "";
+  const text = [data.markdown, data.text, data.content, pages].find((value) => typeof value === "string" && value) ?? "";
   const next = data.next_pages ?? root.next_pages;
   return { text, nextPages: typeof next === "string" && next ? next : null };
 }
@@ -87,16 +106,29 @@ export function pageAt(text: string, index: number): number | null {
   return page;
 }
 
+/**
+ * Spoken transcripts say "Q1 of FY26" or "first quarter of FY27"; treat these
+ * as "Q1 FY26" / "Q1 FY27" on both sides. Only period wording is normalised;
+ * values must still match exactly.
+ */
+export function normalisePeriodWording(value: string): string {
+  return value.toLowerCase()
+    .replace(/\b(first|second|third|fourth)\s+quarter\b/g, (_m, n: string) => `q${["first", "second", "third", "fourth"].indexOf(n) + 1}`)
+    .replace(/\b(q[1-4])\s+of\s+(the\s+)?/g, "$1 ")
+    .replace(/\bfy\s*'?\s*(\d{2})\s*-\s*(\d{2})\b/g, "fy$2");   // "FY 26-27" → "fy27"
+}
+
 /** Same rule as the official checker's text path: label, both values within 350 chars, both periods within 3000. */
 export function textSupportsComparison(text: string, check: { labels: string[]; previousValue: number; currentValue: number;
   previousPeriod: string; previousEnd: string; currentPeriod: string; currentEnd: string }): { ok: boolean; page: number | null } {
   const flat = text.replace(/\s+/g, " ");
   const lower = flat.toLowerCase();
+  check ={ ...check, previousPeriod: normalisePeriodWording(check.previousPeriod), currentPeriod: normalisePeriodWording(check.currentPeriod) };
   for (const label of check.labels.filter(Boolean)) {
     for (let i = lower.indexOf(label); i >= 0; i = lower.indexOf(label, i + label.length)) {
       if (/[a-z0-9]/.test(lower[i - 1] || "") || /[a-z0-9]/.test(lower[i + label.length] || "")) continue;
       const values = lower.slice(Math.max(0, i - 350), i + label.length + 350);
-      const window = lower.slice(Math.max(0, i - 3000), i + label.length + 3000);
+      const window = normalisePeriodWording(lower.slice(Math.max(0, i - 3000), i + label.length + 3000));
       if (containsReportedNumber(values, check.previousValue) && containsReportedNumber(values, check.currentValue)
         && containsReportingPeriod(window, check.previousPeriod, check.previousEnd)
         && containsReportingPeriod(window, check.currentPeriod, check.currentEnd)) return { ok: true, page: pageAt(flat, i) };
@@ -130,7 +162,8 @@ export async function tapetideExecutionEvidence(input: {
       let pages: string | null = text.trim() ? null : "1-12";
       while (pages && reads < MAX_READS) {
         reads += 1;
-        const page = textFromReadDocument(await input.callTool("read_document", { doc_id: doc.doc_id, pages, max_chars: 60000 }));
+        // max_chars above the documented 24,000 returns a truncated payload without `markdown`.
+        const page = textFromReadDocument(await input.callTool("read_document", { doc_id: doc.doc_id, pages, max_chars: 20000 }));
         text += `${text ? "\n" : ""}${page.text}`;
         pages = /concall/i.test(doc.doc_type) ? page.nextPages : null;   // transcripts state KPIs later in the call
       }
@@ -141,8 +174,8 @@ export async function tapetideExecutionEvidence(input: {
       let archiveUri: string | null = null;
       for (const row of rows.slice(0, 6)) {
         const definition = input.metrics.find((item) => item.metric === row.metricName);
-        const unit = definition ? normalizeFcsUnit(row.unit, definition.units) : "";
-        const previousUnit = definition ? normalizeFcsUnit(row.previousUnit || row.unit, definition.units) : "";
+        const unit = definition ? normalizeFcsUnit(documentCountUnit(row.unit, definition.units), definition.units) : "";
+        const previousUnit = definition ? normalizeFcsUnit(documentCountUnit(row.previousUnit || row.unit, definition.units), definition.units) : "";
         const basis = normalizeComparisonBasis("execution", row.metricName, String(row.comparisonBasis || "").toLowerCase());
         const reject = !definition ? "metric_not_execution"
           : !definition.units.includes(unit) || unit !== previousUnit ? "unregistered_or_mixed_unit"

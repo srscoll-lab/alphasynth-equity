@@ -3,7 +3,8 @@ import { createHash } from "node:crypto";
 import { fetchTapetideAnnualBalanceSheet, fetchTapetideQuarterlyFinancials, financialObservationsFromPayload, isBorrowingsRow,
   isTapetideQuotaMessage, TapetideMcpClient } from "../src/tapetide-fcs-provider.ts";
 import { tapetideBalanceSheetEvidence } from "../src/tapetide-fcs-balance-sheet.ts";
-import { documentsFromListing, resultsWindowDocuments, tapetideExecutionEvidence, textSupportsComparison } from "../src/tapetide-fcs-documents.ts";
+import { documentsFromListing, isUsableMarkdown, resultsWindowDocuments, tapetideExecutionEvidence, textFromReadDocument,
+  textSupportsComparison } from "../src/tapetide-fcs-documents.ts";
 import { mergeProviderEvidence, tapetideCanonicalEvidence } from "../src/tapetide-fcs-evidence.ts";
 import { assessLifecycle, checkpointFromScore, latestMarchOnOrBefore, mergeCheckpoint, type FcsCheckpoint } from "../src/fundamental-review-history.ts";
 // @ts-ignore Plain ESM scorer in the sibling repository.
@@ -155,5 +156,21 @@ for (const linkWorks of [true, false]) {
   assert.equal(usage.markdown_link_downloads, linkWorks ? 1 : 0);
 }
 console.log("Call savings: cache reuse, uncached limit errors, Markdown link with read_document fallback.");
+
+// 8. Regressions from the 22 Oct live run: real Tapetide shapes.
+const realStart = "<!-- page 1 -->\n# www.eichermotors.com\n\nAugust 04, 2026\n\n## Online intimation/submission\n" + "| x |\n".repeat(60);
+assert.equal(isUsableMarkdown(realStart), true, "Tapetide Markdown begins with a page marker, not HTML");
+assert.equal(isUsableMarkdown("<!DOCTYPE html><html><body>Sign in</body></html>" + " ".repeat(300)), false);
+assert.equal(isUsableMarkdown("<html><head></head>" + "x".repeat(300)), false);
+assert.equal(isUsableMarkdown("short"), false);
+const realListingEntry = { data: { documents: [{ doc_id: 26313284, doc_type: "concall", period: "Aug 2026", doc_date: "2026-08-01", num_pages: 22,
+  has_markdown: true, source_url: "https://www.bseindia.com/stockinfo/AnnPdfOpen.aspx?Pname=8c3a03ae.pdf",
+  links: { pdf_url: "https://filings.tapetide.com/raw/concall/4628/26313284.pdf", markdown_url: "https://filings.tapetide.com/documents/concall/4628/26313284.md" } },
+  { doc_id: null, doc_type: "presentation", period: null, doc_date: "2026-08-01", has_markdown: false, links: { markdown_url: null } }] } };
+const parsedReal = documentsFromListing(realListingEntry);
+assert.deepEqual(parsedReal.map((d) => [d.doc_id, d.date, d.markdown_url]), [[26313284, "2026-08-01", "https://filings.tapetide.com/documents/concall/4628/26313284.md"]]);
+assert.deepEqual(textFromReadDocument({ data: { doc_id: 1, markdown: "<!-- page 1 -->\nhello", next_pages: "3-14" } }), { text: "<!-- page 1 -->\nhello", nextPages: "3-14" });
+assert.equal(textFromReadDocument({ data: { pages: [{ page: 1, markdown: "a" }, { page: 2, markdown: "b" }] } }).text, "a\nb");
+console.log("Real Tapetide shapes: page-marker Markdown accepted, doc_date used, read_document text parsed.");
 assert.equal(createHash("sha256").update("x").digest("hex").length, 64);
 console.log("Tapetide beta sources (quota error, annual Balance Sheet, document Execution) verified offline end to end.");

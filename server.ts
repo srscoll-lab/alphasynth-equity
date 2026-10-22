@@ -95,7 +95,7 @@ import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
 import { discoverTapetideFcsSources, fetchTapetideAnnualBalanceSheet, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured, TapetideMcpClient } from "./src/tapetide-fcs-provider";
 import { tapetideBalanceSheetEvidence } from "./src/tapetide-fcs-balance-sheet";
-import { tapetideExecutionEvidence, type ExtractedRow } from "./src/tapetide-fcs-documents";
+import { isUsableMarkdown, tapetideExecutionEvidence, type ExtractedRow } from "./src/tapetide-fcs-documents";
 import { OFFICIAL_FACTORS, latestProviderQuarter, mergeProviderEvidence, tapetideCanonicalEvidence } from "./src/tapetide-fcs-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -358,7 +358,7 @@ async function fetchTapetideMarkdown(url: string): Promise<string | null> {
       ...(tapetideHost && process.env.TAPETIDE_TOKEN ? { Authorization: `Bearer ${process.env.TAPETIDE_TOKEN}` } : {}) } });
     if (!response.ok || Number(response.headers.get("content-length") || 0) > 5 * 1024 * 1024) return null;
     const text = await response.text();
-    return text.length > 200 && !/^\s*</.test(text) ? text : null;   // reject login/HTML pages
+    return isUsableMarkdown(text) ? text : null;
   } catch {
     return null;
   }
@@ -388,7 +388,8 @@ async function extractExecutionRowsFromDocument(input: { text: string; targetPer
   const prompt = `From this company ${input.docType} text, extract up to three EXECUTION comparisons for the quarter ending ${input.targetPeriodEnd}. `
     + `Execution means operating delivery: order book or order inflow, sales/production volumes, deal wins (TCV), capacity utilisation, store count, market share, or named business segment revenue. `
     + `Prefer order_book when stated (balance as at ${input.targetPeriodEnd} versus the previous quarter end or a year earlier, point_in_time_prior_period). `
-    + `Each row: both values must be printed in THIS text with their periods; copy numbers and the unit exactly as printed; quotedLabel = the exact printed label; `
+    + `Each row: both values must be printed in THIS text with their periods; copy numbers and the unit exactly as printed (e.g. "motorcycles"); `
+    + `quotedLabel = the exact printed words naming the measure, as they appear beside the numbers; previousPeriod and currentPeriod = the period wording exactly as printed near those numbers (e.g. "Q1 of FY26"); `
     + `currentPeriodEndDate must be ${input.targetPeriodEnd}; give period end dates as YYYY-MM-DD. Never compute, infer or convert values. `
     + `Never use revenue, profit, EBITDA or margins. Return {"rows": []} if nothing qualifies.\n\n`
     + `Allowed metrics and units: ${JSON.stringify(input.metrics)}\n\nDOCUMENT TEXT:\n${text}`;
