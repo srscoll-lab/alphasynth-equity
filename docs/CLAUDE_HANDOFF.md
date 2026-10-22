@@ -38,7 +38,15 @@ provider data if clearly labelled, and will handle Tapetide terms personally.
    used for every quarter, labelled "as at"); Execution from **Tapetide-parsed
    concall transcripts / presentations** (value must appear beside its label
    in that text; page recorded). Official PDF extraction only as fallback.
-6. Beta = on-demand only. Owner is on Tapetide **Starter** (₹299/mo, 400/day).
+6. Beta = on-demand only.
+7. **Tapetide Free plan ONLY (22 Oct, applies to all future builds):** 50 calls/day,
+   resets 00:00 IST. Never plan around the Starter/paid token. Split cohorts into daily
+   batches (~45 calls/day budget) and stop cleanly at the limit; slower is fine.
+   25-company coverage test (list agreed 22 Oct: TVSMOTOR, BAJAJ-AUTO, MARUTI, LT, BEL,
+   THERMAX, INFY, HCLTECH, PERSISTENT, SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO,
+   TATASTEEL, VOLTAS, CROMPTON, TITAN, TRENT, DMART, BHARTIARTL, INDIGO, POWERGRID, SRF,
+   ASIANPAINT) to run in daily batches after the Eicher/Havells rerun — awaiting the
+   owner's approval of the batch plan.
 
 ## What exists (all in the Claude copy, tests pass: 18 suites + lint + build)
 - Provider-first evidence route in `server.ts` (`/internal/fundamental-review/evidence`).
