@@ -43,6 +43,7 @@
     "verify:fcs-lifecycle-pending": "node --experimental-strip-types scripts/verify-fcs-lifecycle-pending.ts",
     "verify:tapetide-beta-sources": "node --experimental-strip-types scripts/verify-tapetide-beta-sources.ts",
     "verify:fcs-worker-alignment": "node --experimental-strip-types scripts/verify-fcs-worker-alignment.ts",
+    "verify:fcs-derived-quarter": "node --experimental-strip-types scripts/verify-fcs-derived-quarter.ts",
     "verify:fcs-evidence-orchestrator": "node scripts/verify-fcs-evidence-orchestrator.mjs",
     "build:fundamental-review-evidence": "node --experimental-strip-types scripts/build-fundamental-review-evidence-bundle.ts",
     "verify:bms-momentum-radar": "node scripts/verify-bms-momentum-radar.mjs",

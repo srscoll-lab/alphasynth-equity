@@ -92,6 +92,28 @@ and no token change needed. Pre-approved; start without asking again.
   now in the worker (`verify:fcs-worker-alignment`).
 - Not yet deployed to the real worker/beta; that is the next step and needs owner approval.
 
+## 22 Oct (later): March-quarter Execution test (offline, 4 Tapetide calls)
+- Havells needs no derivation: the Q4 FY26 vs Q4 FY25 segment table is printed in the
+  22 Apr 2026 "Information Update" (Tapetide doc 10525236, listed as a concall, page 5).
+  The pipeline read only the first 2 of 4 April documents, which were copies of the call
+  with growth % only. Fix: download every results-window document via its free Markdown
+  link (dedupe), prefer ones with a table for the target quarter.
+- Eicher: Q4 FY26 derived = FY26 "12.27 lakh" − printed Q1..Q3 (914,166) = 312,834 ±500.
+  Method checked on FY25: 1,002,893 − 722,092 = 280,801 = Q4 FY25 as printed.
+  FCS is identical at both rounding bounds.
+- Simulated lifecycles (scratchpad simulate-q4.ts): Eicher 74 → 71 → 72 RECOVERING;
+  Havells 66 → 65 → 49 FADING. With Glenmark that is 3 of 6.
+- Built offline (owner approved): `src/fcs-derived-quarter.ts` + `tapetideExecutionEvidence`
+  now (a) downloads every results-window document via its free link, de-duplicates
+  re-parses, reads table documents first (max 3 model reads); (b) for a March quarter with
+  no printed comparison, derives Q4 = FY − (Q1+Q2+Q3) for additive metrics only, each
+  component verified beside its label in its own results document; refuses if rounding
+  could move growth > 0.5 pp or Q4 is outside 0.5–2× the Q1–Q3 average; prior-year Q4 may
+  be printed (e.g. Eicher May 2025 call). Labelled "derived" in the report and lifecycle
+  table. No extra Tapetide calls (listing now concall+presentation, ~20 months, limit 40);
+  up to ~10 Gemini reads per derived quarter. Test: `npm run verify:fcs-derived-quarter`.
+  Not deployed.
+
 ## Owner commands
 Replace the Tapetide token (paste token when prompted):
 ```powershell

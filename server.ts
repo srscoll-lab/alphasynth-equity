@@ -95,7 +95,7 @@ import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
 import { discoverTapetideFcsSources, fetchTapetideAnnualBalanceSheet, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured, TapetideMcpClient } from "./src/tapetide-fcs-provider";
 import { tapetideBalanceSheetEvidence } from "./src/tapetide-fcs-balance-sheet";
-import { isUsableMarkdown, tapetideExecutionEvidence, type ExtractedRow } from "./src/tapetide-fcs-documents";
+import { isUsableMarkdown, tapetideExecutionEvidence, type ExtractedRow, type ExtractedValue, type ValueRequest } from "./src/tapetide-fcs-documents";
 import { OFFICIAL_FACTORS, latestProviderQuarter, mergeProviderEvidence, tapetideCanonicalEvidence } from "./src/tapetide-fcs-evidence";
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
@@ -399,6 +399,31 @@ async function extractExecutionRowsFromDocument(input: { text: string; targetPer
     return { text: String(response?.text || ""), finishReason: response?.candidates?.[0]?.finishReason, usageMetadata: response?.usageMetadata };
   });
   return rows as ExtractedRow[];
+}
+
+/**
+ * Single printed figures (full-year totals, a stated fourth quarter) for the derived
+ * March quarter. The model only copies what is printed; the caller verifies each value
+ * beside its label and period in the same text and does the arithmetic itself.
+ */
+async function extractExecutionValuesFromDocument(input: { text: string; docType: string; requests: ValueRequest[] }): Promise<ExtractedValue[]> {
+  const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
+  const text = input.text.length > 120_000 ? input.text.slice(0, 120_000) : input.text;
+  const schema = { type: "OBJECT", required: ["rows"], properties: { rows: { type: "ARRAY", items: { type: "OBJECT",
+    required: ["factor", "key", "value", "unit", "quotedLabel", "periodWording"], properties: {
+      factor: { type: "STRING", enum: ["execution"] }, key: { type: "STRING", enum: input.requests.map((item) => item.key) },
+      value: { type: "NUMBER" }, unit: { type: "STRING" }, quotedLabel: { type: "STRING" }, periodWording: { type: "STRING" } } } } } };
+  const prompt = `From this company ${input.docType} text, find each requested figure ONLY if it is printed as a single number for exactly that period. `
+    + `value = the number exactly as printed (e.g. 12.27 for "12.27 lakh motorcycles"); unit = the unit words exactly as printed including any scale word (e.g. "lakh motorcycles", "Rs crores"); `
+    + `quotedLabel = the printed words naming the measure beside the number; periodWording = the period words exactly as printed near the number (e.g. "full financial year", "FY26", "4th Quarter"). `
+    + `Never compute, add, subtract, infer or convert. Skip growth rates, percentages, approximate figures like "over 1 million", and partial periods (nine months, half year, a single month). `
+    + `Return {"rows": []} if none is printed.\n\nRequested figures: ${JSON.stringify(input.requests)}\n\nDOCUMENT TEXT:\n${text}`;
+  const { rows } = await extractFcsFactors(["execution"], async (_factor, attempt) => {
+    const response: any = await getGenAI().models.generateContent({ model, contents: [{ role: "user", parts: [{ text: prompt }] }],
+      config: { responseMimeType: "application/json", responseSchema: schema, ...fcsExtractionGenerationConfig(model, attempt) } });
+    return { text: String(response?.text || ""), finishReason: response?.candidates?.[0]?.finishReason, usageMetadata: response?.usageMetadata };
+  });
+  return rows as ExtractedValue[];
 }
 
 function readFrozenForwardValidation(): any {
@@ -5066,7 +5091,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
           metrics: executionMetricDefinitions().filter((definition) => !requiredDefinitions?.some((item: any) => item?.factor === "execution")
             || requiredDefinitions.some((item: any) => item?.factor === "execution" && item?.metric === definition.metric)),
           callTool: (name, args) => tapetideClient.callTool(name, args),
-          extract: extractExecutionRowsFromDocument, fetchText: fetchTapetideMarkdown,
+          extract: extractExecutionRowsFromDocument, extractValues: extractExecutionValuesFromDocument, fetchText: fetchTapetideMarkdown,
           archive: (bytes, sha256) => archiveFundamentalReviewDocument(bytes, sha256, "text/markdown").catch(() => null) })
         : noEvidence();
       const officialFactors = [...(documentEvidence.candidates.length ? [] : ["execution"]),

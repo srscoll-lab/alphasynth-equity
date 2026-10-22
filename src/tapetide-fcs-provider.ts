@@ -96,6 +96,9 @@ function toolPayload(result: any): unknown {
   const texts = content.filter((item: any) => item?.type === "text" && typeof item.text === "string").map((item: any) => item.text);
   for (const text of texts) {
     try { return JSON.parse(text); } catch { /* Preserve the text below. */ }
+    // Long listings end with a "[TRUNCATED: ...]" note after the JSON body (arrays already cut to fit).
+    const note = text.search(/\n\s*\[TRUNCATED\b/);
+    if (note > 0) try { return JSON.parse(text.slice(0, note)); } catch { /* Preserve the text below. */ }
   }
   return texts.join("\n");
 }
