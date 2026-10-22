@@ -112,7 +112,12 @@ and no token change needed. Pre-approved; start without asking again.
   be printed (e.g. Eicher May 2025 call). Labelled "derived" in the report and lifecycle
   table. No extra Tapetide calls (listing now concall+presentation, ~20 months, limit 40);
   up to ~10 Gemini reads per derived quarter. Test: `npm run verify:fcs-derived-quarter`.
-  Not deployed.
+- Deployed ONLY to the test service (revision 00010-br6, code = a6eb898; 302b441 adds a
+  `-Symbols` filter to the proof script). The live rerun has NOT happened yet: the first two
+  tries got Cloud Run 429 "no available instance" right after rollout (max 1 instance); the
+  third reached the app but the Free Tapetide quota for 22 Oct was used up. Next: after
+  00:00 IST run `scripts/run-claude-fcs-beta-proof.ps1 -Cutoff <date> -Symbols EICHERMOT,HAVELLS`
+  (wait ~5 min after any deploy). Beta/main/worker confirmed unchanged.
 
 ## Owner commands
 Replace the Tapetide token (paste token when prompted):
