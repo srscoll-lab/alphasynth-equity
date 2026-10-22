@@ -2,7 +2,7 @@
 # per company, the current-quarter FCS, then (if published) its two earlier
 # quarters and the lifecycle check. Stops cleanly when Tapetide reports its
 # plan limit. Beta, main, the worker and n8n are not called.
-param([string]$Cutoff = (Get-Date).ToString('yyyy-MM-dd'))
+param([string]$Cutoff = (Get-Date).ToString('yyyy-MM-dd'), [string[]]$Symbols = @())
 $ErrorActionPreference = 'Stop'
 $companies = @(
   @{ Symbol = 'EICHERMOT'; Name = 'Eicher Motors Limited';           Sector = 'Automobile and Auto Components' },
@@ -12,6 +12,7 @@ $companies = @(
   @{ Symbol = 'GLENMARK';  Name = 'Glenmark Pharmaceuticals Limited'; Sector = 'Healthcare' },
   @{ Symbol = 'HAL';       Name = 'Hindustan Aeronautics Limited';   Sector = 'Capital Goods' }
 )
+if ($Symbols.Count) { $companies = @($companies | Where-Object { $Symbols -contains $_.Symbol }) }
 $here = $PSScriptRoot
 $outputDir = Join-Path $here "../output/claude-fcs-test-$($Cutoff.Replace('-',''))"
 New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
