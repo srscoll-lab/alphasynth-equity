@@ -373,7 +373,7 @@ function executionMetricDefinitions() {
 
 /** Model proposes Execution rows from Tapetide-parsed document text; the caller verifies each in that text. */
 async function extractExecutionRowsFromDocument(input: { text: string; targetPeriodEnd: string; docType: string;
-  metrics: Array<{ metric: string; units: string[] }> }): Promise<ExtractedRow[]> {
+  metrics: Array<{ metric: string; units: string[] }>; labelHints?: string[] }): Promise<ExtractedRow[]> {
   const model = process.env.DOSSIER_MODEL || "gemini-2.5-flash";
   // Full concall transcripts state KPIs anywhere; ~120k chars keeps one bounded model call.
   const text = input.text.length > 120_000 ? input.text.slice(0, 120_000) : input.text;
@@ -392,6 +392,7 @@ async function extractExecutionRowsFromDocument(input: { text: string; targetPer
     + `quotedLabel = the exact printed words naming the measure, as they appear beside the numbers; previousPeriod and currentPeriod = the period wording exactly as printed near those numbers (e.g. "Q1 of FY26"); `
     + `currentPeriodEndDate must be ${input.targetPeriodEnd}; give period end dates as YYYY-MM-DD. Never compute, infer or convert values. `
     + `Never use revenue, profit, EBITDA or margins. Return {"rows": []} if nothing qualifies.\n\n`
+    + (input.labelHints?.length ? `This is an earlier quarter of a series: report FIRST the measure printed as ${JSON.stringify(input.labelHints)} (the same business and row the later quarter used), not other businesses or subsidiaries.\n\n` : "")
     + `Allowed metrics and units: ${JSON.stringify(input.metrics)}\n\nDOCUMENT TEXT:\n${text}`;
   const { rows } = await extractFcsFactors(["execution"], async (_factor, attempt) => {
     const response: any = await getGenAI().models.generateContent({ model, contents: [{ role: "user", parts: [{ text: prompt }] }],
@@ -5092,6 +5093,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             || requiredDefinitions.some((item: any) => item?.factor === "execution" && item?.metric === definition.metric)),
           callTool: (name, args) => tapetideClient.callTool(name, args),
           extract: extractExecutionRowsFromDocument, extractValues: extractExecutionValuesFromDocument, fetchText: fetchTapetideMarkdown,
+          labelHints: (requiredDefinitions ?? []).filter((item: any) => item?.factor === "execution")
+            .map((item: any) => String(item?.label_hint || item?.source_label || "")).filter(Boolean),
           archive: (bytes, sha256) => archiveFundamentalReviewDocument(bytes, sha256, "text/markdown").catch(() => null) })
         : noEvidence();
       const officialFactors = [...(documentEvidence.candidates.length ? [] : ["execution"]),

@@ -27,7 +27,9 @@ export type FetchText = (url: string) => Promise<string | null>;
 export type ExtractedRow = { metricName: string; previousPeriod: string; currentPeriod: string; previousPeriodEndDate: string;
   currentPeriodEndDate: string; previousValue: number; currentValue: number; unit: string; previousUnit?: string; quotedLabel: string; comparisonBasis: string };
 export type CallTool = (name: string, args: Record<string, unknown>) => Promise<unknown>;
-export type ExtractRows = (input: { text: string; targetPeriodEnd: string; docType: string; metrics: Array<{ metric: string; units: string[] }> }) => Promise<ExtractedRow[]>;
+export type ExtractRows = (input: { text: string; targetPeriodEnd: string; docType: string; metrics: Array<{ metric: string; units: string[] }>;
+  /** Printed row label the current quarter used, so earlier quarters report the same row. */
+  labelHints?: string[] }) => Promise<ExtractedRow[]>;
 
 /**
  * Counts are printed with the counted noun ("332,940 motorcycles"). Map such
@@ -180,6 +182,9 @@ function numberFingerprint(text: string): Set<string> {
 }
 function nearDuplicate(a: Set<string>, b: Set<string>): boolean {
   if (!a.size || !b.size) return false;
+  // Re-parses of one document are about the same size; a short results update whose
+  // figures are read out on the call is a different document (Havells, 23 Oct).
+  if (Math.min(a.size, b.size) / Math.max(a.size, b.size) < 0.8) return false;
   let shared = 0;
   for (const n of a) if (b.has(n)) shared += 1;
   return shared / Math.min(a.size, b.size) >= 0.8;
@@ -210,6 +215,7 @@ export async function tapetideExecutionEvidence(input: {
   fetchText?: FetchText;
   /** Single printed figures (full-year totals) for the derived March quarter; omitted = no derivation. */
   extractValues?: ExtractValues;
+  labelHints?: string[];
   capturedAt?: string;
 }) {
   const diagnostics: Array<Record<string, unknown>> = [];
@@ -323,8 +329,15 @@ export async function tapetideExecutionEvidence(input: {
       validated_at: capturedAt });
   };
 
+  const hints = (input.labelHints ?? []).filter(Boolean);
+  /** With a hint, rows naming the same measure are kept and others dropped (when any match). */
+  const preferHinted = <T extends { quotedLabel: string }>(rows: T[]): T[] => {
+    if (!hints.length) return rows;
+    const matching = rows.filter((row) => hints.some((hint) => sameSegment(hint, row.quotedLabel)));
+    return matching.length ? matching : rows;
+  };
   const addComparisons = async (source: WindowText, rows: ExtractedRow[]) => {
-    for (const row of rows.slice(0, 6)) {
+    for (const row of preferHinted(rows).slice(0, 6)) {
       const verified = verifyComparison(row, source, input.targetPeriodEnd, input.metrics);
       if (!verified) continue;
       const documentId = await recordDocument(source);
@@ -357,8 +370,8 @@ export async function tapetideExecutionEvidence(input: {
       const found: Verified[] = [];
       for (const source of (await windowTexts(end)).slice(0, 2)) {
         extractions += 1;
-        const rows = await input.extract({ text: source.text, targetPeriodEnd: end, docType: source.doc.doc_type, metrics: additive });
-        for (const row of rows) {
+        const rows = await input.extract({ text: source.text, targetPeriodEnd: end, docType: source.doc.doc_type, metrics: additive, labelHints: hints });
+        for (const row of preferHinted(rows)) {
           const verified = verifyComparison(row, source, end, additive);
           if (verified?.basis === "same_quarter_prior_year") found.push(verified);
         }
@@ -481,7 +494,7 @@ export async function tapetideExecutionEvidence(input: {
     for (const source of texts.slice(0, MAX_EXTRACTIONS)) {
       if (result.candidates.length) break;
       extractions += 1;
-      await addComparisons(source, await input.extract({ text: source.text, targetPeriodEnd: input.targetPeriodEnd, docType: source.doc.doc_type, metrics: input.metrics }));
+      await addComparisons(source, await input.extract({ text: source.text, targetPeriodEnd: input.targetPeriodEnd, docType: source.doc.doc_type, metrics: input.metrics, labelHints: hints }));
     }
     // 2. No link text at all: paged reads (plan calls) of the two best-placed documents.
     for (const doc of texts.length ? [] : window.slice(0, 2)) {
@@ -497,7 +510,7 @@ export async function tapetideExecutionEvidence(input: {
       if (!text.trim()) { diagnostics.push({ outcome: "tapetide_document_empty", doc_id: doc.doc_id }); continue; }
       const source = { doc, text, sha256: createHash("sha256").update(Buffer.from(text, "utf-8")).digest("hex") };
       extractions += 1;
-      await addComparisons(source, await input.extract({ text, targetPeriodEnd: input.targetPeriodEnd, docType: doc.doc_type, metrics: input.metrics }));
+      await addComparisons(source, await input.extract({ text, targetPeriodEnd: input.targetPeriodEnd, docType: doc.doc_type, metrics: input.metrics, labelHints: hints }));
     }
     // 3. March quarter with no printed quarter comparison: derive it.
     if (!result.candidates.length && input.targetPeriodEnd.slice(5) === "03-31" && input.extractValues && input.fetchText) await deriveMarchQuarter();

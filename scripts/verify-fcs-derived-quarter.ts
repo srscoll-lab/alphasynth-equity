@@ -5,7 +5,7 @@ import { normalisePeriodWording, rankByContent, tapetideExecutionEvidence, textS
   type ExtractedValue } from "../src/tapetide-fcs-documents.ts";
 import { tapetideCanonicalEvidence } from "../src/tapetide-fcs-evidence.ts";
 import { tapetideBalanceSheetEvidence } from "../src/tapetide-fcs-balance-sheet.ts";
-import { checkpointFromScore } from "../src/fundamental-review-history.ts";
+import { checkpointFromScore, historyMetricDefinitions } from "../src/fundamental-review-history.ts";
 // @ts-ignore Plain ESM scorer in the sibling repository.
 import { scoreFundamentalChangeReview as scorer } from "../../alphasynth-bms-v2/src/fcs-review-scorer.mjs";
 const score = scorer as unknown as (input: Record<string, unknown>) => Record<string, any>;
@@ -165,6 +165,42 @@ const key = (s: any, docs: any[]) => checkpointFromScore({ symbol: "EICHERMOT", 
 const q4Checkpoint = key(q4Score, q4Bundle.documents);
 assert.equal(q4Checkpoint.comparabilityKey, key(q3Score, bundle("2025-12-31", q3).documents).comparabilityKey, "derived Q4 and printed Q3 are one series");
 assert.ok(q4Checkpoint.evidenceReferences.some((r: any) => (r.currentLocator as any)?.derivation), "lifecycle table can mark the derived quarter");
+
+// 7. 23 Oct live run regressions.
+// (a) Havells Q1 FY27: the short "Information Update" with the segment table must not be
+//     dropped as a duplicate of the call transcript that reads the same figures out.
+const q1Update = "<!-- page 1 -->\nInformation Update Q1 2026-27\n<!-- page 5 -->\n| | Q1 FY27 | Q1 FY26 | YoY (%) | Q4 FY26 |\n|---|---|---|---|---|\n"
+  + "| Switchgears | 608 | 630 | (3.5)% | 736 |\n| Cables | 2,456 | 1,933 | 27.1% | 2,474 |";
+const q1Call = "<!-- page 1 -->\nHavells Q1 FY27 (2026-27) earnings call. " + Array.from({ length: 30 }, (_, i) => `figure ${1000 + i * 37},`).join(" ")
+  + " Switchgears at 608 versus 630, Cables at 2,456 versus 1,933, versus 736 and 2,474 last quarter.";
+const q1Read: string[] = [];
+const q1 = await tapetideExecutionEvidence({ symbol: "HAVELLS", companyName: "Havells", cutoff: CUTOFF, targetPeriodEnd: "2026-06-30",
+  metrics: [{ metric: "segment_revenue", units: ["Rs.Cr", "INR crore"] }], archive: async (_b, sha) => `gs://t/${sha}.md`,
+  callTool: tools(listingOf([[24499162, "2026-07-17", "concall"], [23531160, "2026-07-17", "concall"]])).callTool,
+  fetchText: async (url) => (url.includes("24499162") ? q1Call : q1Update),
+  extract: async ({ text }) => { q1Read.push(text === q1Update ? "update" : "call"); return text === q1Update ? [{ metricName: "segment_revenue", previousPeriod: "Q1 FY26",
+    currentPeriod: "Q1 FY27", previousPeriodEndDate: "2025-06-30", currentPeriodEndDate: "2026-06-30", previousValue: 1933, currentValue: 2456, unit: "Rs crores",
+    quotedLabel: "Cables", comparisonBasis: "same_quarter_prior_year" }] : []; } });
+assert.deepEqual(q1Read, ["update"], "the table document is kept and read first");
+assert.equal(q1.candidates.length, 1);
+
+// (b) Eicher history: the current quarter's row label steers earlier quarters to motorcycles, not VECV trucks.
+const definitions = historyMetricDefinitions({ factors: [{ factor_id: "execution", impacts: [{ metric_id: "sales_volume", canonical_unit: "units",
+  comparison_basis: "same_quarter_prior_year", current_source_locator: { quoted_label: "motorcycles — Q1 FY27 (company document text via Tapetide, not cross-verified with NSE/BSE)" } }] }] });
+assert.equal(definitions[0].label_hint, "motorcycles");
+assert.equal("source_label" in definitions[0], false, "a hint only; the series identity is unchanged");
+const hintsSeen: unknown[] = [];
+const q3Hinted = await tapetideExecutionEvidence({ symbol: "EICHERMOT", companyName: "Eicher Motors", cutoff: CUTOFF, targetPeriodEnd: "2025-12-31",
+  metrics: [{ metric: "sales_volume", units: ["units", "vehicles"] }], labelHints: [String(definitions[0].label_hint)],
+  callTool: tools(listingOf([[17067363, "2026-02-01", "concall"]])).callTool, archive: async (_b, sha) => `gs://t/${sha}.md`,
+  fetchText: async () => eicherTexts[17067363] + "\nVECV recorded Q3 volumes of 26,086 units against 21,010 units in Q3 FY 2025.",
+  extract: async ({ labelHints }) => { hintsSeen.push(labelHints); return [
+    { metricName: "sales_volume", previousPeriod: "Q3 FY 2025", currentPeriod: "Q3 FY '26", previousPeriodEndDate: "2024-12-31", currentPeriodEndDate: "2025-12-31",
+      previousValue: 21010, currentValue: 26086, unit: "units", quotedLabel: "VECV", comparisonBasis: "same_quarter_prior_year" },
+    { metricName: "sales_volume", previousPeriod: "Q3 FY 2025", currentPeriod: "Q3 FY '26", previousPeriodEndDate: "2024-12-31", currentPeriodEndDate: "2025-12-31",
+      previousValue: 269039, currentValue: 325773, unit: "motorcycles", quotedLabel: "motorcycles", comparisonBasis: "same_quarter_prior_year" }]; } });
+assert.deepEqual(hintsSeen, [["motorcycles"]], "the extractor is told which row to report");
+assert.deepEqual(q3Hinted.candidates.map((c) => `${c.source_metric_label} ${c.current_canonical_value}`), ["motorcycles 325773"], "the VECV row is not kept");
 
 console.log(`Havells Q4 FY26 read from its Information Update table (page 5); Eicher Q4 FY26 derived: ${derived.current_source_locator.derivation.current.how}; FCS ${q4Score.fcs_score}.`);
 console.log("Derived March-quarter rule (additive only, printed components verified, rounding ≤ 0.5 pp, labelled 'derived') verified.");

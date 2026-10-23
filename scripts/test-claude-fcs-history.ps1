@@ -24,6 +24,8 @@ if (-not $current.score_publishable) { throw "Latest current score $($currentSco
 $definitions = @($current.factors | ForEach-Object { $factor = $_.factor_id; $_.impacts | ForEach-Object {
   $definition = @{ factor = $factor; metric = $_.metric_id; unit = $_.canonical_unit; consolidation_basis = $_.consolidation_basis; comparison_basis = $_.comparison_basis }
   if ($_.metric_id -eq 'segment_revenue') { $definition.source_label = $_.current_source_locator.quoted_label }
+  # Same as the worker's historyMetricDefinitions: which printed row the current quarter used.
+  if ($factor -eq 'execution') { $definition.label_hint = ([string]$_.current_source_locator.quoted_label -split " $([char]0x2014) ")[0].Trim() }
   $definition } })
 
 $baseUrl = (& $g run services describe $Service --project=$project --region=us-central1 --format='value(status.url)')

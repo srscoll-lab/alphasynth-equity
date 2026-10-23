@@ -69,12 +69,18 @@ export function lockedSourceLabel(impact: any): string {
   return NAMED_ROW_METRICS.has(impact?.metric_id) ? sourceLabelVariants(impact?.current_source_locator?.quoted_label)[0] ?? "" : "";
 }
 
+export function executionLabelHint(impact: any): string {
+  return String(impact?.current_source_locator?.quoted_label || "").split(" — ")[0].trim().slice(0, 80);
+}
+
 /** Definitions a historical quarter must reproduce: same metrics, bases, units and named segments. */
 export function historyMetricDefinitions(score: Record<string, any>) {
   return (Array.isArray(score.factors) ? score.factors : []).flatMap((factor: any) => (factor.impacts || []).map((impact: any) => ({
     factor: factor.factor_id, metric: impact.metric_id, unit: impact.canonical_unit,
     consolidation_basis: impact.consolidation_basis, comparison_basis: impact.comparison_basis,
     ...(lockedSourceLabel(impact) ? { source_label: lockedSourceLabel(impact) } : {}),
+    // Which printed row the current quarter used ("motorcycles", not VECV trucks); a hint, not identity.
+    ...(factor.factor_id === "execution" && executionLabelHint(impact) ? { label_hint: executionLabelHint(impact) } : {}),
   })));
 }
 
