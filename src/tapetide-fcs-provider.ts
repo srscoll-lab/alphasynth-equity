@@ -200,19 +200,33 @@ export class TapetideMcpClient {
   private static readonly cache = new Map<string, { at: number; value: unknown }>();
   static readonly usage = { networkCalls: 0, cacheHits: 0 };
   static clearCache() { TapetideMcpClient.cache.clear(); }
+  /**
+   * Owner policy (22 Oct 2026): Free plan only, 50 calls/day, reset at 00:00 IST.
+   * After the first limit reply no further request is sent until that reset.
+   */
+  private static quotaUntil = 0;
+  static resetQuotaLatch() { TapetideMcpClient.quotaUntil = 0; }
+  static nextIstMidnight(now: number): number {
+    const ist = 5.5 * 3_600_000, day = 86_400_000;
+    return Math.floor((now + ist) / day) * day + day - ist;
+  }
 
   async callTool(name: string, args: JsonObject): Promise<unknown> {
     const key = `${name}:${JSON.stringify(args)}`;
     const ttl = Number(process.env.TAPETIDE_CACHE_MS ?? 30 * 60_000);
     const cached = TapetideMcpClient.cache.get(key);
     if (cached && Date.now() - cached.at < ttl) { TapetideMcpClient.usage.cacheHits += 1; return cached.value; }
+    if (Date.now() < TapetideMcpClient.quotaUntil) throw new Error(TAPETIDE_QUOTA_EXHAUSTED);
     await this.initialize();
     TapetideMcpClient.usage.networkCalls += 1;
     const response = await this.post({ jsonrpc: "2.0", id: ++this.requestId, method: "tools/call", params: { name, arguments: args } });
     if (response?.error) throw new Error(`tapetide_tool_${name}_${response.error.code || "failed"}`);
     const payload = toolPayload(response?.result ?? response);
     // Tapetide returns its plan limit as ordinary text; never treat it as "no data".
-    if (isTapetideQuotaMessage(payload)) throw new Error(TAPETIDE_QUOTA_EXHAUSTED);
+    if (isTapetideQuotaMessage(payload)) {
+      TapetideMcpClient.quotaUntil = TapetideMcpClient.nextIstMidnight(Date.now());
+      throw new Error(TAPETIDE_QUOTA_EXHAUSTED);
+    }
     if (ttl > 0) {
       if (TapetideMcpClient.cache.size >= 500) TapetideMcpClient.cache.delete(TapetideMcpClient.cache.keys().next().value!);
       TapetideMcpClient.cache.set(key, { at: Date.now(), value: payload });

@@ -25,6 +25,7 @@ const mcpFetch = (toolResult: (name: string, args: any) => unknown) => (async (_
 process.env.TAPETIDE_TOKEN = "test-token-not-real";
 const exhausted = await fetchTapetideQuarterlyFinancials({ symbol: "EICHERMOT", client: new TapetideMcpClient({ fetchImpl: mcpFetch(() => quotaText) }) });
 assert.equal(exhausted.diagnostics[0].outcome, "tapetide_quota_exhausted");
+TapetideMcpClient.resetQuotaLatch();   // later sections start after the daily reset
 assert.equal(exhausted.observations.length, 0);
 
 // 2. Annual balance sheet (screener-style shape): Borrowings only, latest March on/before the quarter.
@@ -129,6 +130,12 @@ let toolCalls = 0, quota = true;
 const counting = mcpFetch((name) => { toolCalls += 1; return quota ? quotaText : { data: { periods: ["Jun 2026"], data: { Sales: { "Jun 2026": 1 } } } }; });
 assert.equal((await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) })).diagnostics[0].outcome, "tapetide_quota_exhausted");
 quota = false;
+// Free plan: after the limit reply, nothing is sent until the 00:00 IST reset.
+assert.equal((await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) })).diagnostics[0].outcome, "tapetide_quota_exhausted");
+assert.equal(toolCalls, 1, "no request sent while the daily limit is latched");
+assert.equal(new Date(TapetideMcpClient.nextIstMidnight(Date.parse("2026-10-23T06:15:00Z"))).toISOString(), "2026-10-23T18:30:00.000Z", "next reset is 00:00 IST");
+assert.equal(new Date(TapetideMcpClient.nextIstMidnight(Date.parse("2026-10-23T19:00:00Z"))).toISOString(), "2026-10-24T18:30:00.000Z");
+TapetideMcpClient.resetQuotaLatch();   // simulate the midnight reset
 await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) });
 await fetchTapetideQuarterlyFinancials({ symbol: "MARICO", client: new TapetideMcpClient({ fetchImpl: counting }) });
 assert.equal(toolCalls, 2, "the quota reply was not cached; the second identical request was served from cache");
