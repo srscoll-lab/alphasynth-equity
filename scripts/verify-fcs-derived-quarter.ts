@@ -14,24 +14,25 @@ const CUTOFF = "2026-10-22";
 // 1. Printed precision and period wording.
 assert.deepEqual(countScale("lakh motorcycles"), { scale: 100_000, rest: "motorcycles" });
 assert.deepEqual(countScale("Rs crores"), { scale: 1, rest: "Rs crores" }, "money units keep their own scale");
-assert.equal(printedHalfWidth(12.27, 100_000), 500, "12.27 lakh is exact only to ±500");
-assert.equal(printedHalfWidth(280801), 0.5);
+assert.equal(printedHalfWidth(12.27, 100_000), 1000, "12.27 lakh may be rounded or truncated: ±1,000");
+assert.equal(printedHalfWidth(280801), 1);
 assert.equal(normalisePeriodWording("in the 4th Quarter"), "in the q4");
 assert.equal(normalisePeriodWording("Q1 of FY2025"), "q1 fy25");
 assert.equal(normalisePeriodWording("financial year 2026 and FY 2025-26"), "fy26 and fy26");
 assert.equal(normalisePeriodWording("FY 26-27"), "fy27", "existing rule kept");
 
 // 2. Arithmetic on Eicher's printed figures. FY25 checks the method: printed Q4 FY25 = 2,80,801.
-const c = (value: number, halfWidth = 0.5, period = ""): PrintedComponent => ({ value, halfWidth, period, documentId: "", docId: 0, page: null, quoted: String(value) });
+const c = (value: number, halfWidth = 1, period = ""): PrintedComponent => ({ value, halfWidth, period, documentId: "", docId: 0, page: null, quoted: String(value) });
 const fy25 = deriveFourthQuarter(c(1_002_893), [c(227_736), c(225_317), c(269_039)]);
 assert.ok(!("reject" in fy25) && fy25.value === 280_801, "FY25 total − Q1..Q3 FY25 equals the printed Q4 FY25");
-const fy26 = deriveFourthQuarter(c(1_227_000, 500), [c(261_326), c(327_067), c(325_773)]);
+const fy26 = deriveFourthQuarter(c(1_227_000, 1000), [c(261_326), c(327_067), c(325_773)]);
 assert.ok(!("reject" in fy26));
 if (!("reject" in fy26)) {
   assert.equal(fy26.value, 312_834);
-  assert.deepEqual([fy26.low, fy26.high], [312_332.5, 313_335.5]);
+  assert.deepEqual([fy26.low, fy26.high], [311_831, 313_837]);
+  assert.ok(fy26.low <= 313_811 && 313_811 <= fy26.high, "covers Q4 FY26 as later found printed (313,811; FY26 = 1,227,977 shown as 12.27 lakh)");
   const uncertainty = growthUncertaintyPp(fy26, printedSide(c(280_801)));
-  assert.ok(uncertainty > 0.17 && uncertainty < 0.19, `rounding moves growth by ${uncertainty} pp`);
+  assert.ok(uncertainty > 0.35 && uncertainty < 0.37, `rounding moves growth by ${uncertainty} pp`);
   assert.equal(derivationAcceptable("sales_volume", fy26, printedSide(c(280_801))), null);
   assert.equal(derivationAcceptable("order_book", fy26, printedSide(c(280_801))), "metric_not_additive", "balances are never derived");
 }
@@ -122,7 +123,7 @@ assert.equal(derived.extraction_method, "derived_full_year_minus_first_three_qua
 assert.match(derived.current_source_locator.quoted_label, /^motorcycles — Q4 FY26 \(derived: FY26 full year − Q1 to Q3; .*not cross-verified with NSE\/BSE\)$/);
 assert.match(derived.previous_source_locator.quoted_label, /Q4 FY25 \(as printed;/);
 assert.equal(derived.current_source_locator.derivation.current.how,
-  "FY26 total 12.27 lakh motorcycles − (Q1 2,61,326 + Q2 3,27,067 + Q3 3,25,773) = 3,12,834 (±502 from rounding of the printed total)");
+  "FY26 total 12.27 lakh motorcycles − (Q1 2,61,326 + Q2 3,27,067 + Q3 3,25,773) = 3,12,834 (±1,003 from rounding of the printed total)");
 assert.deepEqual(eicher.validations[0].checks.map((check: any) => `${check.check_id}:${check.status}`), ["derived.components_beside_labels:pass",
   "derived.additive_measure:pass", "derived.rounding_within_tolerance:pass", "derived.plausible_against_first_three_quarters:pass",
   "source.exchange_filing_cross_verification:needs_review"]);

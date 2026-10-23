@@ -127,6 +127,20 @@ and no token change needed. Pre-approved; start without asking again.
   00:00 IST run `scripts/run-claude-fcs-beta-proof.ps1 -Cutoff <date> -Symbols EICHERMOT,HAVELLS`
   (wait ~5 min after any deploy). Beta/main/worker confirmed unchanged.
 
+## 23 Oct results (Free plan, test service revision 00011-sv5, code 68aea8f)
+- **Lifecycles proven live:** Eicher Q3 FY26 74 → Q4 FY26 71 → Q1 FY27 72 RECOVERING;
+  Havells 66 → 65 → 49 FADING. With Glenmark (22 Oct) that is 3 live lifecycles.
+- Havells Q4 FY26 from the Information Update table (doc 10525236 p5), Q1 FY27 from the Q1
+  Information Update (doc 23531160 p5). Eicher Q4 FY26 was found PRINTED (313,811 vs
+  280,801, doc 15306548 p76), so no derivation was needed this time.
+- Fixes from today's first pass: Execution label hint for history (Eicher picked VECV trucks);
+  near-duplicate rule only for similar-sized docs (Havells update was dropped); Tapetide
+  quota latch until 00:00 IST (06b6043).
+- Derivation margin corrected after comparing with the printed 313,811: Eicher's FY26
+  1,227,977 was printed as "12.27 lakh" (truncated), so components now carry ±1 unit of the
+  last printed digit (not ±½). Committed after 68aea8f; not yet deployed.
+- Tapetide calls 23 Oct: 21 of 50.
+
 ## Owner commands
 Replace the Tapetide token (paste token when prompted):
 ```powershell

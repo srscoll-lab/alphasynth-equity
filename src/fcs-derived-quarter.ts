@@ -33,10 +33,14 @@ export function countScale(unit: string): { scale: number; rest: string } {
   return { scale: 1, rest: raw };
 }
 
-/** Half of one unit in the last printed decimal place: 12.27 lakh → 0.005 × 100,000 = 500. */
+/**
+ * ± one unit in the last printed decimal place: 12.27 lakh → 0.01 × 100,000 = 1,000.
+ * A full unit, not half, because issuers truncate as well as round: Eicher printed its
+ * FY26 total 1,227,977 as "12.27 lakh" (23 Oct live run; printed Q4 FY26 = 313,811).
+ */
 export function printedHalfWidth(printed: number, scale = 1): number {
   const decimals = String(printed).includes(".") ? String(printed).split(".")[1].length : 0;
-  return 0.5 * 10 ** -decimals * scale;
+  return 10 ** -decimals * scale;
 }
 
 export type DerivedSide = { value: number; low: number; high: number; method: "printed" | typeof DERIVATION_METHOD; components: PrintedComponent[] };
