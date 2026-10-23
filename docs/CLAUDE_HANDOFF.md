@@ -207,3 +207,9 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
      diagnostics). Needed for Eicher, whose stored Q3/Q4 used VECV rows.
   Tests: verify:fcs-series-identity (new), verify:fcs-worker-alignment (remeasure case).
   Next: redeploy the worker (needs approval), rerun Eicher (≈3 calls), then 5-company batches.
+- Worker redeployed (owner approved): `fcs-review-worker-claudebeta1023c` (code c1b05db) — includes
+  the series-identity fix. Same-day Eicher rerun not possible: the worker returns the existing
+  published job for the same information cutoff (by design, saves calls). Verified, 0 calls.
+- NEXT (24 Oct, after 05:30 IST = new UTC date): 1) request EICHERMOT via the beta link — expect
+  FCS + lifecycle (stored Q3/Q4 remeasured); 2) batch 1 of the 25-company test THROUGH THE BETA
+  LINK (TVSMOTOR, BAJAJ-AUTO, MARUTI, LT, BEL), ~3 Tapetide calls each, one at a time.
