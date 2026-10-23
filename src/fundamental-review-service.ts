@@ -11,7 +11,7 @@ import { assessLifecycle, balanceSheetPeriodAllowed, balanceSheetPeriodEnd, chec
   type FcsCheckpoint } from "./fundamental-review-history.ts";
 import { alignExecutionAcrossQuarters, type QuarterEvidence } from "./fcs-segment-alignment.ts";
 import {fcsPublicationSummaries} from './fcs-publications.ts';
-import {fcsEvidenceFailureMessage} from './fcs-evidence-failure.ts';
+import {DATA_PROVIDER_DAILY_LIMIT,fcsDailyLimitReached,fcsEvidenceFailureMessage,nextIstMidnight} from './fcs-evidence-failure.ts';
 
 type Fetch = typeof fetch;
 const REQUIRED_FACTORS = ["earnings", "economics", "execution", "balance_sheet"] as const;
@@ -27,6 +27,9 @@ export type FundamentalReviewServiceOptions = {
   fetch?: Fetch;
   now?: () => Date;
   historicalBackfillEnabled?: boolean;
+  /** Total and per-quarter time for the two earlier quarters (defaults 180 s / 90 s). */
+  historyBudgetMs?: number;
+  historyRequestMs?: number;
 };
 
 export class FundamentalReviewService {
@@ -53,6 +56,9 @@ export class FundamentalReviewService {
     }
     if (existing && (isFundamentalReviewInProgress(existing.status)
       || (existing.resultAvailable && existing.informationCutoff >= input.informationCutoff))) return existing;
+    // Free data plan: after the daily limit, repeat requests return the paused job until 00:00 IST.
+    if (existing?.failureCode === DATA_PROVIDER_DAILY_LIMIT
+      && this.now().getTime() < nextIstMidnight(Date.parse(existing.updatedAt))) return existing;
     const timestamp = this.now().toISOString();
     const job: FundamentalReviewJobRecord = {
       jobId: `${symbol.toLowerCase()}-${randomUUID()}`,
@@ -160,7 +166,7 @@ export class FundamentalReviewService {
       await this.transition(job, "validating_factors");
       if (factors.size < REQUIRED_FACTORS.length) {
         return this.transition(job, "incomplete", {
-          failureCode: "INSUFFICIENT_VALIDATED_FACTORS",
+          failureCode: fcsDailyLimitReached(diagnostics) ? DATA_PROVIDER_DAILY_LIMIT : "INSUFFICIENT_VALIDATED_FACTORS",
           message: fcsEvidenceFailureMessage(factors.size,diagnostics),
         });
       }
@@ -232,7 +238,7 @@ export class FundamentalReviewService {
     if (current && this.options.historicalBackfillEnabled) {
       // At most two missing periods, with a 3-minute TOTAL history budget.
       // No parallel model fan-out or open-ended retries.
-      const deadline = Date.now() + 180_000;
+      const deadline = Date.now() + (this.options.historyBudgetMs ?? 180_000);
       let target = previousQuarterEnd(current.periodEnd);
       for (let attempt = 0; attempt < 2; attempt += 1, target = previousQuarterEnd(target)) {
         const cached = job.checkpointHistory.find((item) => item.periodEnd === target);
@@ -249,7 +255,7 @@ export class FundamentalReviewService {
               information_cutoff: job.informationCutoff, target_period_end: target,
               required_metric_definitions: historyMetricDefinitions(score),
               missing_factor_ids: REQUIRED_FACTORS }),
-            signal: AbortSignal.timeout(Math.max(1, Math.min(90_000, deadline - Date.now()))),
+            signal: AbortSignal.timeout(Math.max(1, Math.min(this.options.historyRequestMs ?? 90_000, deadline - Date.now()))),
           });
           if (!response.ok) throw new Error(`Historical evidence HTTP ${response.status}`);
           const evidence: any = await response.json();
@@ -354,6 +360,7 @@ export class FundamentalReviewService {
       // Debt" line, so a half-year without one leaves the lifecycle pending.
       lifecycle_unavailable_reason: latestReady ? null
         : !current ? "current_score_not_quarterly_comparable"
+        : job.diagnostics.some((item: any) => item?.historical_period_end && item?.outcome === "tapetide_quota_exhausted") ? "data_provider_daily_limit"
         : periodGaps.some((item) => item.missing_factors.includes("balance_sheet")) ? "balance_sheet_printed_total_debt_not_found"
         : "missing_or_noncomparable_quarterly_history",
     });

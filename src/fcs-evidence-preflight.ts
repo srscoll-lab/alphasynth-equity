@@ -183,7 +183,7 @@ export function providerAssistedFcsPreflight(record: FcsEvidencePreflightRecord,
       requestEnabled: true,
       action: "request_fcs",
       reasonCodes: [...record.reasonCodes, "tapetide_discovery_available", "controlled_large_mid_cap_beta"],
-      reason: "A controlled FCS review can be requested for this large- or mid-cap company. Completion is not guaranteed: a report is published only if original issuer or exchange evidence verifies all four factors.",
+      reason: "A controlled FCS review can be requested for this large- or mid-cap company. Completion is not guaranteed: a report is published only when all four factors are verified from company documents and Tapetide data (beta sources, not cross-verified with NSE/BSE). The free data plan allows a limited number of reviews per day.",
     };
   }
   return {

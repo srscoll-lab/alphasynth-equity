@@ -95,6 +95,7 @@ import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
 import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
 import { discoverTapetideFcsSources, fetchTapetideAnnualBalanceSheet, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured, TapetideMcpClient } from "./src/tapetide-fcs-provider";
 import { tapetideBalanceSheetEvidence } from "./src/tapetide-fcs-balance-sheet";
+import { FINANCIAL_SECTOR_NOT_SUPPORTED_MESSAGE, isUnsupportedFinancialSector } from "./src/fcs-sector-support";
 import { isUsableMarkdown, tapetideExecutionEvidence, type ExtractedRow, type ExtractedValue, type ValueRequest } from "./src/tapetide-fcs-documents";
 import { OFFICIAL_FACTORS, latestProviderQuarter, mergeProviderEvidence, tapetideCanonicalEvidence } from "./src/tapetide-fcs-evidence";
 import { GoogleGenAI } from "@google/genai";
@@ -151,6 +152,17 @@ function fundamentalReviewSymbolEnabled(symbol: string): boolean {
     : fundamentalReviewSupportedSymbols().includes(symbol);
 }
 
+/** Radar sector label ("Financial Services peer median" → "Financial Services"), when the radar has one. */
+function radarSector(symbol: string): string | null {
+  try {
+    const radar = JSON.parse(fs.readFileSync(path.resolve(process.cwd(), "src", "data", "bmsMomentumRadarExpanded.json"), "utf8"));
+    const company = (radar?.companies || []).find((item: any) => cleanFundamentalReviewSymbol(item?.symbol) === symbol);
+    return company?.sector_benchmark ? String(company.sector_benchmark).replace(/\s*peer median$/i, "") : null;
+  } catch {
+    return null;
+  }
+}
+
 function runtimeFcsPreflightForSymbol(symbol: string) {
   return providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol(symbol), tapetideFcsConfigured());
 }
@@ -202,6 +214,9 @@ function getFundamentalReviewService(): FundamentalReviewService {
     scoringUrl: String(process.env.FUNDAMENTAL_REVIEW_SCORING_URL),
     internalToken: process.env.FUNDAMENTAL_REVIEW_INTERNAL_TOKEN,
     dossierToken: process.env.DOSSIER_INTERNAL_TOKEN,
+    // A derived March quarter reads up to ~10 documents; deployments may allow more time.
+    historyBudgetMs: Number(process.env.FCS_HISTORY_BUDGET_MS) || undefined,
+    historyRequestMs: Number(process.env.FCS_HISTORY_REQUEST_MS) || undefined,
     historicalBackfillEnabled: process.env.FUNDAMENTAL_REVIEW_HISTORY_BACKFILL_ENABLED === "true",
     scoringIdentityTokenProvider: process.env.FUNDAMENTAL_REVIEW_SCORING_IAM_AUTH === "true"
       ? createGoogleIdentityTokenProvider()
@@ -5067,6 +5082,10 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
       const tapetideClient = new TapetideMcpClient();
       const usageAtStart = { ...TapetideMcpClient.usage };
       const provider = await fetchTapetideQuarterlyFinancials({ symbol, client: tapetideClient });
+      const quotaHit = (items: any[] | undefined) => (items || []).some((item: any) => item?.outcome === "tapetide_quota_exhausted");
+      // Free plan (owner policy): at the daily limit stop here; the official fallback would only spend model and crawl credits.
+      if (quotaHit(provider.diagnostics)) return res.json({ candidates: [], documents: [], validations: [],
+        diagnostics: [...provider.diagnostics, { outcome: "tapetide_quota_exhausted", detail: "daily limit reached before any evidence; nothing else was attempted" }] });
       const target = targetPeriodEnd || latestProviderQuarter(provider.observations, evidenceCutoff) || "";
       const noEvidence = () => ({ candidates: [] as any[], documents: [] as any[], validations: [] as any[], diagnostics: [] as any[] });
       const archiveSnapshot = async (bytes: Buffer, mediaType: string) => {
@@ -5097,8 +5116,8 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
             .map((item: any) => String(item?.label_hint || item?.source_label || "")).filter(Boolean),
           archive: (bytes, sha256) => archiveFundamentalReviewDocument(bytes, sha256, "text/markdown").catch(() => null) })
         : noEvidence();
-      const officialFactors = [...(documentEvidence.candidates.length ? [] : ["execution"]),
-        ...(balanceEvidence.candidates.length ? [] : ["balance_sheet"])];
+      const officialFactors = quotaHit(documentEvidence.diagnostics) || quotaHit(balanceEvidence.diagnostics) ? []
+        : [...(documentEvidence.candidates.length ? [] : ["execution"]), ...(balanceEvidence.candidates.length ? [] : ["balance_sheet"])];
       // Reg. 33: June/December results carry no balance sheet, so an official
       // Balance Sheet is read from the latest half-year (March/September) results.
       const balanceSheetTarget = target && officialFactors.includes("balance_sheet") ? balanceSheetPeriodEnd(target) : "";
@@ -5203,6 +5222,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const symbol = cleanFundamentalReviewSymbol(req.body?.symbol);
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
     const informationCutoff = String(req.body?.information_cutoff || new Date().toISOString().slice(0, 10));
+    if (isUnsupportedFinancialSector({ companyName: String(req.body?.company_name || ""), sector: radarSector(symbol) })) {
+      return res.status(409).json({ error: FINANCIAL_SECTOR_NOT_SUPPORTED_MESSAGE, code: "FUNDAMENTAL_REVIEW_SECTOR_NOT_SUPPORTED" });
+    }
     try {
       const job = await getFundamentalReviewService().request({
         symbol,
@@ -5298,6 +5320,9 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     const companyName = String(req.body?.company_name || symbol).trim();
     if (!symbol) return res.status(400).json({ error: "A valid company symbol is required." });
 
+    if (isUnsupportedFinancialSector({ companyName, sector: radarSector(symbol) })) {
+      return res.status(409).json({ error: FINANCIAL_SECTOR_NOT_SUPPORTED_MESSAGE, code: "FUNDAMENTAL_REVIEW_SECTOR_NOT_SUPPORTED" });
+    }
     const preflight = runtimeFcsPreflightForSymbol(symbol);
     if (preflight.status === "report_ready") {
       return res.status(409).json({

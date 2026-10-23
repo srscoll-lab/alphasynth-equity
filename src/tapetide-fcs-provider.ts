@@ -1,3 +1,4 @@
+import { nextIstMidnight } from "./fcs-evidence-failure.ts";
 type JsonObject = Record<string, unknown>;
 
 export type TapetideFcsSource = {
@@ -206,10 +207,7 @@ export class TapetideMcpClient {
    */
   private static quotaUntil = 0;
   static resetQuotaLatch() { TapetideMcpClient.quotaUntil = 0; }
-  static nextIstMidnight(now: number): number {
-    const ist = 5.5 * 3_600_000, day = 86_400_000;
-    return Math.floor((now + ist) / day) * day + day - ist;
-  }
+  static nextIstMidnight(now: number): number { return nextIstMidnight(now); }
 
   async callTool(name: string, args: JsonObject): Promise<unknown> {
     const key = `${name}:${JSON.stringify(args)}`;

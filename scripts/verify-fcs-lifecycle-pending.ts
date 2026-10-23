@@ -13,8 +13,8 @@ const solarGaps = [
 const lines = lifecyclePendingExplanation("balance_sheet_printed_total_debt_not_found", solarGaps);
 assert.match(lines[0], /no printed "Total Debt" line was found .* as at 30 Sep 2025\./);
 assert.match(lines[0], /only from the company's own printed Total Debt/);
-assert.ok(lines.includes("Quarter ending 31 Mar 2026: Execution not available from verified official sources."));
-assert.ok(lines.includes("Quarter ending 31 Dec 2025: Balance Sheet not available from verified official sources."));
+assert.ok(lines.includes("Quarter ending 31 Mar 2026: Execution not available from the company documents and data used."));
+assert.ok(lines.includes("Quarter ending 31 Dec 2025: Balance Sheet not available from the company documents and data used."));
 assert.equal(lines.at(-1), "A three-quarter lifecycle needs all four factors in each quarter. The current FCS above is unaffected.");
 assert.match(lifecyclePendingExplanation("missing_or_noncomparable_quarterly_history", [])[0], /do not yet have four comparable/);
 assert.deepEqual(lifecyclePendingExplanation(null, []), [], "nothing to explain when the lifecycle is ready");

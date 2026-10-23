@@ -12,6 +12,8 @@ export function lifecyclePendingExplanation(reason: unknown, gaps: unknown): str
     const dates = [...new Set(periods.filter((gap) => gap.missing_factors.includes("balance_sheet")).map((gap) => dated(gap.balance_sheet_end)))];
     lines.push(`Lifecycle pending: no printed "Total Debt" line was found in the company's official filings for the balance sheet as at ${dates.join(" and ") || "an earlier half-year"}.`
       + ` AlphaSynth measures Balance Sheet only from the company's own printed Total Debt (some companies print it only with annual March results), so that quarter cannot complete all four factors.`);
+  } else if (reason === "data_provider_daily_limit") {
+    lines.push("Lifecycle pending: AlphaSynth’s free data plan reached its daily limit while reading the earlier quarters. Request the review again after midnight IST (00:00) to complete it.");
   } else if (reason === "missing_or_noncomparable_quarterly_history") {
     lines.push("Lifecycle pending: the two earlier quarters do not yet have four comparable, verified factors.");
   } else if (reason === "current_score_not_quarterly_comparable") {
@@ -19,7 +21,7 @@ export function lifecyclePendingExplanation(reason: unknown, gaps: unknown): str
   }
   for (const gap of periods) {
     const missing = gap.missing_factors.filter((factor) => FACTOR_NAMES[factor]).map((factor) => FACTOR_NAMES[factor]);
-    if (missing.length) lines.push(`Quarter ending ${dated(gap.period_end)}: ${missing.join(", ")} not available from verified official sources.`);
+    if (missing.length) lines.push(`Quarter ending ${dated(gap.period_end)}: ${missing.join(", ")} not available from the company documents and data used.`);
   }
   if (lines.length) lines.push("A three-quarter lifecycle needs all four factors in each quarter. The current FCS above is unaffected.");
   return lines;
