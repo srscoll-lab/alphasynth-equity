@@ -167,3 +167,17 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Read-only check done; `docs/BETA_DEPLOY_PLAN.md` holds the exact deploy/rollback steps.
   Main does not use the worker. Worker lacks TAPETIDE_TOKEN, Vertex AI, bucket access and
   memory; plan grants them. NOTHING deployed to worker/beta yet — awaiting owner approval.
+
+## 23 Oct: BETA DEPLOYED (owner approved steps A–C of BETA_DEPLOY_PLAN.md)
+- A: fcs-worker@ granted TAPETIDE_TOKEN secretAccessor, roles/aiplatform.user, bucket
+  objectCreator + objectViewer.
+- B: worker revision `fcs-review-worker-claudebeta1023` (code 4320b11) serving 100% of the
+  worker; 2 CPU / 2 GiB; adds TAPETIDE_TOKEN, GCP_PROJECT_ID/REGION, archive bucket,
+  FCS_HISTORY_BUDGET_MS=300000, FCS_HISTORY_REQUEST_MS=150000; all old settings kept.
+- C: beta revision `alphasynth-equity-fcsbeta1023` (template settings identical to ui1016),
+  0% traffic; smoke-tested (site, capabilities, preflight, publications, bank decline 409,
+  no console errors); tag `expectation-pilot` moved to it. Main still 100% `dossier17`.
+- Rollback: see BETA_DEPLOY_PLAN.md (worker → 00026-gg9; tag → ui1016).
+- NEXT (step D, 24 Oct on fresh Free quota, pre-approved): request EICHERMOT through
+  https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app, wait for FCS +
+  lifecycle, check labels; bank decline already verified.
