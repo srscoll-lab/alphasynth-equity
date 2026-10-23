@@ -159,3 +159,11 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Main (live, 100%): https://alphasynth-equity-oqc2y4ogda-uc.a.run.app (revision dossier17)
 - Beta tag: https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app (revision ui1016)
 - Neither contains the Claude FCS work yet.
+
+## 23 Oct (later): beta readiness + deploy plan
+- Committed 3f86820: daily-limit pause until 00:00 IST (evidence route stops, worker marks
+  DATA_PROVIDER_DAILY_LIMIT, repeat requests return the paused job), bank/NBFC/insurer gate
+  (59 of 250 large/mid caps declined before any call), history time budget via env, wording.
+- Read-only check done; `docs/BETA_DEPLOY_PLAN.md` holds the exact deploy/rollback steps.
+  Main does not use the worker. Worker lacks TAPETIDE_TOKEN, Vertex AI, bucket access and
+  memory; plan grants them. NOTHING deployed to worker/beta yet — awaiting owner approval.
