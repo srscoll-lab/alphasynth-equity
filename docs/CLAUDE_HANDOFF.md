@@ -187,3 +187,13 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   worked end to end (queue, Firestore, Tapetide 3 calls, Gemini, archive).
   Fix 4f38a0f (counted noun as label; prefer main business) — NOT yet on the worker; redeploying
   the worker needs owner approval. Tapetide calls 23 Oct ≈ 24 of 50.
+- Worker redeployed (owner approved): `fcs-review-worker-claudebeta1023b` (code 4acebd2).
+- Step D rerun via beta (07:04 UTC): **Eicher FCS 72 published live on demand** (4/4 factors,
+  45 s, 3 Tapetide calls; history reused the cache = 0 calls). Lifecycle pending: Execution not
+  aligned across quarters — Q1 row labelled "quarter sales", Q4 "Total Volumes" (two rows: RE and
+  VECV), Q3 picked VECV HD trucks. Next fix (offline, needs approval to redeploy): keep the printed
+  unit noun ("motorcycles") as the row's identity/hint, and in history pick the row whose size
+  matches the current quarter's series (RE ~3 lakh vs VECV ~25k).
+- Cost finding: a full on-demand review through the worker costs ~3 Tapetide calls (history
+  reuses cached financials/listing), so the Free plan allows ~15 full reviews/day.
+- Tapetide calls 23 Oct ≈ 27 of 50.
