@@ -407,6 +407,7 @@ async function extractExecutionRowsFromDocument(input: { text: string; targetPer
     + `quotedLabel = the exact printed words naming the measure, as they appear beside the numbers; previousPeriod and currentPeriod = the period wording exactly as printed near those numbers (e.g. "Q1 of FY26"); `
     + `currentPeriodEndDate must be ${input.targetPeriodEnd}; give period end dates as YYYY-MM-DD. Never compute, infer or convert values. `
     + `Never use revenue, profit, EBITDA or margins. Return {"rows": []} if nothing qualifies.\n\n`
+    + `Report the company's own main business first (e.g. the parent brand's total volumes), before subsidiaries or joint ventures.\n\n`
     + (input.labelHints?.length ? `This is an earlier quarter of a series: report FIRST the measure printed as ${JSON.stringify(input.labelHints)} (the same business and row the later quarter used), not other businesses or subsidiaries.\n\n` : "")
     + `Allowed metrics and units: ${JSON.stringify(input.metrics)}\n\nDOCUMENT TEXT:\n${text}`;
   const { rows } = await extractFcsFactors(["execution"], async (_factor, attempt) => {

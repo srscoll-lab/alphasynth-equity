@@ -203,5 +203,16 @@ const q3Hinted = await tapetideExecutionEvidence({ symbol: "EICHERMOT", companyN
 assert.deepEqual(hintsSeen, [["motorcycles"]], "the extractor is told which row to report");
 assert.deepEqual(q3Hinted.candidates.map((c) => `${c.source_metric_label} ${c.current_canonical_value}`), ["motorcycles 325773"], "the VECV row is not kept");
 
+// (c) Beta step D (23 Oct): generic model label "quarter sales"; the counted noun beside the numbers names the row.
+const q1Fy27 = "<!-- page 4 -->\nDuring the quarter, we registered our highest ever quarter sales at 332,940 motorcycles as against 261,326 in Q1 of FY26.";
+const genericLabel = (unit: string, text: string) => tapetideExecutionEvidence({ symbol: "EICHERMOT", companyName: "Eicher Motors", cutoff: CUTOFF, targetPeriodEnd: "2026-06-30",
+  metrics: [{ metric: "sales_volume", units: ["units", "vehicles"] }, { metric: "segment_revenue", units: ["Rs.Cr", "INR crore"] }],
+  callTool: tools(listingOf([[26313284, "2026-08-01", "concall"]])).callTool, archive: async (_b, sha) => `gs://t/${sha}.md`, fetchText: async () => text,
+  extract: async () => [{ metricName: unit === "motorcycles" ? "sales_volume" : "segment_revenue", previousPeriod: "Q1 of FY26", currentPeriod: "the quarter",
+    previousPeriodEndDate: "2025-06-30", currentPeriodEndDate: "2026-06-30", previousValue: 261326, currentValue: 332940, unit, quotedLabel: "quarter sales",
+    comparisonBasis: "same_quarter_prior_year" }] });
+assert.equal((await genericLabel("motorcycles", q1Fy27)).candidates.length, 1, "'motorcycles' beside the numbers verifies the row");
+assert.equal((await genericLabel("Rs crores", q1Fy27.replaceAll("motorcycles", "Rs crores"))).candidates.length, 0, "a money unit is not a row label");
+
 console.log(`Havells Q4 FY26 read from its Information Update table (page 5); Eicher Q4 FY26 derived: ${derived.current_source_locator.derivation.current.how}; FCS ${q4Score.fcs_score}.`);
 console.log("Derived March-quarter rule (additive only, printed components verified, rounding ≤ 0.5 pp, labelled 'derived') verified.");

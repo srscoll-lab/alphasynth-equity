@@ -267,7 +267,9 @@ export async function tapetideExecutionEvidence(input: {
       : !["same_quarter_prior_year", "sequential_quarter", "point_in_time_prior_period"].includes(basis) ? "unsupported_comparison_basis"
       : !Number.isFinite(row.previousValue) || !Number.isFinite(row.currentValue) ? "invalid_values" : null;
     const support = reject ? { ok: false, page: null } : textSupportsComparison(source.text, {
-      labels: [row.metricName.replaceAll("_", " "), ...sourceLabelVariants(row.quotedLabel)],
+      // The counted noun printed beside the numbers also names the row ("332,940 motorcycles" when the
+      // model's label is the generic "quarter sales"); money units ("Rs crores") are too generic to count.
+      labels: [row.metricName.replaceAll("_", " "), ...sourceLabelVariants(row.quotedLabel), ...sourceLabelVariants(row.unit)],
       previousValue: row.previousValue, currentValue: row.currentValue,
       previousPeriod: row.previousPeriod, previousEnd: row.previousPeriodEndDate,
       currentPeriod: row.currentPeriod, currentEnd: row.currentPeriodEndDate });
