@@ -181,3 +181,9 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - NEXT (step D, 24 Oct on fresh Free quota, pre-approved): request EICHERMOT through
   https://expectation-pilot---alphasynth-equity-oqc2y4ogda-uc.a.run.app, wait for FCS +
   lifecycle, check labels; bank decline already verified.
+- Step D (23 Oct, 06:51 UTC): Eicher via the beta link → 3 of 4 factors, no FCS. Cause: the
+  model labelled the right Q1 row (261,326 → 332,940 motorcycles) "quarter sales" (too generic
+  to verify) and the other document's attempt picked VECV trucks. The beta and worker themselves
+  worked end to end (queue, Firestore, Tapetide 3 calls, Gemini, archive).
+  Fix 4f38a0f (counted noun as label; prefer main business) — NOT yet on the worker; redeploying
+  the worker needs owner approval. Tapetide calls 23 Oct ≈ 24 of 50.
