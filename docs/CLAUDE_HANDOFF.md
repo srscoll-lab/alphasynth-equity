@@ -197,3 +197,13 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Cost finding: a full on-demand review through the worker costs ~3 Tapetide calls (history
   reuses cached financials/listing), so the Free plan allows ~15 full reviews/day.
 - Tapetide calls 23 Oct ≈ 27 of 50.
+- Lifecycle-matching fix built offline (owner approved; NOT deployed):
+  1. Each Execution row keeps its printed noun (`unit_wording`, e.g. "motorcycles"); history
+     uses it as the hint when the label is generic ("quarter sales").
+  2. Alignment keeps, in each earlier quarter, only the row of the same size as the current
+     quarter's series (0.5–2×; not for segments, percentages or order books) — VECV is left out.
+  3. Stored quarters measured differently are measured again and replaced only if the new
+     measurement publishes (`historical_checkpoint_remeasured` / `current_checkpoint_remeasured`
+     diagnostics). Needed for Eicher, whose stored Q3/Q4 used VECV rows.
+  Tests: verify:fcs-series-identity (new), verify:fcs-worker-alignment (remeasure case).
+  Next: redeploy the worker (needs approval), rerun Eicher (≈3 calls), then 5-company batches.

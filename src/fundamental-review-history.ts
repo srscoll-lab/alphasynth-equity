@@ -70,7 +70,10 @@ export function lockedSourceLabel(impact: any): string {
 }
 
 export function executionLabelHint(impact: any): string {
-  return String(impact?.current_source_locator?.quoted_label || "").split(" — ")[0].trim().slice(0, 80);
+  const label = String(impact?.current_source_locator?.quoted_label || "").split(" — ")[0].trim().slice(0, 80);
+  const noun = String(impact?.current_source_locator?.unit_wording || "").trim().slice(0, 80);
+  // A generic label ("quarter sales", "Total Volumes") cannot steer earlier quarters; the printed noun can.
+  return !sourceLabelVariants(label).length && sourceLabelVariants(noun).length ? noun : label;
 }
 
 /** Definitions a historical quarter must reproduce: same metrics, bases, units and named segments. */

@@ -333,9 +333,9 @@ export async function tapetideExecutionEvidence(input: {
 
   const hints = (input.labelHints ?? []).filter(Boolean);
   /** With a hint, rows naming the same measure are kept and others dropped (when any match). */
-  const preferHinted = <T extends { quotedLabel: string }>(rows: T[]): T[] => {
+  const preferHinted = <T extends { quotedLabel: string; unit?: string }>(rows: T[]): T[] => {
     if (!hints.length) return rows;
-    const matching = rows.filter((row) => hints.some((hint) => sameSegment(hint, row.quotedLabel)));
+    const matching = rows.filter((row) => hints.some((hint) => sameSegment(hint, row.quotedLabel) || sameSegment(hint, String(row.unit || ""))));
     return matching.length ? matching : rows;
   };
   const addComparisons = async (source: WindowText, rows: ExtractedRow[]) => {
@@ -346,7 +346,9 @@ export async function tapetideExecutionEvidence(input: {
       if (!documentId) break;
       const { doc } = source;
       const locator = (period: string) => ({ section: `Tapetide ${doc.doc_type} ${doc.period}`.trim(), page: verified.page ?? undefined,
-        quoted_label: `${row.quotedLabel} — ${period} (company document text via Tapetide, not cross-verified with NSE/BSE)` });
+        quoted_label: `${row.quotedLabel} — ${period} (company document text via Tapetide, not cross-verified with NSE/BSE)`,
+        // Printed counted noun ("motorcycles"): identifies the row when the label is generic ("quarter sales").
+        unit_wording: row.unit });
       pushCandidate({ metric: row.metricName, label: row.quotedLabel, unit: verified.unit, basis: verified.basis,
         previous: { label: row.previousPeriod, end: row.previousPeriodEndDate, value: row.previousValue },
         current: { label: row.currentPeriod || fiscalQuarterLabel(input.targetPeriodEnd), end: row.currentPeriodEndDate, value: row.currentValue },
@@ -466,7 +468,7 @@ export async function tapetideExecutionEvidence(input: {
         section: side.method === "printed" ? `Tapetide ${side.components[0].docId} (printed)` : "Derived from company documents via Tapetide",
         page: side.method === "printed" ? side.components[0].page ?? undefined : undefined,
         quoted_label: `${label} — ${period} (${side.method === "printed" ? "as printed" : `derived: ${fiscalYear} full year − Q1 to Q3`}; company document text via Tapetide, not cross-verified with NSE/BSE)`,
-        derivation });
+        unit_wording: chain[0].row.unit, derivation });
       pushCandidate({ metric, label, unit: chain[0].unit, basis: "same_quarter_prior_year",
         previous: { label: `Q4 ${fy(year - 1)}`, end: `${year - 1}-03-31`, value: previous.value },
         current: { label: `Q4 ${fy(year)}`, end: target, value: current.value },

@@ -230,7 +230,16 @@ export class FundamentalReviewService {
     job.checkpointHistory ??= [];
     if (!current) job.diagnostics.push({ outcome: "current_score_not_quarterly_comparable",
       detail: "Lifecycle requires four scorer-approved factors for the same supported quarter, with consistent period and methodology metadata." });
-    if (current) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, current);
+    if (current) {
+      // This job measured the current quarter afresh; a stored checkpoint measured differently is replaced (and logged).
+      const stored = job.checkpointHistory.find((item) => item.periodEnd === current!.periodEnd);
+      if (stored && stored.comparabilityKey !== current.comparabilityKey) {
+        job.diagnostics.push({ outcome: "current_checkpoint_remeasured", period_end: current.periodEnd,
+          replaced_job: stored.sourceJobId, replaced_fcs: stored.fcsScore });
+        job.checkpointHistory = job.checkpointHistory.filter((item) => item.periodEnd !== current!.periodEnd);
+      }
+      job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, current);
+    }
     await this.transition(job, "lifecycle_processing");
     // Which factors each historical quarter lacked, so the report can say why
     // the lifecycle is pending (e.g. no printed Total Debt for 30 Sep).
@@ -242,11 +251,12 @@ export class FundamentalReviewService {
       let target = previousQuarterEnd(current.periodEnd);
       for (let attempt = 0; attempt < 2; attempt += 1, target = previousQuarterEnd(target)) {
         const cached = job.checkpointHistory.find((item) => item.periodEnd === target);
-        if (cached) {
-          if (cached.comparabilityKey !== current.comparabilityKey) job.diagnostics.push({
-            outcome: "historical_checkpoint_harmonisation_required", period_end: target });
-          continue;
-        }
+        if (cached?.comparabilityKey === current.comparabilityKey) continue;
+        // A stored quarter measured differently (e.g. another Execution row) would block the
+        // lifecycle forever: measure it again; it is replaced only if the new measurement publishes.
+        const remeasure = Boolean(cached);
+        if (remeasure) job.diagnostics.push({ outcome: "historical_checkpoint_remeasured", period_end: target,
+          replaced_job: cached!.sourceJobId, replaced_fcs: cached!.fcsScore });
         if (Date.now() >= deadline - 1000) break;
         try {
           const response = await this.fetchImpl(this.options.evidenceUrl, {
@@ -282,7 +292,10 @@ export class FundamentalReviewService {
           else quarterEvidence.push({ periodEnd: target, candidates, documents: evidence.documents || [], validations: evidence.validations || [] });
           const checkpoint = checkpointFromScore({ symbol: job.symbol, score: historicalScore,
             informationCutoff: job.informationCutoff, calculatedAt: this.now().toISOString(), sourceJobId: job.jobId!, documents: evidence.documents });
-          if (checkpoint?.periodEnd === target) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, checkpoint);
+          if (checkpoint?.periodEnd === target) {
+            if (remeasure) job.checkpointHistory = job.checkpointHistory.filter((item) => item.periodEnd !== target);
+            job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, checkpoint);
+          }
           await this.transition(job, "lifecycle_processing");
         } catch (error) {
           job.diagnostics.push({ outcome: "historical_checkpoint_incomplete", period_end: target,detail:error instanceof Error?error.message:String(error) });

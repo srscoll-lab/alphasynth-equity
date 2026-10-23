@@ -211,7 +211,9 @@ const genericLabel = (unit: string, text: string) => tapetideExecutionEvidence({
   extract: async () => [{ metricName: unit === "motorcycles" ? "sales_volume" : "segment_revenue", previousPeriod: "Q1 of FY26", currentPeriod: "the quarter",
     previousPeriodEndDate: "2025-06-30", currentPeriodEndDate: "2026-06-30", previousValue: 261326, currentValue: 332940, unit, quotedLabel: "quarter sales",
     comparisonBasis: "same_quarter_prior_year" }] });
-assert.equal((await genericLabel("motorcycles", q1Fy27)).candidates.length, 1, "'motorcycles' beside the numbers verifies the row");
+const nounRow = (await genericLabel("motorcycles", q1Fy27)).candidates;
+assert.equal(nounRow.length, 1, "'motorcycles' beside the numbers verifies the row");
+assert.equal(nounRow[0].current_source_locator.unit_wording, "motorcycles", "the printed noun is kept as the row's identity for history");
 assert.equal((await genericLabel("Rs crores", q1Fy27.replaceAll("motorcycles", "Rs crores"))).candidates.length, 0, "a money unit is not a row label");
 
 console.log(`Havells Q4 FY26 read from its Information Update table (page 5); Eicher Q4 FY26 derived: ${derived.current_source_locator.derivation.current.how}; FCS ${q4Score.fcs_score}.`);

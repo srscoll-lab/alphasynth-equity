@@ -57,8 +57,10 @@ async function bundleFor(target: string) {
 }
 
 let scoringCalls = 0;
-const service = new FundamentalReviewService({ store: new InMemoryFundamentalReviewStore(), queue: new InMemoryFundamentalReviewQueue(),
-  historicalBackfillEnabled: true, evidenceUrl: "https://test/evidence", scoringUrl: "https://test/score", now: () => new Date("2026-10-22T08:00:00Z"),
+const store = new InMemoryFundamentalReviewStore();
+let clock = new Date("2026-10-22T08:00:00Z");
+const service = new FundamentalReviewService({ store, queue: new InMemoryFundamentalReviewQueue(),
+  historicalBackfillEnabled: true, evidenceUrl: "https://test/evidence", scoringUrl: "https://test/score", now: () => clock,
   fetch: async (input, init) => {
     const body = JSON.parse(String(init?.body));
     if (String(input).endsWith("/evidence")) return Response.json(await bundleFor(body.target_period_end || "2026-06-30"));
@@ -78,4 +80,17 @@ assert.equal(new Set(published.checkpoints.map((c: any) => c.comparabilityKey)).
 assert.equal(published.fcs_score, published.checkpoints.at(-1).fcsScore, "headline FCS uses the same like-for-like measures as its lifecycle");
 assert.equal(scoringCalls, 6, "3 raw scores + 3 aligned rescores");
 console.log(`Glenmark-shaped worker run: ${published.lifecycle_assessment.classification}; FCS ${published.checkpoints.map((c: any) => `${c.periodLabel} ${c.fcsScore}`).join(" → ")}`);
+
+// Stored earlier quarters measured differently (23 Oct, Eicher: VECV rows) are measured again and replaced.
+const stored = (await store.readLatest("GLENMARK"))!;
+stored.checkpointHistory = stored.checkpointHistory!.map((c: any) => c.periodEnd < "2026-06-30" ? { ...c, comparabilityKey: "f".repeat(64), fcsScore: 11 } : c);
+await store.save(stored);
+clock = new Date("2026-10-23T08:00:00Z");
+const again = await service.request({ symbol: "GLENMARK", companyName: "Glenmark Pharmaceuticals", informationCutoff: "2026-10-23" });
+assert.notEqual(again.jobId, job.jobId);
+const redone = await service.execute({ jobId: again.jobId!, symbol: "GLENMARK" });
+assert.deepEqual(redone.diagnostics.filter((d: any) => d.outcome === "historical_checkpoint_remeasured").map((d: any) => [d.period_end, d.replaced_fcs]),
+  [["2026-03-31", 11], ["2025-12-31", 11]]);
+assert.equal(redone.status, "ready", "lifecycle forms again after re-measuring");
+assert.ok(!redone.checkpointHistory!.some((c: any) => c.fcsScore === 11), "the mismatched stored quarters were replaced");
 console.log("Worker aligns Execution across quarters (segment wording, common segments) and publishes the lifecycle.");

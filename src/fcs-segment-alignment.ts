@@ -42,8 +42,39 @@ export function canonicalUnitSpelling(unit: string): string {
 const rawLabel = (candidate: any) => String(candidate?.source_metric_label || candidate?.current_source_locator?.quoted_label || "").split(" — ")[0].trim();
 const execution = (quarter: QuarterEvidence) => quarter.candidates.filter((candidate) => candidate.factor_id === "execution");
 
+/**
+ * Same business across quarters by size: when the latest quarter has one row of a
+ * (non-segment, non-percentage) metric, an earlier quarter keeps only its row closest
+ * in size, within 0.5–2×. Eicher (23 Oct): "quarter sales" 332,940 motorcycles; the
+ * earlier calls also give VECV truck volumes (~25,000) under generic labels.
+ */
+const SIZE_BAND = [0.5, 2] as const;
+export function rowsOutOfSeries(quarters: QuarterEvidence[]): Set<string> {
+  const excluded = new Set<string>();
+  const latest = [...quarters].sort((a, b) => a.periodEnd.localeCompare(b.periodEnd)).at(-1);
+  if (!latest) return excluded;
+  const sized = (c: any) => c.canonical_metric_id !== "segment_revenue" && c.canonical_metric_id !== "order_book"
+    && !/percent|basis points/i.test(String(c.canonical_unit)) && Number(c.current_canonical_value) > 0;
+  for (const metric of new Set(execution(latest).filter(sized).map((c) => String(c.canonical_metric_id)))) {
+    const reference = execution(latest).filter((c) => c.canonical_metric_id === metric);
+    if (reference.length !== 1) continue;
+    const size = Number(reference[0].current_canonical_value);
+    for (const quarter of quarters) {
+      if (quarter === latest) continue;
+      const rows = execution(quarter).filter((c) => c.canonical_metric_id === metric && sized(c));
+      const distance = (c: any) => Math.abs(Math.log(Number(c.current_canonical_value) / size));
+      const inBand = rows.filter((c) => { const ratio = Number(c.current_canonical_value) / size; return ratio >= SIZE_BAND[0] && ratio <= SIZE_BAND[1]; })
+        .sort((a, b) => distance(a) - distance(b));
+      for (const row of rows) if (row !== inBand[0]) excluded.add(row.candidate_id);
+    }
+  }
+  return excluded;
+}
+
 export function alignExecutionAcrossQuarters(quarters: QuarterEvidence[]): AlignmentResult {
   const everyHasOrderBook = quarters.every((q) => execution(q).some((c) => c.canonical_metric_id === "order_book"));
+  const outOfSeries = rowsOutOfSeries(quarters);
+  const rows = (q: QuarterEvidence) => execution(q).filter((c) => !outOfSeries.has(c.candidate_id));
   // Groups of matching measures across quarters.
   type Group = { metric: string; label: string; tokens: string[]; perQuarter: Map<string, any[]> };
   const groups: Group[] = [];
@@ -51,11 +82,11 @@ export function alignExecutionAcrossQuarters(quarters: QuarterEvidence[]): Align
   // volume growth) is told apart by its label, like segment revenue.
   const multiRow = new Set(quarters.flatMap((q) => {
     const counts = new Map<string, number>();
-    for (const c of execution(q)) counts.set(c.canonical_metric_id, (counts.get(c.canonical_metric_id) || 0) + 1);
+    for (const c of rows(q)) counts.set(c.canonical_metric_id, (counts.get(c.canonical_metric_id) || 0) + 1);
     return [...counts].filter(([, n]) => n > 1).map(([metric]) => metric);
   }));
   for (const quarter of quarters) {
-    for (const candidate of execution(quarter)) {
+    for (const candidate of rows(quarter)) {
       const metric = String(candidate.canonical_metric_id);
       if (everyHasOrderBook && metric !== "order_book") continue;
       const label = rawLabel(candidate);
