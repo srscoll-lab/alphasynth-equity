@@ -232,3 +232,9 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Validation study proposal: `C:\Users\admin\Documents\Claude-AlphaSynth\research\MULTIBAGGER_VALIDATION_STUDY.md`
   (session multibagger-study); needs owner approval of a ≤5-call probe and the daily call split.
 - Batch tool: `node scripts/run-beta-fcs-batch.mjs <outDir> SYMBOL:Name ...` (results in output/beta-batch-*).
+- Worker redeployed (owner approved): `fcs-review-worker-claudebeta1024` (code 65c88a0 = 27fb44a fixes);
+  beta tag (fcsbeta1023) and main (dossier17) unchanged.
+- NEXT (owner approved 24 Oct, offline only, with tests): fix Thermax (order book reported twice per
+  quarter, YoY + QoQ → keep the year-on-year comparison) and DMart (store count aligned but keys
+  differ after rescoring → find the cause from its stored job dmart-508ca1da-…, likely comparison
+  basis or previous period). Report before any redeploy.
