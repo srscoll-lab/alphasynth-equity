@@ -306,11 +306,9 @@ export class FundamentalReviewService {
     // Three quarters published but Execution was measured differently (e.g. segments
     // worded or cut differently): align to the measures common to all three, rescore
     // with the authoritative scorer, and replace only checkpoints created by this job.
-    if (!assessment && current && quarterEvidence.length === 3
-        && quarterEvidence.every((quarter) => {
-          const existing = job.checkpointHistory!.find((item) => item.periodEnd === quarter.periodEnd);
-          return !existing || existing.sourceJobId === job.jobId;
-        })) {
+    // Every quarter here was measured by this job (a stored checkpoint for the current
+    // quarter may carry an earlier job's id when the measurement was identical — Eicher, 24 Oct).
+    if (!assessment && current && quarterEvidence.length === 3) {
       const alignment = alignExecutionAcrossQuarters(quarterEvidence);
       if (!alignment.aligned) {
         job.diagnostics.push({ outcome: "execution_not_comparable_across_quarters", detail: alignment.reason, measures: alignment.segmentsByQuarter });
@@ -331,6 +329,8 @@ export class FundamentalReviewService {
           const keys = new Set(rescored.map((item) => item.checkpoint?.comparabilityKey));
           if (rescored.every((item) => item.checkpoint) && keys.size === 1) {
             const periods = new Set(rescored.map((item) => item.periodEnd));
+            for (const item of job.checkpointHistory!) if (periods.has(item.periodEnd) && item.sourceJobId !== job.jobId)
+              job.diagnostics.push({ outcome: "checkpoint_replaced_by_aligned_measurement", period_end: item.periodEnd, replaced_job: item.sourceJobId, replaced_fcs: item.fcsScore });
             job.checkpointHistory = job.checkpointHistory!.filter((item) => !periods.has(item.periodEnd));
             for (const item of rescored) job.checkpointHistory = mergeCheckpoint(job.checkpointHistory, item.checkpoint!);
             const latest = rescored.find((item) => item.periodEnd === current!.periodEnd)!;

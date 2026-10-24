@@ -204,7 +204,7 @@ assert.deepEqual(hintsSeen, [["motorcycles"]], "the extractor is told which row 
 assert.deepEqual(q3Hinted.candidates.map((c) => `${c.source_metric_label} ${c.current_canonical_value}`), ["motorcycles 325773"], "the VECV row is not kept");
 
 // (c) Beta step D (23 Oct): generic model label "quarter sales"; the counted noun beside the numbers names the row.
-const q1Fy27 = "<!-- page 4 -->\nDuring the quarter, we registered our highest ever quarter sales at 332,940 motorcycles as against 261,326 in Q1 of FY26.";
+const q1Fy27 = "<!-- page 1 -->\nEicher Motors Q1 FY27 earnings call.\n<!-- page 4 -->\nDuring the quarter, we registered our highest ever quarter sales at 332,940 motorcycles as against 261,326 in Q1 of FY26.";
 const genericLabel = (unit: string, text: string) => tapetideExecutionEvidence({ symbol: "EICHERMOT", companyName: "Eicher Motors", cutoff: CUTOFF, targetPeriodEnd: "2026-06-30",
   metrics: [{ metric: "sales_volume", units: ["units", "vehicles"] }, { metric: "segment_revenue", units: ["Rs.Cr", "INR crore"] }],
   callTool: tools(listingOf([[26313284, "2026-08-01", "concall"]])).callTool, archive: async (_b, sha) => `gs://t/${sha}.md`, fetchText: async () => text,

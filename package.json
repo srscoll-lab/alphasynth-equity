@@ -46,6 +46,7 @@
     "verify:fcs-derived-quarter": "node --experimental-strip-types scripts/verify-fcs-derived-quarter.ts",
     "verify:fcs-beta-readiness": "node --experimental-strip-types scripts/verify-fcs-beta-readiness.ts",
     "verify:fcs-series-identity": "node --experimental-strip-types scripts/verify-fcs-series-identity.ts",
+    "verify:fcs-worker-remeasure": "node --experimental-strip-types scripts/verify-fcs-worker-remeasure.ts",
     "verify:fcs-evidence-orchestrator": "node scripts/verify-fcs-evidence-orchestrator.mjs",
     "build:fundamental-review-evidence": "node --experimental-strip-types scripts/build-fundamental-review-evidence-bundle.ts",
     "verify:bms-momentum-radar": "node scripts/verify-bms-momentum-radar.mjs",

@@ -128,6 +128,18 @@ export function normalisePeriodWording(value: string): string {
     .replace(/\b(?:fy|financial year|fiscal year|fiscal)\s*'?\s*20(\d{2})\b/g, "fy$1");   // "FY 2026", "financial year 2026" → "fy26"
 }
 
+/**
+ * Period wording that names no year ("During the quarter", "last quarter of last year") is
+ * only accepted when the quarter's own identity ("Q1 FY27", or its end date) is printed nearby.
+ * TVS (24 Oct): rounded spoken figures "70,000 → 130,000" passed on wording copied verbatim.
+ */
+const EXPLICIT_PERIOD = /\bfy\s*'?\d{2}\b|\b20\d{2}\b|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\s*['’-]?\s*\d{2}\b|\d{1,2}[-./]\d{1,2}[-./]\d{2,4}/;
+function periodIdentified(window: string, period: string, end: string): boolean {
+  if (!containsReportingPeriod(window, period, end)) return false;
+  if (EXPLICIT_PERIOD.test(period) || !/^\d{4}-\d{2}-\d{2}$/.test(end || "")) return true;
+  return containsReportingPeriod(window, normalisePeriodWording(fiscalQuarterLabel(end)), end);
+}
+
 /** Same rule as the official checker's text path: label, both values within 350 chars, both periods within 3000. */
 export function textSupportsComparison(text: string, check: { labels: string[]; previousValue: number; currentValue: number;
   previousPeriod: string; previousEnd: string; currentPeriod: string; currentEnd: string }): { ok: boolean; page: number | null } {
@@ -140,8 +152,8 @@ export function textSupportsComparison(text: string, check: { labels: string[]; 
       const values = lower.slice(Math.max(0, i - 350), i + label.length + 350);
       const window = normalisePeriodWording(lower.slice(Math.max(0, i - 3000), i + label.length + 3000));
       if (containsReportedNumber(values, check.previousValue) && containsReportedNumber(values, check.currentValue)
-        && containsReportingPeriod(window, check.previousPeriod, check.previousEnd)
-        && containsReportingPeriod(window, check.currentPeriod, check.currentEnd)) return { ok: true, page: pageAt(flat, i) };
+        && periodIdentified(window, check.previousPeriod, check.previousEnd)
+        && periodIdentified(window, check.currentPeriod, check.currentEnd)) return { ok: true, page: pageAt(flat, i) };
     }
   }
   return { ok: false, page: null };
