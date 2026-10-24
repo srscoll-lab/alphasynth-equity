@@ -213,3 +213,22 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - NEXT (24 Oct, after 05:30 IST = new UTC date): 1) request EICHERMOT via the beta link — expect
   FCS + lifecycle (stored Q3/Q4 remeasured); 2) batch 1 of the 25-company test THROUGH THE BETA
   LINK (TVSMOTOR, BAJAJ-AUTO, MARUTI, LT, BEL), ~3 Tapetide calls each, one at a time.
+
+## 24 Oct: first beta batch (live beta link, Free plan, 18 Tapetide calls)
+| Company | Result | FCS | Lifecycle | Why pending / failed |
+|---|---|---|---|---|
+| EICHERMOT | published | 72 | pending | alignment skipped (stored current checkpoint from 23 Oct) — FIXED 27fb44a |
+| TVSMOTOR | published | 57 | pending | vague spoken figures (70,000→130,000) passed — FIXED 27fb44a; quarters used different rows |
+| MARUTI | published | 43 | **WATCH** (65→45→43) | — |
+| THERMAX | published | 40 | pending | order book reported twice per quarter (YoY + QoQ) → alignment gives up; keep YoY (TODO) |
+| DMART | published | 70 | pending | store count aligned but keys differ after rescoring (likely comparison basis/period) (TODO) |
+| VOLTAS | 3 of 4 | — | — | Execution rows not found in text (refused correctly) |
+| BAJAJ-AUTO, LT, BEL | refused | — | — | older built-in library report exists ("report_ready"); users cannot refresh it (DECISION) |
+- Of the 25-company list, 15 are blocked by older built-in reports (BAJAJ-AUTO, LT, BEL, INFY,
+  HCLTECH, PERSISTENT, SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT,
+  BHARTIARTL); CROMPTON is not enabled. Still requestable: INDIGO, POWERGRID, SRF, ASIANPAINT.
+- 27fb44a (not deployed): alignment runs when all three quarters were measured in the run;
+  vague period wording needs "Q1 FY27"/end date nearby. Test: verify:fcs-worker-remeasure.
+- Validation study proposal: `C:\Users\admin\Documents\Claude-AlphaSynth\research\MULTIBAGGER_VALIDATION_STUDY.md`
+  (session multibagger-study); needs owner approval of a ≤5-call probe and the daily call split.
+- Batch tool: `node scripts/run-beta-fcs-batch.mjs <outDir> SYMBOL:Name ...` (results in output/beta-batch-*).
