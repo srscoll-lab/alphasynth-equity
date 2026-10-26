@@ -260,3 +260,8 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   quarter (largest = main business). Test: verify:fcs-worker-remeasure section 3.
 - NEXT: worker redeploy (needs approval); rerun THERMAX, EICHERMOT, TVSMOTOR (~9 calls) on a day
   with quota left after the owner's C1 batch.
+- Worker redeployed (owner approved; first upload timed out, retry OK): `fcs-review-worker-claudebeta1026b`
+  (code c5364ab). Beta tag and main unchanged.
+- NEXT (27 Oct, pre-approved): after the owner's C1 study batch, check today's calls in
+  `research/c1/tapetide/run_log.csv`, then rerun THERMAX, EICHERMOT, TVSMOTOR through the beta
+  (`node scripts/run-beta-fcs-batch.mjs output/beta-batch-20261027 ...`, ~9 calls) and report.
