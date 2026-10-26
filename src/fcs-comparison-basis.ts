@@ -10,8 +10,12 @@ export const BALANCE_SHEET_STOCK_METRICS = new Set([
   "debt_to_equity", "current_ratio", "net_debt_to_ebitda_ratio", "gnpa", "nnpa", "capital_adequacy",
 ]);
 
-/** Execution balances as at a date (an order book is a backlog, not a flow). */
-export const EXECUTION_STOCK_METRICS = new Set(["order_book"]);
+/**
+ * Execution balances as at a date (an order book is a backlog, not a flow). Store count,
+ * customer base, loan book and AUM are balances too: DMart (24 Oct) had store count
+ * "same quarter prior year" in Q1 but "as at" in Q3/Q4, so the quarters never matched.
+ */
+export const EXECUTION_STOCK_METRICS = new Set(["order_book", "store_count", "customer_franchise", "loan_assets", "assets_under_management"]);
 
 const PERIOD_BASES = new Set(["annual_prior_year", "year_to_date_prior_year", "same_quarter_prior_year", "sequential_quarter"]);
 

@@ -238,3 +238,16 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   quarter, YoY + QoQ → keep the year-on-year comparison) and DMart (store count aligned but keys
   differ after rescoring → find the cause from its stored job dmart-508ca1da-…, likely comparison
   basis or previous period). Report before any redeploy.
+
+## 26 Oct: Thermax and DMart fixes (offline, owner approved; NOT deployed)
+- DMart cause: store count was "same quarter prior year" in Q1 but "as at" in Q3/Q4, so keys
+  never matched. Store count, customer base, loan book and AUM are now balances ("as at"), like
+  the order book. Scorer check: DMart Q1 FY27 70 and Q4 FY26 71 publish with the same key as the
+  stored Q3/Q4 (6e7e4aed).
+- Also: "Q1/26"-style period wording (DMart tables) now counts as naming its year (the 24 Oct
+  vague-period rule had refused it).
+- Thermax cause: order book reported twice per quarter (vs a year ago and vs last quarter); the
+  alignment now keeps the year-on-year comparison (else the longest) in every quarter.
+- Tests: verify:fcs-series-identity (sections 5–6). All 21 suites, lint, build pass.
+- NEXT: worker redeploy needs owner approval; then rerun Eicher, TVS, Thermax, DMart through the
+  beta (~12 calls; mind the owner's daily C1 study batch of 40 calls).

@@ -98,6 +98,15 @@ export function alignExecutionAcrossQuarters(quarters: QuarterEvidence[]): Align
       group.perQuarter.set(quarter.periodEnd, [...(group.perQuarter.get(quarter.periodEnd) || []), candidate]);
     }
   }
+  // The same measure twice in one quarter (Thermax, 24 Oct: order book against a year ago AND
+  // against last quarter): keep the year-on-year comparison, else the longest one, in every quarter.
+  const yearBefore = (end: string) => `${Number(end.slice(0, 4)) - 1}${end.slice(4)}`;
+  for (const group of groups) for (const [periodEnd, rows] of group.perQuarter) {
+    if (rows.length < 2) continue;
+    const previousEnd = (c: any) => String(c.previous_period?.end_date || "");
+    const yoy = rows.filter((c) => previousEnd(c) === yearBefore(String(c.current_period?.end_date || periodEnd)));
+    group.perQuarter.set(periodEnd, yoy.length === 1 ? yoy : [[...rows].sort((a, b) => previousEnd(a).localeCompare(previousEnd(b)))[0]]);
+  }
   const common = groups.filter((group) => quarters.every((quarter) => (group.perQuarter.get(quarter.periodEnd) || []).length === 1));
   if (!common.length) {
     return { aligned: false, segments: [], quarters: [], reason: "no_common_execution_measure", segmentsByQuarter: Object.fromEntries(quarters.map((quarter) =>

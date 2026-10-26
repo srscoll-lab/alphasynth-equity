@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { alignExecutionAcrossQuarters, rowsOutOfSeries, type QuarterEvidence } from "../src/fcs-segment-alignment.ts";
 import { executionLabelHint, historyMetricDefinitions } from "../src/fundamental-review-history.ts";
+import { normalizeComparisonBasis } from "../src/fcs-comparison-basis.ts";
+import { tapetideExecutionEvidence } from "../src/tapetide-fcs-documents.ts";
 
 // Real rows from the 23 Oct beta run (Eicher): the current quarter's label is generic and the
 // earlier calls also give VECV truck volumes.
@@ -37,4 +39,36 @@ const seg = (id: string, end: string, label: string, cur: number) => row(id, end
 assert.equal(rowsOutOfSeries([quarter("2025-12-31", [seg("a", "2025-12-31", "Cables", 2241), seg("b", "2025-12-31", "Lighting", 423)]),
   quarter("2026-06-30", [seg("c", "2026-06-30", "Cables", 2456)])]).size, 0);
 
-console.log("Execution series identity: printed noun as hint, same business by size, no forced series — verified.");
+// 5. Thermax (24 Oct beta): each quarter has the order book twice (vs a year ago and vs last quarter)
+//    plus order inflow; one comparison per quarter is kept — the year-on-year one.
+const ob = (id: string, end: string, prevEnd: string, prev: number, cur: number) => ({ ...row(id, end, "Order Balance", prev, cur, "INR crore", "order_book"),
+  comparison_basis: "point_in_time_prior_period", previous_period: { end_date: prevEnd } });
+const inflow = (id: string, end: string) => ({ ...row(id, end, "Order Booking", 2700, 2800, "INR crore", "order_inflow"), previous_period: { end_date: `${Number(end.slice(0, 4)) - 1}${end.slice(4)}` } });
+const thermax = alignExecutionAcrossQuarters([
+  quarter("2025-12-31", [ob("q3-yoy", "2025-12-31", "2024-12-31", 10500, 12100), ob("q3-qoq", "2025-12-31", "2025-09-30", 11900, 12100), inflow("q3-in", "2025-12-31")]),
+  quarter("2026-03-31", [ob("q4-yoy", "2026-03-31", "2025-03-31", 11000, 13604), ob("q4-qoq", "2026-03-31", "2025-12-31", 12100, 13604), inflow("q4-in", "2026-03-31")]),
+  quarter("2026-06-30", [ob("q1-yoy", "2026-06-30", "2025-06-30", 11376, 14045), ob("q1-qoq", "2026-06-30", "2026-03-31", 13604, 14045), inflow("q1-in", "2026-06-30")]),
+]);
+assert.equal(thermax.aligned, true, JSON.stringify(thermax.segmentsByQuarter));
+assert.equal(thermax.measure, "order_book");
+assert.deepEqual(thermax.quarters.map((q) => q.candidates.map((c) => c.candidate_id).join()), ["q3-yoy", "q4-yoy", "q1-yoy"]);
+
+// 6. DMart (24 Oct beta): store count is a balance at a date, whatever basis the model wrote.
+assert.equal(normalizeComparisonBasis("execution", "store_count", "same_quarter_prior_year"), "point_in_time_prior_period");
+assert.equal(normalizeComparisonBasis("execution", "store_count", "point_in_time_prior_period"), "point_in_time_prior_period");
+assert.equal(normalizeComparisonBasis("execution", "sales_volume", "same_quarter_prior_year"), "same_quarter_prior_year", "volumes stay flows");
+const stores = (basis: string, end: string, prevEnd: string, text: string) => tapetideExecutionEvidence({ symbol: "DMART", companyName: "Avenue Supermarts", cutoff: "2026-10-24",
+  targetPeriodEnd: end, metrics: [{ metric: "store_count", units: ["count"] }], archive: async (_b, sha) => `gs://t/${sha}.md`, fetchText: async () => text,
+  callTool: async () => ({ data: { documents: [{ doc_id: 7, doc_type: "presentation", has_markdown: true, links: { markdown_url: "https://filings.tapetide.com/d.md" },
+    doc_date: new Date(Date.parse(`${end}T00:00:00Z`) + 40 * 86_400_000).toISOString().slice(0, 10) }] } }),
+  extract: async () => [{ metricName: "store_count", previousPeriod: prevEnd === "2025-06-30" ? "Q1/26" : "FY25", currentPeriod: prevEnd === "2025-06-30" ? "Q1/27" : "FY26",
+    previousPeriodEndDate: prevEnd, currentPeriodEndDate: end, previousValue: prevEnd === "2025-06-30" ? 424 : 415, currentValue: prevEnd === "2025-06-30" ? 503 : 500,
+    unit: "count", quotedLabel: "Total Stores", comparisonBasis: basis }] });
+const q1Stores = await stores("same_quarter_prior_year", "2026-06-30", "2025-06-30", "<!-- page 3 -->\nQ1 FY27 update. Total Stores Q1/26 424 Q1/27 503 (as of 30 June 2026 vs 30 June 2025)");
+const q4Stores = await stores("point_in_time_prior_period", "2026-03-31", "2025-03-31", "<!-- page 3 -->\nQ4 FY26 update. Stores FY25 415 FY26 500 Total Stores (as of 31 March 2026)");
+assert.deepEqual([q1Stores.candidates[0]?.comparison_basis, q4Stores.candidates[0]?.comparison_basis], ["point_in_time_prior_period", "point_in_time_prior_period"],
+  "both quarters now carry the same basis, so they share one series identity");
+assert.equal((await stores("same_quarter_prior_year", "2026-06-30", "2025-06-30", "<!-- page 3 -->\nQ1 FY27 update. Total Stores Q1/26 424 Q1/27 503")).candidates.length, 1,
+  "'Q1/26' names its year (DMart's table style), so no date is needed nearby");
+
+console.log("Execution series identity: printed noun as hint, same business by size, no forced series, one comparison per measure, stock basis — verified.");
