@@ -251,3 +251,12 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Tests: verify:fcs-series-identity (sections 5–6). All 21 suites, lint, build pass.
 - NEXT: worker redeploy needs owner approval; then rerun Eicher, TVS, Thermax, DMart through the
   beta (~12 calls; mind the owner's daily C1 study batch of 40 calls).
+- 26 Oct worker `fcs-review-worker-claudebeta1026` (4a5b69f) deployed (owner approved). Reruns via
+  beta (owner's C1 batch had used 40 calls; 9 used here): **DMART lifecycle ESTABLISHED 70→71→70**;
+  THERMAX FCS 40 and EICHERMOT FCS 72 still pending — only the non-matching earlier quarter was
+  re-measured, so alignment lacked the third quarter; Eicher's current quarter also had RE + VECV rows.
+- Fixed offline (commit after 4a5b69f, NOT deployed): if either earlier quarter must be measured,
+  measure both; with several current rows keep the one whose size continues in every earlier
+  quarter (largest = main business). Test: verify:fcs-worker-remeasure section 3.
+- NEXT: worker redeploy (needs approval); rerun THERMAX, EICHERMOT, TVSMOTOR (~9 calls) on a day
+  with quota left after the owner's C1 batch.

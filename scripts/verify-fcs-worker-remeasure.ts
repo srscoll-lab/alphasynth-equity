@@ -27,7 +27,7 @@ assert.equal((await run("<!-- page 9 -->\nQ1 FY27 versus Q1 FY26. " + spoken, "2
 //    the earlier quarters were re-measured, and Q4 had two rows (Royal Enfield and VECV).
 const CUTOFF = "2026-10-24";
 const ends = ["2025-12-31", "2026-03-31", "2026-06-30"];
-const exec: Record<string, Array<[string, number, number]>> = {
+const exec: Record<string, Array<[string, number, number]>> & { [end: string]: Array<[string, number, number]> } = {
   "2025-12-31": [["motorcycles", 269039, 325773]],
   "2026-03-31": [["Total Volumes", 280801, 313811], ["Total Volumes", 31070, 34012]],
   "2026-06-30": [["motorcycles", 261326, 332940]],
@@ -79,4 +79,31 @@ assert.ok(outcomes.includes("checkpoint_replaced_by_aligned_measurement"), "the 
 assert.equal(done.status, "ready", done.message);
 assert.equal(new Set(done.checkpointHistory!.filter((c: any) => c.informationCutoff === CUTOFF).map((c: any) => c.comparabilityKey)).size, 1);
 console.log(`Eicher-shaped re-run: ${done.scoreResult?.lifecycle}; ${done.checkpointHistory!.map((c: any) => `${c.periodLabel} ${c.fcsScore}`).join(" → ")}`);
+
+// 3. 26 Oct beta: the current quarter has two rows (Royal Enfield + VECV), one stored earlier quarter
+//    matches the current measurement and the other does not. Both earlier quarters are measured again.
+exec["2026-06-30"] = [["Total Volumes", 261326, 332940], ["VECV", 21610, 24815]];
+const q1Two = await bundleFor("2026-06-30");
+const rawCurrent = checkpointFromScore({ symbol: "EICHERMOT", score: score({ symbol: "EICHERMOT", ...q1Two }), informationCutoff: "2026-10-25", calculatedAt: "t", sourceJobId: "job-25", documents: q1Two.documents })!;
+const store3 = new InMemoryFundamentalReviewStore();
+await store3.save({ jobId: "job-25", symbol: "EICHERMOT", companyName: "Eicher", status: "score_ready_lifecycle_pending", completedFactors: 4, totalFactors: 4,
+  requestedAt: "2026-10-25T07:00:00Z", updatedAt: "2026-10-25T07:01:00Z", message: "", resultAvailable: true, informationCutoff: "2026-10-25",
+  evidenceRows: [], diagnostics: [], scoreResult: null, failureCode: null, lastCompletedLifecycle: null,
+  checkpointHistory: [{ ...rawCurrent, periodEnd: "2025-12-31", periodLabel: "Q3 FY26", comparabilityKey: "c".repeat(64), fcsScore: 74 },
+    { ...rawCurrent, periodEnd: "2026-03-31", periodLabel: "Q4 FY26", fcsScore: 71 }, rawCurrent] } as any);
+const service3 = new FundamentalReviewService({ store: store3, queue: new InMemoryFundamentalReviewQueue(), historicalBackfillEnabled: true,
+  evidenceUrl: "https://test/evidence", scoringUrl: "https://test/score", now: () => new Date("2026-10-26T06:00:00Z"),
+  fetch: async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith("/evidence")) return Response.json(await bundleFor(body.target_period_end || "2026-06-30"));
+    return Response.json(score({ symbol: body.symbol, candidates: body.candidates, documents: body.documents, validations: body.validations }));
+  } });
+const job3 = await service3.request({ symbol: "EICHERMOT", companyName: "Eicher Motors", informationCutoff: "2026-10-26" });
+const done3 = await service3.execute({ jobId: job3.jobId!, symbol: "EICHERMOT" });
+assert.deepEqual(done3.diagnostics.filter((d: any) => d.outcome === "historical_checkpoint_remeasured").map((d: any) => d.period_end), ["2026-03-31", "2025-12-31"],
+  "the matching stored quarter is measured again too, so all three can be aligned");
+assert.equal(done3.status, "ready", done3.message);
+const kept = (done3.scoreResult?.factors || []).find((f: any) => f.factor_id === "execution")?.impacts.map((i: any) => i.current_value);
+assert.deepEqual(kept, [332940], "the VECV row is left out of the current quarter as well");
+console.log(`Two-row current quarter: ${done3.scoreResult?.lifecycle}; ${done3.checkpointHistory!.map((c: any) => `${c.periodLabel} ${c.fcsScore}`).join(" → ")}`);
 console.log("Vague period wording needs the quarter's identity; re-measured quarters align even when the current checkpoint was stored earlier.");

@@ -249,9 +249,13 @@ export class FundamentalReviewService {
       // No parallel model fan-out or open-ended retries.
       const deadline = Date.now() + (this.options.historyBudgetMs ?? 180_000);
       let target = previousQuarterEnd(current.periodEnd);
+      const earlier = [target, previousQuarterEnd(target)];
+      // All or nothing: if either earlier quarter must be measured, measure both, so Execution
+      // can be aligned across all three (Thermax/Eicher, 26 Oct: one stored quarter matched, one did not).
+      const measureAll = earlier.some((end) => job.checkpointHistory!.find((item) => item.periodEnd === end)?.comparabilityKey !== current!.comparabilityKey);
       for (let attempt = 0; attempt < 2; attempt += 1, target = previousQuarterEnd(target)) {
         const cached = job.checkpointHistory.find((item) => item.periodEnd === target);
-        if (cached?.comparabilityKey === current.comparabilityKey) continue;
+        if (!measureAll && cached?.comparabilityKey === current.comparabilityKey) continue;
         // A stored quarter measured differently (e.g. another Execution row) would block the
         // lifecycle forever: measure it again; it is replaced only if the new measurement publishes.
         const remeasure = Boolean(cached);

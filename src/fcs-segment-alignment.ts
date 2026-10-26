@@ -55,17 +55,23 @@ export function rowsOutOfSeries(quarters: QuarterEvidence[]): Set<string> {
   if (!latest) return excluded;
   const sized = (c: any) => c.canonical_metric_id !== "segment_revenue" && c.canonical_metric_id !== "order_book"
     && !/percent|basis points/i.test(String(c.canonical_unit)) && Number(c.current_canonical_value) > 0;
+  const inBand = (rows: any[], size: number) => rows.filter((c) => { const ratio = Number(c.current_canonical_value) / size; return ratio >= SIZE_BAND[0] && ratio <= SIZE_BAND[1]; })
+    .sort((a, b) => Math.abs(Math.log(Number(a.current_canonical_value) / size)) - Math.abs(Math.log(Number(b.current_canonical_value) / size)));
   for (const metric of new Set(execution(latest).filter(sized).map((c) => String(c.canonical_metric_id)))) {
-    const reference = execution(latest).filter((c) => c.canonical_metric_id === metric);
-    if (reference.length !== 1) continue;
-    const size = Number(reference[0].current_canonical_value);
+    const latestRows = execution(latest).filter((c) => c.canonical_metric_id === metric && sized(c));
+    const earlierRows = (quarter: QuarterEvidence) => execution(quarter).filter((c) => c.canonical_metric_id === metric && sized(c));
+    // Several current rows (Eicher, 26 Oct: Royal Enfield and VECV): keep the one whose size continues
+    // in every earlier quarter, the largest (the main business) if more than one does.
+    const continuing = latestRows.filter((c) => quarters.every((q) => q === latest || inBand(earlierRows(q), Number(c.current_canonical_value)).length > 0))
+      .sort((a, b) => Number(b.current_canonical_value) - Number(a.current_canonical_value));
+    const reference = latestRows.length === 1 ? latestRows[0] : continuing[0];
+    if (!reference) continue;
+    for (const row of latestRows) if (row !== reference) excluded.add(row.candidate_id);
+    const size = Number(reference.current_canonical_value);
     for (const quarter of quarters) {
       if (quarter === latest) continue;
-      const rows = execution(quarter).filter((c) => c.canonical_metric_id === metric && sized(c));
-      const distance = (c: any) => Math.abs(Math.log(Number(c.current_canonical_value) / size));
-      const inBand = rows.filter((c) => { const ratio = Number(c.current_canonical_value) / size; return ratio >= SIZE_BAND[0] && ratio <= SIZE_BAND[1]; })
-        .sort((a, b) => distance(a) - distance(b));
-      for (const row of rows) if (row !== inBand[0]) excluded.add(row.candidate_id);
+      const best = inBand(earlierRows(quarter), size)[0];
+      for (const row of earlierRows(quarter)) if (row !== best) excluded.add(row.candidate_id);
     }
   }
   return excluded;
