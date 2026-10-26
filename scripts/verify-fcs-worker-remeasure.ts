@@ -103,7 +103,7 @@ const done3 = await service3.execute({ jobId: job3.jobId!, symbol: "EICHERMOT" }
 assert.deepEqual(done3.diagnostics.filter((d: any) => d.outcome === "historical_checkpoint_remeasured").map((d: any) => d.period_end), ["2026-03-31", "2025-12-31"],
   "the matching stored quarter is measured again too, so all three can be aligned");
 assert.equal(done3.status, "ready", done3.message);
-const kept = (done3.scoreResult?.factors || []).find((f: any) => f.factor_id === "execution")?.impacts.map((i: any) => i.current_value);
+const kept = ((done3.scoreResult?.factors as any[]) || []).find((f: any) => f.factor_id === "execution")?.impacts.map((i: any) => i.current_value);
 assert.deepEqual(kept, [332940], "the VECV row is left out of the current quarter as well");
 console.log(`Two-row current quarter: ${done3.scoreResult?.lifecycle}; ${done3.checkpointHistory!.map((c: any) => `${c.periodLabel} ${c.fcsScore}`).join(" → ")}`);
 console.log("Vague period wording needs the quarter's identity; re-measured quarters align even when the current checkpoint was stored earlier.");
