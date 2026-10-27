@@ -276,3 +276,7 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   this run's measurement differs in key, evidence fingerprint or score. Test: verify:fcs-worker-remeasure §4.
 - NEXT: worker redeploy needs approval; Thermax rerun can only happen tomorrow (same-day request
   returns the existing job).
+- Worker redeployed (owner approved; first upload timed out, retry OK): `fcs-review-worker-claudebeta1027`
+  (code 1a77571). Beta tag and main unchanged.
+- NEXT (pre-approved 27 Oct): rerun THERMAX through the beta on a later day (~3 calls; check the
+  owner's C1 batch usage in research/c1/tapetide/run_log.csv first). Expect lifecycle ready.
