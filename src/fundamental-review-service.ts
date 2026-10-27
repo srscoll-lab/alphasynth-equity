@@ -232,8 +232,11 @@ export class FundamentalReviewService {
       detail: "Lifecycle requires four scorer-approved factors for the same supported quarter, with consistent period and methodology metadata." });
     if (current) {
       // This job measured the current quarter afresh; a stored checkpoint measured differently is replaced (and logged).
+      // That includes the same measure read from another copy of the document (Thermax, 27 Oct: same key and
+      // FCS, different evidence fingerprint, which left the lifecycle marked as not current).
       const stored = job.checkpointHistory.find((item) => item.periodEnd === current!.periodEnd);
-      if (stored && stored.comparabilityKey !== current.comparabilityKey) {
+      if (stored && (stored.comparabilityKey !== current.comparabilityKey || stored.evidenceDigest !== current.evidenceDigest
+          || stored.rawScore !== current.rawScore || stored.fcsScore !== current.fcsScore)) {
         job.diagnostics.push({ outcome: "current_checkpoint_remeasured", period_end: current.periodEnd,
           replaced_job: stored.sourceJobId, replaced_fcs: stored.fcsScore });
         job.checkpointHistory = job.checkpointHistory.filter((item) => item.periodEnd !== current!.periodEnd);

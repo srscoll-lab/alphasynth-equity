@@ -265,3 +265,14 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - NEXT (27 Oct, pre-approved): after the owner's C1 study batch, check today's calls in
   `research/c1/tapetide/run_log.csv`, then rerun THERMAX, EICHERMOT, TVSMOTOR through the beta
   (`node scripts/run-beta-fcs-batch.mjs output/beta-batch-20261027 ...`, ~9 calls) and report.
+
+## 27 Oct: reruns via beta (worker claudebeta1026b, 9 Tapetide calls, before the owner's C1 batch)
+- **EICHERMOT lifecycle RECOVERING 74 → 71 → 72; TVSMOTOR RECOVERING 73 → 54 → 56** (motorcycles +
+  scooters, thousand units). Live beta lifecycles now: Maruti, DMart, Eicher, TVS.
+- THERMAX FCS 40, all three quarters share one key, but marked pending: today's current quarter had
+  the same key and FCS as the stored one but a different evidence fingerprint (another document
+  copy), so the stored one was kept and the "latest ready" check failed.
+- Fixed offline (NOT deployed): the current quarter's stored checkpoint is replaced (logged) whenever
+  this run's measurement differs in key, evidence fingerprint or score. Test: verify:fcs-worker-remeasure §4.
+- NEXT: worker redeploy needs approval; Thermax rerun can only happen tomorrow (same-day request
+  returns the existing job).

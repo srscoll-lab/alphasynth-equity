@@ -106,4 +106,21 @@ assert.equal(done3.status, "ready", done3.message);
 const kept = ((done3.scoreResult?.factors as any[]) || []).find((f: any) => f.factor_id === "execution")?.impacts.map((i: any) => i.current_value);
 assert.deepEqual(kept, [332940], "the VECV row is left out of the current quarter as well");
 console.log(`Two-row current quarter: ${done3.scoreResult?.lifecycle}; ${done3.checkpointHistory!.map((c: any) => `${c.periodLabel} ${c.fcsScore}`).join(" → ")}`);
+
+// 4. Thermax, 27 Oct: next day, same measure and score, but read from another copy of the document
+//    (different evidence fingerprint). The stored current quarter is replaced and the lifecycle is current.
+const finished = (await store3.readLatest("EICHERMOT"))!;
+finished.checkpointHistory = finished.checkpointHistory!.map((c: any) => c.periodEnd === "2026-06-30" ? { ...c, evidenceDigest: "d".repeat(64), sourceJobId: "copy-a" } : c);
+await store3.save(finished);
+const service4 = new FundamentalReviewService({ store: store3, queue: new InMemoryFundamentalReviewQueue(), historicalBackfillEnabled: true,
+  evidenceUrl: "https://test/evidence", scoringUrl: "https://test/score", now: () => new Date("2026-10-27T06:00:00Z"),
+  fetch: async (input, init) => {
+    const body = JSON.parse(String(init?.body));
+    if (String(input).endsWith("/evidence")) return Response.json(await bundleFor(body.target_period_end || "2026-06-30"));
+    return Response.json(score({ symbol: body.symbol, candidates: body.candidates, documents: body.documents, validations: body.validations }));
+  } });
+const job4 = await service4.request({ symbol: "EICHERMOT", companyName: "Eicher Motors", informationCutoff: "2026-10-27" });
+const done4 = await service4.execute({ jobId: job4.jobId!, symbol: "EICHERMOT" });
+assert.ok(done4.diagnostics.some((d: any) => d.outcome === "current_checkpoint_remeasured" && d.replaced_job === "copy-a"), "same score from another document copy replaces the stored quarter, logged");
+assert.equal(done4.status, "ready", done4.message);
 console.log("Vague period wording needs the quarter's identity; re-measured quarters align even when the current checkpoint was stored earlier.");
