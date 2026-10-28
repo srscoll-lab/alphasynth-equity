@@ -217,6 +217,32 @@ export function rankByContent<T extends { text: string }>(items: T[], targetPeri
     .sort((a, b) => a.rank - b.rank || a.index - b.index).map(({ item }) => item);
 }
 
+/**
+ * A quarter's flow comparison must compare two quarters. Power Grid (28 Oct): availability
+ * "FY26 vs FY25" was stored as Q4 FY26 and "Upto Dec'25 vs FY25" as Q3 FY26, so no measure
+ * lined up across the three quarters. Balances ("as at") are exempt.
+ */
+const PART_OR_FULL_YEAR = /\b(?:up\s*to|upto|ytd|year[\s-]*to[\s-]*date|9\s*m|9m|nine[\s-]+months?|six[\s-]+months?|h[12]|half[\s-]*year|full[\s-]*year|cumulative|annual)\b/i;
+const QUARTER_MARKER = /\bq[1-4]|quarter|\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*\b|\d{1,2}[-./]\d{1,2}[-./]\d{2,4}|\d{4}-\d{2}-\d{2}/i;
+const shiftMonths = (end: string, months: number) => {
+  const date = new Date(`${end.slice(0, 7)}-01T00:00:00Z`);
+  date.setUTCMonth(date.getUTCMonth() + months + 1, 0);   // last day of the target month
+  return date.toISOString().slice(0, 10);
+};
+export function quarterPeriodMismatch(row: Pick<ExtractedRow, "previousPeriod" | "currentPeriod" | "previousPeriodEndDate" | "currentPeriodEndDate">, basis: string): string | null {
+  if (basis === "point_in_time_prior_period") return null;
+  for (const wording of [row.currentPeriod, row.previousPeriod]) {
+    const text = normalisePeriodWording(String(wording || ""));
+    if (PART_OR_FULL_YEAR.test(text) || (/\bfy\d{2}\b/.test(text) && !QUARTER_MARKER.test(text))) return "period_not_a_quarter";
+  }
+  const expected = basis === "same_quarter_prior_year" ? shiftMonths(row.currentPeriodEndDate, -12)
+    : basis === "sequential_quarter" ? shiftMonths(row.currentPeriodEndDate, -3) : null;
+  return expected && row.previousPeriodEndDate !== expected ? "previous_period_not_matching_basis" : null;
+}
+
+/** Capital work-in-progress / capex is money being spent, not orders won; the scorer has no metric for it. */
+const NOT_AN_ORDER_BOOK = /work[\s-]*in[\s-]*progress|\bcwip\b|capital\s+(?:expenditure|investment)|\bcapex\b/i;
+
 const fy = (year: number) => `FY${String(year).slice(-2)}`;
 const formatNumber = (n: number) => n.toLocaleString("en-IN", { maximumFractionDigits: 2 });
 
@@ -278,7 +304,9 @@ export async function tapetideExecutionEvidence(input: {
       : row.currentPeriodEndDate !== periodEnd ? "target_period_mismatch"
       : !(row.previousPeriodEndDate < row.currentPeriodEndDate) ? "invalid_period_order"
       : !["same_quarter_prior_year", "sequential_quarter", "point_in_time_prior_period"].includes(basis) ? "unsupported_comparison_basis"
-      : !Number.isFinite(row.previousValue) || !Number.isFinite(row.currentValue) ? "invalid_values" : null;
+      : row.metricName === "order_book" && NOT_AN_ORDER_BOOK.test(row.quotedLabel) ? "label_is_not_order_book"
+      : quarterPeriodMismatch(row, basis)
+      ?? (!Number.isFinite(row.previousValue) || !Number.isFinite(row.currentValue) ? "invalid_values" : null);
     const support = reject ? { ok: false, page: null } : textSupportsComparison(source.text, {
       // The counted noun printed beside the numbers also names the row ("332,940 motorcycles" when the
       // model's label is the generic "quarter sales"); money units ("Rs crores") are too generic to count.

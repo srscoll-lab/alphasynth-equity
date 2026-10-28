@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { alignExecutionAcrossQuarters, rowsOutOfSeries, type QuarterEvidence } from "../src/fcs-segment-alignment.ts";
 import { executionLabelHint, historyMetricDefinitions } from "../src/fundamental-review-history.ts";
 import { normalizeComparisonBasis } from "../src/fcs-comparison-basis.ts";
-import { tapetideExecutionEvidence } from "../src/tapetide-fcs-documents.ts";
+import { quarterPeriodMismatch, tapetideExecutionEvidence } from "../src/tapetide-fcs-documents.ts";
 
 // Real rows from the 23 Oct beta run (Eicher): the current quarter's label is generic and the
 // earlier calls also give VECV truck volumes.
@@ -71,4 +71,31 @@ assert.deepEqual([q1Stores.candidates[0]?.comparison_basis, q4Stores.candidates[
 assert.equal((await stores("same_quarter_prior_year", "2026-06-30", "2025-06-30", "<!-- page 3 -->\nQ1 FY27 update. Total Stores Q1/26 424 Q1/27 503")).candidates.length, 1,
   "'Q1/26' names its year (DMart's table style), so no date is needed nearby");
 
-console.log("Execution series identity: printed noun as hint, same business by size, no forced series, one comparison per measure, stock basis — verified.");
+// 7. Power Grid (28 Oct beta): a quarter compares two quarters. Full-year and year-to-date rows are
+//    refused for a flow; balances ("as at") are not affected; capital work-in-progress is not an order book.
+const span = (previousPeriod: string, currentPeriod: string, previousPeriodEndDate: string, currentPeriodEndDate: string) =>
+  ({ previousPeriod, currentPeriod, previousPeriodEndDate, currentPeriodEndDate });
+assert.equal(quarterPeriodMismatch(span("Q1FY26", "Q1FY27", "2025-06-30", "2026-06-30"), "same_quarter_prior_year"), null);
+assert.equal(quarterPeriodMismatch(span("FY25", "FY26", "2025-03-31", "2026-03-31"), "same_quarter_prior_year"), "period_not_a_quarter");
+assert.equal(quarterPeriodMismatch(span("FY25", "Upto Dec'25", "2025-03-31", "2025-12-31"), "same_quarter_prior_year"), "period_not_a_quarter");
+assert.equal(quarterPeriodMismatch(span("9M FY25", "9M FY26", "2024-12-31", "2025-12-31"), "same_quarter_prior_year"), "period_not_a_quarter");
+assert.equal(quarterPeriodMismatch(span("Q3 FY26", "Q3 FY26", "2025-03-31", "2025-12-31"), "same_quarter_prior_year"), "previous_period_not_matching_basis");
+assert.equal(quarterPeriodMismatch(span("Q4 FY26", "Q1 FY27", "2026-03-31", "2026-06-30"), "sequential_quarter"), null);
+assert.equal(quarterPeriodMismatch(span("Q1/26", "Q1/27", "2025-06-30", "2026-06-30"), "same_quarter_prior_year"), null, "DMart table style");
+assert.equal(quarterPeriodMismatch(span("FY25", "FY26", "2025-03-31", "2026-03-31"), "point_in_time_prior_period"), null, "balances as at 31 Mar");
+const grid = (rows: any[]) => tapetideExecutionEvidence({ symbol: "POWERGRID", companyName: "Power Grid", cutoff: "2026-10-28", targetPeriodEnd: "2026-03-31",
+  metrics: [{ metric: "transmission_availability", units: ["percent"] }, { metric: "order_book", units: ["INR crore"] }], archive: async (_b, sha) => `gs://t/${sha}.md`,
+  fetchText: async () => "<!-- page 4 -->\nQ4 FY26 results. AVAILABILITY (%) FY25 99.81 FY26 99.84; AVAILABILITY (%) Q4 FY25 99.72 Q4 FY26 99.86; Capital Work-in-Progress As on 31.03.25 41,000 As on 31.03.26 48,500 crore",
+  callTool: async () => ({ data: { documents: [{ doc_id: 9, doc_type: "presentation", has_markdown: true, links: { markdown_url: "https://filings.tapetide.com/g.md" }, doc_date: "2026-05-15" }] } }),
+  extract: async () => rows });
+const avail = (previousPeriod: string, currentPeriod: string, previousValue: number, currentValue: number) => ({ metricName: "transmission_availability", previousPeriod, currentPeriod,
+  previousPeriodEndDate: "2025-03-31", currentPeriodEndDate: "2026-03-31", previousValue, currentValue, unit: "percent", quotedLabel: "AVAILABILITY (%)", comparisonBasis: "same_quarter_prior_year" });
+const gridQ4 = await grid([avail("FY25", "FY26", 99.81, 99.84), avail("Q4 FY25", "Q4 FY26", 99.72, 99.86),
+  { metricName: "order_book", previousPeriod: "As on 31.03.25", currentPeriod: "As on 31.03.26", previousPeriodEndDate: "2025-03-31", currentPeriodEndDate: "2026-03-31",
+    previousValue: 41000, currentValue: 48500, unit: "INR crore", quotedLabel: "Capital Work-in-Progress", comparisonBasis: "point_in_time_prior_period" }]);
+assert.deepEqual(gridQ4.candidates.map((c) => `${c.canonical_metric_id}:${c.previous_canonical_value}->${c.current_canonical_value}`), ["transmission_availability:99.72->99.86"],
+  "only the quarterly availability row is kept");
+assert.deepEqual(gridQ4.diagnostics.filter((d) => /period_not_a_quarter|label_is_not_order_book/.test(String(d.outcome))).map((d) => d.outcome),
+  ["period_not_a_quarter", "label_is_not_order_book"]);
+
+console.log("Execution series identity: printed noun as hint, same business by size, no forced series, one comparison per measure, stock basis, quarter-only periods — verified.");

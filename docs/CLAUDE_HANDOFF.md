@@ -304,3 +304,15 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   stored under metric `order_book` — consider its own metric id.
 - Note: `run-beta-fcs-batch.mjs` overwrites results.json per run; Thermax's 28 Oct row is only here.
 - Live beta lifecycles now: Maruti, DMart, Eicher, TVS, Thermax, IndiGo.
+- Power Grid fix built offline (owner approved; NOT deployed), in `tapetideExecutionEvidence`:
+  1. `quarterPeriodMismatch`: a flow comparison must compare two quarters — full-year ("FY26"),
+     year-to-date ("Upto Dec'25", "9M"), half-year wording refused (`period_not_a_quarter`), and the
+     previous end must be exactly 12 months (YoY) or 3 months (sequential) earlier
+     (`previous_period_not_matching_basis`). Balances ("as at") are exempt.
+  2. Capital work-in-progress / capex labelled as order book refused (`label_is_not_order_book`).
+  Changed from the proposal: CWIP was NOT given its own metric — the scorer's taxonomy (alphasynth-bms-v2,
+  fcs-review-scorer) has none, and changing the scorer is out of bounds; so the March-quarter CWIP lookup
+  is moot. Power Grid's lifecycle now depends on each quarter's documents printing QUARTERLY availability;
+  if they print only FY/YTD figures it will stay pending (honestly). Test: verify:fcs-series-identity §7.
+  All 19 FCS suites, lint, build pass.
+- NEXT: worker redeploy needs owner approval; then rerun POWERGRID on a later day (~3 calls).
