@@ -280,3 +280,14 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   (code 1a77571). Beta tag and main unchanged.
 - NEXT (pre-approved 27 Oct): rerun THERMAX through the beta on a later day (~3 calls; check the
   owner's C1 batch usage in research/c1/tapetide/run_log.csv first). Expect lifecycle ready.
+
+## 28 Oct: Thermax rerun via beta (worker claudebeta1027, 3 Tapetide calls)
+- **THERMAX lifecycle FADING 72 → 72 → 40** (Q3 FY26 → Q4 FY26 → Q1 FY27), FCS 40, 4/4 factors,
+  0.8 min, job thermax-34885817-…; current quarter re-measured (fix 1a77571 worked). Execution: order
+  balance 14,045 INR crore (vs 11,376 a year ago, 13,604 last quarter), order booking 2,749 → 2,809.
+- Live beta lifecycles now: Maruti, DMart, Eicher, TVS, Thermax.
+- Note: the owner said the C1 study batch had run, but `research/c1/tapetide/run_log.csv` showed no
+  rows after 18:30 UTC 27 Oct at run time (04:58 UTC) — check where that batch logs.
+- Awaiting owner: (a) IndiGo + Power Grid today (~6 calls); (b) allow a fresh review when an older
+  built-in "report_ready" report covers an older quarter (blocks 15 of 25); (c) add a CLAUDE.md with
+  standing rules for Mac/cloud sessions.
