@@ -321,3 +321,18 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   Rollback: `--to-revisions=fcs-review-worker-claudebeta1027=100`.
 - NEXT (pre-approved 28 Oct): rerun POWERGRID through the beta on a later day (~3 calls; check the owner's
   C1 batch usage first). Expect a lifecycle only if each quarter's documents print quarterly availability.
+
+## 28 Oct (later): fresh reviews over older built-in reports + CLAUDE.md (owner approved; NOT deployed)
+- Owner decision: allow a fresh on-demand review when a built-in "report_ready" report does not cover the
+  latest reported quarter. Rule (`builtInReportCoversLatestQuarter`, src/fcs-evidence-preflight.ts): the
+  latest reported quarter = most recent quarter end ≥ 60 days ago (today: 30 Jun 2026); a report covers it
+  if it names that quarter or later, or (no quarter named, e.g. the 50 "Latest comparable reporting
+  period" reports, information to 25 Aug 2026) its cutoff is after that quarter's 60-day deadline (29 Aug).
+  So all 15 blocked test companies can now be requested; beta's own Q1 FY27 reports stay "report ready".
+  Reason code `built_in_report_older_quarter`; the radar shows "Request fresh FCS" + "Open earlier FCS report".
+- A fresh published score now replaces the old report's lifecycle too (pending until its own three quarters),
+  never showing an older lifecycle beside a new score (src/fcs-publications.ts).
+- Tests: verify-fcs-evidence-preflight (new section), verify-fcs-publication-list; all FCS suites, lint, build pass.
+- This is a change to the BETA APP (alphasynth-equity), not the worker: it needs a new beta revision
+  (0% traffic, then move tag `expectation-pilot`, main untouched) — needs owner approval.
+- CLAUDE.md: standing rules section added at the top (existing code notes kept).
