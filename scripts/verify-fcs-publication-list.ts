@@ -13,6 +13,8 @@ assert.equal(fcsPublicationSummaries([{...record,scoreResult:{...record.scoreRes
 const base=[{symbol:'HCLTECH',fcsAsOf:'2026-08-26',fcsScore:65,fcsPeriod:'Q3 FY26',lifecycle:null,lifecycleReady:false,checkpoints:1}];
 const old=structuredClone(base);const merged=mergeFcsPublications(base,summary);assert.deepEqual(base,old);assert.equal(merged[0].fcsScore,72);assert.equal(merged[0].lifecycleReady,true);assert.equal(merged[0].checkpoints,3);
 assert.equal(mergeFcsPublications(base,[{...summary[0],symbol:'UNKNOWN'}]).length,1);
+const withOldLifecycle=[{...base[0],lifecycle:'FADING',lifecycleReady:true,checkpoints:3}];const pendingFresh=mergeFcsPublications(withOldLifecycle,[{...summary[0],lifecycleReady:false,lifecycle:null,checkpoints:1}]);
+assert.equal(pendingFresh[0].fcsScore,72);assert.equal(pendingFresh[0].lifecycleReady,false,'a fresh score never keeps the older report lifecycle');assert.equal(pendingFresh[0].lifecycle,null);assert.equal(pendingFresh[0].checkpoints,1);
 const admitted=mergeFcsPublications(base,[{...summary[0],symbol:'UNKNOWN'}],publication=>({symbol:publication.symbol,fcsAsOf:publication.informationCutoff,fcsScore:publication.fcsScore,fcsPeriod:publication.fcsPeriod,lifecycle:publication.lifecycle,lifecycleReady:publication.lifecycleReady,checkpoints:publication.checkpoints}));
 assert.equal(admitted.length,2);assert.equal(admitted[1].symbol,'UNKNOWN');assert.deepEqual(base,old);
 assert.equal(mergeFcsPublications(base,[{...summary[0],symbol:'UNKNOWN',fcsScore:NaN}],()=>{throw Error('Invalid score must never be admitted')}).length,1);

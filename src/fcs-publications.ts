@@ -29,9 +29,10 @@ export function mergeFcsPublications<T extends {symbol:string;fcsAsOf:string;fcs
     && item.informationCutoff>=record.fcsAsOf.slice(0,10));
   if(!publication)return record;
   return {...record,fcsScore:publication.fcsScore,fcsPeriod:publication.fcsPeriod,fcsAsOf:publication.informationCutoff,
-    lifecycle:publication.lifecycleReady?publication.lifecycle:record.lifecycle,
-    lifecycleReady:publication.lifecycleReady || record.lifecycleReady,
-    checkpoints:publication.lifecycleReady?3:record.lifecycleReady?record.checkpoints:publication.checkpoints,
+    // A fresh score never sits beside the older report's lifecycle (owner decision, 28 Oct 2026).
+    lifecycle:publication.lifecycleReady?publication.lifecycle:null,
+    lifecycleReady:publication.lifecycleReady,
+    checkpoints:publication.lifecycleReady?3:publication.checkpoints,
     lifecycleAsOf:publication.lifecycleReady?publication.historyThrough:null,
     livePublication:true};
  });

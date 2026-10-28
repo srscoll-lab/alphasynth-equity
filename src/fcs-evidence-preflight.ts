@@ -103,11 +103,49 @@ function unavailableRecord(symbol: string): FcsEvidencePreflightRecord {
  *   approved four-factor evidence and current/comparable verified documents;
  * - membership in the priority batch without that proof stays partial.
  */
-export function deterministicFcsPreflight(symbol: string): FcsEvidencePreflightRecord {
+/**
+ * Owner decision (28 Oct 2026): a built-in report that does not cover the latest reported quarter
+ * must not block a fresh on-demand review. The latest reported quarter is the most recent quarter
+ * end at least 60 days ago (the longest listing deadline, for March). A report covers it when it
+ * names that quarter (or a later one) or, when it names none ("Latest comparable reporting
+ * period"), its information cutoff is after that quarter's 60-day deadline.
+ */
+const RESULTS_DEADLINE_DAYS = 60;
+const DAY_MS = 86_400_000;
+const isoDate = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+export function latestReportedQuarterEnd(today: Date = new Date()): string {
+  const limit = today.getTime() - RESULTS_DEADLINE_DAYS * DAY_MS;
+  for (let year = today.getUTCFullYear(); ; year -= 1) {
+    for (const end of [`${year}-12-31`, `${year}-09-30`, `${year}-06-30`, `${year}-03-31`]) {
+      if (Date.parse(`${end}T00:00:00Z`) <= limit) return end;
+    }
+  }
+}
+/** "Q1 FY27" → 2026-06-30; null when the label names no quarter. */
+export function fiscalQuarterEnd(label: string): string | null {
+  const match = String(label || "").match(/\bQ([1-4])\s*FY\s*'?(\d{2})\b/i);
+  if (!match) return null;
+  const year = 2000 + Number(match[2]);
+  return [`${year - 1}-06-30`, `${year - 1}-09-30`, `${year - 1}-12-31`, `${year}-03-31`][Number(match[1]) - 1];
+}
+export function builtInReportCoversLatestQuarter(report: { fcsPeriod: string; fcsAsOf: string }, today: Date = new Date()): boolean {
+  const latest = latestReportedQuarterEnd(today);
+  const named = fiscalQuarterEnd(report.fcsPeriod);
+  if (named) return named >= latest;
+  const cutoff = String(report.fcsAsOf || "").slice(0, 10);
+  return /^\d{4}-\d{2}-\d{2}$/.test(cutoff) && cutoff >= isoDate(Date.parse(`${latest}T00:00:00Z`) + RESULTS_DEADLINE_DAYS * DAY_MS);
+}
+
+export function deterministicFcsPreflight(symbol: string, today: Date = new Date()): FcsEvidencePreflightRecord {
   const clean = String(symbol || "").trim().toUpperCase();
   const company = radarCompanies.find((item) => item.symbol === clean);
   if (!company) return unavailableRecord(clean);
   const report = reportBySymbol.get(clean);
+  if (report && !builtInReportCoversLatestQuarter(report, today)) {
+    const fresh = withoutBuiltInReport(clean, company);
+    return { ...fresh, reasonCodes: [...fresh.reasonCodes, "built_in_report_older_quarter"],
+      evidence: { ...fresh.evidence, publishedFourFactorReport: true } };
+  }
   if (report) {
     return {
       symbol: clean,
@@ -127,6 +165,10 @@ export function deterministicFcsPreflight(symbol: string): FcsEvidencePreflightR
       },
     };
   }
+  return withoutBuiltInReport(clean, company);
+}
+
+function withoutBuiltInReport(clean: string, company: (typeof radarCompanies)[number]): FcsEvidencePreflightRecord {
   const approval = approvalBySymbol.get(clean);
   if (approvedHighProbabilityEvidence(approval)) {
     return {
@@ -196,11 +238,11 @@ export function providerAssistedFcsPreflight(record: FcsEvidencePreflightRecord,
   };
 }
 
-export function buildFcsEvidencePreflightSnapshot(): FcsEvidencePreflightSnapshot {
+export function buildFcsEvidencePreflightSnapshot(today: Date = new Date()): FcsEvidencePreflightSnapshot {
   const records = radarCompanies
     .filter((company) => company.market_cap_segment.label === "Large cap")
     .sort((left, right) => left.symbol.localeCompare(right.symbol))
-    .map((company) => deterministicFcsPreflight(company.symbol));
+    .map((company) => deterministicFcsPreflight(company.symbol, today));
   const byStatus = blankStatusCounts();
   const byCapSegment: Record<string, Record<FcsEvidencePreflightStatus, number>> = {};
   for (const record of records) {
@@ -226,6 +268,6 @@ export function buildFcsEvidencePreflightSnapshot(): FcsEvidencePreflightSnapsho
   };
 }
 
-export function fcsEvidencePreflightForSymbol(symbol: string): FcsEvidencePreflightRecord {
-  return deterministicFcsPreflight(symbol);
+export function fcsEvidencePreflightForSymbol(symbol: string, today: Date = new Date()): FcsEvidencePreflightRecord {
+  return deterministicFcsPreflight(symbol, today);
 }

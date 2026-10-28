@@ -534,6 +534,15 @@ export default function MomentumRadar({ onBack, onOpenSectorLens, initialCompany
       {fcsRecordBySymbol.has(company.symbol) && <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[10px] text-zinc-200 underline">View previously published FCS</button>}
       {!isFundamentalReviewInProgress(runtimeJob.status) && <button type="button" onClick={() => onDeepDive({ symbol: company.symbol, company_name: company.company_name, bms_status: "not_requested" })} className="mt-2 block text-[10px] font-semibold text-gold underline">Open company Deep Dive</button>}
     </>;
+    // Owner decision (28 Oct): an earlier built-in report that does not cover the latest quarter stays
+    // viewable, but a fresh review can be requested.
+    if (preflight?.requestEnabled && preflight.reasonCodes.includes("built_in_report_older_quarter")
+        && reviewRequestsAvailable && (reviewRequestScope === "radar_universe" || reviewSupportedSymbols.has(company.symbol))) return <>
+      <span className="text-[10px] font-semibold text-emerald-200">Fresh FCS review available</span>
+      <div className="mt-2 text-[9px] leading-relaxed text-zinc-300">An earlier FCS report exists (information to {fcsRecordBySymbol.get(company.symbol)?.fcsAsOf?.slice(0, 10) || "an earlier date"}), but it does not cover the latest reported quarter. {preflight.reason}</div>
+      <button type="button" onClick={() => showRequestConfirmation(company)} className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-300/35 bg-emerald-300/[0.10] px-2.5 py-2 text-[9px] font-black uppercase tracking-[0.06em] text-emerald-100 hover:border-emerald-300/60 hover:text-white"><TrendingUp className="h-3.5 w-3.5" /> Request fresh FCS</button>
+      <button type="button" onClick={() => onBrowseLibrary(company.symbol)} className="mt-2 block text-[9px] font-black uppercase tracking-[0.08em] text-cyan-200 hover:text-white">Open earlier FCS report</button>
+    </>;
     if (lifecycleBySymbol.has(company.symbol)) return <>
     <span className={`rounded-full border px-2 py-1 text-[9px] font-black ${lifecycleStyle[lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1]}`}>READY · {lifecycleDisplay(lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1).label}</span>
     <div className="mt-2 text-[10px] leading-relaxed text-zinc-300">{lifecycleDisplay(lifecycleBySymbol.get(company.symbol)!.lifecycle_v2_1).explanation} Scores: {lifecycleBySymbol.get(company.symbol)!.score_path.join(" → ")}.</div>
