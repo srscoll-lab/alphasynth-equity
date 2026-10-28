@@ -344,3 +344,15 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   Rollback: `gcloud run services update-traffic alphasynth-equity --project=my-nse-research-app --region=us-central1 --update-tags=expectation-pilot=alphasynth-equity-fcsbeta1023`.
 - NEXT (needs owner approval of which/how many, ~3 calls each, after the C1 batch): fresh reviews of the
   15 formerly blocked companies in daily batches; POWERGRID rerun (pre-approved) on a later day.
+- Gap found via the beta's publication list (15 published, 14 with lifecycle): L&T, Infosys, HCL Tech and
+  Persistent already had Q1 FY27 on-demand reports (6–9 Oct) but were offered a fresh review. Fixed
+  (`withCurrentPublication`; server preflight, capabilities and request gate now read the worker's
+  publication list, cached 60 s, best effort): a company opened up by the older-built-in-report rule is
+  "report ready" again when a published report covers the latest quarter. Beta-made companies (Power Grid,
+  Thermax…) can still be re-reviewed. Test: verify-fcs-evidence-preflight.
+- BETA REDEPLOYED (owner approved): `alphasynth-equity-fcsbeta1028b` (code 953d98a), 0% → smoke-tested
+  (the four report_ready, L&T request refused 409 before any call, Bajaj Auto/BEL/Power Grid/Thermax requestable,
+  bank declined, publications 15, no console errors) → tag `expectation-pilot` moved. Main 100% dossier17.
+  Rollback: `gcloud.cmd run services update-traffic alphasynth-equity --project=my-nse-research-app --region=us-central1 --update-tags=expectation-pilot=alphasynth-equity-fcsbeta1028`.
+- Fresh reviews now available for 11 of the 15 formerly blocked: BAJAJ-AUTO, BEL, SUNPHARMA, DRREDDY, CIPLA,
+  ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT, BHARTIARTL (~3 calls each; needs owner approval of the batch).
