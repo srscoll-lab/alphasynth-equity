@@ -12,6 +12,7 @@ The owner is not a developer: keep replies short and in plain language, and batc
 - **Tapetide: Free plan only** (50 calls/day, resets 00:00 IST). Never use or plan around a paid token. The owner's own study batch uses about 40 calls a day; check `research/c1/tapetide/run_log.csv` (rows at or after 18:30 UTC of the previous day) before spending calls. A full on-demand review costs about 3 calls.
 - **Data labels:** beta data is "Tapetide / company documents, not cross-verified with NSE/BSE"; publish an FCS only with all four factors (Earnings, Economics, Execution, Balance Sheet). Banks, NBFCs and insurers are not supported yet.
 - **Git:** Claude commits locally and cannot `git push`; give the owner this command for Windows PowerShell: `git -C "C:\Users\admin\Documents\Claude-AlphaSynth\alphasynth-equity" push`. End commit messages with a `Co-Authored-By: Claude …` line.
+- **Commands for the owner's PowerShell:** script running is disabled there, so write `gcloud.cmd` (not `gcloud`) in any gcloud command given to the owner.
 - **Deploys from the owner's PC** sometimes time out uploading to Google Storage: retry once and confirm the old revision kept serving.
 - **Tests:** the FCS work has many `npm run verify:fcs-*` / `verify:tapetide-*` suites; run the relevant ones plus `npm run lint` and `npm run build` before committing.
 
