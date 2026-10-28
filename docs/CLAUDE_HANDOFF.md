@@ -316,3 +316,8 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   if they print only FY/YTD figures it will stay pending (honestly). Test: verify:fcs-series-identity §7.
   All 19 FCS suites, lint, build pass.
 - NEXT: worker redeploy needs owner approval; then rerun POWERGRID on a later day (~3 calls).
+- Worker redeployed (owner approved; first upload timed out, retry OK): `fcs-review-worker-claudebeta1028`
+  (code c4fae5b), 100% of the worker, 2 CPU / 2 GiB. Beta tag (fcsbeta1023) and main (dossier17) unchanged.
+  Rollback: `--to-revisions=fcs-review-worker-claudebeta1027=100`.
+- NEXT (pre-approved 28 Oct): rerun POWERGRID through the beta on a later day (~3 calls; check the owner's
+  C1 batch usage first). Expect a lifecycle only if each quarter's documents print quarterly availability.
