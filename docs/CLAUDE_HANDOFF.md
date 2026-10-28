@@ -336,3 +336,11 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - This is a change to the BETA APP (alphasynth-equity), not the worker: it needs a new beta revision
   (0% traffic, then move tag `expectation-pilot`, main untouched) — needs owner approval.
 - CLAUDE.md: standing rules section added at the top (existing code notes kept).
+- BETA DEPLOYED (owner approved): revision `alphasynth-equity-fcsbeta1028` (code 2f78266; template identical to
+  fcsbeta1023), deployed at 0% traffic, smoke-tested (site + health 200, preflight LT/INFY/BAJAJ-AUTO now
+  request-enabled with `built_in_report_older_quarter`, THERMAX unchanged, bank declined, publications 200,
+  radar shows "Fresh FCS review available", no console errors), then tag `expectation-pilot` moved to it.
+  Main still 100% `dossier17`. Worker unchanged (claudebeta1028). 0 Tapetide calls used.
+  Rollback: `gcloud run services update-traffic alphasynth-equity --project=my-nse-research-app --region=us-central1 --update-tags=expectation-pilot=alphasynth-equity-fcsbeta1023`.
+- NEXT (needs owner approval of which/how many, ~3 calls each, after the C1 batch): fresh reviews of the
+  15 formerly blocked companies in daily batches; POWERGRID rerun (pre-approved) on a later day.

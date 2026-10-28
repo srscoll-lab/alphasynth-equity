@@ -6,7 +6,7 @@ Prepared 23 Oct 2026 from a read-only check. Nothing here has been run.
 | Service | Today | After | Who sees it |
 |---|---|---|---|
 | `fcs-review-worker` | revision `fcs-review-worker-00026-gg9` (19 Oct, old evidence route) | new revision from the Claude copy | Only the beta. Main has no FCS settings. |
-| `alphasynth-equity` beta tag `expectation-pilot` | `alphasynth-equity-ui1016` | new revision from the Claude copy, 0% traffic | Beta link only |
+| `alphasynth-equity` beta tag `expectation-pilot` | `alphasynth-equity-ui1016` (now fcsbeta1028, 28 Oct; previous fcsbeta1023) | new revision from the Claude copy, 0% traffic | Beta link only |
 | Main (`dossier17`, 100% traffic) | unchanged | unchanged | Everyone |
 | `fcs-review-scorer`, n8n | unchanged | unchanged | — |
 
