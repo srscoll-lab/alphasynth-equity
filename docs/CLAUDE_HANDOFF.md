@@ -291,3 +291,16 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - Awaiting owner: (a) IndiGo + Power Grid today (~6 calls); (b) allow a fresh review when an older
   built-in "report_ready" report covers an older quarter (blocks 15 of 25); (c) add a CLAUDE.md with
   standing rules for Mac/cloud sessions.
+
+## 28 Oct (later): IndiGo + Power Grid via beta (owner approved, 6 Tapetide calls; 9 today in all)
+- **INDIGO lifecycle WATCH 25 → 24 → 24**, FCS 24 (Execution: load factor 84.6% → 83.3%), 1.1 min.
+- **POWERGRID FCS 54, lifecycle pending** (`execution_alignment_not_publishable`); all three quarters had
+  4/4 factors. Cause (job powergrid-1f58f46c-…): Q1 FY27 Execution = availability Q1 vs Q1 + CWIP as at
+  30.06; Q4 FY26 = availability FY26 vs FY25 only (no CWIP row); Q3 FY26 = CWIP as at 31.12 + availability
+  "Upto Dec'25" vs FY25 (mismatched periods, should have been refused). No measure is common to all three.
+- Proposed offline fix (NOT built): (1) refuse availability comparisons whose two periods differ in
+  length (YTD vs full year) and full-year rows for a quarter; (2) for balances like CWIP, look for the
+  "as at 31.03" row in the March-quarter documents (a balance needs no derivation). CWIP is currently
+  stored under metric `order_book` — consider its own metric id.
+- Note: `run-beta-fcs-batch.mjs` overwrites results.json per run; Thermax's 28 Oct row is only here.
+- Live beta lifecycles now: Maruti, DMart, Eicher, TVS, Thermax, IndiGo.
