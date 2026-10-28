@@ -356,3 +356,9 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   Rollback: `gcloud.cmd run services update-traffic alphasynth-equity --project=my-nse-research-app --region=us-central1 --update-tags=expectation-pilot=alphasynth-equity-fcsbeta1028`.
 - Fresh reviews now available for 11 of the 15 formerly blocked: BAJAJ-AUTO, BEL, SUNPHARMA, DRREDDY, CIPLA,
   ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT, BHARTIARTL (~3 calls each; needs owner approval of the batch).
+- NEXT (29 Oct, PRE-APPROVED by the owner 28 Oct): after the owner's C1 study batch (check
+  `research/c1/tapetide/run_log.csv`, rows at/after 18:30 UTC 28 Oct; Free plan 50/day), run through the beta
+  `node scripts/run-beta-fcs-batch.mjs output/beta-batch-20261029 "POWERGRID:Power Grid Corporation of India Limited" ...`
+  then as many of BAJAJ-AUTO, BEL, SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT,
+  BHARTIARTL as fit in the remaining calls (~3 each; stop ≥2 calls short of 50). Report FCS + lifecycle +
+  calls; carry the rest to later days. Note: results.json is overwritten per run — use one run per day.
