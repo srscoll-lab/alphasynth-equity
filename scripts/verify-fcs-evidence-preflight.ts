@@ -7,6 +7,7 @@ import {
   fiscalQuarterEnd,
   latestReportedQuarterEnd,
   providerAssistedFcsPreflight,
+  withCurrentPublication,
 } from "../src/fcs-evidence-preflight.ts";
 
 // Built-in reports (information to 25 Aug 2026) still cover the latest reported quarter on 26 Aug.
@@ -77,5 +78,19 @@ assert.ok(ltBeta.reasonCodes.includes("built_in_report_older_quarter"));
 const blocked = ["BAJAJ-AUTO", "LT", "BEL", "INFY", "HCLTECH", "PERSISTENT", "SUNPHARMA", "DRREDDY", "CIPLA", "ULTRACEMCO", "HINDALCO", "TATASTEEL", "TITAN", "TRENT", "BHARTIARTL"];
 assert.deepEqual(blocked.filter((symbol) => !providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol(symbol, OCT_28), true).requestEnabled), [],
   "all 15 test companies blocked on 24 Oct can now be requested");
+
+// ...but a published on-demand report for the latest quarter still counts as ready (L&T had Q1 FY27 from 7 Oct).
+const published = [{ symbol: "LT", fcsPeriod: "Q1 FY27", informationCutoff: "2026-10-07" }, { symbol: "THERMAX", fcsPeriod: "Q1 FY27", informationCutoff: "2026-10-28" },
+  { symbol: "INFY", fcsPeriod: "Q4 FY26", informationCutoff: "2026-06-01" }];
+const ltPublished = withCurrentPublication(ltBeta, published, OCT_28);
+assert.equal(ltPublished.status, "report_ready");
+assert.equal(ltPublished.requestEnabled, false);
+assert.equal(ltPublished.action, "view_report");
+assert.ok(ltPublished.reasonCodes.includes("published_report_covers_latest_quarter"));
+assert.ok(!ltPublished.reasonCodes.includes("built_in_report_older_quarter"), "radar must not show the fresh-review button");
+const infyOlder = withCurrentPublication(providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol("INFY", OCT_28), true), published, OCT_28);
+assert.equal(infyOlder.requestEnabled, true, "a published report for an older quarter does not block");
+const thermax = providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol("THERMAX", OCT_28), true);
+assert.deepEqual(withCurrentPublication(thermax, published, OCT_28), thermax, "beta's own companies can still be re-reviewed");
 
 console.log(JSON.stringify(snapshot.summary, null, 2));

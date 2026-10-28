@@ -136,6 +136,25 @@ export function builtInReportCoversLatestQuarter(report: { fcsPeriod: string; fc
   return /^\d{4}-\d{2}-\d{2}$/.test(cutoff) && cutoff >= isoDate(Date.parse(`${latest}T00:00:00Z`) + RESULTS_DEADLINE_DAYS * DAY_MS);
 }
 
+/**
+ * An older built-in report no longer blocks a request, but a published on-demand report for the
+ * latest reported quarter does (28 Oct: L&T, Infosys, HCL Tech and Persistent had Q1 FY27 reports
+ * from 6–9 Oct). Only records opened up by the older-report rule are affected, so on-demand
+ * companies can still be re-reviewed.
+ */
+export function withCurrentPublication(record: FcsEvidencePreflightRecord,
+  publications: ReadonlyArray<{ symbol: string; fcsPeriod: string; informationCutoff: string }>, today: Date = new Date()): FcsEvidencePreflightRecord {
+  if (!record.reasonCodes.includes("built_in_report_older_quarter")) return record;
+  const latest = latestReportedQuarterEnd(today);
+  const current = publications.find((item) => item.symbol === record.symbol && (fiscalQuarterEnd(item.fcsPeriod) ?? "") >= latest);
+  if (!current) return record;
+  return { ...record, status: "report_ready", requestEnabled: false, action: "view_report",
+    reasonCodes: [...record.reasonCodes.filter((code) => code !== "built_in_report_older_quarter"), "published_report_covers_latest_quarter"],
+    reason: `A four-factor FCS report for ${current.fcsPeriod} is already published. Open it; a new review would repeat the same quarter.`,
+    evidenceCheckedAt: current.informationCutoff, evidenceCutoff: current.informationCutoff,
+    evidence: { publishedFourFactorReport: true, approvedFourFactorEvidence: true, currentComparableDocumentsVerified: true } };
+}
+
 export function deterministicFcsPreflight(symbol: string, today: Date = new Date()): FcsEvidencePreflightRecord {
   const clean = String(symbol || "").trim().toUpperCase();
   const company = radarCompanies.find((item) => item.symbol === clean);

@@ -92,7 +92,7 @@ import {
 import { createCanonicalEvidenceProviderFromEnvironment } from "./src/fundamental-review-evidence";
 import { anchorsForEvidencePeriod, canonicalizeDynamicEvidence } from "./src/fundamental-review-dynamic-evidence";
 import { createGoogleIdentityTokenProvider } from "./src/google-cloud-runtime";
-import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight } from "./src/fcs-evidence-preflight";
+import { buildFcsEvidencePreflightSnapshot, fcsEvidencePreflightForSymbol, providerAssistedFcsPreflight, withCurrentPublication } from "./src/fcs-evidence-preflight";
 import { discoverTapetideFcsSources, fetchTapetideAnnualBalanceSheet, fetchTapetideFinancialCandidates, fetchTapetideQuarterlyFinancials, tapetideFcsConfigured, TapetideMcpClient } from "./src/tapetide-fcs-provider";
 import { tapetideBalanceSheetEvidence } from "./src/tapetide-fcs-balance-sheet";
 import { FINANCIAL_SECTOR_NOT_SUPPORTED_MESSAGE, isUnsupportedFinancialSector } from "./src/fcs-sector-support";
@@ -163,13 +163,14 @@ function radarSector(symbol: string): string | null {
   }
 }
 
-function runtimeFcsPreflightForSymbol(symbol: string) {
-  return providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol(symbol), tapetideFcsConfigured());
+type PublishedReviewSummary = { symbol: string; fcsPeriod: string; informationCutoff: string };
+function runtimeFcsPreflightForSymbol(symbol: string, publications: PublishedReviewSummary[] = []) {
+  return withCurrentPublication(providerAssistedFcsPreflight(fcsEvidencePreflightForSymbol(symbol), tapetideFcsConfigured()), publications);
 }
 
-function runtimeFcsPreflightSnapshot() {
+function runtimeFcsPreflightSnapshot(publications: PublishedReviewSummary[] = []) {
   const snapshot = buildFcsEvidencePreflightSnapshot();
-  const records = [...momentumRadarSymbols()].sort().map(runtimeFcsPreflightForSymbol);
+  const records = [...momentumRadarSymbols()].sort().map((symbol) => runtimeFcsPreflightForSymbol(symbol, publications));
   const blank = () => ({ report_ready: 0, high_probability: 0, provider_assisted: 0, partial: 0, unavailable: 0 });
   const byStatus = blank();
   const byCapSegment: Record<string, ReturnType<typeof blank>> = {};
@@ -4943,13 +4944,35 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     return res.json(BMS_FACTOR_SCHEMA_DESCRIPTION);
   });
 
-  app.get("/api/bms/fundamental-review/capabilities", (_req, res) => {
+  // Published on-demand reports (worker list, cached 60 s). Shared by the publication list and the
+  // preflight, so a company whose latest quarter is already published is not offered a repeat review.
+  let publishedReviewListCache:{checkedAt:number;payload:any}|null=null;
+  async function publishedReviewList(timeoutMs=60_000):Promise<any>{
+    if(publishedReviewListCache && Date.now()-publishedReviewListCache.checkedAt<60_000)return publishedReviewListCache.payload;
+    const statusUrl=process.env.FUNDAMENTAL_REVIEW_STATUS_URL;
+    if(!statusUrl)throw Object.assign(new Error("Published-review list is not configured."),{notConfigured:true});
+    const url=new URL(statusUrl);url.pathname="/internal/fundamental-review/publications";url.search="";
+    // The private worker can cold-start after an idle period. Publication
+    // summaries are read-only, so allow enough time for that first lookup
+    // instead of making the library silently fall back to stale rows.
+    const response=await fetch(url,{headers:await fundamentalReviewGatewayHeaders(statusUrl),signal:AbortSignal.timeout(timeoutMs)});
+    if(!response.ok)throw new Error("Publication-list lookup failed");
+    const payload:any=await response.json();if(!Array.isArray(payload.publications))throw new Error("Invalid publication list");
+    publishedReviewListCache={checkedAt:Date.now(),payload};return payload;
+  }
+  /** Best effort for the preflight: the last good list, else none (the request gate then behaves as before). */
+  async function currentPublications(timeoutMs:number):Promise<PublishedReviewSummary[]>{
+    try{return (await publishedReviewList(timeoutMs)).publications;}
+    catch(error:any){console.error("[fundamental-review] preflight publication check failed:",error?.message||error);return publishedReviewListCache?.payload?.publications||[];}
+  }
+
+  app.get("/api/bms/fundamental-review/capabilities", async (_req, res) => {
     const requestConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_REQUEST_WEBHOOK_URL);
     const statusConfigured = Boolean(process.env.FUNDAMENTAL_REVIEW_STATUS_URL);
     const publicRequestsEnabled = process.env.FUNDAMENTAL_REVIEW_PUBLIC_REQUESTS_ENABLED === "true";
     const configuredSymbols = fundamentalReviewSupportedSymbols();
     const requestScope = fundamentalReviewRequestScope();
-    const preflight = runtimeFcsPreflightSnapshot();
+    const preflight = runtimeFcsPreflightSnapshot(await currentPublications(10_000));
     const supportedSymbols = preflight.priorityBatch.records.filter((record) => record.requestEnabled).map((record) => record.symbol);
     const supportedSymbolCount = supportedSymbols.length;
     const available = requestConfigured && statusConfigured && publicRequestsEnabled && supportedSymbolCount > 0;
@@ -4978,11 +5001,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     });
   });
 
-  app.get("/api/bms/fundamental-review/preflight", (req, res) => {
+  app.get("/api/bms/fundamental-review/preflight", async (req, res) => {
     const symbol = cleanFundamentalReviewSymbol(req.query.symbol);
     res.setHeader("Cache-Control", "public, max-age=300");
-    if (symbol) return res.json(runtimeFcsPreflightForSymbol(symbol));
-    return res.json(runtimeFcsPreflightSnapshot());
+    const publications = await currentPublications(10_000);
+    if (symbol) return res.json(runtimeFcsPreflightForSymbol(symbol, publications));
+    return res.json(runtimeFcsPreflightSnapshot(publications));
   });
 
   // Durable worker endpoints. In production these are invoked through Cloud
@@ -5274,22 +5298,12 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     try {return res.json({publications:await getFundamentalReviewService().publications()});}
     catch {return res.status(503).json({error:"Published-review list is temporarily unavailable."});}
   });
-  let publishedReviewListCache:{checkedAt:number;payload:any}|null=null;
   app.get("/api/bms/fundamental-review/publications",async (_req,res)=>{
     res.setHeader("Cache-Control","no-store");
-    if(publishedReviewListCache && Date.now()-publishedReviewListCache.checkedAt<60_000)return res.json(publishedReviewListCache.payload);
-    const statusUrl=process.env.FUNDAMENTAL_REVIEW_STATUS_URL;
-    if(!statusUrl)return res.status(503).json({error:"Published-review list is not configured."});
     try {
-      const url=new URL(statusUrl);url.pathname="/internal/fundamental-review/publications";url.search="";
-      // The private worker can cold-start after an idle period. Publication
-      // summaries are read-only, so allow enough time for that first lookup
-      // instead of making the library silently fall back to stale rows.
-      const response=await fetch(url,{headers:await fundamentalReviewGatewayHeaders(statusUrl),signal:AbortSignal.timeout(60_000)});
-      if(!response.ok)throw new Error("Publication-list lookup failed");
-      const payload:any=await response.json();if(!Array.isArray(payload.publications))throw new Error("Invalid publication list");
-      publishedReviewListCache={checkedAt:Date.now(),payload};return res.json(payload);
+      return res.json(await publishedReviewList());
     } catch(error:any) {
+      if(error?.notConfigured)return res.status(503).json({error:"Published-review list is not configured."});
       console.error("[fundamental-review] publication-list lookup failed:",error?.message||error);
       // A previously verified list is safer than reverting the UI to older
       // static rows during a transient worker restart.
@@ -5324,7 +5338,7 @@ For each item, preserve source_id and url. Return sentiment as positive, neutral
     if (isUnsupportedFinancialSector({ companyName, sector: radarSector(symbol) })) {
       return res.status(409).json({ error: FINANCIAL_SECTOR_NOT_SUPPORTED_MESSAGE, code: "FUNDAMENTAL_REVIEW_SECTOR_NOT_SUPPORTED" });
     }
-    const preflight = runtimeFcsPreflightForSymbol(symbol);
+    const preflight = runtimeFcsPreflightForSymbol(symbol, await currentPublications(30_000));
     if (preflight.status === "report_ready") {
       return res.status(409).json({
         error: "A published four-factor FCS already exists. Open the existing report instead of starting a paid review.",
