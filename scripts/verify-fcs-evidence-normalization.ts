@@ -82,4 +82,9 @@ assert.equal(sourceSupportsFcsUnit('Rs. In Cr', 'Rs. In Cr'), true);
 assert.equal(normalizeFcsUnit('Cr', ['Rs.Cr']), 'Rs.Cr');
 assert.equal(sourceSupportsFcsUnit('QUARTERLY RESULT - EBIDTA (Rs. In Cr)', 'Cr'), true);
 assert.equal(sourceSupportsFcsUnit('USD in Cr', 'Cr'), false);
+// BEL (29 Oct beta): the order book is printed only in running text, number between currency and scale.
+assert.equal(sourceSupportsFcsUnit('The order book position of the company as on 1st July, 2026 stood at Rs. 72,258 Crore.', 'Crore'), true);
+assert.equal(sourceSupportsFcsUnit('order book of ₹73,882.5 crores as on 1 April 2026', 'INR crore'), true);
+assert.equal(sourceSupportsFcsUnit('order book of USD 72,258 crore', 'Crore'), false, 'another currency is not INR');
+assert.equal(sourceSupportsFcsUnit('Rs. 72,258 Lakhs', 'INR crore'), false, 'a different scale is not crore');
 console.log('FCS denomination normalization passed: source values retained; explicit INR scale conversions verified.');

@@ -168,6 +168,12 @@ export function normalizeFcsComparisonValues(
   };
 }
 
+/**
+ * "Rs. in crore" / "₹ Crore" headings, or a figure written with both ("Rs. 72,258 Crore"):
+ * BEL (29 Oct) printed its order book only in running text.
+ */
+const INR_CRORE_WORDING = /(?:INR|Rs\.?|₹)\s*(?:in\s*)?(?:crores?|cr\.?)\b|(?:INR|Rs\.?|₹)\s*\d[\d,]*(?:\.\d+)?\s*(?:crores?|cr\.?)(?![a-z])/i;
+
 /** Require a currency denomination to be visible in the cited original. */
 export function sourceSupportsFcsUnit(documentText: string, rawUnit: unknown): boolean {
   const sourceUnit = String(rawUnit ?? '').trim();
@@ -176,7 +182,7 @@ export function sourceSupportsFcsUnit(documentText: string, rawUnit: unknown): b
   if (bareDivisor !== null) {
     // A bare scale from the model is acceptable only when the cited original
     // itself names INR/rupees with that scale; normalization alone is not proof.
-    if (bareDivisor === 1 && /(?:INR|Rs\.?|₹)\s*(?:in\s*)?(?:crores?|cr\.?)\b/i.test(text)) return true;
+    if (bareDivisor === 1 && INR_CRORE_WORDING.test(text)) return true;
     const declaresInr = /(?:presentation\s+currency|currency)[^\n]{0,120}\bINR\b|\bINR\b[^\n]{0,120}(?:presentation\s+currency|currency)/i.test(documentText);
     if (!declaresInr) return false;
     if (bareDivisor === 100) return /(?:amount\s+in|level\s+of\s+rounding[^\n]{0,80})(?:lakhs?|lacs?)\b/i.test(text);
@@ -190,7 +196,7 @@ export function sourceSupportsFcsUnit(documentText: string, rawUnit: unknown): b
   if (divisor === 10_000_000) return /INR\s*\(\s*in\s*actuals?\s*\)|(?:INR|Rs\.?)\s*(?:in\s*)?rupees?/i.test(text);
   if (divisor === 100) return /(?:INR|Rs\.?)\s*(?:in\s*)?(?:lakhs?|lacs?)|(?:lakhs?|lacs?)\s*of\s*(?:INR|rupees?)/i.test(text);
   if (divisor === 10) return /(?:INR|Rs\.?)\s*(?:in\s*)?(?:millions?|mn)\b/i.test(text);
-  if (divisor === 1) return /(?:INR|Rs\.?|₹)\s*(?:in\s*)?(?:crores?|cr\.?)\b/i.test(text);
+  if (divisor === 1) return INR_CRORE_WORDING.test(text);
   if (divisor === 0.001) return /(?:INR|Rs\.?)\s*(?:in\s*)?thousand\s+crores?\b/i.test(text);
   return /(?:INR|Rs\.?)\s*(?:in\s*)?(?:billions?|bn)\b/i.test(text);
 }
