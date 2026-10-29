@@ -383,3 +383,4 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - FOUND 29 Oct: beta tag `expectation-pilot` points to `fcsbeta1028` again (was moved to `fcsbeta1028b` on 28 Oct),
   so L&T/Infosys/HCL Tech/Persistent are offered repeat reviews again. Not changed by Claude; asked the owner.
 - NEXT: rerun BEL on a later day (~3 calls) after the owner's C1 batch.
+- 29 Oct (owner approved): beta tag `expectation-pilot` moved back to `fcsbeta1028b`; L&T report_ready again.
