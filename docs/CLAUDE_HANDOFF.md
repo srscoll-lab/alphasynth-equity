@@ -362,3 +362,13 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   then as many of BAJAJ-AUTO, BEL, SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT,
   BHARTIARTL as fit in the remaining calls (~3 each; stop ≥2 calls short of 50). Report FCS + lifecycle +
   calls; carry the rest to later days. Note: results.json is overwritten per run — use one run per day.
+
+## 29 Oct: batch via beta (beta fcsbeta1028b, worker claudebeta1028, 9 Tapetide calls)
+| Company | Result | FCS | Lifecycle | Why |
+|---|---|---|---|---|
+| POWERGRID | published | 45 (was 54) | pending | CWIP now refused (fix works); Execution = availability Q1 only; all 3 quarters re-measured but still no common measure (`execution_alignment_not_publishable`) — Q4/Q3 documents likely print only full-year/YTD availability. Disclosure gap, not a code bug. |
+| BAJAJ-AUTO | 3 of 4 | — | — | Execution not found: Tapetide had 1 results-window document; official PDFs (6 read) gave no verified comparison. |
+| BEL | 3 of 4 | — | — | Order book found in an official BSE PDF (Q4 FY26 → Q1 FY27) but refused `current_source_unit_not_verified`; Tapetide 1 document, nothing. Possible offline fix: check the unit wording in that PDF (bf9053f4…). |
+- The owner said the C1 batch had run, but run_log.csv again showed 0 rows today (06:36 UTC); planned as if 40 were used.
+- Remaining formerly-blocked companies: SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT,
+  BHARTIARTL (pre-approved batch continues on later days, ~3 calls each).
