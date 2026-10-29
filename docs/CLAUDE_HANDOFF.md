@@ -378,3 +378,8 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
   Test: verify-fcs-evidence-normalization. All FCS suites, lint, build pass. Caveat: later checks (previous value
   73,882 and the "as on 1st July" date vs 30 Jun) are untested until a live rerun. NEXT: worker redeploy needs
   approval; then rerun BEL (~3 calls).
+- Worker redeployed (owner approved 29 Oct): `fcs-review-worker-claudebeta1029` (code e20fafc, BEL unit fix), 100%.
+  Rollback: `--to-revisions=fcs-review-worker-claudebeta1028=100`. Main still 100% dossier17.
+- FOUND 29 Oct: beta tag `expectation-pilot` points to `fcsbeta1028` again (was moved to `fcsbeta1028b` on 28 Oct),
+  so L&T/Infosys/HCL Tech/Persistent are offered repeat reviews again. Not changed by Claude; asked the owner.
+- NEXT: rerun BEL on a later day (~3 calls) after the owner's C1 batch.
