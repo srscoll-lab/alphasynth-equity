@@ -372,3 +372,9 @@ times out at 10 s on a cold start (seen 21 Oct 12:45 IST); not worth fixing in V
 - The owner said the C1 batch had run, but run_log.csv again showed 0 rows today (06:36 UTC); planned as if 40 were used.
 - Remaining formerly-blocked companies: SUNPHARMA, DRREDDY, CIPLA, ULTRACEMCO, HINDALCO, TATASTEEL, TITAN, TRENT,
   BHARTIARTL (pre-approved batch continues on later days, ~3 calls each).
+- BEL fix built offline (owner approved; NOT deployed), aefd405: the official-document unit check
+  (`sourceSupportsFcsUnit`) only accepted headings like "Rs. in Crore"; BEL printed "stood at Rs. 72,258 Crore"
+  in running text. Now a currency + number + crore phrase also counts (other currencies/scales still refused).
+  Test: verify-fcs-evidence-normalization. All FCS suites, lint, build pass. Caveat: later checks (previous value
+  73,882 and the "as on 1st July" date vs 30 Jun) are untested until a live rerun. NEXT: worker redeploy needs
+  approval; then rerun BEL (~3 calls).
